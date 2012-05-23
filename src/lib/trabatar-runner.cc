@@ -1,4 +1,5 @@
 #include <trabatar/util.h>
+#include <trabatar/trabatar-runner.h>
 
 using namespace trabatar;
 using namespace std;
