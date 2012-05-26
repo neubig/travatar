@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace trabatar {
+namespace travatar {
 
 class TestBase {
 

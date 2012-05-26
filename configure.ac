@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([trabatar], [0.0.1], [neubig@gmail.com])
-AC_CONFIG_SRCDIR(src/lib/trabatar.cc)
-AC_CONFIG_HEADERS([src/include/trabatar/config.h])
+AC_INIT([travatar], [0.0.1], [neubig@gmail.com])
+AC_CONFIG_SRCDIR(src/lib/travatar.cc)
+AC_CONFIG_HEADERS([src/include/travatar/config.h])
 AC_CONFIG_FILES([
     Makefile
     src/Makefile

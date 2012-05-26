@@ -1,8 +1,8 @@
-TRABATARTH = test-trabatar.h test-base.h
+TRABATARTH = test-travatar.h test-base.h
 
 AM_CPPFLAGS = -I$(srcdir)/../include -DPKGDATADIR='"$(pkgdatadir)"'
 
-bin_PROGRAMS = test-trabatar
+bin_PROGRAMS = test-travatar
 
-test_trabatar_SOURCES = test-trabatar.cc ${KYTH}
-test_trabatar_LDADD = ../lib/libtrabatar.la -lboost_regex
+test_travatar_SOURCES = test-travatar.cc ${KYTH}
+test_travatar_LDADD = ../lib/libtravatar.la -lboost_regex

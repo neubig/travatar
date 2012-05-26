@@ -1,14 +1,14 @@
-#include <trabatar/config-trabatar-runner.h>
-#include <trabatar/trabatar-runner.h>
+#include <travatar/config-travatar-runner.h>
+#include <travatar/travatar-runner.h>
 
-using namespace trabatar;
+using namespace travatar;
 using namespace std;
 
 int main(int argc, char** argv) {
     // load the arguments
-    ConfigTrabatarRunner conf;
+    ConfigTravatarRunner conf;
     vector<string> args = conf.loadConfig(argc,argv);
     // train the reorderer
-    TrabatarRunner runner;
+    TravatarRunner runner;
     runner.Run(conf);
 }

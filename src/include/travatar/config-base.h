@@ -6,9 +6,9 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
-#include <trabatar/util.h>
+#include <travatar/util.h>
 
-namespace trabatar {
+namespace travatar {
 
 #define DIE_HELP(msg) do {                      \
     std::ostringstream oss;                     \

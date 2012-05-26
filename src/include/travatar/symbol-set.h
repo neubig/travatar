@@ -3,9 +3,9 @@
 
 #include <vector>
 #include <stdexcept>
-#include <trabatar/util.h>
+#include <travatar/util.h>
 
-namespace trabatar {
+namespace travatar {
 
 template < class T >
 class SymbolSet {

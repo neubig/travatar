@@ -1,5 +1,5 @@
-#ifndef _TRABATAR_UTIL__
-#define _TRABATAR_UTIL__
+#ifndef _TRAVATAR_UTIL__
+#define _TRAVATAR_UTIL__
 
 #include <cmath>
 #include <vector>
@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <tr1/unordered_map>
 
-#define TRABATAR_SAFE
+#define TRAVATAR_SAFE
 
 #define THROW_ERROR(msg) do {                   \
     std::ostringstream oss;                     \
@@ -85,7 +85,7 @@ inline std::istream & operator>> (std::istream & in, std::pair<X,Y>& s) {
 
 }
 
-namespace trabatar {
+namespace travatar {
 
 inline bool IsDigit(char c) {
     return c >= '0' && c <= '9';
@@ -110,7 +110,7 @@ inline std::pair<X,Y> MakePair(const X & x, const Y & y) {
 //     }
 // };
 // 
-// typedef std::tr1::unordered_map< std::pair<int, int>, double, trabatar::PairHash<int> > PairProbMap;
+// typedef std::tr1::unordered_map< std::pair<int, int>, double, travatar::PairHash<int> > PairProbMap;
 typedef long long WordPairId;
 typedef std::tr1::unordered_map< WordPairId, double > PairProbMap;
 inline WordPairId HashPair(int x, int y, int yMax) {
@@ -188,7 +188,7 @@ inline bool ApproximateDoubleEquals(
 // Perform safe access to a vector
 template < class T >
 inline const T & SafeAccess(const std::vector<T> & vec, int idx) {
-#ifdef TRABATAR_SAFE
+#ifdef TRAVATAR_SAFE
     if(idx < 0 || idx >= (int)vec.size())
         THROW_ERROR("Out of bound access size="<<vec.size()<<", idx="<<idx);
 #endif
@@ -198,7 +198,7 @@ inline const T & SafeAccess(const std::vector<T> & vec, int idx) {
 // Perform safe access to a vector
 template < class T >
 inline T & SafeAccess(std::vector<T> & vec, int idx) {
-#ifdef TRABATAR_SAFE
+#ifdef TRAVATAR_SAFE
     if(idx < 0 || idx >= (int)vec.size())
         THROW_ERROR("Out of bound access size="<<vec.size()<<", idx="<<idx);
 #endif
@@ -207,7 +207,7 @@ inline T & SafeAccess(std::vector<T> & vec, int idx) {
 
 template < class T >
 inline const T & SafeReference(const T * ptr) {
-#ifdef TRABATAR_SAFE
+#ifdef TRAVATAR_SAFE
     if(!ptr)
         THROW_ERROR("Null pointer access");
 #endif

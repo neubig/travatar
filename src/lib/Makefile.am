@@ -1,8 +1,8 @@
-TRABATARCPP = trabatar.cc trabatar-runner.cc
+TRABATARCPP = travatar.cc travatar-runner.cc
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-lib_LTLIBRARIES = libtrabatar.la
+lib_LTLIBRARIES = libtravatar.la
 
-libtrabatar_la_SOURCES = ${TRABATARCPP}
-libtrabatar_la_LDFLAGS = -version-info 0:0:0
+libtravatar_la_SOURCES = ${TRABATARCPP}
+libtravatar_la_LDFLAGS = -version-info 0:0:0

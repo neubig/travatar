@@ -1,0 +1,28 @@
+#ifndef TRABATAR_TREE_IO__
+#define TRABATAR_TREE_IO__
+
+#include <vector>
+#include <iostream>
+#include <travatar/hyper-graph.h>
+
+namespace travatar {
+
+// A virtual class to read in and write out parse trees
+class TreeIO {
+public:
+    virtual ~TreeIO() { };
+    virtual HyperGraph * ReadTree(istream & in) = 0;
+    virtual void WriteTree(const HyperGraph & tree, ostream & out) = 0;
+};
+
+// Read in and write out Penn Treebank format trees
+class PennTreeIO {
+public:
+    virtual ~PennTreeIO() { }
+    virtual HyperGraph * ReadTree(istream & in);
+    virtual void WriteTree(const HyperGraph & tree, ostream & out);
+}
+
+}
+
+#endif

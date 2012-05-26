@@ -1,14 +1,14 @@
 #include <iostream>
-#include "test-trabatar-runner.h"
+#include "test-travatar-runner.h"
 #include "test-base.h"
 
 using namespace std;
-using namespace trabatar;
+using namespace travatar;
 
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
-    tests.push_back(new TestTrabatarRunner());
+    tests.push_back(new TestTravatarRunner());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

@@ -5,25 +5,25 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
-#include <trabatar/util.h>
-#include <trabatar/config-base.h>
+#include <travatar/util.h>
+#include <travatar/config-base.h>
 
-namespace trabatar {
+namespace travatar {
 
-class ConfigTrabatarRunner : public ConfigBase {
+class ConfigTravatarRunner : public ConfigBase {
 
 public:
 
-    ConfigTrabatarRunner() : ConfigBase() {
+    ConfigTravatarRunner() : ConfigBase() {
         minArgs_ = 2;
         maxArgs_ = 2;
 
         SetUsage(
-"~~~ trabatar ~~~\n"
+"~~~ travatar ~~~\n"
 "  by Graham Neubig\n"
 "\n"
 "Calculates features for a text filterer.\n"
-"  Usage: trabatar [INPUT] [FEATURES]\n"
+"  Usage: travatar [INPUT] [FEATURES]\n"
 );
 
         AddConfigEntry("swap", "0.0", "The fraction of sentences to swap");
