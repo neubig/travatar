@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
 #include <tr1/unordered_map>
 
 #define TRAVATAR_SAFE
@@ -60,7 +61,7 @@ template <class X, class Y>
 inline std::ostream& operator << ( std::ostream& out, 
                                    const std::pair< X, Y >& rhs )
 {
-    out << "< " << rhs.first << " " << rhs.second << " >";
+    out << "[" << rhs.first << ", " << rhs.second << "]";
     return out;
 }
 
@@ -212,6 +213,92 @@ inline const T & SafeReference(const T * ptr) {
         THROW_ERROR("Null pointer access");
 #endif
     return *ptr;
+}
+
+template<class T>
+int CheckVector(const std::vector<T> & exp, const std::vector<T> & act) {
+    int ok = 1;
+    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+        if(i >= (int)exp.size() || 
+           i >= (int)act.size() || 
+           exp[i] != act[i]) {
+           
+            ok = 0;
+            std::cout << "exp["<<i<<"] != act["<<i<<"] (";
+            if(i >= (int)exp.size()) std::cout << "NULL";
+            else std::cout << exp[i];
+            std::cout <<" != ";
+            if(i >= (int)act.size()) std::cout << "NULL"; 
+            else std::cout << act[i];
+            std::cout << ")" << std::endl;
+        }
+    }
+    return ok;
+}
+
+template<class T>
+int CheckPtrVector(const std::vector<T*> & exp, const std::vector<T*> & act) {
+    int ok = 1;
+    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+        if(i >= (int)exp.size() || 
+           i >= (int)act.size() || 
+           (exp[i]==NULL) != (act[i]==NULL) ||
+           (exp[i]!=NULL && *exp[i] != *act[i])) {
+            ok = 0;
+            std::cout << "exp["<<i<<"] != act["<<i<<"] (";
+            if(i >= (int)exp.size()) std::cout << "OVER";
+            else if(exp[i] == NULL) std::cout << "NULL";
+            else std::cout << *exp[i];
+            std::cout <<" != ";
+            if(i >= (int)act.size()) std::cout << "OVER";
+            else if(act[i] == NULL) std::cout << "NULL";
+            else std::cout << *act[i];
+            std::cout << ")" << std::endl;
+        }
+    }
+    return ok;
+}
+
+template<class T>
+int CheckAlmostVector(const std::vector<T> & exp,
+                      const std::vector<T> & act) {
+    int ok = 1;
+    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+        if(i >= (int)exp.size() || 
+           i >= (int)act.size() || 
+           abs(exp[i] - act[i]) > 0.01) {
+           
+            ok = 0;
+            std::cout << "exp["<<i<<"] != act["<<i<<"] (";
+            if(i >= (int)exp.size()) std::cout << "NULL";
+            else std::cout << exp[i];
+            std::cout <<" != ";
+            if(i >= (int)act.size()) std::cout << "NULL"; 
+            else std::cout << act[i];
+            std::cout << ")" << std::endl;
+        }
+    }
+    return ok;
+}
+
+inline int CheckAlmost(double exp, double act) {
+    if(abs(exp - act) > 0.01) {
+        std::cout << "CheckAlmost: " << exp << " != " << act << std::endl;
+        return 0;
+    }
+    return 1;
+}
+
+inline int CheckString(const std::string & exp, const std::string & act) {
+    if(exp != act) {
+        std::cerr << "CheckString failed" << std::endl << "exp: '"<<exp<<"'"
+             <<std::endl<<"act: '"<<act<<"'" <<std::endl;
+        for(int i = 0; i < (int)std::min(exp.length(), act.length()); i++)
+            if(exp[i] != act[i])
+                std::cerr << "exp[" << i << "] '" << exp[i] << "' != act["<<i<<"] '"<<act[i]<<"'" <<std::endl;
+        return 0;
+    }
+    return 1;
 }
 
 

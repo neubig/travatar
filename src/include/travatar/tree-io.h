@@ -11,17 +11,17 @@ namespace travatar {
 class TreeIO {
 public:
     virtual ~TreeIO() { };
-    virtual HyperGraph * ReadTree(istream & in) = 0;
-    virtual void WriteTree(const HyperGraph & tree, ostream & out) = 0;
+    virtual HyperGraph * ReadTree(std::istream & in) = 0;
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out) = 0;
 };
 
 // Read in and write out Penn Treebank format trees
-class PennTreeIO {
+class PennTreeIO : public TreeIO {
 public:
     virtual ~PennTreeIO() { }
-    virtual HyperGraph * ReadTree(istream & in);
-    virtual void WriteTree(const HyperGraph & tree, ostream & out);
-}
+    virtual HyperGraph * ReadTree(std::istream & in);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+};
 
 }
 

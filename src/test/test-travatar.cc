@@ -1,5 +1,7 @@
 #include <iostream>
 #include "test-travatar-runner.h"
+#include "test-tree-io.h"
+#include "test-io-util.h"
 #include "test-base.h"
 
 using namespace std;
@@ -8,6 +10,8 @@ using namespace travatar;
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
+    tests.push_back(new TestIOUtil());
+    tests.push_back(new TestTreeIO());
     tests.push_back(new TestTravatarRunner());
     // Run all the tests
     int number_passed = 0;
