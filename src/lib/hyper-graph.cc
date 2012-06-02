@@ -61,7 +61,7 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
 
 // Output for a graph fragment in JSON format
 void GraphFragment::Print(std::ostream & out) const {
-    out << "{\"prob\": "<<prob_;
+    out << "{\"score\": "<<score_;
     if(edges_.size()) {
         out << ", \"edges\": [";
         for(int i = 0; i < (int)edges_.size(); i++)

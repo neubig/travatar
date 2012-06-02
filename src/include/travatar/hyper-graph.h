@@ -32,6 +32,13 @@ public:
 #endif
         return score_;
     }
+    void SetProb(double score) { 
+        score_ = score;
+#ifdef TRAVATAR_SAFE
+        if(!(score_ >= 0 && score_ <= 1))
+            THROW_ERROR("Invalid probability "<<score_);
+#endif
+    }
 
     // Getters/Setters
     void SetId(NodeId id) { id_ = id; }
@@ -132,6 +139,18 @@ public:
             delete edge;
     };
 
+    // Check to make sure that the probabilities of edges
+    // outgoing from a particular node add to one
+    void NormalizeEdgeProbabilities() {
+        BOOST_FOREACH(HyperNode* node, nodes_) {
+            double sum = 0;
+            BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
+                sum += edge->GetProb();
+            BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
+                edge->SetProb(edge->GetProb() / sum);
+        }
+    }
+
     // Check to make sure two hypergraphs are equal
     //  (print an error and return zero if not)
     int CheckEqual(const HyperGraph & rhs) const;
@@ -177,15 +196,15 @@ public:
 // This should generally be used for extracting rules
 class GraphFragment {
 public:
-    GraphFragment(HyperEdge * edge = NULL) : prob_(1) {
+    GraphFragment(HyperEdge * edge = NULL) : score_(1) {
         if(edge != NULL) AddEdge(edge);
     }
     void AddEdge(HyperEdge* edge) {
         edges_.push_back(edge);
-        prob_ *= edge->GetProb();
+        score_ *= edge->GetProb();
     }
     bool operator==(const GraphFragment & rhs) const {
-        if(prob_ != rhs.prob_ || edges_.size() != rhs.edges_.size())
+        if(score_ != rhs.score_ || edges_.size() != rhs.edges_.size())
             return false;
         for(int i = 0; i < (int)edges_.size(); i++)
             if(*edges_[i] != *rhs.edges_[i])
@@ -195,11 +214,28 @@ public:
     bool operator!=(const GraphFragment & rhs) const {
         return !(*this == rhs);
     }
+
+    // Get the scoreability (score, and must be between 0 and 1
+    double GetProb() {
+#ifdef TRAVATAR_SAFE
+        if(!(score_ >= 0 && score_ <= 1))
+            THROW_ERROR("Invalid scoreability "<<score_);
+#endif
+        return score_;
+    }
+    void SetProb(double score) { 
+        score_ = score;
+#ifdef TRAVATAR_SAFE
+        if(!(score_ >= 0 && score_ <= 1))
+            THROW_ERROR("Invalid scoreability "<<score_);
+#endif
+    }
+
     // Input/Output
     void Print(std::ostream & out) const;
 private:
     std::vector<HyperEdge*> edges_;
-    double prob_;
+    double score_;
 };
 inline std::ostream &operator<<( std::ostream &out, const GraphFragment &L ) {
     L.Print(out);

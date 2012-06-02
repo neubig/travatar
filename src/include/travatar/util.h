@@ -225,6 +225,11 @@ inline T & SafeAccess(std::vector<T> & vec, int idx) {
 }
 
 template < class T >
+inline const T & SafeReference(const std::vector<T*> & ptr) {
+    return SafeReference(SafeAccess(ptr));
+}
+
+template < class T >
 inline const T & SafeReference(const T * ptr) {
 #ifdef TRAVATAR_SAFE
     if(!ptr)

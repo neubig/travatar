@@ -77,15 +77,15 @@ public:
         HyperNode* node7 = new HyperNode(Dict::WID("NP"),      MakePair(1,2)); hg_exp.AddNode(node7);
         HyperNode* node8 = new HyperNode(Dict::WID("NN"),      MakePair(1,2)); hg_exp.AddNode(node8);
         HyperNode* node9 = new HyperNode(Dict::WID("water"),   MakePair(1,2)); hg_exp.AddNode(node9);
-        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); hg_exp.AddEdge(edge0);
-        HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); hg_exp.AddEdge(edge1);
-        HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); hg_exp.AddEdge(edge2);
-        HyperEdge* edge3 = new HyperEdge(node2); edge3->AddTail(node3); edge3->AddTail(node8); hg_exp.AddEdge(edge3);
-        HyperEdge* edge4 = new HyperEdge(node3); edge4->AddTail(node6); hg_exp.AddEdge(edge4);
-        HyperEdge* edge5 = new HyperEdge(node4); edge5->AddTail(node5); hg_exp.AddEdge(edge5);
-        HyperEdge* edge6 = new HyperEdge(node5); edge6->AddTail(node6); hg_exp.AddEdge(edge6);
-        HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); hg_exp.AddEdge(edge7);
-        HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); hg_exp.AddEdge(edge8);
+        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); hg_exp.AddEdge(edge0);
+        HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); hg_exp.AddEdge(edge1);
+        HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); hg_exp.AddEdge(edge2);
+        HyperEdge* edge3 = new HyperEdge(node2); edge3->AddTail(node3); edge3->AddTail(node8); node2->AddEdge(edge3); hg_exp.AddEdge(edge3);
+        HyperEdge* edge4 = new HyperEdge(node3); edge4->AddTail(node6); node3->AddEdge(edge4); hg_exp.AddEdge(edge4);
+        HyperEdge* edge5 = new HyperEdge(node4); edge5->AddTail(node5); node4->AddEdge(edge5); hg_exp.AddEdge(edge5);
+        HyperEdge* edge6 = new HyperEdge(node5); edge6->AddTail(node6); node5->AddEdge(edge6); hg_exp.AddEdge(edge6);
+        HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); hg_exp.AddEdge(edge7);
+        HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); hg_exp.AddEdge(edge8);
         hg_exp.SetWords(Dict::ParseWords("running water"));
         // Check to make sure that the remaining values still remain
         string left_act; instr >> left_act;

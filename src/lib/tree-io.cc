@@ -82,6 +82,7 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
         HyperEdge * edge = new HyperEdge;
         edge->SetId(v.second.get<int>("id"));
         edge->SetHead(ret->GetNode(v.second.get<int>("head")));
+        edge->GetHead()->AddEdge(edge);
         BOOST_FOREACH(ptree::value_type &t, v.second.get_child("tails"))
             edge->AddTail(ret->GetNode(t.second.get<int>("")));
         ret->AddEdge(edge);
