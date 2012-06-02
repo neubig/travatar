@@ -36,6 +36,8 @@ public:
     // Getters/Setters
     void SetId(NodeId id) { id_ = id; }
     NodeId GetId() const { return id_; }
+    void SetHead(HyperNode* head) { head_ = head; }
+    HyperNode* GetHead() const { return head_; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
 
@@ -63,9 +65,9 @@ public:
         UNSET_FRONTIER = 'U'
     } FrontierType;
 private:
+    NodeId id_;
     WordId sym_;
     std::pair<int,int> span_;
-    NodeId id_;
     FrontierType frontier_;
     std::vector<HyperEdge*> edges_;
     Sentence target_words_;
@@ -73,7 +75,7 @@ public:
     HyperNode(WordId sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
-        sym_(sym), span_(span), id_(id), frontier_(UNSET_FRONTIER) { };
+        id_(id), sym_(sym), span_(span), frontier_(UNSET_FRONTIER) { };
     ~HyperNode() { };
 
     // Information
@@ -90,6 +92,7 @@ public:
     NodeId GetId() const { return id_; }
     const std::pair<int,int> & GetSpan() const { return span_; }
     std::pair<int,int> & GetSpan() { return span_; }
+    void SetSpan(const std::pair<int,int> & span) { span_ = span; }
     const std::vector<HyperEdge*> GetEdges() const { return edges_; }
     std::vector<HyperEdge*> GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
@@ -116,13 +119,12 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
 // The hypergraph
 class HyperGraph {
 protected:
-    int id_;
     std::vector<HyperNode*> nodes_;
     std::vector<HyperEdge*> edges_;
     std::vector<WordId> words_;
 public:
 
-    HyperGraph() : id_(-1) { };
+    HyperGraph() { };
     ~HyperGraph() {
         BOOST_FOREACH(HyperNode* node, nodes_)
             delete node;
@@ -137,12 +139,23 @@ public:
     // Adders. Add the value, and set its ID appropriately
     // HyperGraph will take control of the added value
     void AddNode(HyperNode * node) {
-        node->SetId(nodes_.size());
-        nodes_.push_back(node);
+        if(node->GetId() == -1) {
+            node->SetId(nodes_.size());
+            nodes_.push_back(node);
+        } else {
+            if((int)nodes_.size() <= node->GetId())
+                nodes_.resize(node->GetId()+1, NULL);
+            else if(nodes_[node->GetId()] != NULL)
+                THROW_ERROR("Duplicate node addition @ " << node->GetId());
+            nodes_[node->GetId()] = node;
+        }
     }
     void AddEdge(HyperEdge * edge) {
         edge->SetId(edges_.size());
         edges_.push_back(edge);
+    }
+    void AddWord(WordId id) {
+        words_.push_back(id);
     }
 
     // Accessors

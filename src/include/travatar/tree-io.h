@@ -24,6 +24,14 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 
+// Read in and write out JSON Treebank format trees
+class JSONTreeIO : public TreeIO {
+public:
+    virtual ~JSONTreeIO() { }
+    virtual HyperGraph * ReadTree(std::istream & in);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+};
+
 }
 
 #endif

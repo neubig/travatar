@@ -1,8 +1,13 @@
+#include <list>
 #include <travatar/tree-io.h>
 #include <travatar/io-util.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 using namespace travatar;
 using namespace std;
+using namespace boost;
+using namespace boost::property_tree;
 
 HyperGraph * PennTreeIO::ReadTree(istream & in) {
     // The new hypergraph and stack to read the nodes
@@ -54,5 +59,38 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
 }
 
 void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
+    THROW_ERROR("Not implemented yet");
+}
+
+
+HyperGraph * JSONTreeIO::ReadTree(istream & in) {
+    ptree pt;
+    string line; getline(in, line); istringstream line_in(line);
+    json_parser::read_json(line_in, pt);
+    HyperGraph * ret = new HyperGraph;
+    // Get each of the nodes
+    BOOST_FOREACH(ptree::value_type &v, pt.get_child("nodes")) {
+        HyperNode * node = new HyperNode;
+        node->SetId(v.second.get<int>("id"));
+        node->SetSym(Dict::WID(v.second.get<string>("sym")));
+        ptree::const_iterator it = v.second.get_child("span").begin();
+        int l = it->second.get<int>(""); int r = (++it)->second.get<int>("");
+        node->SetSpan(MakePair(l, r));
+        ret->AddNode(node);
+    }
+    BOOST_FOREACH(ptree::value_type &v, pt.get_child("edges")) {
+        HyperEdge * edge = new HyperEdge;
+        edge->SetId(v.second.get<int>("id"));
+        edge->SetHead(ret->GetNode(v.second.get<int>("head")));
+        BOOST_FOREACH(ptree::value_type &t, v.second.get_child("tails"))
+            edge->AddTail(ret->GetNode(t.second.get<int>("")));
+        ret->AddEdge(edge);
+    }
+    BOOST_FOREACH(ptree::value_type &v, pt.get_child("words"))
+        ret->AddWord(Dict::WID(v.second.get<string>("")));
+    return ret;
+}
+
+void JSONTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     THROW_ERROR("Not implemented yet");
 }
