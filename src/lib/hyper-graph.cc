@@ -58,3 +58,14 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
            CheckPtrVector(edges_, rhs.edges_) &&
            CheckVector(words_, rhs.words_);
 }
+
+// Output for a graph fragment in JSON format
+void GraphFragment::Print(std::ostream & out) const {
+    out << "{\"prob\": "<<prob_;
+    if(edges_.size()) {
+        out << ", \"edges\": [";
+        for(int i = 0; i < (int)edges_.size(); i++)
+            out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
+    }
+    out << "}";
+}

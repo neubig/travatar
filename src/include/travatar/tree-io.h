@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <travatar/hyper-graph.h>
 
 namespace travatar {

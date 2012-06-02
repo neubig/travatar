@@ -40,7 +40,10 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
             Trim(in, WHITE_SPACE);
             if(in.peek() != '(') {
                 string val = ReadUntil(in, ")", WHITE_SPACE_OR_OPENPAREN);
-                hg->GetWords().push_back(Dict::WID(val));
+                WordId wid = Dict::WID(val);
+                hg->GetWords().push_back(wid);
+                HyperNode* child = new HyperNode(wid, MakePair(pos,pos+1));
+                hg->AddNode(child); edge->AddTail(child);
                 ++pos;
             }
         } else {

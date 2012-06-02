@@ -3,12 +3,15 @@
 
 #include <cmath>
 #include <vector>
+#include <set>
 #include <string>
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
 #include <tr1/unordered_map>
+#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 
 #define TRAVATAR_SAFE
 
@@ -62,6 +65,21 @@ inline std::ostream& operator << ( std::ostream& out,
                                    const std::pair< X, Y >& rhs )
 {
     out << "[" << rhs.first << ", " << rhs.second << "]";
+    return out;
+}
+
+// Output function for sets
+template <class X>
+inline std::ostream& operator << ( std::ostream& out, 
+                                   const std::set< X >& rhs )
+{
+    out << "[";
+    int val = 0;
+    BOOST_FOREACH(const X & x, rhs) {
+        if(val++) out << " ";
+        out << x;
+    }
+    out << "]";
     return out;
 }
 
@@ -257,6 +275,15 @@ int CheckPtrVector(const std::vector<T*> & exp, const std::vector<T*> & act) {
         }
     }
     return ok;
+}
+template<class T>
+int CheckPtrVector(const std::vector<boost::shared_ptr<T> > & exp, const std::vector<boost::shared_ptr<T> > & act) {
+    std::vector<T*> new_exp, new_act;
+    BOOST_FOREACH(const boost::shared_ptr<T> & exp_val, exp)
+        new_exp.push_back(exp_val.get());
+    BOOST_FOREACH(const boost::shared_ptr<T> & act_val, act)
+        new_act.push_back(act_val.get());
+    return CheckPtrVector(new_exp,new_act);
 }
 
 template<class T>

@@ -2,11 +2,13 @@
 #define TRAVATAR_DICT_H__
 
 #include <string>
+#include <vector>
 #include <travatar/symbol-set.h>
 
 namespace travatar {
 
 typedef int WordId;
+typedef std::vector<WordId> Sentence;
 
 struct Dict {
     // Call Freeze to prevent new IDs from being used
@@ -22,6 +24,16 @@ struct Dict {
     // Get the word symbol
     static const std::string & WSym(WordId id) {
         return wids_.GetSymbol(id);
+    }
+
+    // Get the
+    static std::string WAnnotatedSym(WordId id) {
+        std::ostringstream oss;
+        if(id < 0)
+            oss << "x" << -1+id*-1;
+        else
+            oss << '"' << wids_.GetSymbol(id) << '"';
+        return oss.str();
     }
 
     // Get the word ID
