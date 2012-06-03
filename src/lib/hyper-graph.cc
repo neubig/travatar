@@ -67,5 +67,10 @@ void GraphFragment::Print(std::ostream & out) const {
         for(int i = 0; i < (int)edges_.size(); i++)
             out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
     }
+    if(tails_.size()) {
+        out << ", \"tails\": [";
+        for(int i = 0; i < (int)tails_.size(); i++)
+            out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
+    }
     out << "}";
 }

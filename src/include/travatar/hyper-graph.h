@@ -204,16 +204,26 @@ public:
         score_ *= edge->GetProb();
     }
     bool operator==(const GraphFragment & rhs) const {
-        if(score_ != rhs.score_ || edges_.size() != rhs.edges_.size())
+        if(score_ != rhs.score_ || edges_.size() != rhs.edges_.size() || tails_.size() != rhs.tails_.size())
             return false;
         for(int i = 0; i < (int)edges_.size(); i++)
             if(*edges_[i] != *rhs.edges_[i])
+                return false;
+        for(int i = 0; i < (int)tails_.size(); i++)
+            if(*tails_[i] != *rhs.tails_[i])
                 return false;
         return true;
     }
     bool operator!=(const GraphFragment & rhs) const {
         return !(*this == rhs);
     }
+
+    // Get the head and tails
+    const HyperNode* GetHead() const { return edges_[0]->GetHead(); }
+    HyperNode* GetHead() { return edges_[0]->GetHead(); }
+    const std::vector<HyperNode*> & GetTails() const { return tails_; }
+    std::vector<HyperNode*> & GetTails() { return tails_; }
+    void AddTail(HyperNode * node) { tails_.push_back(node); }
 
     // Get the scoreability (score, and must be between 0 and 1
     double GetProb() {
@@ -235,6 +245,7 @@ public:
     void Print(std::ostream & out) const;
 private:
     std::vector<HyperEdge*> edges_;
+    std::vector<HyperNode*> tails_;
     double score_;
 };
 inline std::ostream &operator<<( std::ostream &out, const GraphFragment &L ) {
