@@ -1,6 +1,7 @@
 #include <iostream>
 #include "test-alignment.h"
 #include "test-travatar-runner.h"
+#include "test-hyper-graph.h"
 #include "test-tree-io.h"
 #include "test-rule-extractor.h"
 #include "test-io-util.h"
@@ -14,6 +15,7 @@ int main() {
     vector<TestBase*> tests;
     tests.push_back(new TestAlignment());
     tests.push_back(new TestIOUtil());
+    tests.push_back(new TestHyperGraph());
     tests.push_back(new TestTreeIO());
     tests.push_back(new TestRuleExtractor());
     tests.push_back(new TestTravatarRunner());

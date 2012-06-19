@@ -16,7 +16,7 @@ public:
 
     TestRuleExtractor() {
         // Use the example from Galley et al.
-        string src1_tree = "(S (NP (PRP he)) (VP (AUX does) (RB not) (VB go)))";
+        string src1_tree = "(ROOT (S (NP (PRP he)) (VP (AUX does) (RB not) (VB go))))";
         string trg1_str  = "il ne va pas";
         string align1_str = "0-0 1-1 1-3 2-1 2-3 3-2";
         istringstream iss(src1_tree);
@@ -53,145 +53,92 @@ public:
 
     ~TestRuleExtractor() { }
 
-    int TestCalculateSpan() {
-        ForestExtractor ghkm_ext;
-        vector<set<int> > src_span = align1.GetSrcAlignments();
-        vector<set<int>*> node_span(src1_graph->NumNodes(), (set<int>*)NULL);
-        ghkm_ext.CalculateSpan(src1_graph->GetNode(0), src_span, node_span);
-        // Save the actual spans
-        vector<set<int> > node_exp(11);
-        node_exp[0].insert(0); node_exp[0].insert(1); node_exp[0].insert(2); node_exp[0].insert(3);
-        node_exp[1].insert(0);
-        node_exp[2].insert(0);
-        node_exp[3].insert(0);
-        node_exp[4].insert(1); node_exp[4].insert(2); node_exp[4].insert(3);
-        node_exp[5].insert(1); node_exp[5].insert(3);
-        node_exp[6].insert(1); node_exp[6].insert(3);
-        node_exp[7].insert(1); node_exp[7].insert(3);
-        node_exp[8].insert(1); node_exp[8].insert(3);
-        node_exp[9].insert(2);
-        node_exp[10].insert(2);
-        // Check the equality
-        int ret = 1;
-        for(int i = 0; i < 11; i++)
-            if(node_exp[i] != *SafeAccess(node_span, i)) {
-                cerr << i << " not equal" << endl;
-                ret = 0;
-            }
-        return ret;
-    }
-
-    int TestCalculateSpanForest() {
-        ForestExtractor ghkm_ext;
-        vector<set<int> > src_span = align2.GetSrcAlignments();
-        vector<set<int>*> node_span(src2_graph->NumNodes(), (set<int>*)NULL);
-        for(int i = 0; i < 10; i++)
-            ghkm_ext.CalculateSpan(src2_graph->GetNode(i), src_span, node_span);
-        // Save the actual spans
-        vector<set<int> > node_exp(10);
-        node_exp[0].insert(0); node_exp[0].insert(2);
-        node_exp[1].insert(0); node_exp[1].insert(2);
-        node_exp[2].insert(0); node_exp[2].insert(2);
-        node_exp[3].insert(2);
-        node_exp[4].insert(2);
-        node_exp[5].insert(2); 
-        node_exp[6].insert(2); 
-        node_exp[7].insert(0); 
-        node_exp[8].insert(0); 
-        node_exp[9].insert(0);
-        // Check the equality
-        int ret = 1;
-        for(int i = 0; i < 10; i++)
-            if(node_exp[i] != SafeReference(SafeAccess(node_span, i))) {
-                ret = 0;
-                cerr << i << " not equal " << SafeReference(SafeAccess(node_span, i)) << endl;
-            }
-        return ret;
-    }
-
-    int TestCalculateFrontier() {
-        ForestExtractor ghkm_ext;
-        vector<set<int> > src_span = align1.GetSrcAlignments();
-        vector<set<int>*> node_span(src1_graph->NumNodes(), (set<int>*)NULL);
-        ghkm_ext.CalculateFrontier(src1_graph->GetNode(0), src_span, node_span, set<int>());
-        // Here, we will treat terminal nodes as non-frontier, as we just
-        vector<HyperNode::FrontierType> 
-            exp(11, HyperNode::IS_FRONTIER), act(11, HyperNode::IS_FRONTIER);
-        exp[3] = HyperNode::NOT_FRONTIER;
-        exp[5] = HyperNode::NOT_FRONTIER; exp[6] = HyperNode::NOT_FRONTIER;
-        exp[7] = HyperNode::NOT_FRONTIER; exp[8] = HyperNode::NOT_FRONTIER;
-        exp[10] = HyperNode::NOT_FRONTIER;
-        for(int i = 0; i < 11; i++)
-            act[i] = src1_graph->GetNode(i)->IsFrontier();
-        return CheckVector(exp, act);
-    }
-
-    int TestCalculateFrontierForest() {
-        ForestExtractor ghkm_ext;
-        vector<set<int> > src_span = align2.GetSrcAlignments();
-        vector<set<int>*> node_span(src2_graph->NumNodes(), (set<int>*)NULL);
-        ghkm_ext.CalculateFrontier(src2_graph->GetNode(0), src_span, node_span, set<int>());
-        // Here, we will treat terminal nodes as non-frontier, as we just
-        vector<HyperNode::FrontierType> exp(10, HyperNode::IS_FRONTIER), act(10);
-        exp[6] = HyperNode::NOT_FRONTIER; exp[9] = HyperNode::NOT_FRONTIER;
-        for(int i = 0; i < 10; i++)
-            act[i] = src2_graph->GetNode(i)->IsFrontier();
-        return CheckVector(exp, act);
-    }
-
     int TestTreeExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
-        vector<shared_ptr<GraphFragment> > frags_act = forest_ext.ExtractRules(*src1_graph, trg1_sent, align1);
+        scoped_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, /* trg1_sent,*/ align1));
         // Create the actual rule graph
-        vector<shared_ptr<GraphFragment> > frags_exp(5);
-        // Expected edge numbers: "(S0 (NP1 (PRP2 he)) (VP3 (AUX4 does) (RB5 not) (VB6 go)))";
-        // Edge rooted at S0
-        frags_exp[0].reset(new GraphFragment);
-        frags_exp[0]->AddEdge(src1_graph->GetEdge(0));
-        // Edge rooted at NP1
-        frags_exp[1].reset(new GraphFragment);
-        frags_exp[1]->AddEdge(src1_graph->GetEdge(1));
-        // Edge rooted at PRP2
-        frags_exp[2].reset(new GraphFragment);
-        frags_exp[2]->AddEdge(src1_graph->GetEdge(2));
-        // Edge rooted at VP3
-        frags_exp[3].reset(new GraphFragment);
-        frags_exp[3]->AddEdge(src1_graph->GetEdge(3));
-        frags_exp[3]->AddEdge(src1_graph->GetEdge(4));
-        frags_exp[3]->AddEdge(src1_graph->GetEdge(5));
-        // Edge rooted at VB6
-        frags_exp[4].reset(new GraphFragment);
-        frags_exp[4]->AddEdge(src1_graph->GetEdge(6));
+        HyperGraph frags_exp;
+        // ---- Add nodes ----
+        // Expected node numbers: "(ROOT0 (S1 (NP2 (PRP3 he)) (VP4 (AUX5 does) (RB6 not) (VB7 go))))";
+        // Node rooted at root0
+        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,4));
+        frags_exp.AddNode(root0_node);
+        // Node rooted at s1
+        HyperNode* s1_node = new HyperNode(Dict::WID("S"), MakePair(0,4));
+        frags_exp.AddNode(s1_node);
+        // Node rooted at np2
+        HyperNode* np2_node = new HyperNode(Dict::WID("NP"), MakePair(0,1));
+        frags_exp.AddNode(np2_node);
+        // Node rooted at prp3
+        HyperNode* prp3_node = new HyperNode(Dict::WID("PRP"), MakePair(0,1));
+        frags_exp.AddNode(prp3_node);
+        // Node rooted at vp4
+        HyperNode* vp4_node = new HyperNode(Dict::WID("VP"), MakePair(1,4));
+        frags_exp.AddNode(vp4_node);
+        // Node rooted at vb7
+        HyperNode* vb7_node = new HyperNode(Dict::WID("VB"), MakePair(3,4));
+        frags_exp.AddNode(vb7_node);
+        // ---- Add edges ----
+        // Edge for root0
+        HyperEdge* root0_edge = new HyperEdge(root0_node);
+        frags_exp.AddEdge(root0_edge);
+        root0_edge->AddTail(s1_node);
+        root0_edge->AddFragmentEdge(src1_graph->GetEdge(0));
+        root0_node->AddEdge(root0_edge);
+        // Edge for s1
+        HyperEdge* s1_edge = new HyperEdge(s1_node);
+        frags_exp.AddEdge(s1_edge);
+        s1_edge->AddTail(np2_node);
+        s1_edge->AddTail(vp4_node);
+        s1_edge->AddFragmentEdge(src1_graph->GetEdge(1));
+        s1_node->AddEdge(s1_edge);
+        // Edge for np2
+        HyperEdge* np2_edge = new HyperEdge(np2_node);
+        frags_exp.AddEdge(np2_edge);
+        np2_edge->AddTail(prp3_node);
+        np2_edge->AddFragmentEdge(src1_graph->GetEdge(2));
+        np2_node->AddEdge(np2_edge);
+        // Edge for prp3
+        HyperEdge* prp3_edge = new HyperEdge(prp3_node);
+        frags_exp.AddEdge(prp3_edge);
+        prp3_edge->AddFragmentEdge(src1_graph->GetEdge(3));
+        prp3_node->AddEdge(prp3_edge);
+        // Edge for vp4
+        HyperEdge* vp4_edge = new HyperEdge(vp4_node);
+        frags_exp.AddEdge(vp4_edge);
+        vp4_edge->AddTail(vb7_node);
+        vp4_edge->AddFragmentEdge(src1_graph->GetEdge(4));
+        vp4_edge->AddFragmentEdge(src1_graph->GetEdge(5));
+        vp4_edge->AddFragmentEdge(src1_graph->GetEdge(6));
+        vp4_node->AddEdge(vp4_edge);
+        // Edge for vb7
+        HyperEdge* vb7_edge = new HyperEdge(vb7_node);
+        frags_exp.AddEdge(vb7_edge);
+        vb7_edge->AddFragmentEdge(src1_graph->GetEdge(7));
+        vb7_node->AddEdge(vb7_edge);
         // Check to make sure that these are equal
-        return CheckPtrVector(frags_exp, frags_act);
+        return frags_exp.CheckEqual(*frags_act);
     }
 
     int TestForestExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
         src2_graph->NormalizeEdgeProbabilities();
-        vector<shared_ptr<GraphFragment> > frags_act = forest_ext.ExtractRules(*src2_graph, trg2_sent, align2);
+        shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src2_graph, align2));
         // Create the actual values, all non-terminal edges should be fine, and most should have
         // a probability of 0.5, as they only belong to one of the two trees
-        vector<shared_ptr<GraphFragment> > frags_exp(9);
-        for(int i = 0; i < 9; i++) {
-            frags_exp[i].reset(new GraphFragment);
-            frags_exp[i]->AddEdge(src2_graph->GetEdge(i));
-            frags_exp[i]->SetProb(1);
-        }
+        vector<double> scores_exp(9, 1.0), scores_act(9);
+        for(int i = 0; i < 9; i++) 
+            scores_act[i] = frags_act->GetEdge(i)->GetProb();
         // The only two edges that are 0.5 are the split edges on top
-        frags_exp[0]->SetProb(0.5); frags_exp[1]->SetProb(0.5);
+        scores_exp[0] = 0.5; scores_exp[1] = 0.5;
         // Check to make sure that these are equal
-        return CheckPtrVector(frags_exp, frags_act);
+        return CheckVector(scores_exp, scores_act);
     }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestCalculateSpan()" << endl; if(TestCalculateSpan()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestCalculateSpanForest()" << endl; if(TestCalculateSpanForest()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestCalculateFrontier()" << endl; if(TestCalculateFrontier()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
