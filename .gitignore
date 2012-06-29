@@ -21,5 +21,6 @@ ltmain.sh
 m4
 missing
 src/bin/travatar
+src/bin/forest-extractor
 src/test/test-travatar
 src/include/travatar/stamp-h1

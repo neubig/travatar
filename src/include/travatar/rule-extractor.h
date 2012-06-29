@@ -5,6 +5,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
 #include <set>
+#include <list>
 
 namespace travatar {
 
@@ -16,6 +17,22 @@ public:
     virtual HyperGraph * ExtractMinimalRules(
         HyperGraph & src_parse, 
         const Alignment & align) const = 0;
+
+    // Take an edge that represents a rule and the corresponding target sentence
+    // and return a string version of the rule
+    std::string RuleToString(
+        const HyperEdge & rule,
+        const Sentence & src_sent,
+        const Sentence & trg_sent) const;
+
+private:
+    // A function to help print rules recursively
+    void PrintRuleSurface(const HyperNode & node,
+                          const Sentence & src_sent,
+                          std::list<HyperEdge*> & remaining_fragments,
+                          int & tail_num,
+                          std::ostream & oss) const;
+
 };
 
 // A rule extractor using forest based rule extraction

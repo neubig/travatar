@@ -33,7 +33,7 @@ public:
     }
 
     // Get the probability (score, and must be between 0 and 1
-    double GetProb() {
+    double GetProb() const {
 #ifdef TRAVATAR_SAFE
         if(!(score_ >= 0 && score_ <= 1))
             THROW_ERROR("Invalid probability "<<score_);
@@ -55,6 +55,8 @@ public:
     HyperNode* GetHead() const { return head_; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
+    const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
+    std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;
@@ -121,13 +123,14 @@ public:
     const std::pair<int,int> & GetSpan() const { return src_span_; }
     std::pair<int,int> & GetSpan() { return src_span_; }
     void SetSpan(const std::pair<int,int> & span) { src_span_ = span; }
-    const std::vector<HyperEdge*> GetEdges() const { return edges_; }
-    std::vector<HyperEdge*> GetEdges() { return edges_; }
+    const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
+    std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
     HyperNode::FrontierType GetFrontier() const { return frontier_; }
     const std::set<int>* GetTrgSpan() const { return trg_span_; }
     std::set<int>* GetTrgSpan() { return trg_span_; }
+    void SetTrgSpan(const std::set<int>& trg_span) { trg_span_ = new std::set<int>(trg_span); }
     FrontierType IsFrontier() const { return frontier_; }
     void SetFrontier(FrontierType frontier) { frontier_ = frontier; }
 
@@ -219,76 +222,13 @@ public:
     int NumNodes() const { return nodes_.size(); }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_,i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_,i); }
-    const std::vector<HyperEdge*> GetEdges() const { return edges_; }
+    const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     int NumEdges() const { return edges_.size(); }
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
     void SetWords(const std::vector<WordId> & words) { words_ = words; }
 
 };
-
-// // A fragment of a hypergraph with a corresponding probability
-// // This should generally be used for extracting rules
-// class GraphFragment {
-// public:
-//     GraphFragment(HyperEdge * edge = NULL) : score_(1) {
-//         if(edge != NULL) AddEdge(edge);
-//     }
-//     void AddEdge(HyperEdge* edge) {
-//         edges_.push_back(edge);
-//         score_ *= edge->GetProb();
-//     }
-// 
-//     // Comparators
-//     bool operator==(const GraphFragment & rhs) const {
-//         if(score_ != rhs.score_ || edges_.size() != rhs.edges_.size() || tails_.size() != rhs.tails_.size())
-//             return false;
-//         for(int i = 0; i < (int)edges_.size(); i++)
-//             if(*edges_[i] != *rhs.edges_[i])
-//                 return false;
-//         for(int i = 0; i < (int)tails_.size(); i++)
-//             if(*tails_[i] != *rhs.tails_[i])
-//                 return false;
-//         return true;
-//     }
-//     bool operator!=(const GraphFragment & rhs) const {
-//         return !(*this == rhs);
-//     }
-// 
-//     // Get the head and tails
-//     const HyperNode* GetHead() const { return edges_[0]->GetHead(); }
-//     HyperNode* GetHead() { return edges_[0]->GetHead(); }
-//     const std::vector<HyperNode*> & GetTails() const { return tails_; }
-//     std::vector<HyperNode*> & GetTails() { return tails_; }
-//     void AddTail(HyperNode * node) { tails_.push_back(node); }
-// 
-//     // Get the scoreability (score, and must be between 0 and 1
-//     double GetProb() {
-// #ifdef TRAVATAR_SAFE
-//         if(!(score_ >= 0 && score_ <= 1))
-//             THROW_ERROR("Invalid scoreability "<<score_);
-// #endif
-//         return score_;
-//     }
-//     void SetProb(double score) { 
-//         score_ = score;
-// #ifdef TRAVATAR_SAFE
-//         if(!(score_ >= 0 && score_ <= 1))
-//             THROW_ERROR("Invalid scoreability "<<score_);
-// #endif
-//     }
-// 
-//     // Input/Output
-//     void Print(std::ostream & out) const;
-// private:
-//     std::vector<HyperEdge*> edges_;
-//     std::vector<HyperNode*> tails_;
-//     double score_;
-// };
-// inline std::ostream &operator<<( std::ostream &out, const GraphFragment &L ) {
-//     L.Print(out);
-//     return out;
-// }
 
 }
 

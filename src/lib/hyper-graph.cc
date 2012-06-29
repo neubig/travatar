@@ -41,6 +41,9 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
        if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
           (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
           return false;
+    if((trg_span_==NULL) != (rhs.trg_span_==NULL) ||
+       (trg_span_!=NULL && *trg_span_ != *rhs.trg_span_))
+       return false;
     return true;
 }
 
@@ -74,22 +77,6 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
            CheckPtrVector(edges_, rhs.edges_) &&
            CheckVector(words_, rhs.words_);
 }
-
-// // Output for a graph fragment in JSON format
-// void GraphFragment::Print(std::ostream & out) const {
-//     out << "{\"score\": "<<score_;
-//     if(edges_.size()) {
-//         out << ", \"edges\": [";
-//         for(int i = 0; i < (int)edges_.size(); i++)
-//             out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
-//     }
-//     if(tails_.size()) {
-//         out << ", \"tails\": [";
-//         for(int i = 0; i < (int)tails_.size(); i++)
-//             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
-//     }
-//     out << "}";
-// }
 
 const set<int> * HyperNode::CalculateTrgSpan(
         const vector<set<int> > & word_spans) {

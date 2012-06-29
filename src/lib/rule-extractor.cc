@@ -1,6 +1,7 @@
 #include <travatar/rule-extractor.h>
 #include <queue>
 #include <stack>
+#include <list>
 
 using namespace travatar;
 using namespace std;
@@ -18,11 +19,14 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
     typedef pair<HyperEdge*,deque<HyperNode*> > FragFront;
     // First, build a graph of nodes that contain the same spans as the original nodes
     HyperGraph* ret = new HyperGraph;
+    ret->SetWords(src_parse.GetWords());
     map<int,int> old_new_ids;
     BOOST_FOREACH(HyperNode * v, src_parse.GetNodes()) {
         if(v->IsFrontier() == HyperNode::IS_FRONTIER) {
             old_new_ids.insert(MakePair(v->GetId(), ret->NumNodes()));
-            ret->AddNode(new HyperNode(v->GetSym(), v->GetSpan(), ret->NumNodes()));
+            HyperNode* node = new HyperNode(v->GetSym(), v->GetSpan(), ret->NumNodes());
+            node->SetTrgSpan(*v->GetTrgSpan());
+            ret->AddNode(node);
         }
     }
     // Create the rules
@@ -76,4 +80,77 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
 
     }
     return ret;
+}
+
+void RuleExtractor::PrintRuleSurface(const HyperNode & node,
+                                     const Sentence & src_sent,
+                                     list<HyperEdge*> & remaining_fragments,
+                                     int & tail_num,
+                                     ostream & oss) const {
+    // If this is a terminal, print its surface form
+    if(node.IsTerminal()) {
+        oss << '"' << Dict::WSym(node.GetSym()) << '"';
+        return;
+    // If this is a frontier node
+    } else if (node.IsFrontier() == HyperNode::IS_FRONTIER) {
+        // At the top of the tree, continue
+        if(tail_num == -1) {
+            tail_num = 0;
+        // Otherwise, return it
+        } else {
+            oss << 'x' << tail_num++ << ':' << Dict::WSym(node.GetSym());
+            return;
+        }
+    }
+    // If this is a non-terminal that is at the top of the tree
+    oss << Dict::WSym(node.GetSym()) << '(';
+    if(remaining_fragments.size() == 0)
+        THROW_ERROR("Attempting to pop empty list at " << node);
+    HyperEdge * my_edge = *remaining_fragments.begin();
+    remaining_fragments.pop_front();
+    int pos = 0;
+    BOOST_FOREACH(HyperNode* my_node, my_edge->GetTails()) {
+        if(pos++ != 0) oss << ' ';
+        PrintRuleSurface(*my_node, src_sent, remaining_fragments, tail_num,oss);
+    }
+    oss << ')';
+}
+
+// Creating a rule
+string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent) const {
+    // Get the target span for the top node
+    const std::set<int> & trg_span=SafeReference(rule.GetHead()->GetTrgSpan());
+    int trg_begin = *trg_span.begin(), trg_end = *trg_span.rbegin()+1;
+    // Create the covered target vector. Initially all are -1, indicating that
+    // they have not yet been covered by a child frontier node
+    vector<int> trg_cover(trg_end-trg_begin, -1);
+    const vector<HyperNode*> & tails = rule.GetTails();
+    map<int,int> tail_map;
+    for(int i = 0; i < (int)tails.size(); i++) {
+        tail_map[tails[i]->GetId()] = i;
+        const std::set<int> & my_trg_span = SafeReference(tails[i]->GetTrgSpan());
+        for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++)
+            trg_cover[j-trg_begin] = i;
+    }
+    // Create the string to return
+    ostringstream oss;
+    // Traverse the rules in order of edge
+    list<HyperEdge*> remaining_fragments;
+    BOOST_FOREACH(HyperEdge *edge, rule.GetFragmentEdges())
+        remaining_fragments.push_back(edge);
+    int tail_num = -1;
+    PrintRuleSurface(*(*remaining_fragments.begin())->GetHead(), src_sent, remaining_fragments, tail_num, oss);
+    // Make the actual rule
+    oss << " |||";
+    int last = -1;
+    for(int i = 0; i < (int)trg_cover.size(); i++) {
+        if(trg_cover[i] == -1)
+            oss << " \"" << Dict::WSym(trg_sent[i+trg_begin]) << "\"";
+        else if (last != trg_cover[i]) {
+            oss << " x" << trg_cover[i];
+            last = trg_cover[i];
+        }
+    }
+    oss << " ||| " << rule.GetProb();
+    return oss.str();
 }

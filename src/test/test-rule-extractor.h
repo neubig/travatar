@@ -56,28 +56,35 @@ public:
     int TestTreeExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
-        scoped_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, /* trg1_sent,*/ align1));
+        scoped_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
         // Create the actual rule graph
         HyperGraph frags_exp;
+        frags_exp.SetWords(src1_graph->GetWords());
         // ---- Add nodes ----
         // Expected node numbers: "(ROOT0 (S1 (NP2 (PRP3 he)) (VP4 (AUX5 does) (RB6 not) (VB7 go))))";
         // Node rooted at root0
         HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,4));
+        root0_node->SetTrgSpan(*src1_graph->GetNode(0)->GetTrgSpan());
         frags_exp.AddNode(root0_node);
         // Node rooted at s1
         HyperNode* s1_node = new HyperNode(Dict::WID("S"), MakePair(0,4));
+        s1_node->SetTrgSpan(*src1_graph->GetNode(1)->GetTrgSpan());
         frags_exp.AddNode(s1_node);
         // Node rooted at np2
         HyperNode* np2_node = new HyperNode(Dict::WID("NP"), MakePair(0,1));
+        np2_node->SetTrgSpan(*src1_graph->GetNode(2)->GetTrgSpan());
         frags_exp.AddNode(np2_node);
         // Node rooted at prp3
         HyperNode* prp3_node = new HyperNode(Dict::WID("PRP"), MakePair(0,1));
+        prp3_node->SetTrgSpan(*src1_graph->GetNode(3)->GetTrgSpan());
         frags_exp.AddNode(prp3_node);
         // Node rooted at vp4
         HyperNode* vp4_node = new HyperNode(Dict::WID("VP"), MakePair(1,4));
+        vp4_node->SetTrgSpan(*src1_graph->GetNode(5)->GetTrgSpan());
         frags_exp.AddNode(vp4_node);
         // Node rooted at vb7
         HyperNode* vb7_node = new HyperNode(Dict::WID("VB"), MakePair(3,4));
+        vb7_node->SetTrgSpan(*src1_graph->GetNode(10)->GetTrgSpan());
         frags_exp.AddNode(vb7_node);
         // ---- Add edges ----
         // Edge for root0
@@ -137,10 +144,27 @@ public:
         return CheckVector(scores_exp, scores_act);
     }
 
+    int TestRulePrinting() {
+        // Run the Forest algorithm
+        ForestExtractor forest_ext;
+        shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
+        vector<string> rule_exp, rule_act;
+        BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
+            rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent));
+        rule_exp.push_back("ROOT(x0:S) ||| x0 ||| 1");
+        rule_exp.push_back("S(x0:NP x1:VP) ||| x0 x1 ||| 1");
+        rule_exp.push_back("NP(x0:PRP) ||| x0 ||| 1");
+        rule_exp.push_back("PRP(\"he\") ||| \"il\" ||| 1");
+        rule_exp.push_back("VP(AUX(\"does\") RB(\"not\") x0:VB) ||| \"ne\" x0 \"pas\" ||| 1");
+        rule_exp.push_back("VB(\"go\") ||| \"va\" ||| 1");
+        return CheckVector(rule_exp, rule_act);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
