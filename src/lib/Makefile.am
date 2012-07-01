@@ -1,4 +1,4 @@
-TRABATARCPP = travatar.cc travatar-runner.cc dict.cc tree-io.cc hyper-graph.cc alignment.cc rule-extractor.cc forest-extractor-runner.cc
+TRABATARCPP = travatar.cc travatar-runner.cc dict.cc tree-io.cc hyper-graph.cc alignment.cc rule-extractor.cc forest-extractor-runner.cc lookup-table.cc
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
