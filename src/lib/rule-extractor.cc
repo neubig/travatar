@@ -25,7 +25,7 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
         if(v->IsFrontier() == HyperNode::IS_FRONTIER) {
             old_new_ids.insert(MakePair(v->GetId(), ret->NumNodes()));
             HyperNode* node = new HyperNode(v->GetSym(), v->GetSpan(), ret->NumNodes());
-            node->SetTrgSpan(*v->GetTrgSpan());
+            node->SetTrgSpan(v->GetTrgSpan());
             ret->AddNode(node);
         }
     }
@@ -75,11 +75,43 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
                     new_frag->AddFragmentEdge(e);
                     open.push(FragFront(new_frag, new_front));
                 }
+                // Delete the partial fragment
+                delete frag_front.first;
             }
         }
-
     }
     return ret;
+}
+
+HyperGraph * ForestExtractor::AttachNullsTop(const HyperGraph & rule_graph,
+                                           const Alignment & align,
+                                           int trg_len) {
+    HyperGraph * ret = new HyperGraph(rule_graph);
+    vector<bool> nulls(trg_len, true);
+    BOOST_FOREACH(const Alignment::AlignmentPair & a, align.GetAlignmentVector())
+        nulls[a.second] = false;
+    AttachNullsTop(nulls, *ret->GetNode(0));
+    return ret;
+}
+
+void ForestExtractor::AttachNullsTop(vector<bool> & nulls,
+                                     HyperNode & node) {
+    pair<int,int> trg_covered = node.GetTrgCovered();
+    if(trg_covered.first == -1) return;
+    trg_covered.second = min(trg_covered.second, (int)nulls.size());
+    vector<bool> child_covered(trg_covered.second-trg_covered.first, false);
+    BOOST_FOREACH(HyperNode * tail, (node.GetEdges()[0])->GetTails()) {
+        pair<int,int> tail_cov = tail->GetTrgCovered();
+        for(int i = tail_cov.first; i < tail_cov.second; i++)
+            child_covered[i-trg_covered.first] = true;
+        AttachNullsTop(nulls, *tail);
+    }
+    for(int i = 0; i < (int)child_covered.size(); i++) {
+        if(!child_covered[i]) {
+            nulls[i+trg_covered.first] = true;
+            node.GetTrgSpan().insert(i+trg_covered.first);
+        }
+    }
 }
 
 void RuleExtractor::PrintRuleSurface(const HyperNode & node,
@@ -119,7 +151,7 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
 // Creating a rule
 string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent) const {
     // Get the target span for the top node
-    const std::set<int> & trg_span=SafeReference(rule.GetHead()->GetTrgSpan());
+    const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
     int trg_begin = *trg_span.begin(), trg_end = *trg_span.rbegin()+1;
     // Create the covered target vector. Initially all are -1, indicating that
     // they have not yet been covered by a child frontier node
@@ -128,7 +160,7 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     map<int,int> tail_map;
     for(int i = 0; i < (int)tails.size(); i++) {
         tail_map[tails[i]->GetId()] = i;
-        const std::set<int> & my_trg_span = SafeReference(tails[i]->GetTrgSpan());
+        const std::set<int> & my_trg_span = tails[i]->GetTrgSpan();
         for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++)
             trg_cover[j-trg_begin] = i;
     }

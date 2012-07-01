@@ -45,6 +45,15 @@ public:
         HyperGraph & src_parse, 
         const Alignment & align) const;
 
+    HyperGraph * AttachNullsTop(const HyperGraph & rule_graph,
+                                const Alignment & align,
+                                int trg_len);
+
+protected:
+
+    void AttachNullsTop(std::vector<bool> & nulls,
+                        HyperNode & node);
+
 };
 
 }

@@ -3,6 +3,24 @@
 using namespace std;
 using namespace travatar;
 
+
+// Refresh the pointers to head and tail nodes so they point to
+// nodes in a new HyperGraph. Useful when copying nodes
+void HyperEdge::RefreshPointers(HyperGraph & new_graph) {
+    head_ = new_graph.GetNode(head_->GetId());
+    for(int i = 0; i < (int)tails_.size(); i++)
+        tails_[i] = new_graph.GetNode(tails_[i]->GetId());
+}
+
+
+// Refresh the pointers to head and tail nodes so they point to
+// nodes in a new HyperGraph. Useful when copying nodes
+void HyperNode::RefreshPointers(HyperGraph & new_graph) {
+    for(int i = 0; i < (int)edges_.size(); i++)
+        edges_[i] = new_graph.GetEdge(edges_[i]->GetId());
+}
+
+
 // Check to make sure that two hyperedges are equal
 bool HyperEdge::operator==(const HyperEdge & rhs) const {
     if(id_ != rhs.id_ ||
@@ -41,8 +59,7 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
        if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
           (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
           return false;
-    if((trg_span_==NULL) != (rhs.trg_span_==NULL) ||
-       (trg_span_!=NULL && *trg_span_ != *rhs.trg_span_))
+    if(trg_span_ != rhs.trg_span_)
        return false;
     return true;
 }
@@ -60,10 +77,10 @@ void HyperNode::Print(std::ostream & out) const {
         for(int i = 0; i < (int)edges_.size(); i++)
             out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
     }
-    if(trg_span_) {
+    if(has_trg_span_) {
         out << ", \"trg_span\": [";
         int num = 0;
-        BOOST_FOREACH(int v, *trg_span_)
+        BOOST_FOREACH(int v, trg_span_)
             out << (num++ != 0?", ":"") << v;
         out << "]";
     }
@@ -78,19 +95,22 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
            CheckVector(words_, rhs.words_);
 }
 
-const set<int> * HyperNode::CalculateTrgSpan(
+const set<int> & HyperNode::CalculateTrgSpan(
         const vector<set<int> > & word_spans) {
     // Memoized recursion
-    if(trg_span_ != NULL) return trg_span_;
+    if(has_trg_span_) return trg_span_;
+    has_trg_span_ = true;
     // If this is terminal, simply set to aligned values
     if(IsTerminal()) {
-        trg_span_ = new set<int>(word_spans[src_span_.first]);
+        // Skip null values
+        if(src_span_.first < (int)word_spans.size())
+            trg_span_ = word_spans[src_span_.first];
     } else {
         // First, calculate all the spans
-        trg_span_ = new set<int>;
+        trg_span_ = set<int>();
         BOOST_FOREACH(HyperNode* child, GetEdge(0)->GetTails()) {
-            BOOST_FOREACH(int val, *child->CalculateTrgSpan(word_spans)) {
-                trg_span_->insert(val);
+            BOOST_FOREACH(int val, child->CalculateTrgSpan(word_spans)) {
+                trg_span_.insert(val);
             }
         }
     }
@@ -105,14 +125,17 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
                    const set<int> & complement) {
     if(frontier_ != UNSET_FRONTIER) return frontier_;
     if(IsTerminal()) return (frontier_ = HyperNode::NOT_FRONTIER);
-    frontier_ = HyperNode::IS_FRONTIER;
     // Check if this is in the frontier
-    const set<int>* span = CalculateTrgSpan(src_spans);
-    for(set<int>::const_iterator it = span->begin();
-        frontier_ == HyperNode::IS_FRONTIER && it != span->end();
-        it++)
-        if(complement.find(*it) != complement.end())
-            frontier_ = HyperNode::NOT_FRONTIER;
+    CalculateTrgSpan(src_spans);
+    // We define null-aligned words to not be on the frontier
+    if(trg_span_.size() != 0) {
+        frontier_ = HyperNode::IS_FRONTIER;
+        for(int i = *trg_span_.begin(); frontier_ == HyperNode::IS_FRONTIER && i <= *trg_span_.rbegin(); i++)
+            if(complement.find(i) != complement.end())
+                frontier_ = HyperNode::NOT_FRONTIER;
+    } else {
+        frontier_ = HyperNode::NOT_FRONTIER;
+    }
     // For all other nodes
     BOOST_FOREACH(HyperEdge * edge, edges_) {
         vector<HyperNode*> & tails = edge->GetTails();
@@ -121,7 +144,7 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
             set<int> my_comp = complement;
             BOOST_FOREACH(HyperNode* child2, tails) {
                 if(child != child2) {
-                    BOOST_FOREACH(int pos, *child2->CalculateTrgSpan(src_spans))
+                    BOOST_FOREACH(int pos, child2->CalculateTrgSpan(src_spans))
                         my_comp.insert(pos);
                 }
             }

@@ -2,6 +2,7 @@
 #define TRAVATAR_HYPER_GRAPH__
 
 #include <vector>
+#include <climits>
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
 
@@ -24,6 +25,10 @@ protected:
 public:
     HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), score_(1) { };
     ~HyperEdge() { };
+
+    // Refresh the pointers to head and tail nodes so they point to
+    // nodes in a new HyperGraph. Useful when copying edges
+    void RefreshPointers(HyperGraph & new_graph);
 
     // Adder
     void AddTail(HyperNode* tail) { tails_.push_back(tail); }
@@ -93,19 +98,24 @@ private:
     std::vector<HyperEdge*> edges_;
     // For use in rule extraction, the span in the target sentence that this
     // node covers
-    std::set<int>* trg_span_;
+    bool has_trg_span_;
+    std::set<int> trg_span_;
     // Whether or not this node is a frontier node
     FrontierType frontier_;
 public:
     HyperNode(WordId sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
-        id_(id), sym_(sym), src_span_(span), trg_span_(NULL),
+        id_(id), sym_(sym), src_span_(span), has_trg_span_(false),
         frontier_(UNSET_FRONTIER) { };
     ~HyperNode() { };
 
+    // Refresh the pointers to head and tail nodes so they point to
+    // nodes in a new HyperGraph. Useful when copying nodes
+    void RefreshPointers(HyperGraph & new_graph);
+
     // Calculate the spans and frontiers using the GHKM algorithm
-    const std::set<int> * CalculateTrgSpan(
+    const std::set<int> & CalculateTrgSpan(
             const std::vector<std::set<int> > & word_spans);
 
     // Information
@@ -128,11 +138,23 @@ public:
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
     HyperNode::FrontierType GetFrontier() const { return frontier_; }
-    const std::set<int>* GetTrgSpan() const { return trg_span_; }
-    std::set<int>* GetTrgSpan() { return trg_span_; }
-    void SetTrgSpan(const std::set<int>& trg_span) { trg_span_ = new std::set<int>(trg_span); }
+    bool HasTrgSpan() const { return has_trg_span_; }
+    const std::set<int> & GetTrgSpan() const { return trg_span_; }
+    std::set<int> & GetTrgSpan() { return trg_span_; }
+    void SetTrgSpan(const std::set<int>& trg_span) { trg_span_ = trg_span; has_trg_span_ = true; }
     FrontierType IsFrontier() const { return frontier_; }
     void SetFrontier(FrontierType frontier) { frontier_ = frontier; }
+    
+    // Return the parts of the target sentence covered by this node
+    // If this is the root node, it will cover the whole target sentence, and this 
+    // will return <0, INT_MAX>
+    // If this covers no part of the target, return <-1, -1>
+    // Otherwise return the exact part that is actually covered
+    std::pair<int, int> GetTrgCovered() {
+        if(id_ == 0) return MakePair(0, INT_MAX);
+        if(trg_span_.size() == 0) return MakePair(-1,-1);
+        return MakePair(*trg_span_.begin(), *trg_span_.rbegin()+1);
+    }
 
     // Operators
     bool operator==(const HyperNode & rhs) const;
@@ -164,6 +186,18 @@ protected:
 public:
 
     HyperGraph() { };
+    // First copy the edges and nodes, then refresh the pointers
+    HyperGraph(const HyperGraph & rhs) {
+        words_ = rhs.words_;
+        BOOST_FOREACH(HyperNode * node, rhs.nodes_)
+            nodes_.push_back(new HyperNode(*node));
+        BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
+            edges_.push_back(new HyperEdge(*edge));
+        BOOST_FOREACH(HyperNode * node, nodes_)
+            node->RefreshPointers(*this);
+        BOOST_FOREACH(HyperEdge * edge, edges_)
+            edge->RefreshPointers(*this);
+    }
     ~HyperGraph() {
         BOOST_FOREACH(HyperNode* node, nodes_)
             delete node;

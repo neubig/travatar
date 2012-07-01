@@ -20,8 +20,8 @@ public:
         string src1_tree = "(S (NP (PRP he)) (VP (AUX does) (RB not) (VB go)))";
         string trg1_str  = "il ne va pas";
         string align1_str = "0-0 1-1 1-3 2-1 2-3 3-2";
-        istringstream iss(src1_tree);
-        src1_graph.reset(tree_io.ReadTree(iss));
+        istringstream iss1(src1_tree);
+        src1_graph.reset(tree_io.ReadTree(iss1));
         trg1_sent = Dict::ParseWords(trg1_str);
         align1 = Alignment::FromString(align1_str);
         // also an example of a forest
@@ -50,7 +50,16 @@ public:
         string align2_str = "0-2 1-0";
         trg2_sent = Dict::ParseWords(trg2_str);
         align2 = Alignment::FromString(align2_str);
+        // Use an example with a target null
+        string src3_tree = "(S (NP (PRP he)) (VP (VB went)))";
+        string trg3_str  = "ikimashita";
+        string align3_str = "1-0";
+        istringstream iss3(src3_tree);
+        src3_graph.reset(tree_io.ReadTree(iss3));
+        trg3_sent = Dict::ParseWords(trg3_str);
+        align3 = Alignment::FromString(align3_str);
     }
+
 
     ~TestHyperGraph() { }
 
@@ -73,11 +82,16 @@ public:
         // Check the equality
         int ret = 1;
         for(int i = 0; i < 11; i++)
-            if(node_exp[i] != *src1_graph->GetNode(i)->GetTrgSpan()) {
+            if(node_exp[i] != src1_graph->GetNode(i)->GetTrgSpan()) {
                 cerr << i << " not equal" << endl;
                 ret = 0;
             }
         return ret;
+    }
+
+    int TestCopy() {
+        HyperGraph src1_copy(*src1_graph);
+        return src1_graph->CheckEqual(src1_copy);
     }
 
     int TestCalculateSpanForest() {
@@ -100,7 +114,7 @@ public:
         // Check the equality
         int ret = 1;
         for(int i = 0; i < 10; i++)
-            if(node_exp[i] != *src2_graph->GetNode(i)->GetTrgSpan()) {
+            if(node_exp[i] != src2_graph->GetNode(i)->GetTrgSpan()) {
                 ret = 0;
                 cerr << i << " not equal " << SafeReference(SafeAccess(node_span, i)) << endl;
             }
@@ -122,6 +136,21 @@ public:
             act[i] = src1_graph->GetNode(i)->GetFrontier();
         return CheckVector(exp, act);
     }
+    
+    int TestCalculateNull() {
+        vector<set<int> > src_span = align3.GetSrcAlignments();
+        vector<set<int>*> node_span(src3_graph->NumNodes(), (set<int>*)NULL);
+        // Here, we will treat terminal nodes as non-frontier, as we just
+        vector<HyperNode::FrontierType> 
+            exp(7, HyperNode::NOT_FRONTIER), act(7, HyperNode::IS_FRONTIER);
+        exp[0] = HyperNode::IS_FRONTIER;
+        exp[4] = HyperNode::IS_FRONTIER;
+        exp[5] = HyperNode::IS_FRONTIER;
+        src3_graph->CalculateFrontiers(src_span);
+        for(int i = 0; i < 7; i++)
+            act[i] = src3_graph->GetNode(i)->GetFrontier();
+        return CheckVector(exp, act);
+    }
 
     int TestCalculateFrontierForest() {
         vector<set<int> > src_span = align2.GetSrcAlignments();
@@ -137,8 +166,10 @@ public:
 
     bool RunTest() {
         int done = 0, succeeded = 0;
+        done++; cout << "TestCopy()" << endl; if(TestCopy()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateSpan()" << endl; if(TestCalculateSpan()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateSpanForest()" << endl; if(TestCalculateSpanForest()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCalculateNull()" << endl; if(TestCalculateNull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontier()" << endl; if(TestCalculateFrontier()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
@@ -147,9 +178,9 @@ public:
 
 private:
     PennTreeIO tree_io;
-    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph;
-    Sentence trg1_sent, trg2_sent;
-    Alignment align1, align2;
+    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph;
+    Sentence trg1_sent, trg2_sent, trg3_sent;
+    Alignment align1, align2, align3;
 
 };
 
