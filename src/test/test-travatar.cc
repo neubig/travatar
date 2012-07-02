@@ -5,6 +5,7 @@
 #include "test-tree-io.h"
 #include "test-rule-extractor.h"
 #include "test-io-util.h"
+#include "test-lookup-table.h"
 #include "test-base.h"
 
 using namespace std;
@@ -19,6 +20,7 @@ int main() {
     tests.push_back(new TestTreeIO());
     tests.push_back(new TestRuleExtractor());
     tests.push_back(new TestTravatarRunner());
+    tests.push_back(new TestLookupTable());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

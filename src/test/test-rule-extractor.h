@@ -288,12 +288,12 @@ public:
         vector<string> rule_exp, rule_act;
         BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
             rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent));
-        rule_exp.push_back("ROOT(x0:S) ||| x0 ||| 1");
-        rule_exp.push_back("S(x0:NP x1:VP) ||| x0 x1 ||| 1");
-        rule_exp.push_back("NP(x0:PRP) ||| x0 ||| 1");
-        rule_exp.push_back("PRP(\"he\") ||| \"il\" ||| 1");
-        rule_exp.push_back("VP(AUX(\"does\") RB(\"not\") x0:VB) ||| \"ne\" x0 \"pas\" ||| 1");
-        rule_exp.push_back("VB(\"go\") ||| \"va\" ||| 1");
+        rule_exp.push_back("ROOT ( x0:S ) ||| x0 ||| 1");
+        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("NP ( x0:PRP ) ||| x0 ||| 1");
+        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" ||| 1");
+        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1");
+        rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1");
         return CheckVector(rule_exp, rule_act);
     }
 

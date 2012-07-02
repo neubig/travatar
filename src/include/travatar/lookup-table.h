@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <travatar/hyper-graph.h>
+#include <travatar/translation-rule.h>
 #include <boost/foreach.hpp>
 
 namespace travatar {
@@ -13,9 +14,14 @@ class LookupState {
 public:
     LookupState() { }
     virtual ~LookupState() { }
+
+    const std::vector<const HyperNode*> & GetNonterms() const { return nonterm_nodes_; }
+    std::vector<const HyperNode*> & GetNonterms() { return nonterm_nodes_; }
+    void SetNonterms(const std::vector<const HyperNode*> & nonterm_nodes) { nonterm_nodes_ = nonterm_nodes; }
+
 protected:
     // Links to the nodes of non-terminals that are abstracted
-    std::vector<HyperNode*> nonterm_nodes_;
+    std::vector<const HyperNode*> nonterm_nodes_;
 };
 
 // A table that allows rules to be looked up
@@ -26,9 +32,14 @@ public:
     virtual ~LookupTable() { };
 
     // Find all the translation rules rooted at a particular node in a parse graph
-    std::vector<boost::shared_ptr<LookupState> > LookupTranslationRules(
+    std::vector<boost::shared_ptr<LookupState> > LookupSrc(
             const HyperNode & node, 
             const std::vector<boost::shared_ptr<LookupState> > & old_states);
+
+    // Find rules associated with a particular source pattern
+    virtual const std::vector<TranslationRule*> * FindRules(const LookupState & state) const = 0;
+
+    virtual LookupState * GetInitialState() = 0;
 
 protected:
 

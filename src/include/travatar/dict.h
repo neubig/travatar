@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <climits>
 #include <travatar/symbol-set.h>
 
 namespace travatar {
@@ -19,6 +20,20 @@ struct Dict {
     // Get the word ID
     static WordId WID(const std::string & str) {
         return wids_.GetId(str, add_);
+    }
+
+    // Get the quoted word ID
+    static WordId QuotedWID(const std::string & str) {
+        // For x0 -> -1, x1 -> -2, etc.
+        if(str[0] == 'x') {
+            return -1-atoi(str.substr(1).c_str());
+        // Otherwise, string must be quoted
+        } else if (str[0] == '"' && str.length() > 2 && str[str.length()-1] == '"') {
+            return wids_.GetId(str.substr(1,str.length()-2), add_);
+        } else {
+            THROW_ERROR("Bad quoted string at " << str);
+            return INT_MIN;
+        }
     }
 
     // Get the word symbol
@@ -43,6 +58,16 @@ struct Dict {
         std::vector<WordId> ret;
         while(iss >> buff)
             ret.push_back(WID(buff));
+        return ret;
+    }
+    
+    // Get the word ID
+    static std::vector<WordId> ParseQuotedWords(const std::string & str) {
+        std::istringstream iss(str);
+        std::string buff;
+        std::vector<WordId> ret;
+        while(iss >> buff)
+            ret.push_back(QuotedWID(buff));
         return ret;
     }
 

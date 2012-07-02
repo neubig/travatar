@@ -121,7 +121,7 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
                                      ostream & oss) const {
     // If this is a terminal, print its surface form
     if(node.IsTerminal()) {
-        oss << '"' << Dict::WSym(node.GetSym()) << '"';
+        oss << "\"" << Dict::WSym(node.GetSym()) << '"';
         return;
     // If this is a frontier node
     } else if (node.IsFrontier() == HyperNode::IS_FRONTIER) {
@@ -130,22 +130,21 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
             tail_num = 0;
         // Otherwise, return it
         } else {
-            oss << 'x' << tail_num++ << ':' << Dict::WSym(node.GetSym());
+            oss << "x" << tail_num++ << ':' << Dict::WSym(node.GetSym());
             return;
         }
     }
     // If this is a non-terminal that is at the top of the tree
-    oss << Dict::WSym(node.GetSym()) << '(';
+    oss << Dict::WSym(node.GetSym()) << " (";
     if(remaining_fragments.size() == 0)
         THROW_ERROR("Attempting to pop empty list at " << node);
     HyperEdge * my_edge = *remaining_fragments.begin();
     remaining_fragments.pop_front();
-    int pos = 0;
     BOOST_FOREACH(HyperNode* my_node, my_edge->GetTails()) {
-        if(pos++ != 0) oss << ' ';
+        oss << ' ';
         PrintRuleSurface(*my_node, src_sent, remaining_fragments, tail_num,oss);
     }
-    oss << ')';
+    oss << " )";
 }
 
 // Creating a rule
