@@ -1,6 +1,7 @@
 #ifndef TRANSLATION_RULE_H__
 #define TRANSLATION_RULE_H__
 
+#include <travatar/dict.h>
 #include <string>
 
 namespace travatar {
@@ -10,11 +11,12 @@ class TranslationRule {
 public:
     TranslationRule(const std::string & src_str = "",
                     const std::vector<int> & trg_words = std::vector<int>(),
-                    const std::vector<double> & features = std::vector<double>()) :
+                    const SparseMap & features = SparseMap()) :
         src_str_(src_str), trg_words_(trg_words), features_(features) { }
 
     void AddTrgWord(int id) { trg_words_.push_back(id); }
-    void AddFeature(double feat) { features_.push_back(feat); }
+    void AddFeature(int id, double feat) { features_.insert(MakePair(id, feat)); }
+    void AddFeature(const std::string & str, double feat) { features_.insert(MakePair(Dict::WID(str), feat)); }
 
     bool operator==(const TranslationRule & rhs) const {
         return
@@ -34,24 +36,27 @@ public:
                 out << trg_words_[i] << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
         }
         if(features_.size()) {
-            out << ", \"features\": [";
-            for(int i = 0; i < (int)features_.size(); i++)
-                out << features_[i] << ((i == (int)features_.size()-1) ? "]" : ", ");
+            int pos = 0;
+            out << ", \"features\": {";
+            BOOST_FOREACH(const SparsePair & val, features_) {
+                out << "\""<<Dict::WSym(val.first)<<"\": " << val.second<<(pos++?", ":"");
+            }
+            out << "}";
         }
         out << "}";
     }
 
     const std::string & GetSrcStr() const { return src_str_; }
     const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
-    const std::vector<double> & GetFeatures() const { return features_; }
+    const SparseMap & GetFeatures() const { return features_; }
     std::string & GetSrcStr() { return src_str_; }
     std::vector<WordId> & GetTrgWords() { return trg_words_; }
-    std::vector<double> & GetFeatures() { return features_; }
+    SparseMap & GetFeatures() { return features_; }
 
 protected:
     std::string src_str_;
     std::vector<WordId> trg_words_;
-    std::vector<double> features_;
+    SparseMap features_;
 
 };
 inline std::ostream &operator<<( std::ostream &out, const TranslationRule &L ) {

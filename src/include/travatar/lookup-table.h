@@ -31,6 +31,39 @@ public:
     LookupTable() { }
     virtual ~LookupTable() { };
 
+    // // Build the rule hypergraph
+    // HyperGraph * BuildRuleHypergraph(const HyperGraph & parse) {
+    //     // Create the hyper-graph to return, and add its nodes
+    //     HyperGraph * ret = new HyperGraph;
+    //     BOOST_FOREACH(HyperNode * node, parse.GetNodes()) {
+    //         HyperNode* next_node = new HyperNode;
+    //         next_node.SetSym(node->GetSym());
+    //         next_node.SetSpan(node->GetSpan());
+    //         ret->GetNodes().push_back(next_node);
+    //     }
+    //     // Get the initial state
+    //     std::vector<boost::shared_ptr<LookupState> > initial(1);
+    //     initial[0].reset(GetInitialState());
+    //     // Find the rule matches for each node
+    //     BOOST_FOREACH(HyperNode * node, parse.GetNodes()) {
+    //         std::vector<boost::shared_ptr<LookupState> > srcs = LookupSrc(*node, initial);
+    //         if(srcs.size() > 0) {
+    //             BOOST_FOREACH(const boost::shared_ptr<LookupState> & src, srcs) {
+    //                 HyperEdge* base_edge = new HyperEdge;
+    //                 // Add the lookup's connecting nodes, if any
+    //                 HERE
+    //                 BOOST_FOREACH(const TranslationRule * rule, SafeReference(FindRules(*src))) {
+    //                     
+    //                 }
+    //             }
+    //         } else if (node->IsTerminal()) {
+    //             // TODO
+    //         } else {
+    //             // TODO
+    //         }
+    //     }
+    // }
+
     // Find all the translation rules rooted at a particular node in a parse graph
     std::vector<boost::shared_ptr<LookupState> > LookupSrc(
             const HyperNode & node, 

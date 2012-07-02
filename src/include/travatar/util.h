@@ -21,38 +21,21 @@
     throw std::runtime_error(oss.str()); }       \
   while (0);
 
-#ifdef HAVE_TR1_UNORDERED_MAP
-#   include <tr1/unordered_map>
-    template <class T>
-    class StringMap : public std::tr1::unordered_map<std::string,T> { };
-#elif HAVE_EXT_HASH_MAP
-#   include <ext/hash_map>
-    namespace __gnu_cxx {
-    template <>
-    struct hash<std::string> {
-    size_t operator() (const std::string& x) const { return hash<const char*>()(x.c_str()); }
-    };
-    }
-    template <class T>
-    class StringMap : public __gnu_cxx::hash_map<std::string,T> { };
-#else
-#   include <map>
-    template <class T>
-    class StringMap : public std::map<std::string,T> { };
-#endif
+template <class T>
+class StringMap : public std::tr1::unordered_map<std::string,T> { };
 
 namespace std {
 
 // Unordered map equality function
-template < class T >
-inline bool operator==(const StringMap<T> & lhs, 
-                       const StringMap<T> & rhs) {
+template < class K, class T >
+inline bool operator==(const std::tr1::unordered_map<K, T> & lhs, 
+                       const std::tr1::unordered_map<K, T> & rhs) {
     if(lhs.size() != rhs.size())
         return false;
-    for(typename StringMap<T>::const_iterator it = lhs.begin();
+    for(typename std::tr1::unordered_map<K,T>::const_iterator it = lhs.begin();
         it != lhs.end();
         it++) {
-        typename StringMap<T>::const_iterator it2 = rhs.find(it->first);
+        typename std::tr1::unordered_map<K,T>::const_iterator it2 = rhs.find(it->first);
         if(it2 == rhs.end() || it2->second != it->second)
             return false;
     }
@@ -332,6 +315,10 @@ inline int CheckString(const std::string & exp, const std::string & act) {
     }
     return 1;
 }
+
+
+typedef std::pair<int, double> SparsePair;
+typedef std::tr1::unordered_map<int, double> SparseMap;
 
 
 }  // end namespace

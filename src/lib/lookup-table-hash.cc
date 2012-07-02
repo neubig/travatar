@@ -21,11 +21,7 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
             ret->AddToMatches(partial.str());
         }
         vector<WordId> trg_words = Dict::ParseQuotedWords(columns[1]);
-        vector<double> features;
-        istringstream feat_in(columns[2]);
-        double feat;
-        while(feat_in >> feat)
-            features.push_back(feat);
+        SparseMap features = Dict::ParseFeatures(columns[2]);
         ret->AddRule(new TranslationRule(columns[0], trg_words, features));
     }
     return ret;

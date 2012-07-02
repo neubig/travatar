@@ -4,7 +4,10 @@
 #include <string>
 #include <vector>
 #include <climits>
+#include <cstdlib>
+#include <boost/algorithm/string.hpp>
 #include <travatar/symbol-set.h>
+#include <travatar/util.h>
 
 namespace travatar {
 
@@ -68,6 +71,20 @@ struct Dict {
         std::vector<WordId> ret;
         while(iss >> buff)
             ret.push_back(QuotedWID(buff));
+        return ret;
+    }
+
+    // Get the word ID
+    static SparseMap ParseFeatures(const std::string & str) {
+        std::istringstream iss(str);
+        std::string buff;
+        SparseMap ret;
+        while(iss >> buff) {
+            std::vector<std::string> columns;
+            boost::algorithm::split(columns, buff, boost::is_any_of("="));
+            if(columns.size() != 2) THROW_ERROR("Bad feature string " << str);
+            ret.insert(MakePair(Dict::WID(columns[0]), atof(columns[1].c_str())));
+        }
         return ret;
     }
 

@@ -2,6 +2,7 @@
 #include <queue>
 #include <stack>
 #include <list>
+#include <map>
 
 using namespace travatar;
 using namespace std;
