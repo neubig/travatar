@@ -319,7 +319,12 @@ inline int CheckString(const std::string & exp, const std::string & act) {
 
 typedef std::pair<int, double> SparsePair;
 typedef std::tr1::unordered_map<int, double> SparseMap;
-
+inline SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs) {
+    BOOST_FOREACH(const SparsePair & val, rhs)
+        if(val.second != 0)
+            lhs[val.first] += val.second;
+    return lhs;
+}
 
 }  // end namespace
 

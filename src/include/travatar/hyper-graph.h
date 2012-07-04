@@ -219,6 +219,9 @@ public:
     double AddScore(double score) { return (score_ += score); }
     double GetScore() { return score_; }
 
+    // Calculate the features for this path by simply adding up all the features
+    SparseMap CalcFeatures();
+
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
     void Print(std::ostream & out) const;

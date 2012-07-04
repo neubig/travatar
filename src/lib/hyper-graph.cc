@@ -232,3 +232,12 @@ void HyperPath::Print(std::ostream & out) const {
     }
     out << "}";
 }
+
+
+// Calculate the features for this path by simply adding up all the features
+SparseMap HyperPath::CalcFeatures() {
+    SparseMap ret;
+    BOOST_FOREACH(HyperEdge* edge, edges_)
+        ret += edge->GetRule()->GetFeatures();
+    return ret;
+}
