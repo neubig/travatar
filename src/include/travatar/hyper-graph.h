@@ -100,12 +100,14 @@ private:
     FrontierType frontier_;
     // The viterbi score of the entire subtree under this node
     double viterbi_score_;
+    // The contribution of the best edge to the score
+    double viterbi_contribution_;
 public:
     HyperNode(WordId sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
         id_(id), sym_(sym), src_span_(span), has_trg_span_(false),
-        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX) { };
+        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX), viterbi_contribution_(-DBL_MAX) { };
     ~HyperNode() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -123,11 +125,16 @@ public:
                 double score = edge->GetScore();
                 BOOST_FOREACH(HyperNode * tail, edge->GetTails())
                     score += tail->GetViterbiScore();
-                if(score > viterbi_score_)
+                if(score > viterbi_score_) {
                     viterbi_score_ = score;
+                    viterbi_contribution_ = edge->GetScore();
+                }
             }
         }
         return viterbi_score_;
+    }
+    double GetViterbiContribution() {
+        return viterbi_contribution_;
     }
 
     // Calculate the spans and frontiers using the GHKM algorithm
@@ -193,6 +200,40 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
     return out;
 }
 
+// A single scored path through a hypergraph
+class HyperPath {
+public:
+    HyperPath() : score_(0) { }
+    
+    void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
+    void PushNode(HyperNode * node) { remaining_nodes_.push_back(node); }
+    HyperNode* PopNode() {
+        HyperNode * ret = NULL;
+        if(remaining_nodes_.size() > 0) {
+            ret = *remaining_nodes_.rbegin();
+            remaining_nodes_.pop_back();
+        }
+        return ret;
+    }
+    void SetScore(double score) { score_ = score; }
+    double AddScore(double score) { return (score_ += score); }
+    double GetScore() { return score_; }
+
+    bool operator==(const HyperPath & rhs) const;
+    bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
+    void Print(std::ostream & out) const;
+
+protected:
+    std::vector<HyperEdge*> edges_;
+    double score_;
+    // For use with partial paths, which nodes are still open?
+    std::vector<HyperNode*> remaining_nodes_;
+};
+inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
+    L.Print(out);
+    return out;
+}
+
 // The hypergraph
 class HyperGraph {
 protected:
@@ -220,6 +261,9 @@ public:
         BOOST_FOREACH(HyperEdge* edge, edges_)
             delete edge;
     };
+
+    // Get the n-best paths through the graph
+    std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n);
 
     // Check to make sure that the probabilities of edges
     // outgoing from a particular node add to one (in the log domain)

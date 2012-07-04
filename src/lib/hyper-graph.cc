@@ -1,8 +1,11 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
+#include <boost/shared_ptr.hpp>
+#include <queue>
 
 using namespace std;
 using namespace travatar;
+using namespace boost;
 
 
 // Refresh the pointers to head and tail nodes so they point to
@@ -157,4 +160,75 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
         }
     }
     return frontier_;
+}
+
+class ComparePathScore {
+public:
+    bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
+        return x->GetScore() < y->GetScore();
+    }
+};
+
+vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
+    priority_queue<shared_ptr<HyperPath>,
+                   vector<shared_ptr<HyperPath> >, 
+                   ComparePathScore> paths;
+    shared_ptr<HyperPath> init_path(new HyperPath);
+    init_path->PushNode(nodes_[0]);
+    init_path->AddScore(nodes_[0]->GetViterbiScore());
+    paths.push(init_path);
+    vector<shared_ptr<HyperPath> > ret;
+    while(paths.size() > 0 && (int)ret.size() < n) {
+        shared_ptr<HyperPath> curr_path = paths.top();
+        paths.pop();
+        HyperNode * node = curr_path->PopNode();
+        if(node == NULL) {
+            ret.push_back(curr_path);
+        } else {
+            curr_path->AddScore(-1*node->GetViterbiContribution());
+            // Expand each different edge
+            BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
+                // Create a new path that is a copy of the old one, and add
+                // the edge and its corresponding score
+                shared_ptr<HyperPath> next_path(new HyperPath(*curr_path));
+                next_path->AddEdge(edge);
+                next_path->AddScore(edge->GetScore());
+                // Add the nodes in reverse order, to ensure that we
+                // are doing a depth-first left-to-right traversal
+                BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
+                    next_path->PushNode(tail);
+                paths.push(next_path);
+            }
+        }
+        
+    }
+    return ret;
+}
+
+
+// Check to make sure that two hyperpaths are equal
+bool HyperPath::operator==(const HyperPath & rhs) const {
+    for(int i = 0; i < (int)edges_.size(); i++)
+       if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
+          (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
+          return false;
+    for(int i = 0; i < (int)remaining_nodes_.size(); i++)
+       if((remaining_nodes_[i]==NULL) != (rhs.remaining_nodes_[i]==NULL) ||
+          (remaining_nodes_[i]!=NULL && remaining_nodes_[i]->GetId() != rhs.remaining_nodes_[i]->GetId()))
+          return false;
+    return abs(score_ - rhs.score_) < 1e-5;
+}
+
+// Output for a hyperedge in JSON format
+void HyperPath::Print(std::ostream & out) const {
+    out << "{\"edges\": [";
+    for(int i = 0; i < (int)edges_.size(); i++)
+        out << (i != 0 ? ", " : "") << edges_[i]->GetId();
+    out << "], \"score\": " << score_;
+    if(remaining_nodes_.size()) {
+        out << ", \"remaining_nodes\": [";
+        for(int i = 0; i < (int)remaining_nodes_.size(); i++)
+            out << remaining_nodes_[i]->GetId() << ((i == (int)remaining_nodes_.size()-1) ? "]" : ", ");
+    }
+    out << "}";
 }

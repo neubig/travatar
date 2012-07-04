@@ -184,7 +184,15 @@ public:
         exp_scores[0] = -0.6; exp_scores[1] = -0.1; exp_scores[2] = -0.2;
         for(int i = 0; i < 3; i++)
             act_scores[i] = rule_graph.GetNode(i)->GetViterbiScore();
-        return CheckAlmostVector(exp_scores, act_scores); 
+        if(!CheckAlmostVector(exp_scores, act_scores))
+            return false;
+        // Get the three-best edge values
+        vector<shared_ptr<HyperPath> > exp_nbest, act_nbest;
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[0]->AddEdge(e0); exp_nbest[0]->AddEdge(e2); exp_nbest[0]->AddEdge(e4); exp_nbest[0]->SetScore(-0.6);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(e0); exp_nbest[1]->AddEdge(e3); exp_nbest[1]->AddEdge(e4); exp_nbest[1]->SetScore(-0.8);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(e0); exp_nbest[2]->AddEdge(e2); exp_nbest[2]->AddEdge(e5); exp_nbest[2]->SetScore(-0.9);
+        act_nbest = rule_graph.GetNbest(3);
+        return CheckPtrVector(exp_nbest, act_nbest);
     }
 
     bool RunTest() {
