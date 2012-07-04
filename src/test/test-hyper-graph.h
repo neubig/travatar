@@ -164,6 +164,29 @@ public:
         return CheckVector(exp, act);
     }
 
+    int TestNbestPath() {
+        HyperGraph rule_graph;
+        // Add the nodes
+        HyperNode * n0 = new HyperNode; rule_graph.AddNode(n0);
+        HyperNode * n1 = new HyperNode; rule_graph.AddNode(n1);
+        HyperNode * n2 = new HyperNode; rule_graph.AddNode(n2);
+        // Add the edges
+        HyperEdge * e0 = new HyperEdge(n0); rule_graph.AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); n0->AddEdge(e0);
+        HyperEdge * e1 = new HyperEdge(n0); rule_graph.AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); n0->AddEdge(e1);
+        HyperEdge * e2 = new HyperEdge(n1); rule_graph.AddEdge(e2); e2->SetScore(-0.1); n1->AddEdge(e2);
+        HyperEdge * e3 = new HyperEdge(n1); rule_graph.AddEdge(e3); e3->SetScore(-0.3); n1->AddEdge(e3);
+        HyperEdge * e4 = new HyperEdge(n2); rule_graph.AddEdge(e4); e4->SetScore(-0.2); n2->AddEdge(e4);
+        HyperEdge * e5 = new HyperEdge(n2); rule_graph.AddEdge(e5); e5->SetScore(-0.5); n2->AddEdge(e5);
+        // Accumulate Viterbi scores over nodes
+        rule_graph.ResetViterbiScores();
+        // The viterbi scores should be -0.6, -0.1, -0.2
+        vector<double> exp_scores(3), act_scores(3);
+        exp_scores[0] = -0.6; exp_scores[1] = -0.1; exp_scores[2] = -0.2;
+        for(int i = 0; i < 3; i++)
+            act_scores[i] = rule_graph.GetNode(i)->GetViterbiScore();
+        return CheckAlmostVector(exp_scores, act_scores); 
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCopy()" << endl; if(TestCopy()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -172,6 +195,7 @@ public:
         done++; cout << "TestCalculateNull()" << endl; if(TestCalculateNull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontier()" << endl; if(TestCalculateFrontier()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

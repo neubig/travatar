@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <climits>
+#include <cfloat>
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
 
@@ -25,7 +26,7 @@ protected:
     // matched by a rule represented by this edge (for use in rule graphs)
     std::vector<HyperEdge*> fragment_edges_;
 public:
-    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), rule_(NULL), score_(1) { };
+    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), rule_(NULL), score_(0.0) { };
     ~HyperEdge() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -36,26 +37,14 @@ public:
     void AddTail(HyperNode* tail) { tails_.push_back(tail); }
     void AddFragmentEdge(HyperEdge* edge) {
         fragment_edges_.push_back(edge);
-        score_ *= edge->GetProb();
+        score_ += edge->GetScore();
     }
 
    
 
     // Get the probability (score, and must be between 0 and 1
-    double GetProb() const {
-#ifdef TRAVATAR_SAFE
-        if(!(score_ >= 0 && score_ <= 1))
-            THROW_ERROR("Invalid probability "<<score_);
-#endif
-        return score_;
-    }
-    void SetProb(double score) { 
-        score_ = score;
-#ifdef TRAVATAR_SAFE
-        if(!(score_ >= 0 && score_ <= 1))
-            THROW_ERROR("Invalid probability "<<score_);
-#endif
-    }
+    double GetScore() const { return score_; }
+    void SetScore(double score) { score_ = score; }
 
     // Getters/Setters
     void SetId(NodeId id) { id_ = id; }
@@ -109,17 +98,37 @@ private:
     std::set<int> trg_span_;
     // Whether or not this node is a frontier node
     FrontierType frontier_;
+    // The viterbi score of the entire subtree under this node
+    double viterbi_score_;
 public:
     HyperNode(WordId sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
         id_(id), sym_(sym), src_span_(span), has_trg_span_(false),
-        frontier_(UNSET_FRONTIER) { };
+        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX) { };
     ~HyperNode() { };
 
     // Refresh the pointers to head and tail nodes so they point to
     // nodes in a new HyperGraph. Useful when copying nodes
     void RefreshPointers(HyperGraph & new_graph);
+
+    void SetViterbiScore(double viterbi_score) {
+        viterbi_score_ = viterbi_score;
+    }
+    double GetViterbiScore() {
+        if(viterbi_score_ == -DBL_MAX) {
+            if(edges_.size() == 0)
+                THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
+            BOOST_FOREACH(HyperEdge * edge, edges_) {
+                double score = edge->GetScore();
+                BOOST_FOREACH(HyperNode * tail, edge->GetTails())
+                    score += tail->GetViterbiScore();
+                if(score > viterbi_score_)
+                    viterbi_score_ = score;
+            }
+        }
+        return viterbi_score_;
+    }
 
     // Calculate the spans and frontiers using the GHKM algorithm
     const std::set<int> & CalculateTrgSpan(
@@ -213,14 +222,15 @@ public:
     };
 
     // Check to make sure that the probabilities of edges
-    // outgoing from a particular node add to one
+    // outgoing from a particular node add to one (in the log domain)
     void NormalizeEdgeProbabilities() {
         BOOST_FOREACH(HyperNode* node, nodes_) {
             double sum = 0;
             BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-                sum += edge->GetProb();
+                sum += exp(edge->GetScore());
+            sum = log(sum);
             BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-                edge->SetProb(edge->GetProb() / sum);
+                edge->SetScore(edge->GetScore() - sum);
         }
     }
 
@@ -253,6 +263,11 @@ public:
     }
     void AddWord(WordId id) {
         words_.push_back(id);
+    }
+
+    void ResetViterbiScores() {
+        BOOST_FOREACH(HyperNode * node, nodes_)
+            node->SetViterbiScore(-DBL_MAX);
     }
 
     // Accessors

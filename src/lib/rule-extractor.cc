@@ -183,6 +183,6 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
             last = trg_cover[i];
         }
     }
-    oss << " ||| " << rule.GetProb();
+    oss << " ||| " << exp(rule.GetScore());
     return oss.str();
 }

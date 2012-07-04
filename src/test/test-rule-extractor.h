@@ -143,13 +143,13 @@ public:
         shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src2_graph, align2));
         // Create the actual values, all non-terminal edges should be fine, and most should have
         // a probability of 0.5, as they only belong to one of the two trees
-        vector<double> scores_exp(9, 1.0), scores_act(9);
+        vector<double> scores_exp(9, 0.0), scores_act(9);
         for(int i = 0; i < 9; i++) 
-            scores_act[i] = frags_act->GetEdge(i)->GetProb();
+            scores_act[i] = frags_act->GetEdge(i)->GetScore();
         // The only two edges that are 0.5 are the split edges on top
-        scores_exp[0] = 0.5; scores_exp[1] = 0.5;
+        scores_exp[0] = log(0.5); scores_exp[1] = log(0.5);
         // Check to make sure that these are equal
-        return CheckVector(scores_exp, scores_act);
+        return CheckAlmostVector(scores_exp, scores_act);
     }
 
     int TestTopNullExtraction() {
