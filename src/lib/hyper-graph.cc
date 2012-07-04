@@ -1,4 +1,5 @@
 #include <travatar/hyper-graph.h>
+#include <travatar/translation-rule.h>
 
 using namespace std;
 using namespace travatar;
@@ -26,6 +27,8 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
     if(id_ != rhs.id_ ||
        (head_==NULL) != (rhs.head_==NULL) ||
        (head_!=NULL && head_->GetId() != rhs.head_->GetId()) ||
+       (rule_==NULL) != (rhs.rule_==NULL) ||
+       (rule_!=NULL && *rule_ != *rhs.rule_) ||
        (tails_.size() != rhs.tails_.size()))
         return false;
     for(int i = 0; i < (int)tails_.size(); i++)
@@ -47,6 +50,8 @@ void HyperEdge::Print(std::ostream & out) const {
         for(int i = 0; i < (int)tails_.size(); i++)
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
     }
+    if(rule_ != NULL)
+        out << ", \"rule\": " << *rule_;
     out << "}";
 }
 

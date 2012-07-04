@@ -11,6 +11,7 @@ namespace travatar {
 typedef short NodeId;
 class HyperNode;
 class HyperGraph;
+class TranslationRule;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -18,12 +19,13 @@ protected:
     NodeId id_;
     HyperNode* head_;
     std::vector<HyperNode*> tails_;
+    const TranslationRule* rule_;
     double score_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
     std::vector<HyperEdge*> fragment_edges_;
 public:
-    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), score_(1) { };
+    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), rule_(NULL), score_(1) { };
     ~HyperEdge() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -36,6 +38,8 @@ public:
         fragment_edges_.push_back(edge);
         score_ *= edge->GetProb();
     }
+
+   
 
     // Get the probability (score, and must be between 0 and 1
     double GetProb() const {
@@ -60,8 +64,11 @@ public:
     HyperNode* GetHead() const { return head_; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
+    void SetTails(const std::vector<HyperNode*> & tails) { tails_ = tails; }
     const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
     std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
+    const TranslationRule * GetRule() const { return rule_; }
+    void SetRule(const TranslationRule * rule) { rule_ = rule; }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;
@@ -251,8 +258,8 @@ public:
     // Accessors
     const HyperNode* GetNode(int i) const { return SafeAccess(nodes_,i); }
     HyperNode* GetNode(int i) { return SafeAccess(nodes_,i); }
-    const std::vector<HyperNode*> GetNodes() const { return nodes_; }
-    std::vector<HyperNode*> GetNodes() { return nodes_; }
+    const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
+    std::vector<HyperNode*> & GetNodes() { return nodes_; }
     int NumNodes() const { return nodes_.size(); }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_,i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_,i); }
