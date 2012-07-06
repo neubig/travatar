@@ -5,6 +5,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
+#include <travatar/translation-rule.h>
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
@@ -58,6 +59,23 @@ public:
         src3_graph.reset(tree_io.ReadTree(iss3));
         trg3_sent = Dict::ParseWords(trg3_str);
         align3 = Alignment::FromString(align3_str);
+        // Example rule graph
+        rule_graph_.reset(new HyperGraph);
+        HyperNode * n0 = new HyperNode; rule_graph_->AddNode(n0);
+        HyperNode * n1 = new HyperNode; rule_graph_->AddNode(n1);
+        HyperNode * n2 = new HyperNode; rule_graph_->AddNode(n2);
+        rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
+        HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
+        rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
+        HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
+        rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a"));
+        HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
+        rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("b"));
+        HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
+        rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
+        HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
+        rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
+        HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
     }
 
 
@@ -165,34 +183,38 @@ public:
     }
 
     int TestNbestPath() {
-        HyperGraph rule_graph;
-        // Add the nodes
-        HyperNode * n0 = new HyperNode; rule_graph.AddNode(n0);
-        HyperNode * n1 = new HyperNode; rule_graph.AddNode(n1);
-        HyperNode * n2 = new HyperNode; rule_graph.AddNode(n2);
-        // Add the edges
-        HyperEdge * e0 = new HyperEdge(n0); rule_graph.AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); n0->AddEdge(e0);
-        HyperEdge * e1 = new HyperEdge(n0); rule_graph.AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); n0->AddEdge(e1);
-        HyperEdge * e2 = new HyperEdge(n1); rule_graph.AddEdge(e2); e2->SetScore(-0.1); n1->AddEdge(e2);
-        HyperEdge * e3 = new HyperEdge(n1); rule_graph.AddEdge(e3); e3->SetScore(-0.3); n1->AddEdge(e3);
-        HyperEdge * e4 = new HyperEdge(n2); rule_graph.AddEdge(e4); e4->SetScore(-0.2); n2->AddEdge(e4);
-        HyperEdge * e5 = new HyperEdge(n2); rule_graph.AddEdge(e5); e5->SetScore(-0.5); n2->AddEdge(e5);
         // Accumulate Viterbi scores over nodes
-        rule_graph.ResetViterbiScores();
+        rule_graph_->ResetViterbiScores();
         // The viterbi scores should be -0.6, -0.1, -0.2
         vector<double> exp_scores(3), act_scores(3);
         exp_scores[0] = -0.6; exp_scores[1] = -0.1; exp_scores[2] = -0.2;
         for(int i = 0; i < 3; i++)
-            act_scores[i] = rule_graph.GetNode(i)->GetViterbiScore();
+            act_scores[i] = rule_graph_->GetNode(i)->GetViterbiScore();
         if(!CheckAlmostVector(exp_scores, act_scores))
             return false;
         // Get the three-best edge values
         vector<shared_ptr<HyperPath> > exp_nbest, act_nbest;
-        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[0]->AddEdge(e0); exp_nbest[0]->AddEdge(e2); exp_nbest[0]->AddEdge(e4); exp_nbest[0]->SetScore(-0.6);
-        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(e0); exp_nbest[1]->AddEdge(e3); exp_nbest[1]->AddEdge(e4); exp_nbest[1]->SetScore(-0.8);
-        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(e0); exp_nbest[2]->AddEdge(e2); exp_nbest[2]->AddEdge(e5); exp_nbest[2]->SetScore(-0.9);
-        act_nbest = rule_graph.GetNbest(3);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(2)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(4)); exp_nbest[0]->SetScore(-0.6);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(3)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(4)); exp_nbest[1]->SetScore(-0.8);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(2)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(5)); exp_nbest[2]->SetScore(-0.9);
+        act_nbest = rule_graph_->GetNbest(3);
         return CheckPtrVector(exp_nbest, act_nbest);
+    }
+
+    int TestPathTranslation() {
+        // Get the three-best edge values
+        vector<shared_ptr<HyperPath> > edges;
+        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[0]->AddEdge(rule_graph_->GetEdge(0)); edges[0]->AddEdge(rule_graph_->GetEdge(2)); edges[0]->AddEdge(rule_graph_->GetEdge(4)); edges[0]->SetScore(-0.6);
+        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[1]->AddEdge(rule_graph_->GetEdge(0)); edges[1]->AddEdge(rule_graph_->GetEdge(3)); edges[1]->AddEdge(rule_graph_->GetEdge(4)); edges[1]->SetScore(-0.8);
+        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[2]->AddEdge(rule_graph_->GetEdge(1)); edges[2]->AddEdge(rule_graph_->GetEdge(2)); edges[2]->AddEdge(rule_graph_->GetEdge(5)); edges[2]->SetScore(-0.9);
+        // Create the expected and actual values 
+        vector<string> exp_trans(3), act_trans(3);
+        exp_trans[0] = "a x";
+        exp_trans[1] = "b x";
+        exp_trans[2] = "y a";
+        for(int i = 0; i < 3; i++)
+            act_trans[i] = Dict::PrintWords(edges[i]->CalcTranslation());
+        return CheckVector(exp_trans, act_trans);
     }
 
     bool RunTest() {
@@ -204,15 +226,17 @@ public:
         done++; cout << "TestCalculateFrontier()" << endl; if(TestCalculateFrontier()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
 private:
     PennTreeIO tree_io;
-    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph;
+    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, rule_graph_;
     Sentence trg1_sent, trg2_sent, trg3_sent;
     Alignment align1, align2, align3;
+    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_01, rule_10;
 
 };
 

@@ -241,3 +241,24 @@ SparseMap HyperPath::CalcFeatures() {
         ret += edge->GetRule()->GetFeatures();
     return ret;
 }
+
+// Calculate the translation of the path
+vector<WordId> HyperPath::CalcTranslation(int & idx) {
+    vector<vector<WordId> > child_trans;
+    int my_id = idx++;
+    BOOST_FOREACH(HyperNode * tail, edges_[my_id]->GetTails()) {
+        if(tail != edges_[idx]->GetHead())
+            THROW_ERROR("Unmatching hyper-nodes " << *tail);
+        child_trans.push_back(CalcTranslation(idx));
+    }
+    vector<WordId> ret;
+    BOOST_FOREACH(int wid, SafeReference(edges_[my_id]->GetRule()).GetTrgWords()) {
+        if(wid >= 0) {
+            ret.push_back(wid);
+        } else {
+            BOOST_FOREACH(int next_wid, child_trans[-1 - wid])
+                ret.push_back(next_wid);
+        }
+    }
+    return ret;
+}

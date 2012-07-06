@@ -54,6 +54,25 @@ struct Dict {
         return oss.str();
     }
 
+    static std::string PrintWords(const std::vector<WordId> & ids) {
+        std::ostringstream oss;
+        for(int i = 0; i < (int)ids.size(); i++) {
+            if(i != 0) oss << ' ';
+            oss << WSym(ids[i]);
+        }
+        return oss.str();
+    }
+
+    static std::string PrintFeatures(const SparseMap & feats) {
+        std::ostringstream oss;
+        int sent = 0;
+        BOOST_FOREACH(const SparsePair & kv, feats) {
+            if(sent++ != 0) oss << ' ';
+            oss << Dict::WSym(kv.first) << '=' << kv.second;
+        }
+        return oss.str();
+    }
+
     // Get the word ID
     static std::vector<WordId> ParseWords(const std::string & str) {
         std::istringstream iss(str);

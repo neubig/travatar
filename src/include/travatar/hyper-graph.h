@@ -219,6 +219,9 @@ public:
     double AddScore(double score) { return (score_ += score); }
     double GetScore() { return score_; }
 
+    std::vector<WordId> CalcTranslation() { int idx = 0; return CalcTranslation(idx); }
+    std::vector<WordId> CalcTranslation(int & idx);
+
     // Calculate the features for this path by simply adding up all the features
     SparseMap CalcFeatures();
 
