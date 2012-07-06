@@ -94,17 +94,20 @@ struct Dict {
     }
 
     // Get the word ID
-    static SparseMap ParseFeatures(const std::string & str) {
-        std::istringstream iss(str);
+    static SparseMap ParseFeatures(std::istream & iss) {
         std::string buff;
         SparseMap ret;
         while(iss >> buff) {
             std::vector<std::string> columns;
             boost::algorithm::split(columns, buff, boost::is_any_of("="));
-            if(columns.size() != 2) THROW_ERROR("Bad feature string " << str);
+            if(columns.size() != 2) THROW_ERROR("Bad feature string @ " << buff);
             ret.insert(MakePair(Dict::WID(columns[0]), atof(columns[1].c_str())));
         }
         return ret;
+    }
+    static SparseMap ParseFeatures(const std::string & str) {
+        std::istringstream iss(str);
+        return ParseFeatures(iss);
     }
 
 private:

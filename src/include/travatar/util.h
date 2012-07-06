@@ -326,6 +326,17 @@ inline SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs) {
     return lhs;
 }
 
+inline double operator*(const SparseMap & lhs, const SparseMap & rhs) {
+    double ret = 0;
+    BOOST_FOREACH(const SparsePair & val, lhs) {
+        SparseMap::const_iterator it = rhs.find(val.first);
+        if(it != rhs.end()) {
+            ret += val.second * it->second;
+        }
+    }
+    return ret;
+}
+
 }  // end namespace
 
 #endif

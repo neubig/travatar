@@ -26,7 +26,8 @@ public:
 "  Usage: travatar < INPUT > OUTPUT\n"
 );
 
-        AddConfigEntry("tm", "", "Translation model file location");
+        AddConfigEntry("tm_file", "", "Translation model file location");
+        AddConfigEntry("weight_file", "", "Weight file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
 
     }

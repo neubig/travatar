@@ -185,7 +185,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
         if(node == NULL) {
             ret.push_back(curr_path);
         } else {
-            curr_path->AddScore(-1*node->GetViterbiContribution());
+            curr_path->AddScore(-1*node->GetViterbiScore());
             // Expand each different edge
             BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
                 // Create a new path that is a copy of the old one, and add
@@ -193,6 +193,8 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
                 shared_ptr<HyperPath> next_path(new HyperPath(*curr_path));
                 next_path->AddEdge(edge);
                 next_path->AddScore(edge->GetScore());
+                BOOST_FOREACH(HyperNode * node, edge->GetTails())
+                    next_path->AddScore(node->GetViterbiScore());
                 // Add the nodes in reverse order, to ensure that we
                 // are doing a depth-first left-to-right traversal
                 BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
@@ -261,4 +263,10 @@ vector<WordId> HyperPath::CalcTranslation(int & idx) {
         }
     }
     return ret;
+}
+
+// Score each edge in the graph
+void HyperGraph::ScoreEdges(const SparseMap & weights) {
+    BOOST_FOREACH(HyperEdge * edge, edges_)
+        edge->SetScore(SafeReference(edge->GetRule()).GetFeatures() * weights);
 }

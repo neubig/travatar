@@ -38,9 +38,7 @@ public:
     void AddFragmentEdge(HyperEdge* edge) {
         fragment_edges_.push_back(edge);
         score_ += edge->GetScore();
-    }
-
-   
+    }   
 
     // Get the probability (score, and must be between 0 and 1
     double GetScore() const { return score_; }
@@ -100,14 +98,12 @@ private:
     FrontierType frontier_;
     // The viterbi score of the entire subtree under this node
     double viterbi_score_;
-    // The contribution of the best edge to the score
-    double viterbi_contribution_;
 public:
     HyperNode(WordId sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
         id_(id), sym_(sym), src_span_(span), has_trg_span_(false),
-        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX), viterbi_contribution_(-DBL_MAX) { };
+        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX) { };
     ~HyperNode() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -127,14 +123,10 @@ public:
                     score += tail->GetViterbiScore();
                 if(score > viterbi_score_) {
                     viterbi_score_ = score;
-                    viterbi_contribution_ = edge->GetScore();
                 }
             }
         }
         return viterbi_score_;
-    }
-    double GetViterbiContribution() {
-        return viterbi_contribution_;
     }
 
     // Calculate the spans and frontiers using the GHKM algorithm
@@ -267,6 +259,9 @@ public:
         BOOST_FOREACH(HyperEdge* edge, edges_)
             delete edge;
     };
+
+    // Score each edge in the graph
+    void ScoreEdges(const SparseMap & weights);
 
     // Get the n-best paths through the graph
     std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n);
