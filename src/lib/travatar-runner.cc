@@ -1,4 +1,5 @@
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/tree-io.h>
@@ -25,8 +26,24 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
     SparseMap weights = Dict::ParseFeatures(weight_in);
     weight_in.close();
-    // Process one at a time
+    // Open the n-best output stream if it exists
     int nbest_count = config.GetInt("nbest");
+    scoped_ptr<ostream> nbest_out;
+    if(config.GetString("nbest_out") != "") {
+        nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
+        if(!*nbest_out)
+            THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
+    } else {
+        nbest_count = 1;
+    }
+    // Open the n-best output stream if it exists
+    scoped_ptr<ostream> trace_out;
+    if(config.GetString("trace_out") != "") {
+        trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
+        if(!*trace_out)
+            THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
+    }
+    // Process one at a time
     int sent = 0;
     string line;
     PennTreeIO penn;
@@ -39,15 +56,26 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         rule_graph->ScoreEdges(weights);
         rule_graph->ResetViterbiScores();
         vector<shared_ptr<HyperPath> > nbest_list = rule_graph->GetNbest(nbest_count);
-        if(nbest_count == 1) {
-            cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
-        } else {
+        cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
+        if(nbest_out.get() != NULL) {
             BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
-                cout 
+                *nbest_out
                     << sent
                     << " ||| " << Dict::PrintWords(path->CalcTranslation(tree_graph->GetWords()))
                     << " ||| " << path->GetScore()
                     << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
+            }
+        }
+        if(trace_out.get() != NULL) {
+            BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
+                const TranslationRule * rule = edge->GetRule();
+                *trace_out
+                    << sent
+                    << " ||| " << edge->GetHead()->GetSpan()
+                    << " ||| " << rule->GetSrcStr() 
+                    << " ||| " << Dict::PrintAnnotatedWords(rule->GetTrgWords())
+                    << " ||| " << Dict::PrintFeatures(rule->GetFeatures())
+                    << endl;
             }
         }
         sent++;

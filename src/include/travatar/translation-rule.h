@@ -29,7 +29,7 @@ public:
     }
 
     void Print(std::ostream & out) const {
-        out << "{\"src\": \""<<src_str_;
+        out << "{\"src\": \""<<src_str_ << "\"";
         if(trg_words_.size()) {
             out << ", \"trg_words\": [";
             for(int i = 0; i < (int)trg_words_.size(); i++)
@@ -39,7 +39,7 @@ public:
             int pos = 0;
             out << ", \"features\": {";
             BOOST_FOREACH(const SparsePair & val, features_) {
-                out << "\""<<Dict::WSym(val.first)<<"\": " << val.second<<(pos++?", ":"");
+                out << (pos++?", ":"") << "\""<<Dict::WSym(val.first)<<"\": " << val.second;
             }
             out << "}";
         }

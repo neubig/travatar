@@ -47,7 +47,9 @@ struct Dict {
     // Get the
     static std::string WAnnotatedSym(WordId id) {
         std::ostringstream oss;
-        if(id < 0)
+        if(id == INT_MAX)
+            oss << "<UNK>";
+        else if(id < 0)
             oss << "x" << -1+id*-1;
         else
             oss << '"' << wids_.GetSymbol(id) << '"';
@@ -59,6 +61,15 @@ struct Dict {
         for(int i = 0; i < (int)ids.size(); i++) {
             if(i != 0) oss << ' ';
             oss << WSym(ids[i]);
+        }
+        return oss.str();
+    }
+
+    static std::string PrintAnnotatedWords(const std::vector<WordId> & ids) {
+        std::ostringstream oss;
+        for(int i = 0; i < (int)ids.size(); i++) {
+            if(i != 0) oss << ' ';
+            oss << WAnnotatedSym(ids[i]);
         }
         return oss.str();
     }

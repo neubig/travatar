@@ -29,6 +29,8 @@ public:
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("weight_file", "", "Weight file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
+        AddConfigEntry("nbest_out", "", "n-best output file location");
+        AddConfigEntry("trace_out", "", "trace output file location");
 
     }
 	
