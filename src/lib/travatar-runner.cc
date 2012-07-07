@@ -13,12 +13,14 @@ using namespace boost;
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load the rule table
     ifstream tm_in(config.GetString("tm_file").c_str());
+    cerr << "Reading tm file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
     shared_ptr<LookupTableHash> tm(LookupTableHash::ReadFromRuleTable(tm_in));
     tm_in.close();
     // Load the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
+    cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
     if(!weight_in)
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
     SparseMap weights = Dict::ParseFeatures(weight_in);
@@ -28,6 +30,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     int sent = 0;
     string line;
     PennTreeIO penn;
+    cerr << "Translating..." << endl;
     while(getline(std::cin, line)) {
         istringstream in(line);
         shared_ptr<HyperGraph> tree_graph(penn.ReadTree(in));
@@ -48,5 +51,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             }
         }
         sent++;
+        cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
+    cerr << endl << "Done translating..." << endl;
 }

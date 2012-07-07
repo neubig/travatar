@@ -92,7 +92,10 @@ public:
         exp_rules[6] = new TranslationRule("VB ( \"go\" )");
         exp_rules[6]->AddTrgWord(Dict::WID("va"));
         exp_rules[6]->AddFeature("Pegf", 0.7); exp_rules[6]->AddFeature("ppen", 2.718);
-        return CheckPtrVector(exp_rules, act_rules);
+        int ret =  CheckPtrVector(exp_rules, act_rules);
+        BOOST_FOREACH(TranslationRule * rule, exp_rules)
+            delete rule;
+        return ret;
     }
 
     int TestBuildRuleGraph() {

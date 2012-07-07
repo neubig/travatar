@@ -28,6 +28,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     // Get the lines
     string src_line, trg_line, align_line;
     int has_src, has_trg, has_align;
+    int sent = 0;
+    cerr << "Extracting rules (.=10,000, !=100,000 sentences)" << endl;
     while(true) {
         // Load one line from each file and check that they all exist
         has_src = getline(src_in, src_line) ? 1 : 0;
@@ -51,5 +53,10 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             cout << extractor.RuleToString(*edge, 
                                            src_graph->GetWords(), 
                                            trg_sent) << endl;
+        sent++;
+        if(sent % 10000 == 0) {
+            cerr << (sent % 100000 == 0 ? '!' : '.'); cerr.flush();
+        }
     }
+    cerr << endl;
 }

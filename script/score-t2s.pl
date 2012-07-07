@@ -9,8 +9,10 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $TOP_N = 10;
+my $SRC_MIN_FREQ = 2;
 GetOptions(
-    "top-n=i" => \$TOP_N
+    "top-n=i" => \$TOP_N,
+    "src-min-freq=i" => \$SRC_MIN_FREQ
 );
 
 if(@ARGV != 0) {
@@ -22,6 +24,7 @@ sub print_counts {
     my $id = shift;
     my $counts = shift;
     my $sum = sum(values %$counts);
+    return if $sum < $SRC_MIN_FREQ;
     my @keys = keys %$counts;
     if(@keys > $TOP_N) {
         @keys = sort { $counts->{$b} <=> $counts->{$a} } @keys;

@@ -219,6 +219,11 @@ public:
     // Calculate the features for this path by simply adding up all the features
     SparseMap CalcFeatures();
 
+    const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
+    std::vector<HyperEdge*> & GetEdges() { return edges_; }
+    const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
+    HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
+
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
     void Print(std::ostream & out) const;

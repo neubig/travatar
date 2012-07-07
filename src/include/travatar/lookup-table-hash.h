@@ -26,7 +26,11 @@ protected:
 class LookupTableHash : public LookupTable {
 public:
     LookupTableHash() { }
-    virtual ~LookupTableHash() { };
+    virtual ~LookupTableHash() {
+        BOOST_FOREACH(RulePair & rule_pair, rules_)
+            BOOST_FOREACH(TranslationRule * rule, rule_pair.second)
+                delete rule;
+    };
 
     virtual LookupState * GetInitialState() {
         return new LookupStateHash;
@@ -86,6 +90,7 @@ protected:
 protected:
     std::tr1::unordered_set<std::string> src_matches;
     typedef std::tr1::unordered_map<std::string, std::vector<TranslationRule*> > RuleMap;
+    typedef std::pair<const std::string, std::vector<TranslationRule*> > RulePair;
     RuleMap rules_;
 
 };

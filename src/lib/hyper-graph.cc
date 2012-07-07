@@ -165,7 +165,8 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
 class ComparePathScore {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
-        return x->GetScore() < y->GetScore();
+        if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() < y->GetScore();
+        return x->GetEdges().size() < y->GetEdges().size();
     }
 };
 
