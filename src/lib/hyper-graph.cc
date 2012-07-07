@@ -245,17 +245,30 @@ SparseMap HyperPath::CalcFeatures() {
 }
 
 // Calculate the translation of the path
-vector<WordId> HyperPath::CalcTranslation(int & idx) {
+vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> & src_words) {
     vector<vector<WordId> > child_trans;
     int my_id = idx++;
-    BOOST_FOREACH(HyperNode * tail, edges_[my_id]->GetTails()) {
+    BOOST_FOREACH(HyperNode * tail, SafeAccess(edges_, my_id)->GetTails()) {
         if(tail != edges_[idx]->GetHead())
             THROW_ERROR("Unmatching hyper-nodes " << *tail);
-        child_trans.push_back(CalcTranslation(idx));
+        child_trans.push_back(CalcTranslation(idx, src_words));
     }
     vector<WordId> ret;
     BOOST_FOREACH(int wid, SafeReference(edges_[my_id]->GetRule()).GetTrgWords()) {
-        if(wid >= 0) {
+        // Special handling of unknowns
+        if(wid == INT_MAX) {
+            // For terminals, map all source words into the target
+            if(edges_[my_id]->GetTails().size() == 0) {
+                pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
+                for(int i = span.first; i < span.second; i++)
+                    ret.push_back(src_words[i]);
+            // For non-terminals, map in order
+            } else {
+                BOOST_FOREACH(const vector<int> & vec, child_trans)
+                    BOOST_FOREACH(int next_wid, vec)
+                        ret.push_back(next_wid);
+            }
+        } else if(wid >= 0) {
             ret.push_back(wid);
         } else {
             BOOST_FOREACH(int next_wid, child_trans[-1 - wid])

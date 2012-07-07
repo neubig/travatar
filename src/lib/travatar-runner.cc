@@ -37,12 +37,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         rule_graph->ResetViterbiScores();
         vector<shared_ptr<HyperPath> > nbest_list = rule_graph->GetNbest(nbest_count);
         if(nbest_count == 1) {
-            cout << Dict::PrintWords(nbest_list[0]->CalcTranslation()) << endl;
+            cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
         } else {
             BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
                 cout 
                     << sent
-                    << " ||| " << Dict::PrintWords(path->CalcTranslation())
+                    << " ||| " << Dict::PrintWords(path->CalcTranslation(tree_graph->GetWords()))
                     << " ||| " << path->GetScore()
                     << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
             }

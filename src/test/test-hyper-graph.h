@@ -61,9 +61,11 @@ public:
         align3 = Alignment::FromString(align3_str);
         // Example rule graph
         rule_graph_.reset(new HyperGraph);
-        HyperNode * n0 = new HyperNode; rule_graph_->AddNode(n0);
-        HyperNode * n1 = new HyperNode; rule_graph_->AddNode(n1);
-        HyperNode * n2 = new HyperNode; rule_graph_->AddNode(n2);
+        vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
+        rule_graph_->SetWords(ab);
+        HyperNode * n0 = new HyperNode; n0->SetSpan(MakePair(0,2)); rule_graph_->AddNode(n0);
+        HyperNode * n1 = new HyperNode; n1->SetSpan(MakePair(0,1)); rule_graph_->AddNode(n1);
+        HyperNode * n2 = new HyperNode; n2->SetSpan(MakePair(1,2)); rule_graph_->AddNode(n2);
         rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
         HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
         rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
@@ -76,6 +78,8 @@ public:
         HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
         rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
         HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
+        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(INT_MAX);
+        HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
     }
 
 
@@ -203,17 +207,19 @@ public:
 
     int TestPathTranslation() {
         // Get the three-best edge values
-        vector<shared_ptr<HyperPath> > edges;
-        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[0]->AddEdge(rule_graph_->GetEdge(0)); edges[0]->AddEdge(rule_graph_->GetEdge(2)); edges[0]->AddEdge(rule_graph_->GetEdge(4)); edges[0]->SetScore(-0.6);
-        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[1]->AddEdge(rule_graph_->GetEdge(0)); edges[1]->AddEdge(rule_graph_->GetEdge(3)); edges[1]->AddEdge(rule_graph_->GetEdge(4)); edges[1]->SetScore(-0.8);
-        edges.push_back(shared_ptr<HyperPath>(new HyperPath)); edges[2]->AddEdge(rule_graph_->GetEdge(1)); edges[2]->AddEdge(rule_graph_->GetEdge(2)); edges[2]->AddEdge(rule_graph_->GetEdge(5)); edges[2]->SetScore(-0.9);
+        vector<shared_ptr<HyperPath> > paths;
+        paths.push_back(shared_ptr<HyperPath>(new HyperPath)); paths[0]->AddEdge(rule_graph_->GetEdge(0)); paths[0]->AddEdge(rule_graph_->GetEdge(2)); paths[0]->AddEdge(rule_graph_->GetEdge(4)); paths[0]->SetScore(-0.6);
+        paths.push_back(shared_ptr<HyperPath>(new HyperPath)); paths[1]->AddEdge(rule_graph_->GetEdge(0)); paths[1]->AddEdge(rule_graph_->GetEdge(3)); paths[1]->AddEdge(rule_graph_->GetEdge(4)); paths[1]->SetScore(-0.8);
+        paths.push_back(shared_ptr<HyperPath>(new HyperPath)); paths[2]->AddEdge(rule_graph_->GetEdge(1)); paths[2]->AddEdge(rule_graph_->GetEdge(2)); paths[2]->AddEdge(rule_graph_->GetEdge(5)); paths[2]->SetScore(-0.9);
+        paths.push_back(shared_ptr<HyperPath>(new HyperPath)); paths[3]->AddEdge(rule_graph_->GetEdge(1)); paths[3]->AddEdge(rule_graph_->GetEdge(2)); paths[3]->AddEdge(rule_graph_->GetEdge(6)); paths[3]->SetScore(-2.9);
         // Create the expected and actual values 
-        vector<string> exp_trans(3), act_trans(3);
+        vector<string> exp_trans(4), act_trans(4);
         exp_trans[0] = "a x";
         exp_trans[1] = "b x";
         exp_trans[2] = "y a";
-        for(int i = 0; i < 3; i++)
-            act_trans[i] = Dict::PrintWords(edges[i]->CalcTranslation());
+        exp_trans[3] = "t a";
+        for(int i = 0; i < 4; i++)
+            act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(rule_graph_->GetWords()));
         return CheckVector(exp_trans, act_trans);
     }
 
@@ -236,7 +242,7 @@ private:
     boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, rule_graph_;
     Sentence trg1_sent, trg2_sent, trg3_sent;
     Alignment align1, align2, align3;
-    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_01, rule_10;
+    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
 
 };
 

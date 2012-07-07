@@ -211,8 +211,10 @@ public:
     double AddScore(double score) { return (score_ += score); }
     double GetScore() { return score_; }
 
-    std::vector<WordId> CalcTranslation() { int idx = 0; return CalcTranslation(idx); }
-    std::vector<WordId> CalcTranslation(int & idx);
+    std::vector<WordId> CalcTranslation(const std::vector<WordId> & src_words) { 
+        int idx = 0; return CalcTranslation(idx, src_words);
+    }
+    std::vector<WordId> CalcTranslation(int & idx, const std::vector<WordId> & src_words);
 
     // Calculate the features for this path by simply adding up all the features
     SparseMap CalcFeatures();
@@ -325,6 +327,7 @@ public:
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_,i); }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     int NumEdges() const { return edges_.size(); }
+    WordId GetWord(int i) const { return SafeAccess(words_, i); }
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
     void SetWords(const std::vector<WordId> & words) { words_ = words; }
