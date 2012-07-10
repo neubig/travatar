@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
+#include <lm/left.hh>
 
 namespace travatar {
 
@@ -13,6 +14,7 @@ typedef short NodeId;
 class HyperNode;
 class HyperGraph;
 class TranslationRule;
+typedef std::vector<HyperNode*> ChartEntry;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -20,13 +22,15 @@ protected:
     NodeId id_;
     HyperNode* head_;
     std::vector<HyperNode*> tails_;
-    const TranslationRule* rule_;
     double score_;
+    std::string rule_str_;
+    std::vector<WordId> trg_words_;
+    SparseMap features_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
     std::vector<HyperEdge*> fragment_edges_;
 public:
-    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), rule_(NULL), score_(0.0) { };
+    HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), score_(0.0) { };
     ~HyperEdge() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -49,13 +53,21 @@ public:
     NodeId GetId() const { return id_; }
     void SetHead(HyperNode* head) { head_ = head; }
     HyperNode* GetHead() const { return head_; }
+    const HyperNode* GetTail(int i) const { return tails_[i]; }
+    HyperNode* GetTail(int i) { return tails_[i]; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
     void SetTails(const std::vector<HyperNode*> & tails) { tails_ = tails; }
     const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
     std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
-    const TranslationRule * GetRule() const { return rule_; }
-    void SetRule(const TranslationRule * rule) { rule_ = rule; }
+    // const TranslationRule * GetRule() const { return rule_; }
+    void SetRule(const TranslationRule * rule);
+    const std::string & GetRuleStr() const { return rule_str_; }
+    const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
+    const SparseMap & GetFeatures() const { return features_; }
+    std::string & GetRuleStr() { return rule_str_; }
+    std::vector<WordId> & GetTrgWords() { return trg_words_; }
+    SparseMap & GetFeatures() { return features_; }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;
@@ -321,6 +333,19 @@ public:
         BOOST_FOREACH(HyperNode * node, nodes_)
             node->SetViterbiScore(-DBL_MAX);
     }
+
+    // Intersect this graph with a language model, using cube pruning to control
+    // the overall state space.
+    HyperGraph * IntersectWithLM(const lm::ngram::Model & lm, double lm_weight, int stack_pop_limit = INT_MAX);
+
+    const ChartEntry & BuildChart(
+                        const lm::ngram::Model & lm, 
+                        double lm_weight,
+                        int stack_pop_limit, 
+                        std::vector<boost::shared_ptr<ChartEntry> > & chart, 
+                        std::vector<lm::ngram::ChartState> & states, 
+                        int id,
+                        HyperGraph & graph);
 
     // Accessors
     const HyperNode* GetNode(int i) const { return SafeAccess(nodes_,i); }

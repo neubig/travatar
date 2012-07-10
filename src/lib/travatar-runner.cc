@@ -68,13 +68,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         }
         if(trace_out.get() != NULL) {
             BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
-                const TranslationRule * rule = edge->GetRule();
                 *trace_out
                     << sent
                     << " ||| " << edge->GetHead()->GetSpan()
-                    << " ||| " << rule->GetSrcStr() 
-                    << " ||| " << Dict::PrintAnnotatedWords(rule->GetTrgWords())
-                    << " ||| " << Dict::PrintFeatures(rule->GetFeatures())
+                    << " ||| " << edge->GetRuleStr() 
+                    << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords())
+                    << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                     << endl;
             }
         }

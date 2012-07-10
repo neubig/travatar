@@ -1,11 +1,17 @@
+#include <lm/left.hh>
+#include <lm/model.hh>
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
+#include <travatar/generic-string.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/tr1/unordered_set.hpp>
 #include <queue>
+#include <map>
 
 using namespace std;
 using namespace travatar;
 using namespace boost;
+using namespace lm::ngram;
 
 
 // Refresh the pointers to head and tail nodes so they point to
@@ -30,8 +36,6 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
     if(id_ != rhs.id_ ||
        (head_==NULL) != (rhs.head_==NULL) ||
        (head_!=NULL && head_->GetId() != rhs.head_->GetId()) ||
-       (rule_==NULL) != (rhs.rule_==NULL) ||
-       (rule_!=NULL && *rule_ != *rhs.rule_) ||
        (tails_.size() != rhs.tails_.size()))
         return false;
     for(int i = 0; i < (int)tails_.size(); i++)
@@ -53,8 +57,6 @@ void HyperEdge::Print(std::ostream & out) const {
         for(int i = 0; i < (int)tails_.size(); i++)
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
     }
-    if(rule_ != NULL)
-        out << ", \"rule\": " << *rule_;
     out << "}";
 }
 
@@ -241,7 +243,7 @@ void HyperPath::Print(std::ostream & out) const {
 SparseMap HyperPath::CalcFeatures() {
     SparseMap ret;
     BOOST_FOREACH(HyperEdge* edge, edges_)
-        ret += edge->GetRule()->GetFeatures();
+        ret += edge->GetFeatures();
     return ret;
 }
 
@@ -255,7 +257,7 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
         child_trans.push_back(CalcTranslation(idx, src_words));
     }
     vector<WordId> ret;
-    BOOST_FOREACH(int wid, SafeReference(edges_[my_id]->GetRule()).GetTrgWords()) {
+    BOOST_FOREACH(int wid, edges_[my_id]->GetTrgWords()) {
         // Special handling of unknowns
         if(wid == INT_MAX) {
             // For terminals, map all source words into the target
@@ -282,5 +284,120 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
 // Score each edge in the graph
 void HyperGraph::ScoreEdges(const SparseMap & weights) {
     BOOST_FOREACH(HyperEdge * edge, edges_)
-        edge->SetScore(SafeReference(edge->GetRule()).GetFeatures() * weights);
+        edge->SetScore(edge->GetFeatures() * weights);
+}
+
+class QueueEntry {
+public:
+    QueueEntry(double score, double lm_score, const GenericString<int> & id) :
+        score_(score), lm_score_(lm_score), id_(id) { }
+    // Score of the entry
+    double score_, lm_score_;
+    GenericString<int> id_;
+};
+
+const ChartEntry & HyperGraph::BuildChart(
+                    const Model & lm, 
+                    double lm_weight,
+                    int stack_pop_limit, 
+                    vector<shared_ptr<ChartEntry> > & chart, 
+                    vector<ChartState> & states, 
+                    int id,
+                    HyperGraph & graph) {
+    // Don't build already finished charts
+    if(chart[id].get() != NULL) return *chart[id];
+    chart[id].reset(new ChartEntry);
+    // The priority queue of values yet to be expanded
+    priority_queue<pair<double, GenericString<int> > > hypo_queue;
+    // The hypothesis combination map
+    map<ChartState, HyperNode*> hypo_comb;
+    // The set indicating already-expanded combinations
+    unordered_set<GenericString<int> > finished;
+    // For each edge outgoing from this node, add its best hypothesis
+    // to the chart
+    const vector<HyperEdge*> & node_edges = nodes_[id]->GetEdges();
+    for(int i = 0; i < (int)node_edges.size(); i++) {
+        HyperEdge * my_edge = node_edges[i];
+        GenericString<int> q_id(my_edge->GetTails().size()+1);
+        q_id[0] = i;
+        double viterbi_score = my_edge->GetScore();
+        for(int j = 1; i < (int)q_id.length(); j++) {
+            q_id[j] = 0;
+            const ChartEntry & my_entry = BuildChart(lm, lm_weight, stack_pop_limit, chart, states, my_edge->GetTail(j-1)->GetId(), graph);
+            viterbi_score += my_entry[0]->GetViterbiScore();
+        }
+        hypo_queue.push(MakePair(viterbi_score, q_id));
+    }
+    // For each edge on the queue, process it
+    int num_popped = 0;
+    while(hypo_queue.size() != 0) {
+        if(num_popped++ >= stack_pop_limit) break;
+        // Get the score, id string, and edge
+        double top_score = hypo_queue.top().first;
+        const GenericString<int> & id_str = hypo_queue.top().second;
+        const HyperEdge * id_edge = nodes_[id]->GetEdge(id_str[0]);
+        hypo_queue.pop();
+        // Find the chart state and LM probability
+        HyperEdge * next_edge = new HyperEdge;
+        ChartState my_state;
+        RuleScore<lm::ngram::Model> my_rule_score(lm, my_state);
+        BOOST_FOREACH(int trg_id, id_edge->GetTrgWords()) {
+            if(trg_id < 0) {
+                int curr_id = -1 - trg_id;
+                vector<HyperNode*> nodes;
+                // Get the chart for the particular node we're interested in
+                const ChartEntry & my_entry = BuildChart(lm, lm_weight, stack_pop_limit, chart, states, id_edge->GetTail(curr_id)->GetId(), graph);
+                // From the node, get the appropriately ranked edge
+                HyperNode * chart_node = my_entry[id_str[curr_id+1]];
+                // Add that edge to our non-terminal
+                my_rule_score.NonTerminal(states[chart_node->GetId()], 0);
+            } else {
+                my_rule_score.Terminal(trg_id);
+            }
+        }
+        double lm_score = my_rule_score.Finish();
+        // Retrieve the hypothesis
+        map<ChartState, HyperNode*>::iterator it = hypo_comb.find(my_state);
+        HyperNode * next_node;
+        if(it == hypo_comb.end()) {
+            // Create a new copy of the current node
+            next_node = new HyperNode;
+            next_node->SetSpan(nodes_[id]->GetSpan());
+            next_node->SetSym(nodes_[id]->GetSym());
+            graph.AddNode(next_node);
+            hypo_comb.insert(MakePair(my_state, next_node));
+            chart[id]->push_back(next_node);
+        } else {
+            next_node = it->second;
+        }
+        next_node->SetViterbiScore(top_score+lm_score*lm_weight);
+        next_edge->SetHead(next_node);
+        next_edge->GetFeatures().insert(MakePair(Dict::WID("lm"), lm_score));
+        graph.AddEdge(next_edge);
+    }
+    // TODO: sort
+    return *chart[id];
+}
+
+// Intersect this graph with a language model, using cube pruning to control
+// the overall state space.
+using namespace lm::ngram;
+HyperGraph * HyperGraph::IntersectWithLM(const Model & lm, double lm_weight, int stack_pop_limit) {
+    // Create the chart
+    //  contains one vector for each node in the old graph
+    //   each element of the vector is a node in the new graph
+    //   these must be sorted in ascending order of Viterbi probability
+    vector<shared_ptr<ChartEntry> > chart(nodes_.size());
+    // This contains the chart states, indexed by node IDs in the new graph
+    vector<ChartState> states;
+    HyperGraph * ret = new HyperGraph;
+    BuildChart(lm, lm_weight, stack_pop_limit, chart, states, 0, *ret);
+    return ret;
+}
+
+
+void HyperEdge::SetRule(const TranslationRule * rule) {
+    rule_str_ = rule->GetSrcStr();
+    features_ = rule->GetFeatures();
+    trg_words_ = rule->GetTrgWords();
 }
