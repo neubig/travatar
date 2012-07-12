@@ -228,14 +228,15 @@ public:
         ofstream arpa_out(file_name.c_str());
         arpa_out << ""
 "\\data\\\n"
-"ngram 1=6\n"
-"ngram 2=7\n"
+"ngram 1=7\n"
+"ngram 2=8\n"
 "\n"
 "\\1-grams:\n"
 "-0.6368221	</s>\n"
 "-99	<s>	-0.30103\n"
 "-0.6368221	a	-0.4771213\n"
 "-0.6368221	b	-0.30103\n"
+"-0.6368221	c	-0.30103\n"
 "-0.8129134	x	-0.30103\n"
 "-0.8129134	y	-0.30103\n"
 "\n"
@@ -243,6 +244,7 @@ public:
 "-0.4372497	<s> a\n"
 "-0.4855544	<s> y\n"
 "-0.1286666	a b\n"
+"-0.1286666	a c\n"
 "-0.4372497	b </s>\n"
 "-0.4855544	b x\n"
 "-0.2108534	x </s>\n"
@@ -273,28 +275,34 @@ public:
         // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
         HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ax);
         HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ay);
-        // HyperNode * n_02_xb = new HyperNode; n_02_xb->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_xb);
-        // HyperNode * n_02_xc = new HyperNode; n_02_xc->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_xc);
-        // HyperNode * n_02_yb = new HyperNode; n_02_yb->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_yb);
-        // HyperNode * n_02_yc = new HyperNode; n_02_yc->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_yc);
         // Make edges for 0,1. There are only 2, so no pruning
-        HyperEdge * e_01_ab = new HyperEdge(n_01_ab); exp_graph->AddEdge(e_01_ab); n_01_ab->AddEdge(e_01_ab); e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures());
-        HyperEdge * e_01_ac = new HyperEdge(n_01_ac); exp_graph->AddEdge(e_01_ac); n_01_ac->AddEdge(e_01_ac); e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures());
+        HyperEdge * e_01_ab = new HyperEdge(n_01_ab); exp_graph->AddEdge(e_01_ab); n_01_ab->AddEdge(e_01_ab);
+        e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures()); e_01_ab->AddFeature(Dict::WID("lm"), -0.1286666);
+        HyperEdge * e_01_ac = new HyperEdge(n_01_ac); exp_graph->AddEdge(e_01_ac); n_01_ac->AddEdge(e_01_ac);
+        e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures()); e_01_ac->AddFeature(Dict::WID("lm"), -0.1286666);
         // Make edges for 1,2. There are only 3, so no pruning
-        HyperEdge * e_12_x = new HyperEdge(n_12_x); exp_graph->AddEdge(e_12_x); n_12_x->AddEdge(e_12_x); e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures());
-        HyperEdge * e_12_y = new HyperEdge(n_12_y); exp_graph->AddEdge(e_12_y); n_12_y->AddEdge(e_12_y); e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures());
-        HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t); e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures());
+        HyperEdge * e_12_x = new HyperEdge(n_12_x); exp_graph->AddEdge(e_12_x); n_12_x->AddEdge(e_12_x);
+        e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures()); e_12_x->AddFeature(Dict::WID("lm"), -0.8129134); // P(x)
+        HyperEdge * e_12_y = new HyperEdge(n_12_y); exp_graph->AddEdge(e_12_y); n_12_y->AddEdge(e_12_y);
+        e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures()); e_12_y->AddFeature(Dict::WID("lm"), -0.8129134); // P(y)
+        HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t);
+        e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures()); e_12_t->AddFeature(Dict::WID("lm"), -100); // P(unk)
         // Make edges for 0,2. There are more than three, so only expand the best three
-        HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx); e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx);
+        e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_abx->AddFeature(Dict::WID("lm"), -0.4855544);
         e_02_abx->AddTail(n_01_ab); e_02_abx->AddTail(n_12_x);
-        HyperEdge * e_02_acx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_acx); n_02_ax->AddEdge(e_02_acx); e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        HyperEdge * e_02_acx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_acx); n_02_ax->AddEdge(e_02_acx);
+        e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_acx->AddFeature(Dict::WID("lm"), -0.8129134);
         e_02_acx->AddTail(n_01_ac); e_02_acx->AddTail(n_12_x);
-        HyperEdge * e_02_aby = new HyperEdge(n_02_ay); exp_graph->AddEdge(e_02_aby); n_02_ay->AddEdge(e_02_aby); e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        HyperEdge * e_02_aby = new HyperEdge(n_02_ay); exp_graph->AddEdge(e_02_aby); n_02_ay->AddEdge(e_02_aby);
+        e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_aby->AddFeature(Dict::WID("lm"), -0.30103 + -0.8129134);
         e_02_aby->AddTail(n_01_ab); e_02_aby->AddTail(n_12_y);
         // Make edges for the root. There are only two
-        HyperEdge * e_root_ax = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ax); n_root->AddEdge(e_root_ax); e_root_ax->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        HyperEdge * e_root_ax = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ax); n_root->AddEdge(e_root_ax);
+        e_root_ax->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_root_ax->AddFeature(Dict::WID("lm"), -0.4372497 + -0.2108534);
         e_root_ax->AddTail(n_02_ax);
-        HyperEdge * e_root_ay = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ay); n_root->AddEdge(e_root_ay); e_root_ay->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        HyperEdge * e_root_ay = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ay); n_root->AddEdge(e_root_ay);
+        e_root_ay->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_root_ay->AddFeature(Dict::WID("lm"), -0.4372497 + 0.8129134 + -0.30103 + -0.6368221);
         e_root_ay->AddTail(n_02_ay);
         return exp_graph->CheckEqual(*act_graph);
     }

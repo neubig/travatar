@@ -314,7 +314,7 @@ inline string PrintContext(const State & context) {
     out << "[";
     for(unsigned i = 0; i < context.length; i++) {
         if(i != 0) out << ", ";
-        out << Dict::WSym(context.words[i]);
+        out << context.words[i];
     }
     out << "]";
     return out.str();
@@ -324,7 +324,7 @@ inline string PrintContext(const Left & context) {
     out << "[";
     for(unsigned i = 0; i < context.length; i++) {
         if(i != 0) out << ", ";
-        out << Dict::WSym(context.pointers[i]);
+        out << context.pointers[i];
     }
     out << "]";
     return out.str();
@@ -370,7 +370,7 @@ const ChartEntry & HyperGraph::BuildChart(
         double top_score = hypo_queue.top().first;
         GenericString<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes_[id]->GetEdge(id_str[0]);
-        cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge<<endl;
+        // cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge<<endl;
         hypo_queue.pop();
         // Find the chart state and LM probability
         HyperEdge * next_edge = new HyperEdge;
@@ -398,16 +398,17 @@ const ChartEntry & HyperGraph::BuildChart(
                 }
                 // Add that edge to our non-terminal
                 const ChartState & child_state = SafeAccess(states, chart_node->GetId());
-                cerr << " Adding node context " << *chart_node << " : " << PrintContext(child_state.left) << ", " << PrintContext(child_state.right) << endl;
+                // cerr << " Adding node context " << *chart_node << " : " << PrintContext(child_state.left) << ", " << PrintContext(child_state.right) << endl;
                 my_rule_score.NonTerminal(child_state, 0);
             } else {
-                cerr << " Adding word " << Dict::WSym(trg_id) << endl;
-                my_rule_score.Terminal(trg_id);
+                // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
+                // Re-index vocabulary
+                my_rule_score.Terminal(lm.GetVocabulary().Index(Dict::WSym(trg_id)));
             }
         }
         double lm_score = my_rule_score.Finish();
         // Retrieve the hypothesis
-        cerr << " Finding node: (id_str=" << id_str << ") @ " << PrintContext(my_state.left) << ", " << PrintContext(my_state.right) << endl;
+        // cerr << " LM prob "<<lm_score<<" for: (id_str=" << id_str << ") @ " << PrintContext(my_state.left) << ", " << PrintContext(my_state.right) << endl;
         map<ChartState, HyperNode*>::iterator it = hypo_comb.find(my_state);
         HyperNode * next_node;
         if(it == hypo_comb.end()) {
@@ -422,11 +423,11 @@ const ChartEntry & HyperGraph::BuildChart(
         }
         next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight));
         next_edge->SetHead(next_node);
-        next_edge->GetFeatures().insert(MakePair(Dict::WID("lm"), lm_score));
+        if(lm_score != 0.0)
+            next_edge->GetFeatures().insert(MakePair(Dict::WID("lm"), lm_score));
         graph.AddEdge(next_edge);
-        // cerr << "Added edge: " << *next_edge << endl;
         next_node->AddEdge(next_edge);
-        cerr << " Updated node: " << *next_node << endl;
+        // cerr << " Updated node: " << *next_node << endl;
     }
     sort(chart[id]->begin(), chart[id]->end(), NodeScoreMore());
     return *chart[id];
@@ -462,7 +463,8 @@ HyperGraph * HyperGraph::IntersectWithLM(const Model & lm, double lm_weight, int
         double my_score = my_rule_score.Finish();
         edge->SetScore(my_score*lm_weight);
         edge->AddTail(node);
-        edge->AddFeature(Dict::WID("lm"), my_score);
+        if(my_score != 0.0)
+            edge->AddFeature(Dict::WID("lm"), my_score);
         ret->AddEdge(edge);
         root->AddEdge(edge);
     }

@@ -9,7 +9,7 @@ bool operator==(const SparseMap & lhs, const SparseMap & rhs) {
         return false;
     BOOST_FOREACH(const SparsePair & kv, lhs) {
         SparseMap::const_iterator it = rhs.find(kv.first);
-        if(it == rhs.end() || it->second != kv.second) return false;
+        if(it == rhs.end() || abs(it->second- kv.second) > 1e-6) return false;
     }
     return true;
 }
