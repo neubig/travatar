@@ -30,7 +30,7 @@ protected:
 // This will be overloaded with an actual implementation
 class LookupTable {
 public:
-    LookupTable() : unk_rule_("UNK", std::vector<WordId>(1,INT_MAX), Dict::ParseFeatures("unk=1")) { }
+    LookupTable() : unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")) { }
     virtual ~LookupTable() { };
 
     HyperGraph * BuildRuleGraph(const HyperGraph & parse);

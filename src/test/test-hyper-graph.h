@@ -70,18 +70,17 @@ public:
         HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
         rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
         HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
-        rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a"));
+        rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
         HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
-        rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("b"));
+        rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
         HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
         rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
         HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
         rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
         HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(INT_MAX);
+        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
         HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
     }
-
 
     ~TestHyperGraph() { }
 
@@ -193,7 +192,7 @@ public:
         vector<double> exp_scores(3), act_scores(3);
         exp_scores[0] = -0.6; exp_scores[1] = -0.1; exp_scores[2] = -0.2;
         for(int i = 0; i < 3; i++)
-            act_scores[i] = rule_graph_->GetNode(i)->GetViterbiScore();
+            act_scores[i] = rule_graph_->GetNode(i)->CalcViterbiScore();
         if(!CheckAlmostVector(exp_scores, act_scores))
             return false;
         // Get the three-best edge values
@@ -214,13 +213,90 @@ public:
         paths.push_back(shared_ptr<HyperPath>(new HyperPath)); paths[3]->AddEdge(rule_graph_->GetEdge(1)); paths[3]->AddEdge(rule_graph_->GetEdge(2)); paths[3]->AddEdge(rule_graph_->GetEdge(6)); paths[3]->SetScore(-2.9);
         // Create the expected and actual values 
         vector<string> exp_trans(4), act_trans(4);
-        exp_trans[0] = "a x";
-        exp_trans[1] = "b x";
-        exp_trans[2] = "y a";
-        exp_trans[3] = "t a";
+        exp_trans[0] = "a b x";
+        exp_trans[1] = "a c x";
+        exp_trans[2] = "y a b";
+        exp_trans[3] = "t a b";
         for(int i = 0; i < 4; i++)
             act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(rule_graph_->GetWords()));
         return CheckVector(exp_trans, act_trans);
+    }
+
+    int TestLMIntersection() {
+
+        string file_name = "/tmp/test-hyper-graph-lm.arpa";
+        ofstream arpa_out(file_name.c_str());
+        arpa_out << ""
+"\\data\\\n"
+"ngram 1=6\n"
+"ngram 2=7\n"
+"\n"
+"\\1-grams:\n"
+"-0.6368221	</s>\n"
+"-99	<s>	-0.30103\n"
+"-0.6368221	a	-0.4771213\n"
+"-0.6368221	b	-0.30103\n"
+"-0.8129134	x	-0.30103\n"
+"-0.8129134	y	-0.30103\n"
+"\n"
+"\\2-grams:\n"
+"-0.4372497	<s> a\n"
+"-0.4855544	<s> y\n"
+"-0.1286666	a b\n"
+"-0.4372497	b </s>\n"
+"-0.4855544	b x\n"
+"-0.2108534	x </s>\n"
+"-0.2108534	y a" 
+"\n"
+"\\end\\\n" << endl;
+        arpa_out.close();
+
+        // Load the model
+        lm::ngram::Model mod(file_name.c_str());
+
+        // Intersect the graph with the LM
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph), act_graph(rule_graph_->IntersectWithLM(mod, 1, 3));
+
+        // Create the expected graph
+        vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
+        exp_graph->SetWords(ab);
+        // The root node should be "0,2"
+        HyperNode * n_root = new HyperNode; n_root->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_root);
+        n_root->SetSym(Dict::WID("LMROOT"));
+        // Start on options for the left node, there should be two nodes for "a*b" and "a*c"
+        HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ab);
+        HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ac);
+        // Options on the right node should be "x" and "y"
+        HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_x);
+        HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_y);
+        HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_t);
+        // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
+        HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ax);
+        HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ay);
+        // HyperNode * n_02_xb = new HyperNode; n_02_xb->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_xb);
+        // HyperNode * n_02_xc = new HyperNode; n_02_xc->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_xc);
+        // HyperNode * n_02_yb = new HyperNode; n_02_yb->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_yb);
+        // HyperNode * n_02_yc = new HyperNode; n_02_yc->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_yc);
+        // Make edges for 0,1. There are only 2, so no pruning
+        HyperEdge * e_01_ab = new HyperEdge(n_01_ab); exp_graph->AddEdge(e_01_ab); n_01_ab->AddEdge(e_01_ab); e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures());
+        HyperEdge * e_01_ac = new HyperEdge(n_01_ac); exp_graph->AddEdge(e_01_ac); n_01_ac->AddEdge(e_01_ac); e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures());
+        // Make edges for 1,2. There are only 3, so no pruning
+        HyperEdge * e_12_x = new HyperEdge(n_12_x); exp_graph->AddEdge(e_12_x); n_12_x->AddEdge(e_12_x); e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures());
+        HyperEdge * e_12_y = new HyperEdge(n_12_y); exp_graph->AddEdge(e_12_y); n_12_y->AddEdge(e_12_y); e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures());
+        HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t); e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures());
+        // Make edges for 0,2. There are more than three, so only expand the best three
+        HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx); e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        e_02_abx->AddTail(n_01_ab); e_02_abx->AddTail(n_12_x);
+        HyperEdge * e_02_acx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_acx); n_02_ax->AddEdge(e_02_acx); e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        e_02_acx->AddTail(n_01_ac); e_02_acx->AddTail(n_12_x);
+        HyperEdge * e_02_aby = new HyperEdge(n_02_ay); exp_graph->AddEdge(e_02_aby); n_02_ay->AddEdge(e_02_aby); e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        e_02_aby->AddTail(n_01_ab); e_02_aby->AddTail(n_12_y);
+        // Make edges for the root. There are only two
+        HyperEdge * e_root_ax = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ax); n_root->AddEdge(e_root_ax); e_root_ax->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        e_root_ax->AddTail(n_02_ax);
+        HyperEdge * e_root_ay = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ay); n_root->AddEdge(e_root_ay); e_root_ay->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+        e_root_ay->AddTail(n_02_ay);
+        return exp_graph->CheckEqual(*act_graph);
     }
 
     bool RunTest() {
@@ -233,6 +309,7 @@ public:
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLMIntersection()" << endl; if(TestLMIntersection()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

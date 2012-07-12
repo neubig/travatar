@@ -7,6 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 // will boundary check when defined
 // #define GENERIC_STRING_SAFE
@@ -212,6 +213,17 @@ inline GenericString<GenericChar> operator+(const GenericString<GenericChar>& a,
     ret.splice(a,0);
     ret.splice(b,aimp->length_);
     return ret;
+}
+
+template <class GenericChar>
+inline std::ostream & operator<<(std::ostream & out, const GenericString<GenericChar>& a) {
+    out << "[";
+    for(int i = 0; i < (int)a.length(); i++) {
+        if(i != 0) out << ", ";
+        out << a[i];
+    }
+    out << "]";
+    return out;
 }
 
 template <class GenericChar>

@@ -8,6 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <travatar/symbol-set.h>
 #include <travatar/util.h>
+#include <travatar/sparse-map.h>
 
 namespace travatar {
 
@@ -74,15 +75,11 @@ struct Dict {
         return oss.str();
     }
 
-    static std::string PrintFeatures(const SparseMap & feats) {
-        std::ostringstream oss;
-        int sent = 0;
-        BOOST_FOREACH(const SparsePair & kv, feats) {
-            if(sent++ != 0) oss << ' ';
-            oss << Dict::WSym(kv.first) << '=' << kv.second;
-        }
-        return oss.str();
-    }
+
+    // Feature functions
+    static std::string PrintFeatures(const SparseMap & feats);
+    static SparseMap ParseFeatures(std::istream & iss);
+    static SparseMap ParseFeatures(const std::string & str);
 
     // Get the word ID
     static std::vector<WordId> ParseWords(const std::string & str) {
@@ -102,23 +99,6 @@ struct Dict {
         while(iss >> buff)
             ret.push_back(QuotedWID(buff));
         return ret;
-    }
-
-    // Get the word ID
-    static SparseMap ParseFeatures(std::istream & iss) {
-        std::string buff;
-        SparseMap ret;
-        while(iss >> buff) {
-            std::vector<std::string> columns;
-            boost::algorithm::split(columns, buff, boost::is_any_of("="));
-            if(columns.size() != 2) THROW_ERROR("Bad feature string @ " << buff);
-            ret.insert(MakePair(Dict::WID(columns[0]), atof(columns[1].c_str())));
-        }
-        return ret;
-    }
-    static SparseMap ParseFeatures(const std::string & str) {
-        std::istringstream iss(str);
-        return ParseFeatures(iss);
     }
 
 private:

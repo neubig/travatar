@@ -46,6 +46,8 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
        if((fragment_edges_[i]==NULL) != (rhs.fragment_edges_[i]==NULL) ||
           (fragment_edges_[i]!=NULL && fragment_edges_[i]->GetId() != rhs.fragment_edges_[i]->GetId()))
           return false;
+    if(features_ != rhs.features_)
+        return false;
     return true;
 }
 
@@ -57,6 +59,8 @@ void HyperEdge::Print(std::ostream & out) const {
         for(int i = 0; i < (int)tails_.size(); i++)
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
     }
+    if(features_.size())
+        out << ", \"features\": " << features_;
     out << "}";
 }
 
@@ -94,6 +98,8 @@ void HyperNode::Print(std::ostream & out) const {
             out << (num++ != 0?", ":"") << v;
         out << "]";
     }
+    if(viterbi_score_ != -DBL_MAX)
+        out << ", \"viterbi\": " << viterbi_score_;
     out << "}";
 }
 
@@ -164,7 +170,7 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
     return frontier_;
 }
 
-class ComparePathScore {
+class PathScoreLess {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
         if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() < y->GetScore();
@@ -175,10 +181,10 @@ public:
 vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
     priority_queue<shared_ptr<HyperPath>,
                    vector<shared_ptr<HyperPath> >, 
-                   ComparePathScore> paths;
+                   PathScoreLess> paths;
     shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
-    init_path->AddScore(nodes_[0]->GetViterbiScore());
+    init_path->AddScore(nodes_[0]->CalcViterbiScore());
     paths.push(init_path);
     vector<shared_ptr<HyperPath> > ret;
     while(paths.size() > 0 && (int)ret.size() < n) {
@@ -188,7 +194,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
         if(node == NULL) {
             ret.push_back(curr_path);
         } else {
-            curr_path->AddScore(-1*node->GetViterbiScore());
+            curr_path->AddScore(-1*node->CalcViterbiScore());
             // Expand each different edge
             BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
                 // Create a new path that is a copy of the old one, and add
@@ -197,7 +203,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
                 next_path->AddEdge(edge);
                 next_path->AddScore(edge->GetScore());
                 BOOST_FOREACH(HyperNode * node, edge->GetTails())
-                    next_path->AddScore(node->GetViterbiScore());
+                    next_path->AddScore(node->CalcViterbiScore());
                 // Add the nodes in reverse order, to ensure that we
                 // are doing a depth-first left-to-right traversal
                 BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
@@ -259,7 +265,7 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
     vector<WordId> ret;
     BOOST_FOREACH(int wid, edges_[my_id]->GetTrgWords()) {
         // Special handling of unknowns
-        if(wid == INT_MAX) {
+        if(wid == Dict::WID("<unk>")) {
             // For terminals, map all source words into the target
             if(edges_[my_id]->GetTails().size() == 0) {
                 pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
@@ -296,6 +302,34 @@ public:
     GenericString<int> id_;
 };
 
+class NodeScoreMore {
+public:
+    bool operator()(const HyperNode* x, const HyperNode* y) {
+        return x->GetViterbiScore() > y->GetViterbiScore();
+    }
+};
+
+inline string PrintContext(const State & context) {
+    ostringstream out;
+    out << "[";
+    for(unsigned i = 0; i < context.length; i++) {
+        if(i != 0) out << ", ";
+        out << Dict::WSym(context.words[i]);
+    }
+    out << "]";
+    return out.str();
+}
+inline string PrintContext(const Left & context) {
+    ostringstream out;
+    out << "[";
+    for(unsigned i = 0; i < context.length; i++) {
+        if(i != 0) out << ", ";
+        out << Dict::WSym(context.pointers[i]);
+    }
+    out << "]";
+    return out.str();
+}
+
 const ChartEntry & HyperGraph::BuildChart(
                     const Model & lm, 
                     double lm_weight,
@@ -312,7 +346,7 @@ const ChartEntry & HyperGraph::BuildChart(
     // The hypothesis combination map
     map<ChartState, HyperNode*> hypo_comb;
     // The set indicating already-expanded combinations
-    unordered_set<GenericString<int> > finished;
+    unordered_set<GenericString<int>, GenericHash<GenericString<int> > > finished;
     // For each edge outgoing from this node, add its best hypothesis
     // to the chart
     const vector<HyperEdge*> & node_edges = nodes_[id]->GetEdges();
@@ -321,10 +355,10 @@ const ChartEntry & HyperGraph::BuildChart(
         GenericString<int> q_id(my_edge->GetTails().size()+1);
         q_id[0] = i;
         double viterbi_score = my_edge->GetScore();
-        for(int j = 1; i < (int)q_id.length(); j++) {
+        for(int j = 1; j < (int)q_id.length(); j++) {
             q_id[j] = 0;
             const ChartEntry & my_entry = BuildChart(lm, lm_weight, stack_pop_limit, chart, states, my_edge->GetTail(j-1)->GetId(), graph);
-            viterbi_score += my_entry[0]->GetViterbiScore();
+            viterbi_score += my_entry[0]->CalcViterbiScore();
         }
         hypo_queue.push(MakePair(viterbi_score, q_id));
     }
@@ -334,8 +368,9 @@ const ChartEntry & HyperGraph::BuildChart(
         if(num_popped++ >= stack_pop_limit) break;
         // Get the score, id string, and edge
         double top_score = hypo_queue.top().first;
-        const GenericString<int> & id_str = hypo_queue.top().second;
+        GenericString<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes_[id]->GetEdge(id_str[0]);
+        cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge<<endl;
         hypo_queue.pop();
         // Find the chart state and LM probability
         HyperEdge * next_edge = new HyperEdge;
@@ -347,35 +382,53 @@ const ChartEntry & HyperGraph::BuildChart(
                 vector<HyperNode*> nodes;
                 // Get the chart for the particular node we're interested in
                 const ChartEntry & my_entry = BuildChart(lm, lm_weight, stack_pop_limit, chart, states, id_edge->GetTail(curr_id)->GetId(), graph);
-                // From the node, get the appropriately ranked edge
-                HyperNode * chart_node = my_entry[id_str[curr_id+1]];
+                // From the node, get the appropriately ranked node
+                int edge_pos = id_str[curr_id+1];
+                HyperNode * chart_node = my_entry[edge_pos];
+                next_edge->AddTail(chart_node);
+                // If we have not gotten to the end, insert a new value into the queue
+                if(edge_pos+1 < (int)my_entry.size()) {
+                    GenericString<int> next_str = id_str;
+                    next_str[curr_id+1]++;
+                    if(finished.find(next_str) == finished.end()) {
+                        finished.insert(next_str);
+                        double next_score = top_score - my_entry[edge_pos]->CalcViterbiScore() + my_entry[edge_pos+1]->CalcViterbiScore();
+                        hypo_queue.push(MakePair(next_score, next_str));
+                    }
+                }
                 // Add that edge to our non-terminal
-                my_rule_score.NonTerminal(states[chart_node->GetId()], 0);
+                const ChartState & child_state = SafeAccess(states, chart_node->GetId());
+                cerr << " Adding node context " << *chart_node << " : " << PrintContext(child_state.left) << ", " << PrintContext(child_state.right) << endl;
+                my_rule_score.NonTerminal(child_state, 0);
             } else {
+                cerr << " Adding word " << Dict::WSym(trg_id) << endl;
                 my_rule_score.Terminal(trg_id);
             }
         }
         double lm_score = my_rule_score.Finish();
         // Retrieve the hypothesis
+        cerr << " Finding node: (id_str=" << id_str << ") @ " << PrintContext(my_state.left) << ", " << PrintContext(my_state.right) << endl;
         map<ChartState, HyperNode*>::iterator it = hypo_comb.find(my_state);
         HyperNode * next_node;
         if(it == hypo_comb.end()) {
             // Create a new copy of the current node
-            next_node = new HyperNode;
-            next_node->SetSpan(nodes_[id]->GetSpan());
-            next_node->SetSym(nodes_[id]->GetSym());
+            next_node = new HyperNode(nodes_[id]->GetSym(), nodes_[id]->GetSpan());
             graph.AddNode(next_node);
+            states.push_back(my_state);
             hypo_comb.insert(MakePair(my_state, next_node));
             chart[id]->push_back(next_node);
         } else {
             next_node = it->second;
         }
-        next_node->SetViterbiScore(top_score+lm_score*lm_weight);
+        next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight));
         next_edge->SetHead(next_node);
         next_edge->GetFeatures().insert(MakePair(Dict::WID("lm"), lm_score));
         graph.AddEdge(next_edge);
+        // cerr << "Added edge: " << *next_edge << endl;
+        next_node->AddEdge(next_edge);
+        cerr << " Updated node: " << *next_node << endl;
     }
-    // TODO: sort
+    sort(chart[id]->begin(), chart[id]->end(), NodeScoreMore());
     return *chart[id];
 }
 
@@ -391,10 +444,30 @@ HyperGraph * HyperGraph::IntersectWithLM(const Model & lm, double lm_weight, int
     // This contains the chart states, indexed by node IDs in the new graph
     vector<ChartState> states;
     HyperGraph * ret = new HyperGraph;
+    ret->SetWords(words_);
+    // Add the root node and its corresponding state
+    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), MakePair(0, nodes_[0]->GetSpan().second));
+    ret->AddNode(root);
+    states.resize(1);
+    // Build the chart
     BuildChart(lm, lm_weight, stack_pop_limit, chart, states, 0, *ret);
+    // Build the final nodes
+    BOOST_FOREACH(HyperNode * node, *chart[0]) {
+        HyperEdge * edge = new HyperEdge(root);
+        ChartState my_state;
+        RuleScore<lm::ngram::Model> my_rule_score(lm, my_state);
+        my_rule_score.BeginSentence();
+        my_rule_score.NonTerminal(states[node->GetId()], 0);
+        my_rule_score.Terminal(Dict::WID("</s>"));
+        double my_score = my_rule_score.Finish();
+        edge->SetScore(my_score*lm_weight);
+        edge->AddTail(node);
+        edge->AddFeature(Dict::WID("lm"), my_score);
+        ret->AddEdge(edge);
+        root->AddEdge(edge);
+    }
     return ret;
 }
-
 
 void HyperEdge::SetRule(const TranslationRule * rule) {
     rule_str_ = rule->GetSrcStr();

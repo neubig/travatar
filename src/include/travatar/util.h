@@ -316,27 +316,6 @@ inline int CheckString(const std::string & exp, const std::string & act) {
     return 1;
 }
 
-
-typedef std::pair<int, double> SparsePair;
-typedef std::tr1::unordered_map<int, double> SparseMap;
-inline SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs) {
-    BOOST_FOREACH(const SparsePair & val, rhs)
-        if(val.second != 0)
-            lhs[val.first] += val.second;
-    return lhs;
-}
-
-inline double operator*(const SparseMap & lhs, const SparseMap & rhs) {
-    double ret = 0;
-    BOOST_FOREACH(const SparsePair & val, lhs) {
-        SparseMap::const_iterator it = rhs.find(val.first);
-        if(it != rhs.end()) {
-            ret += val.second * it->second;
-        }
-    }
-    return ret;
-}
-
 }  // end namespace
 
 #endif

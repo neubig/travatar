@@ -2,6 +2,7 @@
 #define TRANSLATION_RULE_H__
 
 #include <travatar/dict.h>
+#include <travatar/sparse-map.h>
 #include <string>
 
 namespace travatar {

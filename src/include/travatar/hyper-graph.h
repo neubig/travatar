@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
+#include <travatar/sparse-map.h>
 #include <lm/left.hh>
 
 namespace travatar {
@@ -68,6 +69,10 @@ public:
     std::string & GetRuleStr() { return rule_str_; }
     std::vector<WordId> & GetTrgWords() { return trg_words_; }
     SparseMap & GetFeatures() { return features_; }
+    void SetRuleStr(const std::string & str) { rule_str_ = str; }
+    void SetTrgWords(const std::vector<WordId> & trg) { trg_words_ = trg; }
+    void SetFeatures(const SparseMap & feat) { features_ = feat; }
+    void AddFeature(int idx, double feat) { features_[idx] += feat; }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;
@@ -121,18 +126,19 @@ public:
     // Refresh the pointers to head and tail nodes so they point to
     // nodes in a new HyperGraph. Useful when copying nodes
     void RefreshPointers(HyperGraph & new_graph);
-
-    void SetViterbiScore(double viterbi_score) {
-        viterbi_score_ = viterbi_score;
-    }
-    double GetViterbiScore() {
+    
+    // Set or get the viterbi score without re-calculating it
+    void SetViterbiScore(double viterbi_score) { viterbi_score_ = viterbi_score; }
+    double GetViterbiScore() const { return viterbi_score_; }
+    // Calculate new viterbi scores if necessary
+    double CalcViterbiScore() {
         if(viterbi_score_ == -DBL_MAX) {
             if(edges_.size() == 0)
                 THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
             BOOST_FOREACH(HyperEdge * edge, edges_) {
                 double score = edge->GetScore();
                 BOOST_FOREACH(HyperNode * tail, edge->GetTails())
-                    score += tail->GetViterbiScore();
+                    score += tail->CalcViterbiScore();
                 if(score > viterbi_score_) {
                     viterbi_score_ = score;
                 }
