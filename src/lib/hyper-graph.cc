@@ -48,6 +48,8 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
           return false;
     if(features_ != rhs.features_)
         return false;
+    if(trg_words_ != rhs.trg_words_)
+        return false;
     return true;
 }
 
@@ -58,6 +60,11 @@ void HyperEdge::Print(std::ostream & out) const {
         out << ", \"tails\": [";
         for(int i = 0; i < (int)tails_.size(); i++)
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
+    }
+    if(trg_words_.size()) {
+        out << ", \"trg_words\": [";
+        for(int i = 0; i < (int)trg_words_.size(); i++)
+            out << trg_words_[i] << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
     }
     if(features_.size())
         out << ", \"features\": " << features_;
@@ -70,11 +77,13 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
        sym_ != rhs.sym_ || edges_.size() != rhs.edges_.size())
         return false;
     for(int i = 0; i < (int)edges_.size(); i++)
-       if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
-          (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
-          return false;
+        if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
+            (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
+            return false;
     if(trg_span_ != rhs.trg_span_)
-       return false;
+        return false;
+    if(abs(viterbi_score_ - rhs.viterbi_score_) > 1e-6)
+        return false;
     return true;
 }
 
@@ -106,8 +115,8 @@ void HyperNode::Print(std::ostream & out) const {
 
 // Check to make sure two hypergraphs are equal
 int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
-    return CheckPtrVector(nodes_, rhs.nodes_) &&
-           CheckPtrVector(edges_, rhs.edges_) &&
+    return CheckPtrVector(edges_, rhs.edges_) &&
+           CheckPtrVector(nodes_, rhs.nodes_) &&
            CheckVector(words_, rhs.words_);
 }
 
@@ -370,10 +379,13 @@ const ChartEntry & HyperGraph::BuildChart(
         double top_score = hypo_queue.top().first;
         GenericString<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes_[id]->GetEdge(id_str[0]);
-        // cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge<<endl;
+        // cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge<<", top=" << top_score <<endl;
         hypo_queue.pop();
         // Find the chart state and LM probability
         HyperEdge * next_edge = new HyperEdge;
+        next_edge->SetFeatures(id_edge->GetFeatures());
+        next_edge->SetTrgWords(id_edge->GetTrgWords());
+        next_edge->SetRuleStr(id_edge->GetRuleStr());
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(lm, my_state);
         BOOST_FOREACH(int trg_id, id_edge->GetTrgWords()) {
@@ -421,6 +433,7 @@ const ChartEntry & HyperGraph::BuildChart(
         } else {
             next_node = it->second;
         }
+        // cerr << " HERE: " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;
         next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight));
         next_edge->SetHead(next_node);
         if(lm_score != 0.0)
@@ -455,11 +468,12 @@ HyperGraph * HyperGraph::IntersectWithLM(const Model & lm, double lm_weight, int
     // Build the final nodes
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
+        edge->AddTrgWord(-1);
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(lm, my_state);
         my_rule_score.BeginSentence();
         my_rule_score.NonTerminal(states[node->GetId()], 0);
-        my_rule_score.Terminal(Dict::WID("</s>"));
+        my_rule_score.Terminal(lm.GetVocabulary().Index("</s>"));
         double my_score = my_rule_score.Finish();
         edge->SetScore(my_score*lm_weight);
         edge->AddTail(node);
@@ -467,6 +481,7 @@ HyperGraph * HyperGraph::IntersectWithLM(const Model & lm, double lm_weight, int
             edge->AddFeature(Dict::WID("lm"), my_score);
         ret->AddEdge(edge);
         root->AddEdge(edge);
+        root->SetViterbiScore(max(root->GetViterbiScore(), node->GetViterbiScore() + edge->GetScore()));
     }
     return ret;
 }

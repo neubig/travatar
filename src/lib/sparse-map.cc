@@ -2,14 +2,17 @@
 #include <travatar/sparse-map.h>
 #include <travatar/dict.h>
 
+using namespace std;
+
 namespace travatar {
 
 bool operator==(const SparseMap & lhs, const SparseMap & rhs) {
+    // cerr << "Comparing " << lhs << " to " << rhs << endl;
     if(lhs.size() != rhs.size())
         return false;
     BOOST_FOREACH(const SparsePair & kv, lhs) {
         SparseMap::const_iterator it = rhs.find(kv.first);
-        if(it == rhs.end() || abs(it->second- kv.second) > 1e-6) return false;
+        if(it == rhs.end() || abs(it->second - kv.second) > 1e-6) return false;
     }
     return true;
 }

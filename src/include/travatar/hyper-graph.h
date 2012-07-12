@@ -73,6 +73,7 @@ public:
     void SetTrgWords(const std::vector<WordId> & trg) { trg_words_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }
+    void AddTrgWord(int idx) { trg_words_.push_back(idx); }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;

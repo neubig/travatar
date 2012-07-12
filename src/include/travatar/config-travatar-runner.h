@@ -27,8 +27,10 @@ public:
 );
 
         AddConfigEntry("tm_file", "", "Translation model file location");
+        AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("weight_file", "", "Weight file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
+        AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("trace_out", "", "trace output file location");
 

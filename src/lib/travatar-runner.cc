@@ -5,20 +5,26 @@
 #include <travatar/tree-io.h>
 #include <travatar/travatar-runner.h>
 #include <travatar/lookup-table-hash.h>
+#include <lm/model.hh>
 
 using namespace travatar;
 using namespace std;
 using namespace boost;
+using namespace lm::ngram;
 
 // Run the model
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load the rule table
     ifstream tm_in(config.GetString("tm_file").c_str());
-    cerr << "Reading tm file from "<<config.GetString("tm_file")<<"..." << endl;
+    cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
     shared_ptr<LookupTableHash> tm(LookupTableHash::ReadFromRuleTable(tm_in));
     tm_in.close();
+    // Load the language model
+    shared_ptr<Model> lm;
+    if(config.GetString("lm_file") != "")
+        lm.reset(new Model(config.GetString("lm_file").c_str()));
     // Load the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
@@ -55,6 +61,11 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         shared_ptr<HyperGraph> rule_graph(tm->BuildRuleGraph(*tree_graph));
         rule_graph->ScoreEdges(weights);
         rule_graph->ResetViterbiScores();
+        // If we have an lm, score with the LM
+        if(lm.get() != NULL) {
+            shared_ptr<HyperGraph> lm_graph(rule_graph->IntersectWithLM(*lm, weights[Dict::WID("lm")], config.GetInt("pop_limit")));
+            lm_graph.swap(rule_graph);
+        }
         vector<shared_ptr<HyperPath> > nbest_list = rule_graph->GetNbest(nbest_count);
         cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
         if(nbest_out.get() != NULL) {
