@@ -31,7 +31,11 @@ sub print_counts {
         @keys = @keys[0 .. $TOP_N-1];
     }
     for(sort @keys) {
-        printf "$id ||| $_ ||| Pegf=%f ppen=-1\n", log($counts->{$_}/$sum);
+        my $words = 0;
+        while(/"[^ ]*?"/g) { $words++; }
+        printf "$id ||| $_ ||| Pegf=%f ppen=-1", log($counts->{$_}/$sum);
+        print " w=$words" if($words);
+        print "\n";
     }
 }
 

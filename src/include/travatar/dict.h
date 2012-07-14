@@ -48,9 +48,7 @@ struct Dict {
     // Get the
     static std::string WAnnotatedSym(WordId id) {
         std::ostringstream oss;
-        if(id == INT_MAX)
-            oss << "<UNK>";
-        else if(id < 0)
+        if(id < 0)
             oss << "x" << -1+id*-1;
         else
             oss << '"' << wids_.GetSymbol(id) << '"';

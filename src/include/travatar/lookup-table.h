@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <climits>
+#include <travatar/graph-transformer.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
 #include <boost/foreach.hpp>
@@ -26,14 +27,15 @@ protected:
     std::vector<const HyperNode*> nonterm_nodes_;
 };
 
-// A table that allows rules to be looked up
-// This will be overloaded with an actual implementation
-class LookupTable {
+// An implementation of a GraphTransformer that takes as input
+// a parse forest of the original sentence, looks up rules, and
+// outputs a rule graph in the target language
+class LookupTable : public GraphTransformer {
 public:
     LookupTable() : unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")) { }
     virtual ~LookupTable() { };
 
-    HyperGraph * BuildRuleGraph(const HyperGraph & parse);
+    virtual HyperGraph * TransformGraph(const HyperGraph & parse);
 
     // Find all the translation rules rooted at a particular node in a parse graph
     std::vector<boost::shared_ptr<LookupState> > LookupSrc(

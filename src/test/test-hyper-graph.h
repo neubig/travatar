@@ -3,6 +3,7 @@
 
 #include "test-base.h"
 #include <travatar/hyper-graph.h>
+#include <travatar/lm-composer-bu.h>
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
@@ -254,11 +255,10 @@ public:
 "\\end\\\n" << endl;
         arpa_out.close();
 
-        // Load the model
-        lm::ngram::Model mod(file_name.c_str());
-
         // Intersect the graph with the LM
-        shared_ptr<HyperGraph> exp_graph(new HyperGraph), act_graph(rule_graph_->IntersectWithLM(mod, 1, 3));
+        LMComposerBU lm(new lm::ngram::Model(file_name.c_str()));
+        lm.SetStackPopLimit(3);
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph), act_graph(lm.TransformGraph(*rule_graph_));
 
         // Create the expected graph
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
@@ -351,7 +351,6 @@ public:
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestLMIntersection()" << endl; if(TestLMIntersection()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

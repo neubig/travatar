@@ -15,7 +15,6 @@ typedef short NodeId;
 class HyperNode;
 class HyperGraph;
 class TranslationRule;
-typedef std::vector<HyperNode*> ChartEntry;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -54,7 +53,7 @@ public:
     NodeId GetId() const { return id_; }
     void SetHead(HyperNode* head) { head_ = head; }
     HyperNode* GetHead() const { return head_; }
-    const HyperNode* GetTail(int i) const { return tails_[i]; }
+    const HyperNode* GetTail(int i) const { return SafeAccess(tails_, i); }
     HyperNode* GetTail(int i) { return tails_[i]; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
@@ -340,19 +339,6 @@ public:
         BOOST_FOREACH(HyperNode * node, nodes_)
             node->SetViterbiScore(-DBL_MAX);
     }
-
-    // Intersect this graph with a language model, using cube pruning to control
-    // the overall state space.
-    HyperGraph * IntersectWithLM(const lm::ngram::Model & lm, double lm_weight, int stack_pop_limit = INT_MAX);
-
-    const ChartEntry & BuildChart(
-                        const lm::ngram::Model & lm, 
-                        double lm_weight,
-                        int stack_pop_limit, 
-                        std::vector<boost::shared_ptr<ChartEntry> > & chart, 
-                        std::vector<lm::ngram::ChartState> & states, 
-                        int id,
-                        HyperGraph & graph);
 
     // Accessors
     const HyperNode* GetNode(int i) const { return SafeAccess(nodes_,i); }

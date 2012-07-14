@@ -34,7 +34,7 @@ vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
     return ret_states;
 }
 
-HyperGraph * LookupTable::BuildRuleGraph(const HyperGraph & parse) {
+HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
     // First, for each non-terminal in the input graph, make a node in the output graph
     // and lookup the rules matching each node
     HyperGraph * ret = new HyperGraph;
@@ -80,6 +80,12 @@ HyperGraph * LookupTable::BuildRuleGraph(const HyperGraph & parse) {
                     if(!parse_node->IsTerminal())
                         next_edge->AddTail(ret->GetNode(node_map[parse_node->GetId()]));
                 next_edge->SetRule(GetUnknownRule());
+                if(next_edge->GetTails().size() > 0) {
+                    vector<int> trg(next_edge->GetTails().size());
+                    for(int i = 0; i < (int)trg.size(); i++)
+                        trg[i] = -1 - i;
+                    next_edge->SetTrgWords(trg);
+                }
                 next_node->AddEdge(next_edge);
                 ret->AddEdge(next_edge);
             }

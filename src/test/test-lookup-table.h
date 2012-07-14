@@ -100,7 +100,7 @@ public:
 
     int TestBuildRuleGraph() {
         // Make the rule graph
-        shared_ptr<HyperGraph> act_rule_graph(lookup_hash->BuildRuleGraph(*src1_graph));
+        shared_ptr<HyperGraph> act_rule_graph(lookup_hash->TransformGraph(*src1_graph));
         vector<vector<shared_ptr<LookupState> > > act_lookups(11);
         vector<shared_ptr<LookupState> > old_states;
         old_states.push_back(shared_ptr<LookupState>(lookup_hash->GetInitialState()));
