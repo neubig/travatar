@@ -33,6 +33,8 @@ public:
         AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("trace_out", "", "trace output file location");
+        AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
+
 
     }
 	

@@ -6,6 +6,7 @@
 #include <travatar/travatar-runner.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lm-composer-bu.h>
+#include <travatar/binarizer-directional.h>
 #include <lm/model.hh>
 
 using namespace travatar;
@@ -28,6 +29,15 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         LMComposerBU * bu = new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         lm.reset(bu);
+    }
+    // Create the binarizer
+    shared_ptr<GraphTransformer> binarizer;
+    if(config.GetString("binarize") == "left") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
+    } else if(config.GetString("binarize") == "right") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") != "none") {
+        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
     // Load the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
@@ -62,6 +72,11 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         istringstream in(line);
         shared_ptr<HyperGraph> tree_graph(penn.ReadTree(in));
         if(tree_graph.get() == NULL) break;
+        // Binarizer if necessary
+        if(binarizer.get() != NULL) {
+            shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
+            tree_graph.swap(bin_graph);
+        }
         shared_ptr<HyperGraph> rule_graph(tm->TransformGraph(*tree_graph));
         rule_graph->ScoreEdges(weights);
         rule_graph->ResetViterbiScores();
