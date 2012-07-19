@@ -45,24 +45,35 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) {
         // Binarize until we have reached an intermediate node that is finished
         bool first = true;
         while(first || (head->GetEdges().size() == 0 && tail_str.length() > 1)) {
-            HyperNode *left = NULL, *right = NULL;
-            if(tail_str.length() > 0)
-                left = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(0,1), xbar);
+            HyperNode *small = NULL, *big = NULL;
+            if(tail_str.length() > 0) {
+                GenericString<int> str = (dir_ == BINARIZE_RIGHT ? 
+                                          tail_str.substr(0,1) :
+                                          tail_str.substr(tail_str.length()-1));
+                small = FindIndexedNode(hg, *ret, built_nodes, str, xbar);
+            }
             if(tail_str.length() > 1) {
-                tail_str = tail_str.substr(1);
-                right = FindIndexedNode(hg, *ret, built_nodes, tail_str, xbar);
+                tail_str = (dir_ == BINARIZE_RIGHT ?
+                            tail_str.substr(1) :
+                            tail_str.substr(0, tail_str.length()-1));
+                big = FindIndexedNode(hg, *ret, built_nodes, tail_str, xbar);
             }
             // Create the left and right edges
             HyperEdge * next_edge = new HyperEdge(head);
-            if(left) next_edge->AddTail(left);
-            if(right) next_edge->AddTail(right);
+            if(dir_ == BINARIZE_RIGHT) {
+                if(small) next_edge->AddTail(small);
+                if(big) next_edge->AddTail(big);
+            } else {
+                if(big) next_edge->AddTail(big);
+                if(small) next_edge->AddTail(small);
+            }
             // Score only the top edge
             if(first) {
                 next_edge->SetFeatures(edge->GetFeatures());
                 next_edge->SetScore(edge->GetScore());
             }
             ret->AddEdge(next_edge); head->AddEdge(next_edge);
-            head = right;
+            head = big;
             first = false;
         }
         

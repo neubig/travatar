@@ -43,9 +43,25 @@ public:
         return exp_graph->CheckEqual(*act_graph);
     }
 
+    int TestBinarizerLeft() {
+        BinarizerDirectional br(BinarizerDirectional::BINARIZE_LEFT);
+        shared_ptr<HyperGraph> act_graph(br.TransformGraph(*trinary_graph_));
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+        HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(MakePair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperNode * nb12 = new HyperNode; nb12->SetSpan(MakePair(0,2)); exp_graph->AddNode(nb12); nb12->SetSym(Dict::WID("A'"));
+        HyperNode * nb2 = new HyperNode; nb2->SetSpan(MakePair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
+        HyperNode * nb1 = new HyperNode; nb1->SetSpan(MakePair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
+        HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb12); e1->AddTail(nb3); na->AddEdge(e1);
+        e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+        HyperEdge * e2 = new HyperEdge(nb12); exp_graph->AddEdge(e2); e2->AddTail(nb1); e2->AddTail(nb2); nb12->AddEdge(e2);
+        return exp_graph->CheckEqual(*act_graph);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestBinarizerRight()" << endl; if(TestBinarizerRight()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBinarizerLeft()" << endl; if(TestBinarizerLeft()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestBinarizer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
