@@ -16,8 +16,8 @@ public:
     TestBinarizer() {
         // Example rule graph
         trinary_graph_.reset(new HyperGraph);
-        vector<int> src(3); src[0] = Dict::WID("s"); src[1] = Dict::WID("t"); src[1] = Dict::WID("u");
-        trinary_graph_->SetWords(src);
+        src_.resize(3); src_[0] = Dict::WID("s"); src_[1] = Dict::WID("t"); src_[2] = Dict::WID("u");
+        trinary_graph_->SetWords(src_);
         HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));   trinary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
         HyperNode * nb1 = new HyperNode; nb1->SetSpan(MakePair(0,1)); trinary_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(MakePair(1,2)); trinary_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
@@ -32,6 +32,7 @@ public:
         BinarizerDirectional br(BinarizerDirectional::BINARIZE_RIGHT);
         shared_ptr<HyperGraph> act_graph(br.TransformGraph(*trinary_graph_));
         shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+        exp_graph->SetWords(src_);
         HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
         HyperNode * nb1 = new HyperNode; nb1->SetSpan(MakePair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
         HyperNode * nb23 = new HyperNode; nb23->SetSpan(MakePair(1,3)); exp_graph->AddNode(nb23); nb23->SetSym(Dict::WID("A'"));
@@ -47,6 +48,7 @@ public:
         BinarizerDirectional br(BinarizerDirectional::BINARIZE_LEFT);
         shared_ptr<HyperGraph> act_graph(br.TransformGraph(*trinary_graph_));
         shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+        exp_graph->SetWords(src_);
         HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
         HyperNode * nb3 = new HyperNode; nb3->SetSpan(MakePair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
         HyperNode * nb12 = new HyperNode; nb12->SetSpan(MakePair(0,2)); exp_graph->AddNode(nb12); nb12->SetSym(Dict::WID("A'"));
@@ -70,6 +72,7 @@ private:
     PennTreeIO tree_io;
     boost::scoped_ptr<HyperGraph> trinary_graph_;
     boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
+    vector<WordId> src_;
 
 };
 

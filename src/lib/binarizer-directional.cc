@@ -27,6 +27,7 @@ HyperNode * BinarizerDirectional::FindIndexedNode(const HyperGraph & hg, HyperGr
 HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) {
     // First copy the graph
     HyperGraph * ret = new HyperGraph;
+    ret->SetWords(hg.GetWords());
     // A map to keep track of nodes that have already been built for this graph
     SNMap built_nodes;
     // Process each edge in the original graph

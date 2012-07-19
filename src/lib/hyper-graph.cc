@@ -281,7 +281,7 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
             if(edges_[my_id]->GetTails().size() == 0) {
                 pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
                 for(int i = span.first; i < span.second; i++)
-                    ret.push_back(src_words[i]);
+                    ret.push_back(SafeAccess(src_words, i));
             // For non-terminals, map in order
             } else {
                 BOOST_FOREACH(const vector<int> & vec, child_trans)
