@@ -44,7 +44,7 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) {
             tail_str[i] = tails[i]->GetId();
         // Binarize until we have reached an intermediate node that is finished
         bool first = true;
-        while(first || (head->GetEdges().size() == 0 && tail_str.length() > 1)) {
+        while(first || (head != NULL && head->GetEdges().size() == 0 && tail_str.length() > 1)) {
             HyperNode *small = NULL, *big = NULL;
             if(tail_str.length() > 0) {
                 GenericString<int> str = (dir_ == BINARIZE_RIGHT ? 

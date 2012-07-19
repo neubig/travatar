@@ -2,6 +2,7 @@
 #include <travatar/tree-io.h>
 #include <travatar/rule-extractor.h>
 #include <travatar/forest-extractor-runner.h>
+#include <travatar/binarizer-directional.h>
 #include <boost/scoped_ptr.hpp>
 
 using namespace travatar;
@@ -15,8 +16,17 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     if(config.GetString("input_format") == "penn")
         tree_io.reset(new PennTreeIO);
     else
-        THROW_ERROR("Invalid TreeIO type: "<<config.GetString("input_format"));
+        THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
     ForestExtractor extractor;
+    // Create the binarizer
+    shared_ptr<GraphTransformer> binarizer;
+    if(config.GetString("binarize") == "left") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
+    } else if(config.GetString("binarize") == "right") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") != "none") {
+        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
+    }
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
     ifstream src_in(argv[0].c_str());
@@ -42,6 +52,12 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Parse into the appropriate data structures
         istringstream src_iss(src_line);
         scoped_ptr<HyperGraph> src_graph(tree_io->ReadTree(src_iss));
+        // Binarizer if necessary
+        if(binarizer.get() != NULL) {
+            scoped_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*src_graph));
+            src_graph.swap(bin_graph);
+        }
+        // Get target words and alignment
         Sentence trg_sent = Dict::ParseWords(trg_line);
         Alignment align = Alignment::FromString(align_line);
         // Do the rule extraction

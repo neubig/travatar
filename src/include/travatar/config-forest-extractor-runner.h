@@ -27,6 +27,7 @@ public:
 );
 
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
+        AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
 
     }
 	
