@@ -1,0 +1,62 @@
+#ifndef TEST_BINARIZER_H__
+#define TEST_BINARIZER_H__
+
+#include "test-base.h"
+#include <travatar/hyper-graph.h>
+#include <travatar/binarizer-directional.h>
+
+using namespace boost;
+
+namespace travatar {
+
+class TestBinarizer : public TestBase {
+
+public:
+
+    TestBinarizer() {
+        // Example rule graph
+        trinary_graph_.reset(new HyperGraph);
+        vector<int> src(3); src[0] = Dict::WID("s"); src[1] = Dict::WID("t"); src[1] = Dict::WID("u");
+        trinary_graph_->SetWords(src);
+        HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));   trinary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
+        HyperNode * nb1 = new HyperNode; nb1->SetSpan(MakePair(0,1)); trinary_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
+        HyperNode * nb2 = new HyperNode; nb2->SetSpan(MakePair(1,2)); trinary_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(MakePair(2,3)); trinary_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("B3"));
+        HyperEdge * e = new HyperEdge(na); trinary_graph_->AddEdge(e); e->AddTail(nb1); e->AddTail(nb2); e->AddTail(nb3); na->AddEdge(e);
+        e->SetScore(1); e->AddFeature(Dict::WID("feat"), 1);
+    }
+
+    ~TestBinarizer() { }
+
+    int TestBinarizerRight() {
+        BinarizerDirectional br(BinarizerDirectional::BINARIZE_RIGHT);
+        shared_ptr<HyperGraph> act_graph(br.TransformGraph(*trinary_graph_));
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+        HyperNode * na = new HyperNode; na->SetSpan(MakePair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
+        HyperNode * nb1 = new HyperNode; nb1->SetSpan(MakePair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
+        HyperNode * nb23 = new HyperNode; nb23->SetSpan(MakePair(1,3)); exp_graph->AddNode(nb23); nb23->SetSym(Dict::WID("A'"));
+        HyperNode * nb2 = new HyperNode; nb2->SetSpan(MakePair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(MakePair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb1); e1->AddTail(nb23); na->AddEdge(e1);
+        e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+        HyperEdge * e2 = new HyperEdge(nb23); exp_graph->AddEdge(e2); e2->AddTail(nb2); e2->AddTail(nb3); nb23->AddEdge(e2);
+        return exp_graph->CheckEqual(*act_graph);
+    }
+
+    bool RunTest() {
+        int done = 0, succeeded = 0;
+        done++; cout << "TestBinarizerRight()" << endl; if(TestBinarizerRight()) succeeded++; else cout << "FAILED!!!" << endl;
+        cout << "#### TestBinarizer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
+        return done == succeeded;
+    }
+
+private:
+    PennTreeIO tree_io;
+    boost::scoped_ptr<HyperGraph> trinary_graph_;
+    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
+
+};
+
+}
+
+#endif

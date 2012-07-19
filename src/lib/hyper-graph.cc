@@ -194,7 +194,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
     shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
     init_path->AddScore(nodes_[0]->CalcViterbiScore());
-    cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
+    // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
     paths.push(init_path);
     vector<shared_ptr<HyperPath> > ret;
     while(paths.size() > 0 && (int)ret.size() < n) {

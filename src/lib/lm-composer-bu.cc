@@ -32,6 +32,7 @@ const ChartEntry & LMComposerBU::BuildChart(
     const vector<HyperNode*> & nodes = parse.GetNodes();
     // Don't build already finished charts
     if(chart[id].get() != NULL) return *chart[id];
+    // cerr << "Building chart @ " << id << endl;
     chart[id].reset(new ChartEntry);
     // The priority queue of values yet to be expanded
     priority_queue<pair<double, GenericString<int> > > hypo_queue;

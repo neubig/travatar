@@ -24,8 +24,11 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     tm_in.close();
     // Load the language model
     shared_ptr<LMComposerBU> lm;
-    if(config.GetString("lm_file") != "")
-        lm.reset(new LMComposerBU(new Model(config.GetString("lm_file").c_str())));
+    if(config.GetString("lm_file") != "") {
+        LMComposerBU * bu = new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+        bu->SetStackPopLimit(config.GetInt("pop_limit"));
+        lm.reset(bu);
+    }
     // Load the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;

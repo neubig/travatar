@@ -166,6 +166,13 @@ public:
     const std::pair<int,int> & GetSpan() const { return src_span_; }
     std::pair<int,int> & GetSpan() { return src_span_; }
     void SetSpan(const std::pair<int,int> & span) { src_span_ = span; }
+    void AddSpan(const std::pair<int,int> & span) {
+        if(src_span_.second == -1) src_span_ = span;
+        else {
+            src_span_.first = std::min(src_span_.first, span.first);
+            src_span_.second = std::max(src_span_.second, span.second);
+        }
+    }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
