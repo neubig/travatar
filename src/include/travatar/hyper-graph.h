@@ -60,6 +60,7 @@ public:
     void SetTails(const std::vector<HyperNode*> & tails) { tails_ = tails; }
     const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
     std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
+    void SetFragmentEdges(const std::vector<HyperEdge*> & fragment_edges) { fragment_edges_ = fragment_edges; }
     // const TranslationRule * GetRule() const { return rule_; }
     void SetRule(const TranslationRule * rule);
     const std::string & GetRuleStr() const { return rule_str_; }

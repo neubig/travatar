@@ -3,7 +3,6 @@
 
 #include "test-base.h"
 #include <travatar/hyper-graph.h>
-#include <travatar/lm-composer-bu.h>
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
@@ -87,21 +86,6 @@ public:
         HyperNode * n_root = new HyperNode; n_root->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_root);
         n_root->SetSym(Dict::WID("LMROOT"));
 
-        // HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
-        // e0->AddFeature(Dict::WID("toy_feature"), 1.5);
-        // rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
-        // HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
-        // rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
-        // HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
-        // rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
-        // HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
-        // rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
-        // HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
-        // rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
-        // HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-        // rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
-        // HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
-        // Start on options for the left node, there should be two nodes for "a*b" and "a*c"
         HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ab);
         n_01_ab->SetViterbiScore(-0.1286666 + -0.6368221 + -0.1);
         HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ac);

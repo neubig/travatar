@@ -221,6 +221,13 @@ inline const T & SafeReference(const T * ptr) {
     return *ptr;
 }
 
+template <class T>
+int CheckEqual(const T & exp, const T & act) {
+    if(exp == act) return 1;
+    std::cerr << exp << " != " << act << std::endl;
+    return 0;
+}
+
 template<class T>
 int CheckVector(const std::vector<T> & exp, const std::vector<T> & act) {
     int ok = 1;

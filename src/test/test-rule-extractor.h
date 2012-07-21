@@ -4,6 +4,7 @@
 #include "test-base.h"
 #include <travatar/rule-extractor.h>
 #include <travatar/alignment.h>
+#include <travatar/rule-composer.h>
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
@@ -100,6 +101,7 @@ public:
         frags_exp.AddEdge(root0_edge);
         root0_edge->AddTail(s1_node);
         root0_edge->AddFragmentEdge(src1_graph->GetEdge(0));
+        // root0_edge->AddTrgWord(-1);
         root0_node->AddEdge(root0_edge);
         // Edge for s1
         HyperEdge* s1_edge = new HyperEdge(s1_node);
@@ -107,17 +109,20 @@ public:
         s1_edge->AddTail(np2_node);
         s1_edge->AddTail(vp4_node);
         s1_edge->AddFragmentEdge(src1_graph->GetEdge(1));
+        // s1_edge->AddTrgWord(-1); s1_edge->AddTrgWord(-2);
         s1_node->AddEdge(s1_edge);
         // Edge for np2
         HyperEdge* np2_edge = new HyperEdge(np2_node);
         frags_exp.AddEdge(np2_edge);
         np2_edge->AddTail(prp3_node);
         np2_edge->AddFragmentEdge(src1_graph->GetEdge(2));
+        // np2_edge->AddTrgWord(-1);
         np2_node->AddEdge(np2_edge);
         // Edge for prp3
         HyperEdge* prp3_edge = new HyperEdge(prp3_node);
         frags_exp.AddEdge(prp3_edge);
         prp3_edge->AddFragmentEdge(src1_graph->GetEdge(3));
+        // prp3_edge->AddTrgWord(Dict::WID("il"));
         prp3_node->AddEdge(prp3_edge);
         // Edge for vp4
         HyperEdge* vp4_edge = new HyperEdge(vp4_node);
@@ -126,11 +131,13 @@ public:
         vp4_edge->AddFragmentEdge(src1_graph->GetEdge(4));
         vp4_edge->AddFragmentEdge(src1_graph->GetEdge(5));
         vp4_edge->AddFragmentEdge(src1_graph->GetEdge(6));
+        // vp4_edge->AddTrgWord(Dict::WID("ne")); vp4_edge->AddTrgWord(-1); vp4_edge->AddTrgWord(Dict::WID("pas"));
         vp4_node->AddEdge(vp4_edge);
         // Edge for vb7
         HyperEdge* vb7_edge = new HyperEdge(vb7_node);
         frags_exp.AddEdge(vb7_edge);
         vb7_edge->AddFragmentEdge(src1_graph->GetEdge(7));
+        // vb7_edge->AddTrgWord(Dict::WID("va"));
         vb7_node->AddEdge(vb7_edge);
         // Check to make sure that these are equal
         return frags_exp.CheckEqual(*frags_act);
@@ -297,6 +304,99 @@ public:
         return CheckVector(rule_exp, rule_act);
     }
 
+
+    int TestComposeEdge() {
+        // Run the Forest algorithm
+        ForestExtractor forest_ext;
+        scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
+        const vector<HyperEdge*> & edges = rule_graph->GetEdges();
+        const vector<HyperNode*> & nodes = rule_graph->GetNodes();
+        // Compose
+        // Expected node numbers: "(ROOT0 (S1 (NP2 (PRP3 he)) (VP4 (AUX5 does) (RB6 not) (VB7 go))))";
+        // Compose the edge over S1 and VP4
+        shared_ptr<HyperEdge> act14(RuleComposer::ComposeEdge(*edges[1], *edges[4], 1));
+        // Build the expected edge
+        shared_ptr<HyperEdge> exp14(new HyperEdge(nodes[1]));
+        exp14->AddTail(nodes[2]); exp14->AddTail(nodes[5]); 
+        // Score is not tested yet
+        // exp14->SetScore(-0.4);
+        // Not clear if calculating rule strings is necessary, as rules are generally
+        // composed before calculating their string representations
+        // exp14->SetRuleStr("S ( V ( \"a\" ) x0:N )");
+        BOOST_FOREACH(const SparsePair & kv, edges[0]->GetFeatures()) exp14->AddFeature(kv.first, kv.second);
+        BOOST_FOREACH(const SparsePair & kv, edges[2]->GetFeatures()) exp14->AddFeature(kv.first, kv.second);
+        // Don't add these, as target words are not extracted
+        // exp14->AddTrgWord(-1); exp14->AddTrgWord(Dict::WID("ne")); exp14->AddTrgWord(-2); exp14->AddTrgWord(Dict::WID("pas"));
+        exp14->AddFragmentEdge(src1_graph->GetEdge(1));
+        exp14->AddFragmentEdge(src1_graph->GetEdge(4));
+        exp14->AddFragmentEdge(src1_graph->GetEdge(5));
+        exp14->AddFragmentEdge(src1_graph->GetEdge(6));
+        return CheckEqual(*exp14, *act14);
+    }
+
+    int TestRuleComposer() {
+        ForestExtractor forest_ext;
+        scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
+        RuleComposer rc(2);
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph(*rule_graph)), act_graph(rc.TransformGraph(*rule_graph));
+        // Example rule graph
+        const vector<HyperEdge*> & edges = exp_graph->GetEdges();
+
+        // Make composed rules
+        HyperEdge * e02 = RuleComposer::ComposeEdge(*edges[0], *edges[1], 0); exp_graph->AddEdge(e02); exp_graph->GetNode(0)->AddEdge(e02);
+        HyperEdge * e12 = RuleComposer::ComposeEdge(*edges[1], *edges[2], 0); exp_graph->AddEdge(e12); exp_graph->GetNode(1)->AddEdge(e12);
+        HyperEdge * e14 = RuleComposer::ComposeEdge(*edges[1], *edges[4], 1); exp_graph->AddEdge(e14); exp_graph->GetNode(1)->AddEdge(e14);
+        HyperEdge * e23 = RuleComposer::ComposeEdge(*edges[2], *edges[3], 0); exp_graph->AddEdge(e23); exp_graph->GetNode(2)->AddEdge(e23);
+        HyperEdge * e45 = RuleComposer::ComposeEdge(*edges[4], *edges[5], 0); exp_graph->AddEdge(e45); exp_graph->GetNode(4)->AddEdge(e45);
+
+        // // ---- Add edges ----
+        // // Edge for root0
+        // HyperEdge* root0_edge = new HyperEdge(root0_node);
+        // frags_exp.AddEdge(root0_edge);
+        // root0_edge->AddTail(s1_node);
+        // root0_edge->AddFragmentEdge(src1_graph->GetEdge(0));
+        // // root0_edge->AddTrgWord(-1);
+        // root0_node->AddEdge(root0_edge);
+        // // Edge for s1
+        // HyperEdge* s1_edge = new HyperEdge(s1_node);
+        // frags_exp.AddEdge(s1_edge);
+        // s1_edge->AddTail(np2_node);
+        // s1_edge->AddTail(vp4_node);
+        // s1_edge->AddFragmentEdge(src1_graph->GetEdge(1));
+        // // s1_edge->AddTrgWord(-1); s1_edge->AddTrgWord(-2);
+        // s1_node->AddEdge(s1_edge);
+        // // Edge for np2
+        // HyperEdge* np2_edge = new HyperEdge(np2_node);
+        // frags_exp.AddEdge(np2_edge);
+        // np2_edge->AddTail(prp3_node);
+        // np2_edge->AddFragmentEdge(src1_graph->GetEdge(2));
+        // // np2_edge->AddTrgWord(-1);
+        // np2_node->AddEdge(np2_edge);
+        // // Edge for prp3
+        // HyperEdge* prp3_edge = new HyperEdge(prp3_node);
+        // frags_exp.AddEdge(prp3_edge);
+        // prp3_edge->AddFragmentEdge(src1_graph->GetEdge(3));
+        // // prp3_edge->AddTrgWord(Dict::WID("il"));
+        // prp3_node->AddEdge(prp3_edge);
+        // // Edge for vp4
+        // HyperEdge* vp4_edge = new HyperEdge(vp4_node);
+        // frags_exp.AddEdge(vp4_edge);
+        // vp4_edge->AddTail(vb7_node);
+        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(4));
+        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(5));
+        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(6));
+        // // vp4_edge->AddTrgWord(Dict::WID("ne")); vp4_edge->AddTrgWord(-1); vp4_edge->AddTrgWord(Dict::WID("pas"));
+        // vp4_node->AddEdge(vp4_edge);
+        // // Edge for vb7
+        // HyperEdge* vb7_edge = new HyperEdge(vb7_node);
+        // frags_exp.AddEdge(vb7_edge);
+        // vb7_edge->AddFragmentEdge(src1_graph->GetEdge(7));
+        // // vb7_edge->AddTrgWord(Dict::WID("va"));
+        // vb7_node->AddEdge(vb7_edge);
+
+        return exp_graph->CheckEqual(*act_graph);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -304,6 +404,8 @@ public:
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         // done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

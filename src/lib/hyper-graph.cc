@@ -36,6 +36,7 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
     if(id_ != rhs.id_ ||
        (head_==NULL) != (rhs.head_==NULL) ||
        (head_!=NULL && head_->GetId() != rhs.head_->GetId()) ||
+       (fragment_edges_.size() != rhs.fragment_edges_.size()) ||
        (tails_.size() != rhs.tails_.size()))
         return false;
     for(int i = 0; i < (int)tails_.size(); i++)
@@ -68,6 +69,11 @@ void HyperEdge::Print(std::ostream & out) const {
     }
     if(features_.size())
         out << ", \"features\": " << features_;
+    if(fragment_edges_.size()) {
+        out << ", \"fragment_edges\": [";
+        for(int i = 0; i < (int)fragment_edges_.size(); i++)
+            out << fragment_edges_[i]->GetId() << ((i == (int)fragment_edges_.size()-1) ? "]" : ", ");
+    }
     out << "}";
 }
 
