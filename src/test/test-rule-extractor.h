@@ -293,14 +293,18 @@ public:
         ForestExtractor forest_ext;
         shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
         vector<string> rule_exp, rule_act;
+        // Get actual rules, plus one composed rule
         BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
             rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent));
+        shared_ptr<HyperEdge> e01(RuleComposer::ComposeEdge(*frags_act->GetEdge(0), *frags_act->GetEdge(1), 0));
+        rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent));
         rule_exp.push_back("ROOT ( x0:S ) ||| x0 ||| 1");
         rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 ||| 1");
         rule_exp.push_back("NP ( x0:PRP ) ||| x0 ||| 1");
         rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" ||| 1");
         rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1");
         rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1");
+        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1");
         return CheckVector(rule_exp, rule_act);
     }
 

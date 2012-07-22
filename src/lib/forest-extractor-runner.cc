@@ -3,6 +3,7 @@
 #include <travatar/rule-extractor.h>
 #include <travatar/forest-extractor-runner.h>
 #include <travatar/binarizer-directional.h>
+#include <travatar/rule-composer.h>
 #include <boost/scoped_ptr.hpp>
 
 using namespace travatar;
@@ -18,8 +19,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     else
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
     ForestExtractor extractor;
+    scoped_ptr<GraphTransformer> binarizer, composer;
     // Create the binarizer
-    shared_ptr<GraphTransformer> binarizer;
     if(config.GetString("binarize") == "left") {
         binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
     } else if(config.GetString("binarize") == "right") {
@@ -27,6 +28,9 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     } else if(config.GetString("binarize") != "none") {
         THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
+    // Create the binarizer
+    if(config.GetInt("compose") > 1)
+        composer.reset(new RuleComposer(config.GetInt("compose")));
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
     ifstream src_in(argv[0].c_str());
@@ -53,16 +57,17 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         istringstream src_iss(src_line);
         scoped_ptr<HyperGraph> src_graph(tree_io->ReadTree(src_iss));
         // Binarizer if necessary
-        if(binarizer.get() != NULL) {
-            scoped_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*src_graph));
-            src_graph.swap(bin_graph);
-        }
+        if(binarizer.get() != NULL)
+            src_graph.reset(binarizer->TransformGraph(*src_graph));
         // Get target words and alignment
         Sentence trg_sent = Dict::ParseWords(trg_line);
         Alignment align = Alignment::FromString(align_line);
         // Do the rule extraction
-        shared_ptr<HyperGraph> rule_graph(
+        scoped_ptr<HyperGraph> rule_graph(
             extractor.ExtractMinimalRules(*src_graph, align));
+        // Binarizer if necessary
+        if(composer.get() != NULL)
+            rule_graph.reset(composer->TransformGraph(*rule_graph));
         // TODO: do other processing
         // Print each of the rules
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges())

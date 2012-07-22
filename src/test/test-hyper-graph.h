@@ -114,7 +114,44 @@ public:
 
     int TestCopy() {
         HyperGraph src1_copy(*src1_graph);
-        return src1_graph->CheckEqual(src1_copy);
+        int ret = src1_graph->CheckEqual(src1_copy);
+        if(ret) {
+            const vector<HyperNode*> & old_nodes = src1_graph->GetNodes();
+            const vector<HyperNode*> & new_nodes = src1_copy.GetNodes();
+            for(int i = 0; i < (int)old_nodes.size(); i++) {
+                if(old_nodes[i] == new_nodes[i]) {
+                    cerr << "old and new node pointers are equal @ " << i << endl;
+                    ret = 0;
+                } else {
+                    const vector<HyperEdge*> & old_edges = old_nodes[i]->GetEdges();
+                    const vector<HyperEdge*> & new_edges = new_nodes[i]->GetEdges();
+                    for(int j = 0; j < (int)old_edges.size(); j++) {
+                        if(old_edges[j] == new_edges[j]) {
+                            cerr << "old and new edge pointers are equal @ " << i << ", " << j << endl;
+                            ret = 0;
+                        }
+                    }
+                }
+            }
+            const vector<HyperEdge*> & old_edges = src1_graph->GetEdges();
+            const vector<HyperEdge*> & new_edges = src1_copy.GetEdges();
+            for(int i = 0; i < (int)old_edges.size(); i++) {
+                if(old_edges[i] == new_edges[i]) {
+                    cerr << "old and new edge pointers are equal @ " << i << endl;
+                    ret = 0;
+                } else {
+                    const vector<HyperNode*> & old_tails = old_edges[i]->GetTails();
+                    const vector<HyperNode*> & new_tails = new_edges[i]->GetTails();
+                    for(int j = 0; j < (int)old_tails.size(); j++) {
+                        if(old_tails[j] == new_tails[j]) {
+                            cerr << "old and new tail pointers are equal @ " << i << ", " << j << endl;
+                            ret = 0;
+                        }
+                    }
+                }
+            }
+        }
+        return ret;
     }
 
     int TestCalculateSpanForest() {

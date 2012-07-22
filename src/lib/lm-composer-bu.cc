@@ -63,7 +63,6 @@ const ChartEntry & LMComposerBU::BuildChart(
         double top_score = hypo_queue.top().first;
         GenericString<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes[id]->GetEdge(id_str[0]);
-        // cerr << "Processing id="<<id<<", id_str="<<id_str<<", id_edge="<<*id_edge << ", top=" << top_score <<endl;
         hypo_queue.pop();
         // Find the chart state and LM probability
         HyperEdge * next_edge = new HyperEdge;

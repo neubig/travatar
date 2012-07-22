@@ -59,11 +59,11 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
                     continue;
                 }
                 // Otherwise process all hyperedges of u
-                // We want to push these on the stack backwards so we can process
-                // in ascending order
-                BOOST_REVERSE_FOREACH(HyperEdge* e, u->GetEdges()) {
+                BOOST_FOREACH(HyperEdge* e, u->GetEdges()) {
                     // Calculate the nodes that still need to be expanded
-                    deque<HyperNode*> new_front = frag_front.second;
+                    // We want to push these on the stack backwards so we can process
+                    // in ascending order
+                    deque<HyperNode*> new_front;
                     BOOST_FOREACH(HyperNode* t, e->GetTails()) {
                         // If this is not a frontier node, push it on the queue
                         if(t->IsFrontier() != HyperNode::IS_FRONTIER)
@@ -71,6 +71,8 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
                         else
                             frag_front.first->AddTail(ret->GetNode(old_new_ids[t->GetId()]));
                     }
+                    BOOST_FOREACH(HyperNode * stack_node, frag_front.second)
+                        new_front.push_back(stack_node);
                     // Push this on to the queue
                     HyperEdge * new_frag(new HyperEdge(*frag_front.first));
                     new_frag->AddFragmentEdge(e);
@@ -125,21 +127,15 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
         oss << "\"" << Dict::WSym(node.GetSym()) << '"';
         return;
     // If this is a frontier node
-    } else if (node.IsFrontier() == HyperNode::IS_FRONTIER) {
-        // At the top of the tree, continue
-        if(tail_num == -1) {
-            tail_num = 0;
-        // Otherwise, return it
-        } else {
-            oss << "x" << tail_num++ << ':' << Dict::WSym(node.GetSym());
-            return;
-        }
+    } else if ((remaining_fragments.size() == 0) || (*remaining_fragments.begin())->GetHead()->GetId() != node.GetId()) {
+        oss << "x" << tail_num++ << ':' << Dict::WSym(node.GetSym());
+        return;
     }
     // If this is a non-terminal that is at the top of the tree
     oss << Dict::WSym(node.GetSym()) << " (";
-    if(remaining_fragments.size() == 0)
-        THROW_ERROR("Attempting to pop empty list at " << node);
     HyperEdge * my_edge = *remaining_fragments.begin();
+    if(remaining_fragments.size() == 0)
+        THROW_ERROR("Attempting to pop an empty stack");
     remaining_fragments.pop_front();
     BOOST_FOREACH(HyperNode* my_node, my_edge->GetTails()) {
         oss << ' ';
@@ -168,10 +164,13 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     ostringstream oss;
     // Traverse the rules in order of edge
     list<HyperEdge*> remaining_fragments;
-    BOOST_FOREACH(HyperEdge *edge, rule.GetFragmentEdges())
+    BOOST_FOREACH(HyperEdge *edge, rule.GetFragmentEdges()) {
         remaining_fragments.push_back(edge);
-    int tail_num = -1;
+    }
+    int tail_num = 0;
     PrintRuleSurface(*(*remaining_fragments.begin())->GetHead(), src_sent, remaining_fragments, tail_num, oss);
+    if(remaining_fragments.size() > 0)
+        THROW_ERROR("Did not use all fragments");
     // Make the actual rule
     oss << " |||";
     int last = -1;

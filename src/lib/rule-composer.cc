@@ -7,7 +7,7 @@ using namespace travatar;
 // Binarize the graph to the right
 HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) {
     HyperGraph * ret = new HyperGraph(hg);
-    const vector<HyperNode*> & nodes = hg.GetNodes();
+    const vector<HyperNode*> & nodes = ret->GetNodes();
     // Add the order-1 edges
     vector<vector<HyperEdge*> > last_edges, min_edges;
     BOOST_FOREACH(HyperNode * node, nodes)

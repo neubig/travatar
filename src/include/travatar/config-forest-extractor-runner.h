@@ -28,6 +28,7 @@ public:
 
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
+        AddConfigEntry("compose", "1", "How many rules to compose (default 1=no composition)");
 
     }
 	

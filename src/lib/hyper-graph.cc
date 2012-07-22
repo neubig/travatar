@@ -56,7 +56,7 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
 
 // Output for a hyperedge in JSON format
 void HyperEdge::Print(std::ostream & out) const {
-    out << "{\"id\": "<<id_<<", \"head\": "<<SafeReference(head_).GetId();
+    out << "{\"id\": "<<id_<<", \"head\": "<<(head_ == NULL ? -1 : head_->GetId());
     if(tails_.size()) {
         out << ", \"tails\": [";
         for(int i = 0; i < (int)tails_.size(); i++)
