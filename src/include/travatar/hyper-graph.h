@@ -11,7 +11,7 @@
 
 namespace travatar {
 
-typedef short NodeId;
+typedef int NodeId;
 class HyperNode;
 class HyperGraph;
 class TranslationRule;
