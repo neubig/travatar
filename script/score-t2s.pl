@@ -13,10 +13,10 @@ my $SRC_MIN_FREQ = 2;
 my $LEX_PROB_FILE = "";
 my $PREFIX = "egf";
 GetOptions(
-    "top-n=i" => \$TOP_N,               # Only extract the top N patterns
-    "src-min-freq=i" => \$SRC_MIN_FREQ, # Minimum frequency of a source pattern
+    "top-n=i" => \$TOP_N,                 # Only extract the top N patterns
+    "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
-                                        # calculating model 1
+                                          # calculating model 1
     "prefix=s" => \$PREFIX,               # Prefix for model 1
 );
 
@@ -74,7 +74,7 @@ sub print_counts {
     my $sum = sum(values %$counts);
     return if $sum < $SRC_MIN_FREQ;
     my @keys = keys %$counts;
-    if(@keys > $TOP_N) {
+    if($TOP_N and (@keys > $TOP_N)) {
         @keys = sort { $counts->{$b} <=> $counts->{$a} } @keys;
         @keys = @keys[0 .. $TOP_N-1];
     }

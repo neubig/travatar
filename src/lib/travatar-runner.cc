@@ -23,13 +23,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
     shared_ptr<LookupTableHash> tm(LookupTableHash::ReadFromRuleTable(tm_in));
     tm_in.close();
-    // Load the language model
-    shared_ptr<LMComposerBU> lm;
-    if(config.GetString("lm_file") != "") {
-        LMComposerBU * bu = new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetStackPopLimit(config.GetInt("pop_limit"));
-        lm.reset(bu);
-    }
     // Create the binarizer
     shared_ptr<GraphTransformer> binarizer;
     if(config.GetString("binarize") == "left") {
@@ -46,6 +39,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
     SparseMap weights = Dict::ParseFeatures(weight_in);
     weight_in.close();
+    // Load the language model
+    shared_ptr<LMComposerBU> lm;
+    if(config.GetString("lm_file") != "") {
+        LMComposerBU * bu = new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+        bu->SetLMWeight(weights[Dict::WID("lm")]);
+        bu->SetStackPopLimit(config.GetInt("pop_limit"));
+        lm.reset(bu);
+    }
     // Open the n-best output stream if it exists
     int nbest_count = config.GetInt("nbest");
     scoped_ptr<ostream> nbest_out;
