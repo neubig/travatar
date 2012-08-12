@@ -82,7 +82,7 @@ sub print_counts {
         my $words = 0;
         my @earr = strip_arr($e);
         my @farr = strip_arr($f);
-        printf "$e ||| $f ||| p=1 ${PREFIX}p=%f", log($counts->{$f}/$sum);
+        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f", log($counts->{$f}), log($counts->{$f}/$sum);
         printf " ${PREFIX}l=%f", m1prob(\@earr, \@farr) if $LEX_PROB_FILE;
         print " w=".scalar(@farr) if (@farr);
         print "\n";

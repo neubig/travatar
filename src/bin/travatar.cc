@@ -11,4 +11,5 @@ int main(int argc, char** argv) {
     // train the reorderer
     TravatarRunner runner;
     runner.Run(conf);
+    return 0;
 }
