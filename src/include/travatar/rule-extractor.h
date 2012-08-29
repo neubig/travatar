@@ -45,14 +45,24 @@ public:
         HyperGraph & src_parse, 
         const Alignment & align) const;
 
+    // Attach null-aligned target words to the very top node
+    // that they can be attached to
     HyperGraph * AttachNullsTop(const HyperGraph & rule_graph,
                                 const Alignment & align,
                                 int trg_len);
+
+    // Attach null-aligned target words to all possible nodes that
+    // they can be attached to
+    HyperGraph * AttachNullsExhaustive(const HyperGraph & rule_graph,
+                                       const Alignment & align,
+                                       int trg_len);
 
 protected:
 
     void AttachNullsTop(std::vector<bool> & nulls,
                         HyperNode & node);
+    void AttachNullsExhaustive(std::vector<bool> & nulls,
+                               HyperNode & node);
 
 };
 

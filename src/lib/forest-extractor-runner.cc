@@ -68,7 +68,11 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Binarizer if necessary
         if(composer.get() != NULL)
             rule_graph.reset(composer->TransformGraph(*rule_graph));
-        // TODO: do other processing
+        // Null attacher if necessary (TODO, make looking up the configuration better)
+        if(config.GetString("attach") == "top")
+            rule_graph.reset(extractor.AttachNullsTop(*rule_graph,align,trg_sent.size()));
+        else if(config.GetString("attach") != "none")
+            THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
         // Print each of the rules
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges())
             cout << extractor.RuleToString(*edge, 

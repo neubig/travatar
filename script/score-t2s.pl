@@ -63,7 +63,7 @@ sub m1prob {
         foreach my $e (@$earr, "") {
             $prob += max($min_prob, $lex{"$f\t$e"});
         }
-        $ret += log($prob/(@$earr+1));
+        $ret += ($prob ? log($prob/(@$earr+1)) : -99);
     }
     return $ret;
 }
@@ -82,7 +82,9 @@ sub print_counts {
         my $words = 0;
         my @earr = strip_arr($e);
         my @farr = strip_arr($f);
-        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f", log($counts->{$f}), log($counts->{$f}/$sum);
+        my $lfreq = ($counts->{$f} ? log($counts->{$f}) : 0);
+        my $lprob = ($counts->{$f} ? log($counts->{$f}/$sum) : -99);
+        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f", $lfreq, $lprob;
         printf " ${PREFIX}l=%f", m1prob(\@earr, \@farr) if $LEX_PROB_FILE;
         print " w=".scalar(@farr) if (@farr);
         print "\n";

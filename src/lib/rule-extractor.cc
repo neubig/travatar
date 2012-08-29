@@ -117,6 +117,37 @@ void ForestExtractor::AttachNullsTop(vector<bool> & nulls,
     }
 }
 
+HyperGraph * ForestExtractor::AttachNullsExhaustive(const HyperGraph & rule_graph,
+                                           const Alignment & align,
+                                           int trg_len) {
+    HyperGraph * ret = new HyperGraph(rule_graph);
+    vector<bool> nulls(trg_len, true);
+    BOOST_FOREACH(const Alignment::AlignmentPair & a, align.GetAlignmentVector())
+        nulls[a.second] = false;
+    AttachNullsExhaustive(nulls, *ret->GetNode(0));
+    return ret;
+}
+
+void ForestExtractor::AttachNullsExhaustive(vector<bool> & nulls,
+                                     HyperNode & node) {
+    pair<int,int> trg_covered = node.GetTrgCovered();
+    if(trg_covered.first == -1) return;
+    trg_covered.second = min(trg_covered.second, (int)nulls.size());
+    vector<bool> child_covered(trg_covered.second-trg_covered.first, false);
+    BOOST_FOREACH(HyperNode * tail, (node.GetEdges()[0])->GetTails()) {
+        pair<int,int> tail_cov = tail->GetTrgCovered();
+        for(int i = tail_cov.first; i < tail_cov.second; i++)
+            child_covered[i-trg_covered.first] = true;
+        AttachNullsExhaustive(nulls, *tail);
+    }
+    for(int i = 0; i < (int)child_covered.size(); i++) {
+        if(!child_covered[i]) {
+            nulls[i+trg_covered.first] = true;
+            node.GetTrgSpan().insert(i+trg_covered.first);
+        }
+    }
+}
+
 void RuleExtractor::PrintRuleSurface(const HyperNode & node,
                                      const Sentence & src_sent,
                                      list<HyperEdge*> & remaining_fragments,

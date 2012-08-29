@@ -11,6 +11,7 @@ binmode STDERR, ":utf8";
 my ($SEED_WEIGHTS, $SRC, $REF, $LM, $TM, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS);
 
 my $MAX_ITERS = 20;
+my $MIN_DIFF = 0.001;
 my $NBEST = 100;
 GetOptions(
     # Necessary
@@ -66,17 +67,31 @@ safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
 safesystem("cp $SEED_WEIGHTS $WORKING_DIR/run1.weights") or die "couldn't copy";
 my $weight_cnt = `wc -l $WORKING_DIR/run1.weights`; chomp $weight_cnt;
 
+# Load weights
+sub load_weights {
+    my $fname = shift;
+    open FILE0, "<:utf8", $fname or die "Couldn't open $fname\n";
+    my %ret = map { chomp; my ($k, $v) = split(/=/); $k => $v } <FILE0>;
+    close FILE0;
+    return %ret;
+}
+
 # Do the outer loop
 foreach my $iter (1 .. $MAX_ITERS) {
-    my $pref = "$WORKING_DIR/run$iter";
+    my $prev = "$WORKING_DIR/run$iter";
     my $next = "$WORKING_DIR/run".($iter+1);
-    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -lm_file $LM -tm_file $TM -weight_file $pref.weights -nbest_out $pref.nbest < $SRC > $pref.out 2> $pref.err") or die "couldn't decode";
-    safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $pref.weights < $pref.nbest > $pref.nbest-dense") or die "couldn't densify";
-    safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $pref.scores.dat --ffile $pref.features.dat -r $REF -n $pref.nbest-dense") or die "couldn't extract";
-    safesystem("$TRAVATAR_DIR/script/mert/make-init-opt.pl < $pref.weights > $pref.init.opt") or die "couldn't make init opt";
+    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -lm_file $LM -tm_file $TM -weight_file $prev.weights -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $prev.weights < $prev.nbest > $prev.nbest-dense") or die "couldn't densify";
+    safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $prev.scores.dat --ffile $prev.features.dat -r $REF -n $prev.nbest-dense") or die "couldn't extract";
+    safesystem("$TRAVATAR_DIR/script/mert/make-init-opt.pl < $prev.weights > $prev.init.opt") or die "couldn't make init opt";
     my $feats = join(",", map { "$WORKING_DIR/run$_.features.dat" } (1 .. $iter));
     my $scores = join(",", map { "$WORKING_DIR/run$_.scores.dat" } (1 .. $iter));
-    safesystem("$MOSES_DIR/bin/mert -d $weight_cnt --scconfig case:true --scfile $scores --ffile $feats --ifile $pref.init.opt -n 20 > $pref.mert.out 2> $pref.mert.log") or die "couldn't mert"; 
-    print `grep Best $pref.mert.log`;
-    safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl $pref.weights $pref.mert.log > $next.weights") or die "couldn't make init opt";
+    safesystem("$MOSES_DIR/bin/mert -d $weight_cnt --scconfig case:true --scfile $scores --ffile $feats --ifile $prev.init.opt -n 20 > $prev.mert.out 2> $prev.mert.log") or die "couldn't mert"; 
+    print `grep Best $prev.mert.log`;
+    safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl $prev.weights $prev.mert.log > $next.weights") or die "couldn't make init opt";
+    my %wprev = load_weights("$prev.weights");
+    my %wnext = load_weights("$next.weights");
+    my $diff = 0;
+    for(keys %wprev) { $diff += abs($wprev{$_} - $wnext{$_}); }
+    last if($diff < $MIN_DIFF);
 }

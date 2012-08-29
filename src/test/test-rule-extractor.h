@@ -226,7 +226,8 @@ public:
     int TestExhaustiveNullExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
-        scoped_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src3_graph, align3));
+        scoped_ptr<HyperGraph> frags_min(forest_ext.ExtractMinimalRules(*src3_graph, align3));
+        scoped_ptr<HyperGraph> frags_act(forest_ext.AttachNullsExhaustive(*frags_min, align3, trg3_sent.size()));
         // Create the actual rule graph
         // Expected nodes "(ROOT0 (VP1 (VBD2 ate) (NP4 (NN5 rice))))";
         HyperGraph frags_exp;
@@ -406,7 +407,7 @@ public:
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-        // done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;
