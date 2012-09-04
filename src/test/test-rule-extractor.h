@@ -223,6 +223,34 @@ public:
         return frags_exp.CheckEqual(*frags_act);
     }
 
+    int TestExpandNode() {
+        ForestExtractor forest_ext;
+        HyperNode old_node(1, MakePair(5,6), 1);
+        old_node.GetTrgSpan().insert(3);
+        vector<bool> nulls(7, true);
+        nulls[1] = false; nulls[3] = false; nulls[5] = false;
+        // Get the actual list of expanded nodes
+        ForestExtractor::SpanNodeVector sn_act = forest_ext.ExpandNode(nulls, old_node);
+        // Make the expected list of expanded nodes
+        vector<HyperNode*> node_exp, node_act;
+        vector<set<int> > set_exp, set_act;
+        for(int i = 0; i < 4; i++) {
+            set_act.push_back(sn_act[i].first);
+            node_act.push_back(sn_act[i].second);
+            set_exp.push_back(set<int>());
+            HyperNode * next_node = new HyperNode(old_node);
+            next_node->SetId(-1);
+            node_exp.push_back(next_node);
+        }
+        node_exp[1]->GetTrgSpan().insert(4);
+        set_exp[1].insert(4);
+        node_exp[2]->GetTrgSpan().insert(2);
+        set_exp[2].insert(2);
+        node_exp[3]->GetTrgSpan().insert(2); node_exp[3]->GetTrgSpan().insert(4);
+        set_exp[3].insert(2); set_exp[3].insert(4);
+        return CheckVector(set_exp, set_act) && CheckPtrVector(node_exp, node_act); 
+    }
+
     int TestExhaustiveNullExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
@@ -233,19 +261,17 @@ public:
         HyperGraph frags_exp;
         frags_exp.SetWords(src3_graph->GetWords());
         // ---- Add nodes ----
+        // Node rooted at pseudo-root
+        HyperNode* pseudo_node = new HyperNode;
+        frags_exp.AddNode(pseudo_node);
         // Node rooted at root0
         HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,2));
         root0_node->SetTrgSpan(src3_graph->GetNode(0)->GetTrgSpan());
         frags_exp.AddNode(root0_node);
-        // Node rooted at vp1 without "o"
-        HyperNode* vp1_node_n = new HyperNode(Dict::WID("VP"), MakePair(0,2));
-        vp1_node_n->SetTrgSpan(src3_graph->GetNode(1)->GetTrgSpan());
-        frags_exp.AddNode(vp1_node_n);
-        // Node rooted at vp1 with "0"
-        HyperNode* vp1_node_y = new HyperNode(Dict::WID("VP"), MakePair(0,2));
-        vp1_node_y->SetTrgSpan(src3_graph->GetNode(1)->GetTrgSpan());
-        vp1_node_y->GetTrgSpan().insert(1);
-        frags_exp.AddNode(vp1_node_y);
+        // Node rooted at vp1
+        HyperNode* vp1_node = new HyperNode(Dict::WID("VP"), MakePair(0,2));
+        vp1_node->SetTrgSpan(src3_graph->GetNode(1)->GetTrgSpan());
+        frags_exp.AddNode(vp1_node);
         // Node rooted at vbd2 without "o"
         HyperNode* vbd2_node_n = new HyperNode(Dict::WID("VBD"), MakePair(0,1));
         vbd2_node_n->SetTrgSpan(src3_graph->GetNode(2)->GetTrgSpan());
@@ -274,18 +300,76 @@ public:
         nn5_node_y->GetTrgSpan().insert(1);
         frags_exp.AddNode(nn5_node_y);
         // ---- Add edges ----
+        // Edge for pseudo-node
+        HyperEdge* p_r0 = new HyperEdge(pseudo_node);
+        frags_exp.AddEdge(p_r0);
+        p_r0->AddTail(root0_node);
+        pseudo_node->AddEdge(p_r0);
         // Edge for root0
-        HyperEdge* root0_edge_y = new HyperEdge(root0_node);
-        frags_exp.AddEdge(root0_edge_y);
-        root0_edge_y->AddTail(vp1_node_y);
-        root0_edge_y->AddFragmentEdge(src1_graph->GetEdge(0));
-        root0_node->AddEdge(root0_edge_y);
-        // Edge for root0
-        HyperEdge* root0_edge_n = new HyperEdge(root0_node);
-        frags_exp.AddEdge(root0_edge_n);
-        root0_edge_n->AddTail(vp1_node_n);
-        root0_edge_n->AddFragmentEdge(src1_graph->GetEdge(0));
-        root0_node->AddEdge(root0_edge_n);
+        HyperEdge* r0_v1 = new HyperEdge(root0_node);
+        frags_exp.AddEdge(r0_v1);
+        r0_v1->AddTail(vp1_node);
+        r0_v1->AddFragmentEdge(src1_graph->GetEdge(0));
+        root0_node->AddEdge(r0_v1);
+        // Edge for vp1 with no attachment
+        HyperEdge* v1_v2n_n4n = new HyperEdge(vp1_node);
+        frags_exp.AddEdge(v1_v2n_n4n);
+        v1_v2n_n4n->AddTail(vbd2_node_n);
+        v1_v2n_n4n->AddTail(np4_node_n);
+        v1_v2n_n4n->AddFragmentEdge(src1_graph->GetEdge(1));
+        vp1_node->AddEdge(v1_v2n_n4n);
+        // Edge for vp1 with right attached
+        HyperEdge* v1_v2n_n4y = new HyperEdge(vp1_node);
+        frags_exp.AddEdge(v1_v2n_n4y);
+        v1_v2n_n4y->AddTail(vbd2_node_n);
+        v1_v2n_n4y->AddTail(np4_node_y);
+        v1_v2n_n4y->AddFragmentEdge(src1_graph->GetEdge(1));
+        vp1_node->AddEdge(v1_v2n_n4y);
+        // Edge for vp1 with left attached
+        HyperEdge* v1_v2y_n4n = new HyperEdge(vp1_node);
+        frags_exp.AddEdge(v1_v2y_n4n);
+        v1_v2y_n4n->AddTail(vbd2_node_y);
+        v1_v2y_n4n->AddTail(np4_node_n);
+        v1_v2y_n4n->AddFragmentEdge(src1_graph->GetEdge(1));
+        vp1_node->AddEdge(v1_v2y_n4n);
+        // Edge for vbd2 without "o"
+        HyperEdge* vbd2_edge_n = new HyperEdge(vbd2_node_n);
+        frags_exp.AddEdge(vbd2_edge_n);
+        vbd2_edge_n->AddFragmentEdge(src1_graph->GetEdge(2));
+        vbd2_node_n->AddEdge(vbd2_edge_n);
+        // Edge for vbd2 with "o"
+        HyperEdge* vbd2_edge_y = new HyperEdge(vbd2_node_y);
+        frags_exp.AddEdge(vbd2_edge_y);
+        vbd2_edge_y->AddFragmentEdge(src1_graph->GetEdge(2));
+        vbd2_node_y->AddEdge(vbd2_edge_y);
+        // Edge for np4
+        HyperEdge* np4_edge_nn = new HyperEdge(np4_node_n);
+        frags_exp.AddEdge(np4_edge_nn);
+        np4_edge_nn->AddTail(nn5_node_n);
+        np4_edge_nn->AddFragmentEdge(src1_graph->GetEdge(3));
+        np4_node_n->AddEdge(np4_edge_nn);
+        // Edge for np4
+        HyperEdge* np4_edge_ny = new HyperEdge(np4_node_n);
+        frags_exp.AddEdge(np4_edge_ny);
+        np4_edge_ny->AddTail(nn5_node_y);
+        np4_edge_ny->AddFragmentEdge(src1_graph->GetEdge(3));
+        np4_node_n->AddEdge(np4_edge_ny);
+        // Edge for np4
+        HyperEdge* np4_edge_y = new HyperEdge(np4_node_y);
+        frags_exp.AddEdge(np4_edge_y);
+        np4_edge_y->AddTail(nn5_node_n);
+        np4_edge_y->AddFragmentEdge(src1_graph->GetEdge(3));
+        np4_node_y->AddEdge(np4_edge_y);
+        // Edge for nn5 without "o"
+        HyperEdge* nn5_edge_n = new HyperEdge(nn5_node_n);
+        frags_exp.AddEdge(nn5_edge_n);
+        nn5_edge_n->AddFragmentEdge(src1_graph->GetEdge(4));
+        nn5_node_n->AddEdge(nn5_edge_n);
+        // Edge for nn5 with "o"
+        HyperEdge* nn5_edge_y = new HyperEdge(nn5_node_y);
+        frags_exp.AddEdge(nn5_edge_y);
+        nn5_edge_y->AddFragmentEdge(src1_graph->GetEdge(4));
+        nn5_node_y->AddEdge(nn5_edge_y);
         return frags_exp.CheckEqual(*frags_act);
     }
 
@@ -406,6 +490,7 @@ public:
         int done = 0, succeeded = 0;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestExpandNode()" << endl; if(TestExpandNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;

@@ -1,3 +1,4 @@
+#include <boost/tuple/tuple.hpp>
 #include <travatar/rule-extractor.h>
 #include <queue>
 #include <stack>
@@ -117,35 +118,135 @@ void ForestExtractor::AttachNullsTop(vector<bool> & nulls,
     }
 }
 
-HyperGraph * ForestExtractor::AttachNullsExhaustive(const HyperGraph & rule_graph,
+
+HyperGraph * ForestExtractor::AttachNullsExhaustive(
+                                           const HyperGraph & rule_graph,
                                            const Alignment & align,
                                            int trg_len) {
     HyperGraph * ret = new HyperGraph(rule_graph);
+    ret->GetNodes().resize(0);
+    ret->GetEdges().resize(0);
+    ret->AddNode(new HyperNode);
     vector<bool> nulls(trg_len, true);
-    BOOST_FOREACH(const Alignment::AlignmentPair & a, align.GetAlignmentVector())
+    // Find the null aligned target words
+    BOOST_FOREACH(const Alignment::AlignmentPair &a, align.GetAlignmentVector())
         nulls[a.second] = false;
-    AttachNullsExhaustive(nulls, *ret->GetNode(0));
+    vector< SpanNodeVector > new_nodes(rule_graph.NumNodes());
+    // Get the expanded nodes in the new graph 
+    GetExpandedNodes(nulls, *rule_graph.GetNode(0), new_nodes);
+    // Add the links from the pseudo-node to the root
+    BOOST_FOREACH( SpanNodeVector::value_type & val, new_nodes[0] ) {
+        HyperEdge * edge = new HyperEdge(ret->GetNode(0));
+        edge->AddTail(val.second);
+        ret->GetNode(0)->AddEdge(edge);
+        ret->AddEdge(edge);
+    }
+    // Add these to the graph
+    BOOST_FOREACH( SpanNodeVector & vec, new_nodes ) {
+        BOOST_FOREACH( SpanNodeVector::value_type & val, vec ) {
+            ret->AddNode(val.second);
+            BOOST_FOREACH( HyperEdge * edge, val.second->GetEdges() ) {
+                ret->AddEdge(edge);
+            }
+        }
+    }
     return ret;
 }
 
-void ForestExtractor::AttachNullsExhaustive(vector<bool> & nulls,
-                                     HyperNode & node) {
-    pair<int,int> trg_covered = node.GetTrgCovered();
-    if(trg_covered.first == -1) return;
-    trg_covered.second = min(trg_covered.second, (int)nulls.size());
-    vector<bool> child_covered(trg_covered.second-trg_covered.first, false);
-    BOOST_FOREACH(HyperNode * tail, (node.GetEdges()[0])->GetTails()) {
-        pair<int,int> tail_cov = tail->GetTrgCovered();
-        for(int i = tail_cov.first; i < tail_cov.second; i++)
-            child_covered[i-trg_covered.first] = true;
-        AttachNullsExhaustive(nulls, *tail);
-    }
-    for(int i = 0; i < (int)child_covered.size(); i++) {
-        if(!child_covered[i]) {
-            nulls[i+trg_covered.first] = true;
-            node.GetTrgSpan().insert(i+trg_covered.first);
+// For each old_node
+// Return a vector of new nodes that have been expanded to cover the surrounding nulls
+// Where each node is also annotated with the set of surrounding positions it covers (out of all the positions possible)
+const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
+                            const vector<bool> & nulls,
+                            const HyperNode & old_node,
+                            vector<ForestExtractor::SpanNodeVector> & expanded
+                ) {
+    int old_id = old_node.GetId();
+    if(expanded[old_id].size())
+        return expanded[old_id];
+    // Expand the node itself
+    expanded[old_id] = ExpandNode(nulls, old_node);
+    // Create the stack of partially processed tails
+    typedef boost::tuple<set<int>, const HyperEdge*, HyperEdge*> q_tuple;
+    queue< q_tuple > open_queue;
+    // If the node has tails, expand the tails for each node
+    BOOST_FOREACH(const SpanNodeVector::value_type & val, expanded[old_id]) {
+        BOOST_FOREACH(const HyperEdge* edge, old_node.GetEdges()) {
+            HyperEdge * new_edge = new HyperEdge(*edge);
+            new_edge->SetHead(val.second);
+            new_edge->SetId(-1);
+            new_edge->GetTails().resize(0);
+            open_queue.push(q_tuple(val.first, edge, new_edge));
         }
     }
+    // While there are still edges we haven't finished, iterate
+    while(open_queue.size() > 0) {
+        q_tuple trip = open_queue.front();
+        open_queue.pop();
+        // If we are done, delete
+        if(trip.get<1>()->NumTails() == trip.get<2>()->NumTails()) {
+            trip.get<2>()->GetHead()->AddEdge(trip.get<2>());
+        // Otherwise, expand the next node in the old edge
+        } else {
+            const SpanNodeVector & next_exp = GetExpandedNodes(nulls, 
+                                                               *trip.get<1>()->GetTail(trip.get<2>()->NumTails()),
+                                                               expanded);
+            // For all the possibilities
+            BOOST_FOREACH(const SpanNodeVector::value_type & val, next_exp) {
+                set<int> new_set = trip.get<0>();
+                bool ok = true;
+                // For each value covered by the tail, check to make sure that
+                // we do not have any doubly covered nulls
+                BOOST_FOREACH(int covered, val.first) {
+                    ok = (new_set.find(covered) == new_set.end());
+                    if(!ok) break;
+                    new_set.insert(covered);
+                }
+                // If we are OK, create a new edge and add it
+                if(ok) {
+                    HyperEdge * next_edge = new HyperEdge(*trip.get<2>());
+                    next_edge->SetId(-1);
+                    next_edge->AddTail(val.second);
+                    open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge));
+                }
+            }
+            delete trip.get<2>();
+        }
+    }
+    return expanded[old_id];
+}
+
+// Check to make sure that we can expand the node properly
+ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
+                const vector<bool> & nulls,
+                const HyperNode & old_node) const {
+    SpanNodeVector ret;
+    const set<int> & trg_span = old_node.GetTrgSpan();
+    // For nodes that are entirely unaligned
+    if(trg_span.size() == 0) {
+        HyperNode * next_node = new HyperNode(old_node);
+        next_node->SetId(-1);
+        ret.push_back(MakePair(set<int>(), next_node));
+        return ret;
+    }
+    // i_node stores the new node with all nulls before
+    set<int> i_set;
+    for(int i = *trg_span.begin(); i >= 0 && (i == *trg_span.begin() || nulls[i]); i--) {
+        if(nulls[i]) i_set.insert(i);
+        set<int> j_set = i_set;
+        for(int j = *trg_span.rbegin();
+              j < (int)nulls.size() && (j == *trg_span.rbegin() || nulls[j]); 
+              j++) {
+            if(nulls[j]) j_set.insert(j);
+            HyperNode * j_node = new HyperNode(old_node);
+            j_node->GetEdges().resize(0);
+            j_node->SetId(-1);
+            BOOST_FOREACH(int k, j_set)
+                j_node->GetTrgSpan().insert(k);
+            ret.push_back(MakePair(j_set, j_node));
+        }
+    }
+    return ret;
 }
 
 void RuleExtractor::PrintRuleSurface(const HyperNode & node,

@@ -57,6 +57,7 @@ public:
     HyperNode* GetTail(int i) { return tails_[i]; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
+    int NumTails() const { return tails_.size(); }
     void SetTails(const std::vector<HyperNode*> & tails) { tails_ = tails; }
     const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
     std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
@@ -191,7 +192,7 @@ public:
     // will return <0, INT_MAX>
     // If this covers no part of the target, return <-1, -1>
     // Otherwise return the exact part that is actually covered
-    std::pair<int, int> GetTrgCovered() {
+    std::pair<int, int> GetTrgCovered() const {
         if(id_ == 0) return MakePair(0, INT_MAX);
         if(trg_span_.size() == 0) return MakePair(-1,-1);
         return MakePair(*trg_span_.begin(), *trg_span_.rbegin()+1);
@@ -357,6 +358,7 @@ public:
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_,i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_,i); }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
+    std::vector<HyperEdge*> & GetEdges() { return edges_; }
     int NumEdges() const { return edges_.size(); }
     WordId GetWord(int i) const { return SafeAccess(words_, i); }
     const std::vector<WordId> & GetWords() const { return words_; }

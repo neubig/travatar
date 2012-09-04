@@ -106,7 +106,7 @@ void HyperNode::Print(std::ostream & out) const {
         for(int i = 0; i < (int)edges_.size(); i++)
             out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
     }
-    if(has_trg_span_) {
+    if(trg_span_.size() > 0) {
         out << ", \"trg_span\": [";
         int num = 0;
         BOOST_FOREACH(int v, trg_span_)

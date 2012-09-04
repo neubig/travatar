@@ -13,6 +13,7 @@ namespace travatar {
 // and an alignment into a forest of matched rules
 class RuleExtractor {
 public:
+
     // Create the minimal graph of rules
     virtual HyperGraph * ExtractMinimalRules(
         HyperGraph & src_parse, 
@@ -56,6 +57,19 @@ public:
     HyperGraph * AttachNullsExhaustive(const HyperGraph & rule_graph,
                                        const Alignment & align,
                                        int trg_len);
+
+    // For expanding all nulls exhaustively
+    typedef std::vector<std::pair<std::set<int>, HyperNode*> > SpanNodeVector;
+
+    // Used memoized recursion to get the expanded nodes for each old node
+    const SpanNodeVector & GetExpandedNodes(
+                            const std::vector<bool> & nulls,
+                            const HyperNode & old_node,
+                            std::vector<SpanNodeVector> & expanded);
+
+    SpanNodeVector ExpandNode(
+                const std::vector<bool> & nulls,
+                const HyperNode & old_node) const;
 
 protected:
 
