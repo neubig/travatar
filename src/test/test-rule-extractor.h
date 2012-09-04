@@ -349,17 +349,17 @@ public:
         np4_edge_nn->AddFragmentEdge(src1_graph->GetEdge(3));
         np4_node_n->AddEdge(np4_edge_nn);
         // Edge for np4
-        HyperEdge* np4_edge_ny = new HyperEdge(np4_node_n);
-        frags_exp.AddEdge(np4_edge_ny);
-        np4_edge_ny->AddTail(nn5_node_y);
-        np4_edge_ny->AddFragmentEdge(src1_graph->GetEdge(3));
-        np4_node_n->AddEdge(np4_edge_ny);
+        HyperEdge* np4_edge_yn = new HyperEdge(np4_node_y);
+        frags_exp.AddEdge(np4_edge_yn);
+        np4_edge_yn->AddTail(nn5_node_n);
+        np4_edge_yn->AddFragmentEdge(src1_graph->GetEdge(3));
+        np4_node_y->AddEdge(np4_edge_yn);
         // Edge for np4
-        HyperEdge* np4_edge_y = new HyperEdge(np4_node_y);
-        frags_exp.AddEdge(np4_edge_y);
-        np4_edge_y->AddTail(nn5_node_n);
-        np4_edge_y->AddFragmentEdge(src1_graph->GetEdge(3));
-        np4_node_y->AddEdge(np4_edge_y);
+        HyperEdge* np4_edge_yy = new HyperEdge(np4_node_y);
+        frags_exp.AddEdge(np4_edge_yy);
+        np4_edge_yy->AddTail(nn5_node_y);
+        np4_edge_yy->AddFragmentEdge(src1_graph->GetEdge(3));
+        np4_node_y->AddEdge(np4_edge_yy);
         // Edge for nn5 without "o"
         HyperEdge* nn5_edge_n = new HyperEdge(nn5_node_n);
         frags_exp.AddEdge(nn5_edge_n);

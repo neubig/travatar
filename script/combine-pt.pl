@@ -54,7 +54,7 @@ while(1) {
     for(split(/ /, $arr[2])) {
         my @kv = split(/=/);
         @kv == 2 or die "bad line $next\n";
-        $buffer{$pid}->{$kv[0]} = $kv[1];
+        $buffer{$pid}->{$kv[0]} = $kv[1] if (($id == 0) or ($kv[0] ne "w"));
     }
     if($has) {
         print "$pid ||| ".join(" ", map { "$_=".$buffer{$pid}->{$_} } sort keys %{$buffer{$pid}})."\n";

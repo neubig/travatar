@@ -20,6 +20,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     else
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
     ForestExtractor extractor;
+    extractor.SetMaxAttach(config.GetInt("attach_len"));
     scoped_ptr<GraphTransformer> binarizer, composer;
     // Create the binarizer
     if(config.GetString("binarize") == "left") {
@@ -86,7 +87,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             for(filt = 0; 
                 filt < (int)rule_filters.size() && 
                 rule_filters[filt]->PassesFilter(*edge, src_graph->GetWords(), trg_sent);
-                filt++) {
+                filt++);
+            if(filt == (int)rule_filters.size()) {
                 cout << extractor.RuleToString(*edge, 
                                                src_graph->GetWords(), 
                                                trg_sent) << endl;

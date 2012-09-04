@@ -41,6 +41,9 @@ private:
 //  Haitao Mi and Liang Huang
 class ForestExtractor : public RuleExtractor{
 public:
+
+    ForestExtractor() : max_attach_(1) { }
+
     // Extract the very minimal set of rules (no nulls, etc)
     virtual HyperGraph * ExtractMinimalRules(
         HyperGraph & src_parse, 
@@ -71,7 +74,13 @@ public:
                 const std::vector<bool> & nulls,
                 const HyperNode & old_node) const;
 
+    void SetMaxAttach(int max_attach) {
+        max_attach_ = max_attach;
+    }
+
 protected:
+
+    int max_attach_;
 
     void AttachNullsTop(std::vector<bool> & nulls,
                         HyperNode & node);

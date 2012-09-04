@@ -124,8 +124,8 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
                                            const Alignment & align,
                                            int trg_len) {
     HyperGraph * ret = new HyperGraph(rule_graph);
-    ret->GetNodes().resize(0);
-    ret->GetEdges().resize(0);
+    ret->DeleteNodes();
+    ret->DeleteEdges();
     ret->AddNode(new HyperNode);
     ret->GetNode(0)->SetFrontier(HyperNode::NOT_FRONTIER);
     vector<bool> nulls(trg_len, true);
@@ -168,16 +168,16 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
     // Expand the node itself
     expanded[old_id] = ExpandNode(nulls, old_node);
     // Create the stack of partially processed tails
-    typedef boost::tuple<set<int>, const HyperEdge*, HyperEdge*> q_tuple;
+    typedef boost::tuple<set<int>, const HyperEdge*, HyperEdge*, int, int > q_tuple;
     queue< q_tuple > open_queue;
-    // If the node has tails, expand the tails for each node
+    // If the node has edges, expand the edges for each node
     BOOST_FOREACH(const SpanNodeVector::value_type & val, expanded[old_id]) {
         BOOST_FOREACH(const HyperEdge* edge, old_node.GetEdges()) {
             HyperEdge * new_edge = new HyperEdge(*edge);
             new_edge->SetHead(val.second);
             new_edge->SetId(-1);
             new_edge->GetTails().resize(0);
-            open_queue.push(q_tuple(val.first, edge, new_edge));
+            open_queue.push(q_tuple(set<int>(), edge, new_edge, *val.second->GetTrgSpan().begin(), *val.second->GetTrgSpan().rbegin()));
         }
     }
     // While there are still edges we haven't finished, iterate
@@ -199,7 +199,9 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                 // For each value covered by the tail, check to make sure that
                 // we do not have any doubly covered nulls
                 BOOST_FOREACH(int covered, val.first) {
-                    ok = (new_set.find(covered) == new_set.end());
+                    ok = (new_set.find(covered) == new_set.end()) &&
+                         covered >= trip.get<3>() &&
+                         covered <= trip.get<4>();
                     if(!ok) break;
                     new_set.insert(covered);
                 }
@@ -208,7 +210,7 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                     HyperEdge * next_edge = new HyperEdge(*trip.get<2>());
                     next_edge->SetId(-1);
                     next_edge->AddTail(val.second);
-                    open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge));
+                    open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge, trip.get<3>(), trip.get<4>()));
                 }
             }
             delete trip.get<2>();
@@ -232,11 +234,12 @@ ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
     }
     // i_node stores the new node with all nulls before
     set<int> i_set;
-    for(int i = *trg_span.begin(); i >= 0 && (i == *trg_span.begin() || nulls[i]); i--) {
+    for(int i = *trg_span.begin(); i >= max(0, *trg_span.begin() - max_attach_)  && (i == *trg_span.begin() || nulls[i]); i--) {
         if(nulls[i]) i_set.insert(i);
         set<int> j_set = i_set;
         for(int j = *trg_span.rbegin();
-              j < (int)nulls.size() && (j == *trg_span.rbegin() || nulls[j]); 
+              j < min((int)nulls.size(), *trg_span.rbegin()+1+max_attach_)  && 
+              (j == *trg_span.rbegin() || nulls[j]); 
               j++) {
             if(nulls[j]) j_set.insert(j);
             HyperNode * j_node = new HyperNode(old_node);
@@ -293,7 +296,7 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
         tail_map[tails[i]->GetId()] = i;
         const std::set<int> & my_trg_span = tails[i]->GetTrgSpan();
         for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++)
-            trg_cover[j-trg_begin] = i;
+            SafeAccess(trg_cover, j-trg_begin) = i;
     }
     // Create the string to return
     ostringstream oss;

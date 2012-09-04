@@ -294,6 +294,18 @@ public:
             delete edge;
     };
 
+    void DeleteNodes() {
+        BOOST_FOREACH(HyperNode* node, nodes_)
+            delete node;
+        nodes_.resize(0);
+    }
+    void DeleteEdges() {
+        BOOST_FOREACH(HyperEdge* edge, edges_)
+            delete edge;
+        edges_.resize(0);
+    }
+        
+
     // Score each edge in the graph
     void ScoreEdges(const SparseMap & weights);
 
