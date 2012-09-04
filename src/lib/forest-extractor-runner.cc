@@ -4,6 +4,7 @@
 #include <travatar/forest-extractor-runner.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/rule-composer.h>
+#include <travatar/rule-filter.h>
 #include <boost/scoped_ptr.hpp>
 
 using namespace travatar;
@@ -39,6 +40,10 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     if(!trg_in) THROW_ERROR("Could not find trg file: " << argv[1]);
     ifstream align_in(argv[2].c_str());
     if(!align_in) THROW_ERROR("Could not find align file: " << argv[2]);
+    // Create rule filters
+    vector< shared_ptr<RuleFilter> > rule_filters;
+    rule_filters.push_back(shared_ptr<RuleFilter>(new PseudoNodeFilter));
+    rule_filters.push_back(shared_ptr<RuleFilter>(new RuleSizeFilter(config.GetInt("term_len"), config.GetInt("nonterm_len"))));
     // Get the lines
     string src_line, trg_line, align_line;
     int has_src, has_trg, has_align;
@@ -75,10 +80,13 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             rule_graph.reset(extractor.AttachNullsExhaustive(*rule_graph,align,trg_sent.size()));
         else if(config.GetString("attach") != "none")
             THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
-        // Print each of the rules
+        // Print each of the rules as long as they pass the filter
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
-            // Skip pseudo-nodes that don't actually appear in the parse chart
-            if(edge->GetHead()->IsFrontier() != HyperNode::NOT_FRONTIER) {
+            int filt;
+            for(filt = 0; 
+                filt < (int)rule_filters.size() && 
+                rule_filters[filt]->PassesFilter(*edge, src_graph->GetWords(), trg_sent);
+                filt++) {
                 cout << extractor.RuleToString(*edge, 
                                                src_graph->GetWords(), 
                                                trg_sent) << endl;
