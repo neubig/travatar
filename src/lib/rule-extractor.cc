@@ -127,6 +127,7 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
     ret->GetNodes().resize(0);
     ret->GetEdges().resize(0);
     ret->AddNode(new HyperNode);
+    ret->GetNode(0)->SetFrontier(HyperNode::NOT_FRONTIER);
     vector<bool> nulls(trg_len, true);
     // Find the null aligned target words
     BOOST_FOREACH(const Alignment::AlignmentPair &a, align.GetAlignmentVector())
@@ -280,6 +281,8 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
 string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent) const {
     // Get the target span for the top node
     const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
+    if(trg_span.size() == 0)
+        THROW_ERROR("Empty target span in rule " << rule << endl << Dict::PrintWords(src_sent) << endl << Dict::PrintWords(trg_sent));
     int trg_begin = *trg_span.begin(), trg_end = *trg_span.rbegin()+1;
     // Create the covered target vector. Initially all are -1, indicating that
     // they have not yet been covered by a child frontier node

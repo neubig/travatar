@@ -71,13 +71,19 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Null attacher if necessary (TODO, make looking up the configuration better)
         if(config.GetString("attach") == "top")
             rule_graph.reset(extractor.AttachNullsTop(*rule_graph,align,trg_sent.size()));
+        else if(config.GetString("attach") == "exhaustive")
+            rule_graph.reset(extractor.AttachNullsExhaustive(*rule_graph,align,trg_sent.size()));
         else if(config.GetString("attach") != "none")
             THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
         // Print each of the rules
-        BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges())
-            cout << extractor.RuleToString(*edge, 
-                                           src_graph->GetWords(), 
-                                           trg_sent) << endl;
+        BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
+            // Skip pseudo-nodes that don't actually appear in the parse chart
+            if(edge->GetHead()->IsFrontier() != HyperNode::NOT_FRONTIER) {
+                cout << extractor.RuleToString(*edge, 
+                                               src_graph->GetWords(), 
+                                               trg_sent) << endl;
+            }
+        }
         sent++;
         if(sent % 10000 == 0) {
             cerr << (sent % 100000 == 0 ? '!' : '.'); cerr.flush();
