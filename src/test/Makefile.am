@@ -5,4 +5,4 @@ AM_CPPFLAGS = -I$(srcdir)/../include -I$(srcdir)/../lib/kenlm -DPKGDATADIR='"$(p
 bin_PROGRAMS = test-travatar
 
 test_travatar_SOURCES = test-travatar.cc ${KYTH}
-test_travatar_LDADD = ../lib/libtravatar.la -lboost_regex -lz -lmarisa
+test_travatar_LDADD = ../lib/libtravatar.la -lboost_thread -lboost_regex -lz -lmarisa
