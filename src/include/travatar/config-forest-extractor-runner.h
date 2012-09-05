@@ -33,6 +33,7 @@ public:
         AddConfigEntry("attach_len", "1", "The maximum length of null segments to attach");
         AddConfigEntry("term_len", "7", "The maximum number of terminals in a rule");
         AddConfigEntry("nonterm_len", "3", "The maximum number of non-terminals in a rule");
+        AddConfigEntry("normalize_probs", "true", "Whether or not to normalize counts to probabilities");
 
     }
 	

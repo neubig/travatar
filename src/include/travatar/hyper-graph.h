@@ -160,6 +160,10 @@ public:
     // Adders
     void AddEdge(HyperEdge* edge) { edges_.push_back(edge); }
 
+    // Functions for the inside-outside algorithm
+    double GetInsideProb(std::vector<double> & inside) const;
+    double GetOutsideProb(const std::vector< std::vector<HyperEdge*> > & all_edges, std::vector<double> & outside) const;
+
     // Getters/Setters
     void SetSym(WordId sym) { sym_ = sym; }
     WordId GetSym() const { return sym_; }
@@ -360,6 +364,10 @@ public:
         BOOST_FOREACH(HyperNode * node, nodes_)
             node->SetViterbiScore(-DBL_MAX);
     }
+
+    // Perform the inside-outside algorithm
+    std::vector< std::vector<HyperEdge*> > GetReversedEdges();
+    void InsideOutsideNormalize();
 
     // Accessors
     const HyperNode* GetNode(int i) const { return SafeAccess(nodes_,i); }

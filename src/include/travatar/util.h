@@ -323,6 +323,14 @@ inline int CheckString(const std::string & exp, const std::string & act) {
     return 1;
 }
 
+inline double AddLogProbs(const std::vector<double> & probs) {
+    const unsigned size = probs.size();
+    double myMax = std::max(probs[0],probs[size-1]), norm=0;
+    for(unsigned i = 0; i < probs.size(); i++)
+        norm += exp(probs[i]-myMax);
+    return log(norm)+myMax;
+}
+
 }  // end namespace
 
 #endif
