@@ -81,6 +81,7 @@ foreach my $iter (1 .. $MAX_ITERS) {
     my $prev = "$WORKING_DIR/run$iter";
     my $next = "$WORKING_DIR/run".($iter+1);
     safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -lm_file $LM -tm_file $TM -weight_file $prev.weights -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    safesystem("cp $prev.out last.out") or die "couldn't copy to last.out";
     safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $prev.weights < $prev.nbest > $prev.nbest-dense") or die "couldn't densify";
     safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $prev.scores.dat --ffile $prev.features.dat -r $REF -n $prev.nbest-dense") or die "couldn't extract";
     safesystem("$TRAVATAR_DIR/script/mert/make-init-opt.pl < $prev.weights > $prev.init.opt") or die "couldn't make init opt";
