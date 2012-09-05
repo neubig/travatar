@@ -189,6 +189,7 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
             trip.get<2>()->GetHead()->AddEdge(trip.get<2>());
         // Otherwise, expand the next node in the old edge
         } else {
+            // cerr << "q@" <<old_id << " == " << open_queue.size() << " tails == " << trip.get<2>()->NumTails() << " / " << trip.get<1>()->NumTails() << endl;
             const SpanNodeVector & next_exp = GetExpandedNodes(nulls, 
                                                                *trip.get<1>()->GetTail(trip.get<2>()->NumTails()),
                                                                expanded);
@@ -211,6 +212,10 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                     next_edge->SetId(-1);
                     next_edge->AddTail(val.second);
                     open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge, trip.get<3>(), trip.get<4>()));
+                    // If we have too many non-terminals, only output the children
+                    // with nulls not attached, as memory will explode with all the attached combinations
+                    if(trip.get<1>()->NumTails() > max_nonterm_)
+                        break;
                 }
             }
             delete trip.get<2>();

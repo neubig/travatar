@@ -21,6 +21,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
     ForestExtractor extractor;
     extractor.SetMaxAttach(config.GetInt("attach_len"));
+    extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
     scoped_ptr<GraphTransformer> binarizer, composer;
     // Create the binarizer
     if(config.GetString("binarize") == "left") {
