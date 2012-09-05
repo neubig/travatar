@@ -5,6 +5,7 @@
 #include <travatar/tree-io.h>
 #include <travatar/travatar-runner.h>
 #include <travatar/lookup-table-hash.h>
+#include <travatar/lookup-table-marisa.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/binarizer-directional.h>
 #include <lm/model.hh>
@@ -21,7 +22,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
-    shared_ptr<LookupTableHash> tm(LookupTableHash::ReadFromRuleTable(tm_in));
+    // Load the translation model
+    shared_ptr<LookupTable> tm;
+    if(config.GetString("tm_storage") == "hash")
+        tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
+    else if(config.GetString("tm_storage") == "marisa")
+        tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
     tm_in.close();
     // Create the binarizer
     shared_ptr<GraphTransformer> binarizer;

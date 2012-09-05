@@ -9,7 +9,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $TOP_N = 10;
-my $SRC_MIN_FREQ = 2;
+my $SRC_MIN_FREQ = 0;
 my $LEX_PROB_FILE = "";
 my $PREFIX = "egf";
 GetOptions(

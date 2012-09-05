@@ -27,11 +27,12 @@ public:
 );
 
         AddConfigEntry("tm_file", "", "Translation model file location");
+        AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("weight_file", "", "Weight file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
-        AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("nbest_out", "", "n-best output file location");
+        AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
 

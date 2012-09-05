@@ -6,6 +6,7 @@
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
 #include <travatar/lookup-table-hash.h>
+#include <travatar/lookup-table-marisa.h>
 #include <travatar/translation-rule.h>
 #include <boost/shared_ptr.hpp>
 
@@ -36,13 +37,15 @@ public:
         rule_oss << "PRP ( \"he\" ) ||| \"il\" ||| Pegf=0.5 ppen=2.718" << endl;
         rule_oss << "VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| Pegf=0.6 ppen=2.718" << endl;
         rule_oss << "VB ( \"go\" ) ||| \"va\" ||| Pegf=0.7 ppen=2.718" << endl;
-        istringstream rule_iss(rule_oss.str());
-        lookup_hash.reset(LookupTableHash::ReadFromRuleTable(rule_iss));
+        istringstream rule_iss_hash(rule_oss.str());
+        lookup_hash.reset(LookupTableHash::ReadFromRuleTable(rule_iss_hash));
+        istringstream rule_iss_marisa(rule_oss.str());
+        lookup_marisa.reset(LookupTableMarisa::ReadFromRuleTable(rule_iss_marisa));
     }
 
     ~TestLookupTable() { }
 
-    int TestHashLookup() {
+    int TestLookup(LookupTable & lookup) {
         vector<int> exp_match_cnt(11, 0), act_match_cnt(11, 0);
         exp_match_cnt[0] = 2;
         exp_match_cnt[1] = 1;
@@ -50,26 +53,26 @@ public:
         exp_match_cnt[4] = 1;
         exp_match_cnt[9] = 1;
         vector<shared_ptr<LookupState> > old_states;
-        old_states.push_back(shared_ptr<LookupState>(lookup_hash->GetInitialState()));
+        old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
         for(int i = 0; i < 11; i++)
-            act_match_cnt[i] = lookup_hash->LookupSrc(*src1_graph->GetNode(i), old_states).size();
+            act_match_cnt[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states).size();
         return CheckVector(exp_match_cnt, act_match_cnt);
     }
 
-    int TestHashRules() {
+    int TestLookupRules(LookupTable & lookup) {
         vector<vector<shared_ptr<LookupState> > > act_lookups(11);
         vector<shared_ptr<LookupState> > old_states;
-        old_states.push_back(shared_ptr<LookupState>(lookup_hash->GetInitialState()));
+        old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
         for(int i = 0; i < 11; i++)
-            act_lookups[i] = lookup_hash->LookupSrc(*src1_graph->GetNode(i), old_states);
+            act_lookups[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states);
         vector<TranslationRule*> exp_rules(7), act_rules(7);
-        act_rules[0] = SafeReference(lookup_hash->FindRules(*act_lookups[0][0]))[0]; // First S(NP, VP)
-        act_rules[1] = SafeReference(lookup_hash->FindRules(*act_lookups[0][0]))[1]; // Second S(NP, VP)
-        act_rules[2] = SafeReference(lookup_hash->FindRules(*act_lookups[0][1]))[0]; // First S(NP(PRP("he")) VP)
-        act_rules[3] = SafeReference(lookup_hash->FindRules(*act_lookups[1][0]))[0]; // NP
-        act_rules[4] = SafeReference(lookup_hash->FindRules(*act_lookups[2][0]))[0]; // PRP
-        act_rules[5] = SafeReference(lookup_hash->FindRules(*act_lookups[4][0]))[0]; // VP
-        act_rules[6] = SafeReference(lookup_hash->FindRules(*act_lookups[9][0]))[0]; // VB
+        act_rules[0] = SafeReference(lookup.FindRules(*act_lookups[0][0]))[0]; // First S(NP, VP)
+        act_rules[1] = SafeReference(lookup.FindRules(*act_lookups[0][0]))[1]; // Second S(NP, VP)
+        act_rules[2] = SafeReference(lookup.FindRules(*act_lookups[0][1]))[0]; // First S(NP(PRP("he")) VP)
+        act_rules[3] = SafeReference(lookup.FindRules(*act_lookups[1][0]))[0]; // NP
+        act_rules[4] = SafeReference(lookup.FindRules(*act_lookups[2][0]))[0]; // PRP
+        act_rules[5] = SafeReference(lookup.FindRules(*act_lookups[4][0]))[0]; // VP
+        act_rules[6] = SafeReference(lookup.FindRules(*act_lookups[9][0]))[0]; // VB
         // Expected rules
         exp_rules[0] = new TranslationRule("S ( x0:NP x1:VP )");
         exp_rules[0]->AddTrgWord(-1); exp_rules[0]->AddTrgWord(-2);
@@ -141,8 +144,10 @@ public:
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestHashLookup()" << endl; if(TestHashLookup()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestHashRules()" << endl; if(TestHashRules()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLookup(lookup_hash)" << endl; if(TestLookup(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLookup(lookup_marisa)" << endl; if(TestLookup(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLookupRules(lookup_hash)" << endl; if(TestLookupRules(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLookupRules(lookup_marisa)" << endl; if(TestLookupRules(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBuildRuleGraph()" << endl; if(TestBuildRuleGraph()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestLookupTable Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
@@ -151,6 +156,7 @@ public:
 private:
     PennTreeIO tree_io;
     boost::scoped_ptr<LookupTableHash> lookup_hash;
+    boost::scoped_ptr<LookupTableMarisa> lookup_marisa;
     boost::scoped_ptr<HyperGraph> src1_graph;
     Sentence trg1_sent;
     Alignment align1;
