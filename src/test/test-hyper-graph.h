@@ -85,7 +85,7 @@ public:
     }
 
     ~TestHyperGraph() { }
-\
+
     int TestCalculateSpan() {
         vector<set<int> > src_span = align1.GetSrcAlignments();
         src1_graph->GetNode(0)->CalculateTrgSpan(src_span);
@@ -110,6 +110,16 @@ public:
                 ret = 0;
             }
         return ret;
+    }
+
+    int TestInsideOutside() {
+        HyperGraph src2_copy(*src2_graph);
+        src2_copy.InsideOutsideNormalize();
+        vector<double> prob_exp(9,log(.5)), prob_act;
+        prob_exp[8] = 0;
+        BOOST_FOREACH(const HyperEdge * edge, src2_copy.GetEdges())
+            prob_act.push_back(edge->GetScore());
+        return CheckVector(prob_exp, prob_act);
     }
 
     int TestCopy() {
@@ -388,6 +398,7 @@ public:
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestInsideOutside()" << endl; if(TestInsideOutside()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

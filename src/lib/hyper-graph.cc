@@ -358,19 +358,21 @@ double HyperNode::GetInsideProb(vector<double> & inside) const {
             next += tail->GetInsideProb(inside);
         sum_over.push_back(next);
     }
+    cerr << "Inside over " << sum_over.size() << " edges=" << edges_.size() << " @ " << id_ << endl;
     return (inside[id_] = AddLogProbs(sum_over));
 }
 
 double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, vector<double> & outside) const {
     if(SafeAccess(outside, id_) != -DBL_MAX)
         return outside[id_];
-    else if(IsTerminal())
+    else if(id_ == 0)
         return (outside[id_] = 0);
     vector<double> sum_over;
     BOOST_FOREACH(const HyperEdge * edge, all_edges[id_]) {
         double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
         sum_over.push_back(next);
     }
+    cerr << "Outside over " << sum_over.size() << " @ " << id_ << endl;
     return (outside[id_] = AddLogProbs(sum_over));
 }
 

@@ -84,7 +84,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
         // If we want to normalize to partial counts, do so
         if(config.GetBool("normalize_probs"))
-            rule_graph.InsideOutsideNormalize();
+            rule_graph->InsideOutsideNormalize();
         // Print each of the rules as long as they pass the filter
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
             int filt;
