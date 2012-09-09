@@ -351,14 +351,16 @@ double HyperNode::GetInsideProb(vector<double> & inside) const {
         return inside[id_];
     else if(IsTerminal())
         return (inside[id_] = 0);
+    // cerr << "@node: " << *this << ": " << edges_.size() << endl;
     vector<double> sum_over;
     BOOST_FOREACH(const HyperEdge * edge, edges_) {
+        // cerr << "   @edge: " << *edge << endl;
         double next = edge->GetScore();
         BOOST_FOREACH(const HyperNode * tail, edge->GetTails())
             next += tail->GetInsideProb(inside);
         sum_over.push_back(next);
     }
-    cerr << "Inside over " << sum_over.size() << " edges=" << edges_.size() << " @ " << id_ << endl;
+    // cerr << "Inside over " << sum_over.size() << " edges=" << edges_.size() << " @ " << id_ << ": " << AddLogProbs(sum_over) << endl;
     return (inside[id_] = AddLogProbs(sum_over));
 }
 
@@ -372,7 +374,7 @@ double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges,
         double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
         sum_over.push_back(next);
     }
-    cerr << "Outside over " << sum_over.size() << " @ " << id_ << endl;
+    // cerr << "Outside over " << sum_over.size() << " @ " << id_ << " : " << AddLogProbs(sum_over) << endl;
     return (outside[id_] = AddLogProbs(sum_over));
 }
 
@@ -388,15 +390,20 @@ vector< vector<HyperEdge*> > HyperGraph::GetReversedEdges() {
 void HyperGraph::InsideOutsideNormalize() {
     // Calculate the inside and outside probabilities
     vector<double> inside(nodes_.size(), -DBL_MAX), outside(nodes_.size(), -DBL_MAX);
-    nodes_[0]->GetInsideProb(inside);
     vector<vector<HyperEdge*> > rev_edges = GetReversedEdges();
-    BOOST_FOREACH(HyperNode * node, nodes_)
-        node->GetOutsideProb(rev_edges, outside);
+    vector<double> new_scores(edges_.size(), -DBL_MAX);
+    cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
     // Re-score the current edges
     BOOST_FOREACH(HyperEdge * edge, edges_) {
-        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges,outside) - inside[0];
-        BOOST_FOREACH(const HyperNode * tail, edge->GetTails())
+        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside) - nodes_[0]->GetInsideProb(inside);
+        cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside) << " - " << nodes_[0]->GetInsideProb(inside);
+        BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
             next += tail->GetInsideProb(inside);
-        edge->SetScore(next);
+            cerr <<  " + " << tail->GetInsideProb(inside);
+        }
+        cerr << " = " << next << endl;
+        new_scores[edge->GetId()] = next;
     }
+    for(int i = 0; i < (int)new_scores.size(); i++)
+        edges_[i]->SetScore(new_scores[i]);
 }

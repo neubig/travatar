@@ -50,7 +50,7 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
                 new_edge->GetTails()[i] = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(i, 1), xbar);
             }
             ret->AddEdge(new_edge); 
-            edge->GetHead()->AddEdge(new_edge);
+            new_edge->GetHead()->AddEdge(new_edge);
             continue;
         }
         // Next, we handle the case where binarization is necessary
@@ -62,15 +62,12 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
             for(int i = 0; i < j-1; i++) {
                 bool is_top = (j-i == (int)tails.size());
                 GenericString<int> my_head_str = (is_top ? head_str : tail_str.substr(i, j-i));
-                // cerr << "i=" << i << " j-i=" << j-i << ": " << my_head_str << endl;
                 HyperNode* head = FindIndexedNode(hg, *ret, built_nodes, my_head_str, xbar);
                 // Skip nodes that have already been made
                 if(!is_top && head->GetEdges().size() > 0)
                     continue;
                 for(int k = i+1; k < j; k++) {
-                    // cerr << "i=" << i << " k-i=" << k-i << ": " << tail_str.substr(i,k-i) << endl;
                     HyperNode* left = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(i,k-i), xbar);
-                    // cerr << "k=" << k << " j-k=" << j-k << ": " << tail_str.substr(k,j-k) << endl;
                     HyperNode* right = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(k, j-k), xbar);
                     // Create the left and right edges
                     HyperEdge * next_edge = new HyperEdge(head);
@@ -82,11 +79,9 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
                         next_edge->SetScore(edge->GetScore());
                     }
                     ret->AddEdge(next_edge); head->AddEdge(next_edge);
-                    // cerr << "head=" << *head << ", left=" << *left << ", right=" << *right << endl;
                 }
             }
         }
-        
     }
     return ret;
 }

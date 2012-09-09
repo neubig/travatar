@@ -313,7 +313,8 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     int tail_num = 0;
     PrintRuleSurface(*(*remaining_fragments.begin())->GetHead(), src_sent, remaining_fragments, tail_num, oss);
     if(remaining_fragments.size() > 0)
-        THROW_ERROR("Did not use all fragments");
+        cerr << "Did not use all fragments" << endl;
+    //    THROW_ERROR("Did not use all fragments");
     // Make the actual rule
     oss << " |||";
     int last = -1;

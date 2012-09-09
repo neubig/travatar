@@ -93,5 +93,21 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
 }
 
 void JSONTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    THROW_ERROR("Not implemented yet");
+    out << "{\"nodes\": [";
+    BOOST_FOREACH(HyperNode * node, tree.GetNodes()) {
+        if(node->GetId() != 0) out << ", ";
+        out << *node;
+    }
+    out << "], \"edges\": [";
+    BOOST_FOREACH(HyperEdge * edge, tree.GetEdges()) {
+        if(edge->GetId() != 0) out << ", ";
+        out << *edge;
+    }
+    out << "], \"words\": [";
+    const vector<int> & words = tree.GetWords();
+    for(int i = 0; i < (int)words.size(); i++) {
+        if(i != 0) out << ", ";
+        out << "\"" << Dict::WSym(words[i]) << "\"";
+    }
+    out << "]}";
 }

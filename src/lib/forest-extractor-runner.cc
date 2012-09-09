@@ -3,6 +3,7 @@
 #include <travatar/rule-extractor.h>
 #include <travatar/forest-extractor-runner.h>
 #include <travatar/binarizer-directional.h>
+#include <travatar/binarizer-cky.h>
 #include <travatar/rule-composer.h>
 #include <travatar/rule-filter.h>
 #include <boost/scoped_ptr.hpp>
@@ -28,6 +29,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
     } else if(config.GetString("binarize") == "right") {
         binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") == "cky") {
+        binarizer.reset(new BinarizerCKY());
     } else if(config.GetString("binarize") != "none") {
         THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
@@ -72,7 +75,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Do the rule extraction
         scoped_ptr<HyperGraph> rule_graph(
             extractor.ExtractMinimalRules(*src_graph, align));
-        // Binarizer if necessary
+        // Compose together
         if(composer.get() != NULL)
             rule_graph.reset(composer->TransformGraph(*rule_graph));
         // Null attacher if necessary (TODO, make looking up the configuration better)
