@@ -72,12 +72,22 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Get target words and alignment
         Sentence trg_sent = Dict::ParseWords(trg_line);
         Alignment align = Alignment::FromString(align_line);
+        // DEBUG
+        {
+            JSONTreeIO io;
+            io.WriteTree(*src_graph, cerr); cerr << endl;
+        }
         // Do the rule extraction
         scoped_ptr<HyperGraph> rule_graph(
             extractor.ExtractMinimalRules(*src_graph, align));
         // Compose together
         if(composer.get() != NULL)
             rule_graph.reset(composer->TransformGraph(*rule_graph));
+        // DEBUG
+        {
+            JSONTreeIO io;
+            io.WriteTree(*rule_graph, cerr); cerr << endl;
+        }
         // Null attacher if necessary (TODO, make looking up the configuration better)
         if(config.GetString("attach") == "top")
             rule_graph.reset(extractor.AttachNullsTop(*rule_graph,align,trg_sent.size()));

@@ -180,6 +180,10 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
             open_queue.push(q_tuple(set<int>(), edge, new_edge, *val.second->GetTrgSpan().begin(), *val.second->GetTrgSpan().rbegin()));
         }
     }
+    // This is to keep track if one example for each edge at each position
+    // has been covered, so we can cover them only once when we have too many
+    // non-terminals
+    set<pair<int,int> > one_finished;
     // While there are still edges we haven't finished, iterate
     while(open_queue.size() > 0) {
         q_tuple trip = open_queue.front();
@@ -214,10 +218,12 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                     open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge, trip.get<3>(), trip.get<4>()));
                     // If we have too many non-terminals, only output the children
                     // with nulls not attached, as memory will explode with all the attached combinations
-                    if(trip.get<1>()->NumTails() > max_nonterm_)
+                    if(trip.get<1>()->NumTails() > max_nonterm_ && 
+                       one_finished.find(MakePair(trip.get<1>()->GetId(), trip.get<2>()->NumTails())) != one_finished.end())
                         break;
                 }
             }
+            one_finished.insert(MakePair(trip.get<1>()->GetId(), trip.get<2>()->NumTails()));
             delete trip.get<2>();
         }
     }
@@ -313,8 +319,7 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     int tail_num = 0;
     PrintRuleSurface(*(*remaining_fragments.begin())->GetHead(), src_sent, remaining_fragments, tail_num, oss);
     if(remaining_fragments.size() > 0)
-        cerr << "Did not use all fragments" << endl;
-    //    THROW_ERROR("Did not use all fragments");
+        THROW_ERROR("Did not use all fragments");
     // Make the actual rule
     oss << " |||";
     int last = -1;

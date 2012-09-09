@@ -373,6 +373,21 @@ public:
         return frags_exp.CheckEqual(*frags_act);
     }
 
+    int TestExhaustiveNullTwo() {
+        string in_str = "{\"nodes\": [{\"sym\": \"root\", \"span\": [0, 22], \"id\": 0, \"edges\": [0], \"trg_span\": [0, 1, 4, 5, 6, 7, 8, 9]}, {\"sym\": \"np\", \"span\": [0, 22], \"id\": 1, \"edges\": [1], \"trg_span\": [0, 1, 4, 5, 6, 7, 8, 9]}, {\"sym\": \"nnp\", \"span\": [6, 7], \"id\": 2, \"edges\": [2], \"trg_span\": [4]}, {\"sym\": \"-rrb-\", \"span\": [21, 22], \"id\": 3, \"edges\": [3], \"trg_span\": [9]}, {\"sym\": \"-lrb-\", \"span\": [10, 11], \"id\": 4, \"edges\": [4], \"trg_span\": [6]}, {\"sym\": \"pp\", \"span\": [13, 21], \"id\": 5, \"edges\": [5], \"trg_span\": [0, 1]}, {\"sym\": \"np\", \"span\": [14, 21], \"id\": 6, \"edges\": [6], \"trg_span\": [0]}, {\"sym\": \"in\", \"span\": [13, 14], \"id\": 7, \"edges\": [7], \"trg_span\": [1]}, {\"sym\": \"np'\", \"span\": [14, 16], \"id\": 8, \"edges\": [8], \"trg_span\": [0]}, {\"sym\": \",\", \"span\": [15, 16], \"id\": 9, \"edges\": [9], \"trg_span\": [0]}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 1, \"tails\": [2, 3, 4, 5]}, {\"id\": 2, \"head\": 2}, {\"id\": 3, \"head\": 3}, {\"id\": 4, \"head\": 4}, {\"id\": 5, \"head\": 5, \"tails\": [7, 6]}, {\"id\": 6, \"head\": 6, \"tails\": [8]}, {\"id\": 7, \"head\": 7}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 9}], \"words\": [\"'\", \"mida\", \"no\", \"hashi\", \"ha\", \"-\", \"shinran\", \"shonin\", \"den\", \"'\", \"-lrb-\", \"a\", \"bridge\", \"of\", \"mida\", \",\", \"a\", \"legend\", \"of\", \"st.\", \"shinran\", \"-rrb-\"]}";
+        string align_str = "0-7 1-7 1-8 2-7 3-7 4-7 5-5 6-4 7-5 8-5 9-5 10-6 11-7 12-7 13-1 15-0 21-9";
+        Alignment align = Alignment::FromString(align_str);
+        istringstream in1(in_str);
+        JSONTreeIO io;
+        shared_ptr<HyperGraph> hg_in(io.ReadTree(in1));
+        ForestExtractor forest_ext;
+        forest_ext.SetMaxNonterm(3);
+        shared_ptr<HyperGraph> hg_out(forest_ext.AttachNullsExhaustive(*hg_in, align, 10));
+        io.WriteTree(*hg_out, cerr); cerr << endl;
+        hg_out->InsideOutsideNormalize();
+        return 1;
+    }
+
     int TestRulePrinting() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
@@ -438,51 +453,6 @@ public:
         HyperEdge * e23 = RuleComposer::ComposeEdge(*edges[2], *edges[3], 0); exp_graph->AddEdge(e23); exp_graph->GetNode(2)->AddEdge(e23);
         HyperEdge * e45 = RuleComposer::ComposeEdge(*edges[4], *edges[5], 0); exp_graph->AddEdge(e45); exp_graph->GetNode(4)->AddEdge(e45);
 
-        // // ---- Add edges ----
-        // // Edge for root0
-        // HyperEdge* root0_edge = new HyperEdge(root0_node);
-        // frags_exp.AddEdge(root0_edge);
-        // root0_edge->AddTail(s1_node);
-        // root0_edge->AddFragmentEdge(src1_graph->GetEdge(0));
-        // // root0_edge->AddTrgWord(-1);
-        // root0_node->AddEdge(root0_edge);
-        // // Edge for s1
-        // HyperEdge* s1_edge = new HyperEdge(s1_node);
-        // frags_exp.AddEdge(s1_edge);
-        // s1_edge->AddTail(np2_node);
-        // s1_edge->AddTail(vp4_node);
-        // s1_edge->AddFragmentEdge(src1_graph->GetEdge(1));
-        // // s1_edge->AddTrgWord(-1); s1_edge->AddTrgWord(-2);
-        // s1_node->AddEdge(s1_edge);
-        // // Edge for np2
-        // HyperEdge* np2_edge = new HyperEdge(np2_node);
-        // frags_exp.AddEdge(np2_edge);
-        // np2_edge->AddTail(prp3_node);
-        // np2_edge->AddFragmentEdge(src1_graph->GetEdge(2));
-        // // np2_edge->AddTrgWord(-1);
-        // np2_node->AddEdge(np2_edge);
-        // // Edge for prp3
-        // HyperEdge* prp3_edge = new HyperEdge(prp3_node);
-        // frags_exp.AddEdge(prp3_edge);
-        // prp3_edge->AddFragmentEdge(src1_graph->GetEdge(3));
-        // // prp3_edge->AddTrgWord(Dict::WID("il"));
-        // prp3_node->AddEdge(prp3_edge);
-        // // Edge for vp4
-        // HyperEdge* vp4_edge = new HyperEdge(vp4_node);
-        // frags_exp.AddEdge(vp4_edge);
-        // vp4_edge->AddTail(vb7_node);
-        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(4));
-        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(5));
-        // vp4_edge->AddFragmentEdge(src1_graph->GetEdge(6));
-        // // vp4_edge->AddTrgWord(Dict::WID("ne")); vp4_edge->AddTrgWord(-1); vp4_edge->AddTrgWord(Dict::WID("pas"));
-        // vp4_node->AddEdge(vp4_edge);
-        // // Edge for vb7
-        // HyperEdge* vb7_edge = new HyperEdge(vb7_node);
-        // frags_exp.AddEdge(vb7_edge);
-        // vb7_edge->AddFragmentEdge(src1_graph->GetEdge(7));
-        // // vb7_edge->AddTrgWord(Dict::WID("va"));
-        // vb7_node->AddEdge(vb7_edge);
-
         return exp_graph->CheckEqual(*act_graph);
     }
 
@@ -493,6 +463,7 @@ public:
         done++; cout << "TestExpandNode()" << endl; if(TestExpandNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestExhaustiveNullTwo()" << endl; if(TestExhaustiveNullTwo()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;

@@ -16,10 +16,10 @@ using namespace travatar;
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
+    tests.push_back(new TestTreeIO());
     tests.push_back(new TestAlignment());
     tests.push_back(new TestIOUtil());
     tests.push_back(new TestHyperGraph());
-    tests.push_back(new TestTreeIO());
     tests.push_back(new TestRuleExtractor());
     tests.push_back(new TestTravatarRunner());
     tests.push_back(new TestLookupTable());
