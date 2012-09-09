@@ -45,7 +45,7 @@ public:
         e_edge->AddTail(z_node);
         e_node->AddEdge(e_edge); tree_exp.AddEdge(e_edge);
 
-        graph_str = "{\"words\": [\"running\", \"water\"], \"nodes\": [ {\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]} ], \"edges\": [ {\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]} ]}\nAAA";
+        graph_str = "{\"words\": [\"running\", \"water\"], \"nodes\": [ {\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]} ], \"edges\": [ {\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 8} ]}\nAAA";
 
         // Create the words
         HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    MakePair(0,2)); graph_exp.AddNode(node0);
@@ -67,7 +67,11 @@ public:
         HyperEdge* edge6 = new HyperEdge(node5); edge6->AddTail(node6); node5->AddEdge(edge6); graph_exp.AddEdge(edge6);
         HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); graph_exp.AddEdge(edge7);
         HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); graph_exp.AddEdge(edge8);
+        HyperEdge* edge9 = new HyperEdge(node8); node8->AddEdge(edge9); graph_exp.AddEdge(edge9);
         graph_exp.SetWords(Dict::ParseWords("running water"));
+ 
+        HyperNode* quotenode = new HyperNode(Dict::WID("\""),    MakePair(0,1)); quote_exp.AddNode(quotenode);
+        quote_exp.SetWords(Dict::ParseWords("\""));
     }
     ~TestTreeIO() { }
 
@@ -106,10 +110,22 @@ public:
         return graph_exp.CheckEqual(*hg_act);
     }
 
+    int TestWriteJSONQuote() {
+        // Use this tree
+        stringstream strm;
+        JSONTreeIO io;
+        io.WriteTree(quote_exp, strm);
+        cerr << "strm: " << strm.str() << endl;
+        boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));
+        // Check that both values are equal
+        return quote_exp.CheckEqual(*hg_act);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTreeIO Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
@@ -118,7 +134,7 @@ public:
 private:
 
     string tree_str, graph_str;
-    HyperGraph tree_exp, graph_exp;
+    HyperGraph tree_exp, graph_exp, quote_exp;
 
 };
 

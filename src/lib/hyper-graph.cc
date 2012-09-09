@@ -99,7 +99,7 @@ void HyperNode::Print(std::ostream & out) const {
     if(sym_==-1)
         out << "null";
     else 
-        out << "\""<<Dict::WSym(sym_)<<"\"";
+        out << "\""<<Dict::WSymEscaped(sym_)<<"\"";
     out << ", \"span\": "<<src_span_<<", \"id\": "<<id_;
     if(edges_.size()) {
         out << ", \"edges\": [";

@@ -85,9 +85,19 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             rule_graph.reset(extractor.AttachNullsExhaustive(*rule_graph,align,trg_sent.size()));
         else if(config.GetString("attach") != "none")
             THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
+        // DEBUG
+        {
+            JSONTreeIO io;
+            io.WriteTree(*rule_graph, cerr); cerr << endl;
+        }
         // If we want to normalize to partial counts, do so
         if(config.GetBool("normalize_probs"))
             rule_graph->InsideOutsideNormalize();
+        // DEBUG
+        {
+            JSONTreeIO io;
+            io.WriteTree(*rule_graph, cerr); cerr << endl;
+        }
         // Print each of the rules as long as they pass the filter
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
             int filt;

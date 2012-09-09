@@ -44,6 +44,13 @@ struct Dict {
     static const std::string & WSym(WordId id) {
         return wids_.GetSymbol(id);
     }
+    
+    // Get the word symbol
+    static std::string WSymEscaped(WordId id) {
+        std::string ret = wids_.GetSymbol(id);
+        boost::replace_all(ret, "\"", "\\\"");
+        return ret;
+    }
 
     // Get the
     static std::string WAnnotatedSym(WordId id) {
