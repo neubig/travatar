@@ -122,6 +122,34 @@ public:
         return CheckVector(prob_exp, prob_act);
     }
 
+    int TestInsideOutsideUnbalanced() {
+        // Build the initial graph
+        HyperGraph hg_act;
+        HyperNode* node0 = new HyperNode(Dict::WID("N0"), MakePair(0,3)); hg_act.AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("N1"), MakePair(0,2)); hg_act.AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("N2"), MakePair(2,3)); hg_act.AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("N3"), MakePair(0,2)); hg_act.AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("N4"), MakePair(0,1)); hg_act.AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("N5"), MakePair(1,2)); hg_act.AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("N6"), MakePair(0,1)); hg_act.AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("N7"), MakePair(1,2)); hg_act.AddNode(node7);
+        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); edge0->AddTail(node2); node0->AddEdge(edge0); hg_act.AddEdge(edge0);
+        HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node3); edge1->AddTail(node2); node0->AddEdge(edge1); hg_act.AddEdge(edge1);
+        HyperEdge* edge2 = new HyperEdge(node3); edge2->AddTail(node4); edge2->AddTail(node5); node3->AddEdge(edge2); hg_act.AddEdge(edge2);
+        HyperEdge* edge3 = new HyperEdge(node3); edge3->AddTail(node6); edge3->AddTail(node7); node3->AddEdge(edge3); hg_act.AddEdge(edge3);
+        HyperEdge* edge4 = new HyperEdge(node3); edge4->AddTail(node4); edge4->AddTail(node7); node3->AddEdge(edge4); hg_act.AddEdge(edge4);
+        // Perform the inside outside algorithm to normalize
+        hg_act.InsideOutsideNormalize();
+        // Get the scores of both graphs
+        vector<double> score_exp(5), score_act(5);
+        score_exp[0] = log(0.25); score_act[0] = edge0->GetScore();
+        score_exp[1] = log(0.75); score_act[1] = edge1->GetScore();
+        score_exp[2] = log(0.25); score_act[2] = edge2->GetScore();
+        score_exp[3] = log(0.25); score_act[3] = edge3->GetScore();
+        score_exp[4] = log(0.25); score_act[4] = edge4->GetScore();
+        return ApproximateDoubleEquals(score_exp, score_act);
+    }
+
     int TestCopy() {
         HyperGraph src1_copy(*src1_graph);
         int ret = src1_graph->CheckEqual(src1_copy);
@@ -399,6 +427,7 @@ public:
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutside()" << endl; if(TestInsideOutside()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestInsideOutsideUnbalanced()" << endl; if(TestInsideOutsideUnbalanced()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

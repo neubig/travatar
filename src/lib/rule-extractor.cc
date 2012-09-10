@@ -134,7 +134,7 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
         nulls[a.second] = false;
     vector< SpanNodeVector > new_nodes(rule_graph.NumNodes());
     // Get the expanded nodes in the new graph 
-    GetExpandedNodes(nulls, *rule_graph.GetNode(0), new_nodes);
+    GetExpandedNodes(nulls, *rule_graph.GetNode(0), new_nodes, max_attach_);
     // Add the links from the pseudo-node to the root
     BOOST_FOREACH( SpanNodeVector::value_type & val, new_nodes[0] ) {
         HyperEdge * edge = new HyperEdge(ret->GetNode(0));
@@ -160,13 +160,14 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
 const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                             const vector<bool> & nulls,
                             const HyperNode & old_node,
-                            vector<ForestExtractor::SpanNodeVector> & expanded
+                            vector<ForestExtractor::SpanNodeVector> & expanded,
+                            int my_attach
                 ) {
     int old_id = old_node.GetId();
     if(expanded[old_id].size())
         return expanded[old_id];
     // Expand the node itself
-    expanded[old_id] = ExpandNode(nulls, old_node);
+    expanded[old_id] = ExpandNode(nulls, old_node, my_attach);
     // Create the stack of partially processed tails
     typedef boost::tuple<set<int>, const HyperEdge*, HyperEdge*, int, int > q_tuple;
     queue< q_tuple > open_queue;
@@ -180,10 +181,6 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
             open_queue.push(q_tuple(set<int>(), edge, new_edge, *val.second->GetTrgSpan().begin(), *val.second->GetTrgSpan().rbegin()));
         }
     }
-    // This is to keep track if one example for each edge at each position
-    // has been covered, so we can cover them only once when we have too many
-    // non-terminals
-    set<pair<int,int> > one_finished;
     // While there are still edges we haven't finished, iterate
     while(open_queue.size() > 0) {
         q_tuple trip = open_queue.front();
@@ -194,9 +191,12 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
         // Otherwise, expand the next node in the old edge
         } else {
             // cerr << "q@" <<old_id << " == " << open_queue.size() << " tails == " << trip.get<2>()->NumTails() << " / " << trip.get<1>()->NumTails() << endl;
+            // Get the expanded nodes, but only expand if we don't have too many non-terminals
+            // to prevent combinatorial explosion
             const SpanNodeVector & next_exp = GetExpandedNodes(nulls, 
                                                                *trip.get<1>()->GetTail(trip.get<2>()->NumTails()),
-                                                               expanded);
+                                                               expanded,
+                                                               (trip.get<1>()->NumTails() > max_nonterm_ ? 0 : max_attach_));
             // For all the possibilities
             BOOST_FOREACH(const SpanNodeVector::value_type & val, next_exp) {
                 set<int> new_set = trip.get<0>();
@@ -216,14 +216,8 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                     next_edge->SetId(-1);
                     next_edge->AddTail(val.second);
                     open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge, trip.get<3>(), trip.get<4>()));
-                    // If we have too many non-terminals, only output the children
-                    // with nulls not attached, as memory will explode with all the attached combinations
-                    if(trip.get<1>()->NumTails() > max_nonterm_ && 
-                       one_finished.find(MakePair(trip.get<1>()->GetId(), trip.get<2>()->NumTails())) != one_finished.end())
-                        break;
                 }
             }
-            one_finished.insert(MakePair(trip.get<1>()->GetId(), trip.get<2>()->NumTails()));
             delete trip.get<2>();
         }
     }
@@ -233,7 +227,8 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
 // Check to make sure that we can expand the node properly
 ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
                 const vector<bool> & nulls,
-                const HyperNode & old_node) const {
+                const HyperNode & old_node,
+                int my_attach) const {
     SpanNodeVector ret;
     const set<int> & trg_span = old_node.GetTrgSpan();
     // For nodes that are entirely unaligned
@@ -245,11 +240,11 @@ ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
     }
     // i_node stores the new node with all nulls before
     set<int> i_set;
-    for(int i = *trg_span.begin(); i >= max(0, *trg_span.begin() - max_attach_)  && (i == *trg_span.begin() || nulls[i]); i--) {
+    for(int i = *trg_span.begin(); i >= max(0, *trg_span.begin() - my_attach)  && (i == *trg_span.begin() || nulls[i]); i--) {
         if(nulls[i]) i_set.insert(i);
         set<int> j_set = i_set;
         for(int j = *trg_span.rbegin();
-              j < min((int)nulls.size(), *trg_span.rbegin()+1+max_attach_)  && 
+              j < min((int)nulls.size(), *trg_span.rbegin()+1+my_attach)  && 
               (j == *trg_span.rbegin() || nulls[j]); 
               j++) {
             if(nulls[j]) j_set.insert(j);

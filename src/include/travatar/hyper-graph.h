@@ -161,7 +161,7 @@ public:
     void AddEdge(HyperEdge* edge) { edges_.push_back(edge); }
 
     // Functions for the inside-outside algorithm
-    double GetInsideProb(std::vector<double> & inside) const;
+    double GetInsideProb(std::vector<double> & inside);
     double GetOutsideProb(const std::vector< std::vector<HyperEdge*> > & all_edges, std::vector<double> & outside) const;
 
     // Getters/Setters

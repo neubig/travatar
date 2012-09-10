@@ -35,6 +35,23 @@ public:
     }
 };
 
+// Don't return rules headed by pseudo-nodes
+class CountFilter : public RuleFilter {
+public:
+    
+    CountFilter(double prob_thresh) : score_thresh_(prob_thresh ? log(prob_thresh) : -DBL_MAX) { }
+    virtual ~CountFilter() { };
+
+    virtual bool PassesFilter(
+        const HyperEdge & rule,
+        const Sentence & src_sent,
+        const Sentence & trg_sent) const {
+        return rule.GetScore() > score_thresh_;
+    }
+private:
+    double score_thresh_;
+};
+
 // Don't return rules greater than a certain length
 class RuleSizeFilter : public RuleFilter {
 protected:

@@ -346,22 +346,27 @@ void HyperEdge::SetRule(const TranslationRule * rule) {
     trg_words_ = rule->GetTrgWords();
 }
 
-double HyperNode::GetInsideProb(vector<double> & inside) const {
+double HyperNode::GetInsideProb(vector<double> & inside) {
     if(SafeAccess(inside, id_) != -DBL_MAX)
         return inside[id_];
     else if(IsTerminal())
         return (inside[id_] = 0);
     // cerr << "@node: " << *this << ": " << edges_.size() << endl;
     vector<double> sum_over;
-    BOOST_FOREACH(const HyperEdge * edge, edges_) {
+    BOOST_FOREACH(HyperEdge * edge, edges_) {
         // cerr << "   @edge: " << *edge << endl;
         double next = edge->GetScore();
-        BOOST_FOREACH(const HyperNode * tail, edge->GetTails())
+        BOOST_FOREACH(HyperNode * tail, edge->GetTails())
             next += tail->GetInsideProb(inside);
         sum_over.push_back(next);
     }
+    inside[id_] = AddLogProbs(sum_over);
     // cerr << "Inside over " << sum_over.size() << " edges=" << edges_.size() << " @ " << id_ << ": " << AddLogProbs(sum_over) << endl;
-    return (inside[id_] = AddLogProbs(sum_over));
+    for(int i = 0; i < (int)sum_over.size(); i++) {
+        // cerr << "edges_["<<i<<"->SetScore("<<sum_over[i]<<" - " << inside[id_]<<")" << endl;
+        edges_[i]->SetScore(sum_over[i] - inside[id_]);
+    }
+    return inside[id_];
 }
 
 double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, vector<double> & outside) const {
@@ -369,6 +374,8 @@ double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges,
         return outside[id_];
     else if(id_ == 0)
         return (outside[id_] = 0);
+    else if(all_edges[id_].size() == 0)
+        return (outside[id_] = -DBL_MAX);
     vector<double> sum_over;
     BOOST_FOREACH(const HyperEdge * edge, all_edges[id_]) {
         double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
@@ -392,15 +399,15 @@ void HyperGraph::InsideOutsideNormalize() {
     vector<double> inside(nodes_.size(), -DBL_MAX), outside(nodes_.size(), -DBL_MAX);
     vector<vector<HyperEdge*> > rev_edges = GetReversedEdges();
     vector<double> new_scores(edges_.size(), -DBL_MAX);
-    cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
+    // cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
     // Re-score the current edges
     BOOST_FOREACH(HyperEdge * edge, edges_) {
-        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside) - nodes_[0]->GetInsideProb(inside);
-        cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside) << " - " << nodes_[0]->GetInsideProb(inside);
-        BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
-            next += tail->GetInsideProb(inside);
-            cerr <<  " + " << tail->GetInsideProb(inside);
-        }
+        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside);
+        // cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside);
+        // BOOST_FOREACH(HyperNode * tail, edge->GetTails()) {
+        //     next += tail->GetInsideProb(inside);
+        //     cerr <<  " + " << tail->GetInsideProb(inside);
+        // }
         cerr << " = " << next << endl;
         new_scores[edge->GetId()] = next;
     }

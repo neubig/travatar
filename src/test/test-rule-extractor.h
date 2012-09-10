@@ -230,7 +230,7 @@ public:
         vector<bool> nulls(7, true);
         nulls[1] = false; nulls[3] = false; nulls[5] = false;
         // Get the actual list of expanded nodes
-        ForestExtractor::SpanNodeVector sn_act = forest_ext.ExpandNode(nulls, old_node);
+        ForestExtractor::SpanNodeVector sn_act = forest_ext.ExpandNode(nulls, old_node, 1);
         // Make the expected list of expanded nodes
         vector<HyperNode*> node_exp, node_act;
         vector<set<int> > set_exp, set_act;
@@ -373,16 +373,16 @@ public:
         return frags_exp.CheckEqual(*frags_act);
     }
 
-    int TestExhaustiveNullTwo() {
-        string in_str = "{\"nodes\": [{\"sym\": \"root\", \"span\": [0, 22], \"id\": 0, \"edges\": [0], \"trg_span\": [0, 1, 4, 5, 6, 7, 8, 9]}, {\"sym\": \"np\", \"span\": [0, 22], \"id\": 1, \"edges\": [1], \"trg_span\": [0, 1, 4, 5, 6, 7, 8, 9]}, {\"sym\": \"nnp\", \"span\": [6, 7], \"id\": 2, \"edges\": [2], \"trg_span\": [4]}, {\"sym\": \"-rrb-\", \"span\": [21, 22], \"id\": 3, \"edges\": [3], \"trg_span\": [9]}, {\"sym\": \"-lrb-\", \"span\": [10, 11], \"id\": 4, \"edges\": [4], \"trg_span\": [6]}, {\"sym\": \"pp\", \"span\": [13, 21], \"id\": 5, \"edges\": [5], \"trg_span\": [0, 1]}, {\"sym\": \"np\", \"span\": [14, 21], \"id\": 6, \"edges\": [6], \"trg_span\": [0]}, {\"sym\": \"in\", \"span\": [13, 14], \"id\": 7, \"edges\": [7], \"trg_span\": [1]}, {\"sym\": \"np'\", \"span\": [14, 16], \"id\": 8, \"edges\": [8], \"trg_span\": [0]}, {\"sym\": \",\", \"span\": [15, 16], \"id\": 9, \"edges\": [9], \"trg_span\": [0]}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 1, \"tails\": [2, 3, 4, 5]}, {\"id\": 2, \"head\": 2}, {\"id\": 3, \"head\": 3}, {\"id\": 4, \"head\": 4}, {\"id\": 5, \"head\": 5, \"tails\": [7, 6]}, {\"id\": 6, \"head\": 6, \"tails\": [8]}, {\"id\": 7, \"head\": 7}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 9}], \"words\": [\"'\", \"mida\", \"no\", \"hashi\", \"ha\", \"-\", \"shinran\", \"shonin\", \"den\", \"'\", \"-lrb-\", \"a\", \"bridge\", \"of\", \"mida\", \",\", \"a\", \"legend\", \"of\", \"st.\", \"shinran\", \"-rrb-\"]}";
-        string align_str = "0-7 1-7 1-8 2-7 3-7 4-7 5-5 6-4 7-5 8-5 9-5 10-6 11-7 12-7 13-1 15-0 21-9";
+    int TestExhaustiveNullDisconnected() {
+        string in_str = "{\"nodes\": [{\"sym\": \"root\", \"span\": [0, 11], \"id\": 0, \"edges\": [0], \"trg_span\": [0, 2, 3, 4, 5, 6, 7, 9, 12, 13]}, {\"sym\": \"s\", \"span\": [0, 11], \"id\": 1, \"edges\": [1], \"trg_span\": [0, 2, 3, 4, 5, 6, 7, 9, 12, 13]}, {\"sym\": \".\", \"span\": [10, 11], \"id\": 2, \"edges\": [2], \"trg_span\": [12, 13]}, {\"sym\": \"s'\", \"span\": [0, 10], \"id\": 3, \"edges\": [3], \"trg_span\": [0, 2, 3, 4, 5, 6, 7, 9]}, {\"sym\": \"vp\", \"span\": [4, 10], \"id\": 4, \"edges\": [4], \"trg_span\": [3, 4, 5, 6, 7]}, {\"sym\": \"np\", \"span\": [3, 4], \"id\": 5, \"edges\": [5], \"trg_span\": [2]}, {\"sym\": \"nn\", \"span\": [2, 3], \"id\": 6, \"edges\": [6], \"trg_span\": [0]}, {\"sym\": \"dt\", \"span\": [1, 2], \"id\": 7, \"edges\": [7], \"trg_span\": [9]}, {\"sym\": \"prp\", \"span\": [3, 4], \"id\": 8, \"edges\": [8], \"trg_span\": [2]}, {\"sym\": \"vbz\", \"span\": [4, 5], \"id\": 9, \"edges\": [9], \"trg_span\": [7]}, {\"sym\": \"pp\", \"span\": [7, 10], \"id\": 10, \"edges\": [10], \"trg_span\": [3]}, {\"sym\": \"np\", \"span\": [8, 10], \"id\": 11, \"edges\": [11], \"trg_span\": [3]}, {\"sym\": \"dt\", \"span\": [8, 9], \"id\": 12, \"edges\": [12], \"trg_span\": [3]}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 1, \"tails\": [3, 2]}, {\"id\": 2, \"head\": 2}, {\"id\": 3, \"head\": 3, \"tails\": [4, 5, 7, 6]}, {\"id\": 4, \"head\": 4, \"tails\": [9, 10]}, {\"id\": 5, \"head\": 5, \"tails\": [8]}, {\"id\": 6, \"head\": 6}, {\"id\": 7, \"head\": 7}, {\"id\": 8, \"head\": 8}, {\"id\": 9, \"head\": 9}, {\"id\": 10, \"head\": 10, \"tails\": [11]}, {\"id\": 11, \"head\": 11, \"tails\": [12]}, {\"id\": 12, \"head\": 12}], \"words\": [\"for\", \"that\", \"reason\", \"it\", \"is\", \"not\", \"open\", \"to\", \"the\", \"public\", \".\"]}";
+        string align_str = "1-9 2-0 3-2 4-7 5-4 6-4 6-5 6-6 8-3 10-12 10-13";
         Alignment align = Alignment::FromString(align_str);
         istringstream in1(in_str);
         JSONTreeIO io;
         shared_ptr<HyperGraph> hg_in(io.ReadTree(in1));
         ForestExtractor forest_ext;
         forest_ext.SetMaxNonterm(3);
-        shared_ptr<HyperGraph> hg_out(forest_ext.AttachNullsExhaustive(*hg_in, align, 10));
+        shared_ptr<HyperGraph> hg_out(forest_ext.AttachNullsExhaustive(*hg_in, align, 14));
         io.WriteTree(*hg_out, cerr); cerr << endl;
         hg_out->InsideOutsideNormalize();
         return 1;
@@ -463,7 +463,7 @@ public:
         done++; cout << "TestExpandNode()" << endl; if(TestExpandNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestExhaustiveNullTwo()" << endl; if(TestExhaustiveNullTwo()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestExhaustiveNullDisconnected()" << endl; if(TestExhaustiveNullDisconnected()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;

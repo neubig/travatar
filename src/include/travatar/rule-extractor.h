@@ -68,11 +68,13 @@ public:
     const SpanNodeVector & GetExpandedNodes(
                             const std::vector<bool> & nulls,
                             const HyperNode & old_node,
-                            std::vector<SpanNodeVector> & expanded);
+                            std::vector<SpanNodeVector> & expanded,
+                            int my_attach);
 
     SpanNodeVector ExpandNode(
                 const std::vector<bool> & nulls,
-                const HyperNode & old_node) const;
+                const HyperNode & old_node,
+                int my_attach) const;
 
     void SetMaxAttach(int max_attach) { max_attach_ = max_attach; }
     void SetMaxNonterm(int max_nonterm) { max_nonterm_ = max_nonterm; }
