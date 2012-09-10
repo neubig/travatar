@@ -73,22 +73,12 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // Get target words and alignment
         Sentence trg_sent = Dict::ParseWords(trg_line);
         Alignment align = Alignment::FromString(align_line);
-        // DEBUG
-        {
-            JSONTreeIO io;
-            io.WriteTree(*src_graph, cerr); cerr << endl;
-        }
         // Do the rule extraction
         scoped_ptr<HyperGraph> rule_graph(
             extractor.ExtractMinimalRules(*src_graph, align));
         // Compose together
         if(composer.get() != NULL)
             rule_graph.reset(composer->TransformGraph(*rule_graph));
-        // DEBUG
-        {
-            JSONTreeIO io;
-            io.WriteTree(*rule_graph, cerr); cerr << endl;
-        }
         // Null attacher if necessary (TODO, make looking up the configuration better)
         if(config.GetString("attach") == "top")
             rule_graph.reset(extractor.AttachNullsTop(*rule_graph,align,trg_sent.size()));
@@ -96,19 +86,9 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             rule_graph.reset(extractor.AttachNullsExhaustive(*rule_graph,align,trg_sent.size()));
         else if(config.GetString("attach") != "none")
             THROW_ERROR("Bad value for argument -attach: " << config.GetString("attach"));
-        // DEBUG
-        {
-            JSONTreeIO io;
-            io.WriteTree(*rule_graph, cerr); cerr << endl;
-        }
         // If we want to normalize to partial counts, do so
         if(config.GetBool("normalize_probs"))
             rule_graph->InsideOutsideNormalize();
-        // DEBUG
-        {
-            JSONTreeIO io;
-            io.WriteTree(*rule_graph, cerr); cerr << endl;
-        }
         // Print each of the rules as long as they pass the filter
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
             int filt;

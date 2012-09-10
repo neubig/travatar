@@ -399,16 +399,12 @@ void HyperGraph::InsideOutsideNormalize() {
     vector<double> inside(nodes_.size(), -DBL_MAX), outside(nodes_.size(), -DBL_MAX);
     vector<vector<HyperEdge*> > rev_edges = GetReversedEdges();
     vector<double> new_scores(edges_.size(), -DBL_MAX);
+    nodes_[0]->GetInsideProb(inside);
     // cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
     // Re-score the current edges
     BOOST_FOREACH(HyperEdge * edge, edges_) {
         double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside);
         // cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside);
-        // BOOST_FOREACH(HyperNode * tail, edge->GetTails()) {
-        //     next += tail->GetInsideProb(inside);
-        //     cerr <<  " + " << tail->GetInsideProb(inside);
-        // }
-        cerr << " = " << next << endl;
         new_scores[edge->GetId()] = next;
     }
     for(int i = 0; i < (int)new_scores.size(); i++)
