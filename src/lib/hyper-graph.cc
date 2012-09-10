@@ -51,6 +51,8 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
         return false;
     if(trg_words_ != rhs.trg_words_)
         return false;
+    if(abs(score_ - rhs.score_) > abs(score_*1e-5))
+        return false;
     return true;
 }
 
@@ -74,6 +76,8 @@ void HyperEdge::Print(std::ostream & out) const {
         for(int i = 0; i < (int)fragment_edges_.size(); i++)
             out << fragment_edges_[i]->GetId() << ((i == (int)fragment_edges_.size()-1) ? "]" : ", ");
     }
+    if(score_ != 0)
+        out << ", \"score\": " << score_;
     out << "}";
 }
 

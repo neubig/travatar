@@ -383,8 +383,7 @@ public:
         ForestExtractor forest_ext;
         forest_ext.SetMaxNonterm(3);
         shared_ptr<HyperGraph> hg_out(forest_ext.AttachNullsExhaustive(*hg_in, align, 14));
-        io.WriteTree(*hg_out, cerr); cerr << endl;
-        hg_out->InsideOutsideNormalize();
+        hg_out->InsideOutsideNormalize(); // We want to check that it doesn't die here
         return 1;
     }
 
