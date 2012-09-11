@@ -42,7 +42,7 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
             tail_str[i] = edge->GetTail(i)->GetId();
         // We need to deal with two cases: binarization is necessary or not
         // First, we handle the "not" case, as it is simpler
-        if(edge->GetTails().size() <= 2) {
+        if(edge->NumTails() <= 2 || edge->NumTails() > max_tails_) {
             HyperEdge * new_edge = new HyperEdge(*edge);
             new_edge->SetHead(FindIndexedNode(hg, *ret, built_nodes, head_str, xbar));
             for(int i = 0; i < (int)edge->GetTails().size(); i++) {

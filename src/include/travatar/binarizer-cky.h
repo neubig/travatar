@@ -18,7 +18,7 @@ public:
 
     typedef boost::unordered_map<GenericString<int>, HyperNode*, GenericHash<GenericString<int> > > SNMap;
 
-    BinarizerCKY() { }
+    BinarizerCKY() : max_tails_(7) { }
     virtual ~BinarizerCKY() { }
 
     // Binarize the graph to the right
@@ -38,6 +38,9 @@ protected:
         SNMap & snmap,
         const GenericString<int> & str,
         WordId xbar);
+
+    // The maximum number of tails that a binarized node can have
+    int max_tails_;
 
 };
 
