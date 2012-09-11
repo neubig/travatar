@@ -105,7 +105,6 @@ public:
         stringstream strm;
         JSONTreeIO io;
         io.WriteTree(graph_exp, strm);
-        cerr << "strm: " << strm.str() << endl;
         boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));
         // Check that both values are equal
         return graph_exp.CheckEqual(*hg_act);
@@ -116,7 +115,6 @@ public:
         stringstream strm;
         JSONTreeIO io;
         io.WriteTree(quote_exp, strm);
-        cerr << "strm: " << strm.str() << endl;
         boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));
         // Check that both values are equal
         return quote_exp.CheckEqual(*hg_act);

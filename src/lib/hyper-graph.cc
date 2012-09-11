@@ -14,6 +14,12 @@ using namespace boost;
 using namespace lm::ngram;
 
 
+void HyperEdge::AddTail(HyperNode* tail) {
+    if(head_ && head_->GetId() != -1 && head_->GetId() == tail->GetId())
+        THROW_ERROR("Adding head and tail to the same edge: " << head_->GetId());
+    tails_.push_back(tail);
+}
+
 // Refresh the pointers to head and tail nodes so they point to
 // nodes in a new HyperGraph. Useful when copying nodes
 void HyperEdge::RefreshPointers(HyperGraph & new_graph) {
@@ -92,6 +98,8 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
             return false;
     if(trg_span_ != rhs.trg_span_)
         return false;
+    if(frontier_ != rhs.frontier_)
+        return false;
     if(abs(viterbi_score_ - rhs.viterbi_score_) > 1e-6)
         return false;
     return true;
@@ -119,6 +127,8 @@ void HyperNode::Print(std::ostream & out) const {
     }
     if(viterbi_score_ != -DBL_MAX)
         out << ", \"viterbi\": " << viterbi_score_;
+    if(frontier_ != UNSET_FRONTIER)
+        out << ", \"frontier\": \"" << (char)frontier_<<"\"";
     out << "}";
 }
 

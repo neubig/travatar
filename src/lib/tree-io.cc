@@ -80,6 +80,7 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg_span"))
                 node->GetTrgSpan().insert(t.second.get<int>(""));
         } catch (ptree_bad_path e) { }
+        node->SetFrontier((HyperNode::FrontierType)v.second.get<char>("frontier", HyperNode::UNSET_FRONTIER));
         ret->AddNode(node);
     }
     BOOST_FOREACH(ptree::value_type &v, pt.get_child("edges")) {

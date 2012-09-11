@@ -58,6 +58,14 @@ public:
         src3_graph.reset(tree_io.ReadTree(iss3));
         trg3_sent = Dict::ParseWords(trg3_str);
         align3 = Alignment::FromString(align3_str);
+        // An example of a tree that caused problems
+        string src4_tree = "{\"nodes\": [{\"sym\": \"root\", \"span\": [0, 5], \"id\": 0, \"edges\": [0]}, {\"sym\": \"np\", \"span\": [0, 5], \"id\": 1, \"edges\": [1]}, {\"sym\": \"np\", \"span\": [0, 1], \"id\": 2, \"edges\": [2]}, {\"sym\": \"prn\", \"span\": [1, 5], \"id\": 3, \"edges\": [5, 6]}, {\"sym\": \"nnp\", \"span\": [0, 1], \"id\": 4, \"edges\": [3]}, {\"sym\": \"landscape\", \"span\": [0, 1], \"id\": 5}, {\"sym\": \"prn'\", \"span\": [1, 4], \"id\": 6, \"edges\": [4]}, {\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 7, \"edges\": [8]}, {\"sym\": \"np\", \"span\": [2, 4], \"id\": 8, \"edges\": [9]}, {\"sym\": \"prn'\", \"span\": [2, 5], \"id\": 9, \"edges\": [7]}, {\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 10, \"edges\": [12]}, {\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 11}, {\"sym\": \"nnp\", \"span\": [2, 3], \"id\": 12, \"edges\": [10]}, {\"sym\": \"nnp\", \"span\": [3, 4], \"id\": 13, \"edges\": [11]}, {\"sym\": \"private\", \"span\": [2, 3], \"id\": 14}, {\"sym\": \"collection\", \"span\": [3, 4], \"id\": 15}, {\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 16}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1]}, {\"id\": 1, \"head\": 1, \"tails\": [2, 3]}, {\"id\": 2, \"head\": 2, \"tails\": [4]}, {\"id\": 3, \"head\": 4, \"tails\": [5]}, {\"id\": 4, \"head\": 6, \"tails\": [7, 8]}, {\"id\": 5, \"head\": 3, \"tails\": [7, 9]}, {\"id\": 6, \"head\": 3, \"tails\": [6, 10]}, {\"id\": 7, \"head\": 9, \"tails\": [8, 10]}, {\"id\": 8, \"head\": 7, \"tails\": [11]}, {\"id\": 9, \"head\": 8, \"tails\": [12, 13]}, {\"id\": 10, \"head\": 12, \"tails\": [14]}, {\"id\": 11, \"head\": 13, \"tails\": [15]}, {\"id\": 12, \"head\": 10, \"tails\": [16]}], \"words\": [\"landscape\", \"-lrb-\", \"private\", \"collection\", \"-rrb-\"]}";
+        string trg4_str = "sansui zu ( kojin zo )";
+        string align4_str = "0-0 0-1 1-2 2-3 2-4 3-3 4-5";
+        istringstream iss4(src4_tree);
+        src4_graph.reset(json_io.ReadTree(iss4));
+        trg4_sent = Dict::ParseWords(trg4_str);
+        align4 = Alignment::FromString(align4_str);
     }
 
     ~TestRuleExtractor() { }
@@ -157,6 +165,33 @@ public:
         scores_exp[0] = log(0.5); scores_exp[1] = log(0.5);
         // Check to make sure that these are equal
         return CheckAlmostVector(scores_exp, scores_act);
+    }
+
+    int TestForestExtractionBinarized() {
+        // Run the Forest algorithm
+        ForestExtractor forest_ext;
+        shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src4_graph, align4));
+        ostringstream oss;
+        // Printing also checks to make sure that there are no overlapping segments
+        vector<string> rule_exp, rule_act;
+        BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
+            rule_act.push_back(forest_ext.RuleToString(*edge, src4_graph->GetWords(), trg4_sent));
+        string align4_str = "0-0 0-1 1-2 2-3 2-4 3-3 4-5";
+        // This should cover all the rules extracted
+        rule_exp.push_back("root ( x0:np ) ||| x0 ||| 1");
+        rule_exp.push_back("np ( x0:np x1:prn ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("np ( x0:nnp ) ||| x0 ||| 1");
+        rule_exp.push_back("nnp ( \"landscape\" ) ||| \"sansui\" \"zu\" ||| 1");
+        rule_exp.push_back("prn ( x0:-lrb- x1:prn' ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("prn ( x0:prn' x1:-rrb- ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("prn' ( x0:-lrb- x1:np ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("prn' ( x0:np x1:-rrb- ) ||| x0 x1 ||| 1");
+        rule_exp.push_back("-lrb- ( \"-lrb-\" ) ||| \"(\" ||| 1");
+        rule_exp.push_back("-rrb- ( \"-rrb-\" ) ||| \")\" ||| 1");
+        rule_exp.push_back("np ( nnp ( \"private\" ) nnp ( \"collection\" ) ) ||| \"kojin\" \"zo\" ||| 1");
+        sort(rule_exp.begin(), rule_exp.end());
+        sort(rule_act.begin(), rule_act.end());
+        return CheckVector(rule_exp, rule_act);
     }
 
     int TestTopNullExtraction() {
@@ -264,6 +299,7 @@ public:
         // Node rooted at pseudo-root
         HyperNode* pseudo_node = new HyperNode;
         frags_exp.AddNode(pseudo_node);
+        pseudo_node->SetFrontier(HyperNode::NOT_FRONTIER);
         // Node rooted at root0
         HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,2));
         root0_node->SetTrgSpan(src3_graph->GetNode(0)->GetTrgSpan());
@@ -404,6 +440,8 @@ public:
         rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1");
         rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1");
         rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1");
+        sort(rule_exp.begin(), rule_exp.end());
+        sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);
     }
 
@@ -459,6 +497,7 @@ public:
         int done = 0, succeeded = 0;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestForestExtractionBinarized()" << endl; if(TestForestExtractionBinarized()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestExpandNode()" << endl; if(TestExpandNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -472,9 +511,10 @@ public:
 
 private:
     PennTreeIO tree_io;
-    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph;
-    Sentence trg1_sent, trg2_sent, trg3_sent;
-    Alignment align1, align2, align3;
+    JSONTreeIO json_io;
+    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, src4_graph;
+    Sentence trg1_sent, trg2_sent, trg3_sent, trg4_sent;
+    Alignment align1, align2, align3, align4;
 
 };
 

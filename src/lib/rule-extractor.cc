@@ -65,17 +65,17 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
                     // We want to push these on the stack backwards so we can process
                     // in ascending order
                     deque<HyperNode*> new_front;
+                    HyperEdge * new_frag(new HyperEdge(*frag_front.first));
                     BOOST_FOREACH(HyperNode* t, e->GetTails()) {
                         // If this is not a frontier node, push it on the queue
                         if(t->IsFrontier() != HyperNode::IS_FRONTIER)
                             new_front.push_back(t);
                         else
-                            frag_front.first->AddTail(ret->GetNode(old_new_ids[t->GetId()]));
+                            new_frag->AddTail(ret->GetNode(old_new_ids[t->GetId()]));
                     }
                     BOOST_FOREACH(HyperNode * stack_node, frag_front.second)
                         new_front.push_back(stack_node);
                     // Push this on to the queue
-                    HyperEdge * new_frag(new HyperEdge(*frag_front.first));
                     new_frag->AddFragmentEdge(e);
                     open.push(FragFront(new_frag, new_front));
                 }
@@ -293,16 +293,36 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     if(trg_span.size() == 0)
         THROW_ERROR("Empty target span in rule " << rule << endl << Dict::PrintWords(src_sent) << endl << Dict::PrintWords(trg_sent));
     int trg_begin = *trg_span.begin(), trg_end = *trg_span.rbegin()+1;
+    int src_begin = rule.GetHead()->GetSpan().first, src_end = rule.GetHead()->GetSpan().second;
     // Create the covered target vector. Initially all are -1, indicating that
     // they have not yet been covered by a child frontier node
-    vector<int> trg_cover(trg_end-trg_begin, -1);
+    vector<int> trg_cover(trg_end-trg_begin, -1), src_cover(src_end-src_begin, -1);
     const vector<HyperNode*> & tails = rule.GetTails();
     map<int,int> tail_map;
     for(int i = 0; i < (int)tails.size(); i++) {
         tail_map[tails[i]->GetId()] = i;
         const std::set<int> & my_trg_span = tails[i]->GetTrgSpan();
-        for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++)
-            SafeAccess(trg_cover, j-trg_begin) = i;
+        const pair<int,int> & my_src_span = tails[i]->GetSpan();
+        for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++) {
+            // Rules should never cover the same span
+            if(trg_cover[j-trg_begin] != -1) {
+                cerr << "src: " << Dict::PrintWords(src_sent) << endl << "trg: " << Dict::PrintWords(trg_sent) << endl << rule << endl;
+                BOOST_FOREACH(HyperNode* tail, tails)
+                    cerr << " " << *tail << endl;
+                THROW_ERROR("Span covered by two target rules");
+            }
+            trg_cover[j-trg_begin] = i;
+        }
+        for(int j = my_src_span.first; j < my_src_span.second; j++) {
+            // Rules should never cover the same span
+            if(src_cover[j-src_begin] != -1) {
+                cerr << "src: " << Dict::PrintWords(src_sent) << endl << "src: " << Dict::PrintWords(src_sent) << endl << rule << endl;
+                BOOST_FOREACH(HyperNode* tail, tails)
+                    cerr << " " << *tail << endl;
+                THROW_ERROR("Span covered by two source rules");
+            }
+            src_cover[j-src_begin] = i;
+        }
     }
     // Create the string to return
     ostringstream oss;

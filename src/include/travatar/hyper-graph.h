@@ -38,7 +38,7 @@ public:
     void RefreshPointers(HyperGraph & new_graph);
 
     // Adder
-    void AddTail(HyperNode* tail) { tails_.push_back(tail); }
+    void AddTail(HyperNode* tail);
     void AddFragmentEdge(HyperEdge* edge) {
         fragment_edges_.push_back(edge);
         score_ += edge->GetScore();
