@@ -8,7 +8,7 @@
 
 namespace travatar {
 
-// A class for right-binarizing trees
+// A class for CKY binarizing trees
 // See:
 //  Binarizing Syntax Trees to Improve Syntax-Based Machine Translation Accuracy
 //  Wei Wang, Kevin Knight, and Daniel Marcu
@@ -21,7 +21,7 @@ public:
     BinarizerCKY() : max_tails_(7) { }
     virtual ~BinarizerCKY() { }
 
-    // Binarize the graph to the right
+    // Binarize the graph exhaustively using CKY
     virtual HyperGraph * TransformGraph(const HyperGraph & hg);
 
 protected:

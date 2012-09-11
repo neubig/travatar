@@ -66,7 +66,11 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
                 // Skip nodes that have already been made
                 if(!is_top && head->GetEdges().size() > 0)
                     continue;
+                // Binarize
                 for(int k = i+1; k < j; k++) {
+                    // Skip the middle nodes
+                    if(k != i+1) k = j-1;
+                    // Find the left and right nodes
                     HyperNode* left = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(i,k-i), xbar);
                     HyperNode* right = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(k, j-k), xbar);
                     // Create the left and right edges
@@ -83,5 +87,6 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
             }
         }
     }
+    // cerr << "BinarizerCKY returns nodes: " << ret->NumNodes() << ", edges: " << ret->NumEdges() << endl;
     return ret;
 }
