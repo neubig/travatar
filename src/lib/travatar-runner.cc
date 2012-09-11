@@ -91,10 +91,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         rule_graph->ScoreEdges(weights);
         rule_graph->ResetViterbiScores();
         // If we have an lm, score with the LM
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         if(lm.get() != NULL) {
             shared_ptr<HyperGraph> lm_graph(lm->TransformGraph(*rule_graph));
             lm_graph.swap(rule_graph);
         }
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         vector<shared_ptr<HyperPath> > nbest_list = rule_graph->GetNbest(nbest_count);
         cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
         if(nbest_out.get() != NULL) {

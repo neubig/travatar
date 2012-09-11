@@ -20,6 +20,13 @@ public:
     }
 };
 
+class NodeSrcLess {
+public:
+    bool operator()(const HyperNode* x, const HyperNode* y) {
+        return x->GetSpan().first < y->GetSpan().second;
+    }
+};
+
 }
 
 const ChartEntry & LMComposerBU::BuildChart(
@@ -118,6 +125,8 @@ const ChartEntry & LMComposerBU::BuildChart(
         }
         next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight_));
         next_edge->SetHead(next_node);
+        // Sort the tails in source order
+        sort(next_edge->GetTails().begin(), next_edge->GetTails().end(), NodeSrcLess());
         next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_);
         if(lm_score != 0.0)
             next_edge->GetFeatures().insert(MakePair(Dict::WID(feature_name_), lm_score));
