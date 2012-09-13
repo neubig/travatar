@@ -26,6 +26,7 @@ public:
 "  Usage: travatar < INPUT > OUTPUT\n"
 );
 
+        AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("lm_file", "", "Language model file location");

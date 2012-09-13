@@ -73,14 +73,21 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
     }
+    // Get the input format parser
+    TreeIO * tree_io;
+    if(config.GetString("in_format") == "penn")
+        tree_io = new PennTreeIO;
+    else if(config.GetString("in_format") == "egret")
+        tree_io = new EgretTreeIO;
+    else
+        THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
     // Process one at a time
     int sent = 0;
     string line;
-    PennTreeIO penn;
     cerr << "Translating..." << endl;
     while(getline(std::cin, line)) {
         istringstream in(line);
-        shared_ptr<HyperGraph> tree_graph(penn.ReadTree(in));
+        shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(in));
         if(tree_graph.get() == NULL) break;
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
