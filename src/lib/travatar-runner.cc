@@ -91,10 +91,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     int sent = 0;
     string line;
     cerr << "Translating..." << endl;
-    while(getline(std::cin, line)) {
-        istringstream in(line);
-        shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(in));
+    while(1) {
+        shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
             shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
