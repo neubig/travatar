@@ -153,8 +153,6 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // Create the sentence and root node
     if(!getline(in,line)) THROW_ERROR("partial egret output");
     ret->SetWords(Dict::ParseWords(line));
-    ostringstream root_name; root_name << "ROOT[0," << ret->GetWords().size()-1 << "]";
-    MakeEgretNode(root_name.str(), node_map, ret);
     // Get the lines one by one
     while(getline(in, line)) {
         if(line == "") return ret;
