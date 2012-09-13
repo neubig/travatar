@@ -316,18 +316,18 @@ public:
     // Get the n-best paths through the graph
     std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n);
 
-    // Check to make sure that the probabilities of edges
-    // outgoing from a particular node add to one (in the log domain)
-    void NormalizeEdgeProbabilities() {
-        BOOST_FOREACH(HyperNode* node, nodes_) {
-            double sum = 0;
-            BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-                sum += exp(edge->GetScore());
-            sum = log(sum);
-            BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-                edge->SetScore(edge->GetScore() - sum);
-        }
-    }
+    // // Check to make sure that the probabilities of edges
+    // // outgoing from a particular node add to one (in the log domain)
+    // void NormalizeEdgeProbabilities() {
+    //     BOOST_FOREACH(HyperNode* node, nodes_) {
+    //         double sum = 0;
+    //         BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
+    //             sum += exp(edge->GetScore());
+    //         sum = log(sum);
+    //         BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
+    //             edge->SetScore(edge->GetScore() - sum);
+    //     }
+    // }
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {

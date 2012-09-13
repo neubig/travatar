@@ -1,6 +1,7 @@
 #include <list>
 #include <travatar/tree-io.h>
 #include <travatar/io-util.h>
+#include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -118,4 +119,69 @@ void JSONTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
         out << "\"" << Dict::WSymEscaped(words[i]) << "\"";
     }
     out << "]}";
+}
+
+HyperNode * EgretTreeIO::MakeEgretNode(const string & str_id, SymbolSet<int> & node_map, HyperGraph * graph) {
+    // Try to find the node
+    int id = node_map.GetId(str_id, true);
+    if(id < graph->NumNodes()) return graph->GetNode(id);
+    else if (id != graph->NumNodes()) THROW_ERROR("Mismatched ID numbers in MakeEgretTreeNode()");
+    // Make the node if it doesn't exist
+    regex node_regex("(.*)\\[(\\d+),(\\d+)\\]");
+    smatch node_match;
+    HyperNode * new_node;
+    if(!regex_match(str_id, node_match, node_regex)) {
+        new_node = new HyperNode(Dict::WID(str_id));
+    } else {
+        new_node = new HyperNode(Dict::WID(node_match[1]), 
+                                 MakePair(atoi(node_match[2].str().c_str()),
+                                          atoi(node_match[3].str().c_str())+1));
+    }
+    graph->AddNode(new_node);
+    return new_node;
+}
+
+HyperGraph * EgretTreeIO::ReadTree(istream & in) {
+    HyperGraph * ret = new HyperGraph;
+    string line, buff;
+    double score;
+    SymbolSet<int> node_map;
+    // Make various regexes
+    cmatch edge_match, sent_match;
+    if(!getline(in,line)) return NULL;
+    if(line.substr(0,8) != "sentence") THROW_ERROR("Missing sentence line: " << endl);
+    // Create the sentence and root node
+    if(!getline(in,line)) THROW_ERROR("partial egret output");
+    ret->SetWords(Dict::ParseWords(line));
+    ostringstream root_name; root_name << "ROOT[0," << ret->GetWords().size()-1 << "]";
+    MakeEgretNode(root_name.str(), node_map, ret);
+    // Get the lines one by one
+    while(getline(in, line)) {
+        if(line == "") return ret;
+        istringstream iss(line);
+        // Get the head
+        iss >> buff;
+        HyperNode * head = MakeEgretNode(buff, node_map, ret);
+        HyperEdge * edge = new HyperEdge(head); ret->AddEdge(edge); head->AddEdge(edge);
+        // The next string should always be "=>"
+        iss >> buff;
+        if(buff != "=>") THROW_ERROR("=> not found in Egret node string: " << line);
+        // Read the tail nodes
+        while(iss >> buff && buff != "|||") {
+            HyperNode * tail = MakeEgretNode(buff, node_map, ret);
+            // Set terminal node's spans to those of their parent
+            if(tail->GetSpan().first == -1)
+                tail->SetSpan(head->GetSpan());
+            edge->AddTail(tail);
+        }
+        if(buff != "|||") THROW_ERROR("||| not found in Egret node string: " << line);
+        // Finally, read the score and add it to a parse
+        iss >> score;
+        edge->SetScore(score); edge->AddFeature(Dict::WID("parse"), score);
+    }
+    return NULL;
+}
+
+void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
+    THROW_ERROR("Not implemented yet");
 }

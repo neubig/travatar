@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <travatar/symbol-set.h>
 #include <travatar/hyper-graph.h>
 
 namespace travatar {
@@ -24,12 +25,22 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 
-// Read in and write out JSON Treebank format trees
+// Read in and write out JSON format hypergraphs
 class JSONTreeIO : public TreeIO {
 public:
     virtual ~JSONTreeIO() { }
     virtual HyperGraph * ReadTree(std::istream & in);
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+};
+
+// Read in the format of the Egret parser
+class EgretTreeIO : public TreeIO {
+public:
+    virtual ~EgretTreeIO() { }
+    virtual HyperGraph * ReadTree(std::istream & in);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+private:
+    HyperNode * MakeEgretNode(const std::string & str_id, SymbolSet<int> & node_map, HyperGraph * graph);
 };
 
 }

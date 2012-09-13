@@ -154,7 +154,8 @@ public:
     int TestForestExtraction() {
         // Run the Forest algorithm
         ForestExtractor forest_ext;
-        src2_graph->NormalizeEdgeProbabilities();
+        src2_graph->GetEdge(0)->SetScore(log(0.5));
+        src2_graph->GetEdge(1)->SetScore(log(0.5));
         shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src2_graph, align2));
         // Create the actual values, all non-terminal edges should be fine, and most should have
         // a probability of 0.5, as they only belong to one of the two trees
