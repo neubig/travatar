@@ -48,6 +48,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
     SparseMap weights = Dict::ParseFeatures(weight_in);
     weight_in.close();
+    // If weights exist, use them to override
+    if(config.GetString("weight_vals") != "") {
+        SparseMap new_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
+        BOOST_FOREACH(const SparseMap::value_type & val, new_weights)
+            weights[val.first] = val.second;
+    }
     // Load the language model
     shared_ptr<LMComposerBU> lm;
     if(config.GetString("lm_file") != "") {

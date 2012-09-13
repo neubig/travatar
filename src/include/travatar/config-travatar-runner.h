@@ -31,6 +31,7 @@ public:
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("weight_file", "", "Weight file location");
+        AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("pop_limit", "100", "The number of pops necessary");
