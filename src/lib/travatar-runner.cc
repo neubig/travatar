@@ -8,6 +8,7 @@
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/binarizer-directional.h>
+#include <travatar/binarizer-cky.h>
 #include <lm/model.hh>
 
 using namespace travatar;
@@ -35,6 +36,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
     } else if(config.GetString("binarize") == "right") {
         binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") == "cky") {
+        binarizer.reset(new BinarizerCKY);
     } else if(config.GetString("binarize") != "none") {
         THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
