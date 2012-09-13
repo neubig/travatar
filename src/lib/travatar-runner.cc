@@ -94,7 +94,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
-        { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
+        // { /* DEBUG */ EgretTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
             shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
