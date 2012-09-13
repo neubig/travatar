@@ -94,12 +94,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
-        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
+        { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
             shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
             tree_graph.swap(bin_graph);
         }
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         shared_ptr<HyperGraph> rule_graph(tm->TransformGraph(*tree_graph));
         rule_graph->ScoreEdges(weights);
         rule_graph->ResetViterbiScores();

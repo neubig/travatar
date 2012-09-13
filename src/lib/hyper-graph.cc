@@ -354,9 +354,9 @@ inline string PrintContext(const Left & context) {
     return out.str();
 }
 
-void HyperEdge::SetRule(const TranslationRule * rule) {
+void HyperEdge::SetRule(const TranslationRule * rule, const SparseMap & orig_features) {
     rule_str_ = rule->GetSrcStr();
-    features_ = rule->GetFeatures();
+    features_ = rule->GetFeatures() + orig_features;
     trg_words_ = rule->GetTrgWords();
 }
 

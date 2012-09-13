@@ -76,6 +76,7 @@ protected:
             LookupStateHash * ret = new LookupStateHash;
             ret->SetString(next);
             ret->SetNonterms(state.GetNonterms());
+            ret->SetFeatures(state.GetFeatures());
             return ret;
         } else {
             // std::cerr << "Matching " << next << " --> failure!" << std::endl;

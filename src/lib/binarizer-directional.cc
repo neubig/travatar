@@ -31,7 +31,8 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) {
     // A map to keep track of nodes that have already been built for this graph
     SNMap built_nodes;
     // Process each edge in the original graph
-    BOOST_FOREACH(const HyperEdge * edge, hg.GetEdges()) {
+    BOOST_FOREACH(const HyperNode * ehead_node, hg.GetNodes()) {
+    BOOST_FOREACH(const HyperEdge * edge, ehead_node->GetEdges()) {
         // Get the symbol for x-bar
         WordId xbar = Dict::WID(Dict::WSym(edge->GetHead()->GetSym())+"'");
         // Get the head node in the new graph
@@ -76,8 +77,8 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) {
             ret->AddEdge(next_edge); head->AddEdge(next_edge);
             head = big;
             first = false;
-        }
-        
+        }        
+    }
     }
 
     return ret;

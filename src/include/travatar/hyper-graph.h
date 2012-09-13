@@ -63,7 +63,8 @@ public:
     std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
     void SetFragmentEdges(const std::vector<HyperEdge*> & fragment_edges) { fragment_edges_ = fragment_edges; }
     // const TranslationRule * GetRule() const { return rule_; }
-    void SetRule(const TranslationRule * rule);
+    // Set the translation rule, including the features in the edges covered by the rule
+    void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
     const std::string & GetRuleStr() const { return rule_str_; }
     const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
     const SparseMap & GetFeatures() const { return features_; }

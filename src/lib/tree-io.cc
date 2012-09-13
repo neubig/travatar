@@ -94,6 +94,10 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("tails"))
                 edge->AddTail(ret->GetNode(t.second.get<int>("")));
         } catch (ptree_bad_path e) { }
+        try {
+            BOOST_FOREACH(ptree::value_type &t, v.second.get_child("features"))
+                edge->AddFeature(Dict::WID(t.first), t.second.get<double>(""));
+        } catch (ptree_bad_path e) { }
         edge->SetScore(v.second.get<double>("score", 0.0));
         ret->AddEdge(edge);
     }

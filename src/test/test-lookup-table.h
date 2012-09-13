@@ -20,7 +20,7 @@ public:
 
     TestLookupTable() {
         // Use the example from Galley et al.
-        string src1_tree = "(S (NP (PRP he)) (VP (AUX does) (RB not) (VB go)))";
+        string src1_tree = "{\"nodes\": [{\"sym\": \"S\", \"span\": [0, 4], \"id\": 0, \"edges\": [0]}, {\"sym\": \"NP\", \"span\": [0, 1], \"id\": 1, \"edges\": [1]}, {\"sym\": \"PRP\", \"span\": [0, 1], \"id\": 2, \"edges\": [2]}, {\"sym\": \"he\", \"span\": [0, 1], \"id\": 3}, {\"sym\": \"VP\", \"span\": [1, 4], \"id\": 4, \"edges\": [3]}, {\"sym\": \"AUX\", \"span\": [1, 2], \"id\": 5, \"edges\": [4]}, {\"sym\": \"does\", \"span\": [1, 2], \"id\": 6}, {\"sym\": \"RB\", \"span\": [2, 3], \"id\": 7, \"edges\": [5]}, {\"sym\": \"not\", \"span\": [2, 3], \"id\": 8}, {\"sym\": \"VB\", \"span\": [3, 4], \"id\": 9, \"edges\": [6]}, {\"sym\": \"go\", \"span\": [3, 4], \"id\": 10}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1, 4]}, {\"id\": 1, \"head\": 1, \"tails\": [2]}, {\"id\": 2, \"head\": 2, \"tails\": [3]}, {\"id\": 3, \"head\": 4, \"tails\": [5, 7, 9]}, {\"id\": 4, \"head\": 5, \"tails\": [6], \"features\": {\"parse\": 1}}, {\"id\": 5, \"head\": 7, \"tails\": [8], \"features\": {\"parse\": 1}}, {\"id\": 6, \"head\": 9, \"tails\": [10]}], \"words\": [\"he\", \"does\", \"not\", \"go\"]}";
         string trg1_str  = "il ne va pas";
         string align1_str = "0-0 1-1 1-3 2-1 2-3 3-2";
         istringstream iss1(src1_tree);
@@ -135,9 +135,9 @@ public:
         HyperEdge* s0_edge_big = new HyperEdge(s0_node); s0_edge_big->AddTail(vp4_node); s0_node->AddEdge(s0_edge_big); exp_rule_graph.AddEdge(s0_edge_big); s0_edge_big->SetRule(act_rules[2]);
         HyperEdge* np1_edge = new HyperEdge(np1_node); np1_edge->AddTail(prp2_node); np1_node->AddEdge(np1_edge); exp_rule_graph.AddEdge(np1_edge); np1_edge->SetRule(act_rules[3]);
         HyperEdge* prp2_edge = new HyperEdge(prp2_node); prp2_node->AddEdge(prp2_edge); exp_rule_graph.AddEdge(prp2_edge); prp2_edge->SetRule(act_rules[4]);
-        HyperEdge* vp4_edge = new HyperEdge(vp4_node); vp4_edge->AddTail(vb9_node); vp4_node->AddEdge(vp4_edge); exp_rule_graph.AddEdge(vp4_edge); vp4_edge->SetRule(act_rules[5]);
-        HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup_hash->GetUnknownRule()); // Unknown edge
-        HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup_hash->GetUnknownRule()); // Unknown edge
+        HyperEdge* vp4_edge = new HyperEdge(vp4_node); vp4_edge->AddTail(vb9_node); vp4_node->AddEdge(vp4_edge); exp_rule_graph.AddEdge(vp4_edge); vp4_edge->SetRule(act_rules[5]);  vp4_edge->AddFeature(Dict::WID("parse"), 2.0);
+        HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup_hash->GetUnknownRule()); aux5_edge->AddFeature(Dict::WID("parse"), 1.0); // Unknown edge
+        HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup_hash->GetUnknownRule());  rb7_edge->AddFeature(Dict::WID("parse"), 1.0); // Unknown edge
         HyperEdge* vb9_edge = new HyperEdge(vb9_node); vb9_node->AddEdge(vb9_edge); exp_rule_graph.AddEdge(vb9_edge); vb9_edge->SetRule(act_rules[6]);
         return exp_rule_graph.CheckEqual(*act_rule_graph);
     }
@@ -154,7 +154,7 @@ public:
     }
 
 private:
-    PennTreeIO tree_io;
+    JSONTreeIO tree_io;
     boost::scoped_ptr<LookupTableHash> lookup_hash;
     boost::scoped_ptr<LookupTableMarisa> lookup_marisa;
     boost::scoped_ptr<HyperGraph> src1_graph;

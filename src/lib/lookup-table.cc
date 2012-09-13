@@ -26,7 +26,10 @@ vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
             // Finish all the states found
             BOOST_FOREACH(const shared_ptr<LookupState> & my_state, my_states) {
                 shared_ptr<LookupState> fin_state(MatchEnd(node, *my_state));
-                if(fin_state != NULL) ret_states.push_back(fin_state);
+                if(fin_state != NULL) {
+                    fin_state->AddFeatures(edge->GetFeatures());
+                    ret_states.push_back(fin_state);
+                }
             }
         }
         
@@ -67,7 +70,7 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
                 BOOST_FOREACH(const TranslationRule * rule, *FindRules(*state)) {
                     HyperEdge * next_edge = new HyperEdge(next_node);
                     next_edge->SetTails(next_tails);
-                    next_edge->SetRule(rule);
+                    next_edge->SetRule(rule, state->GetFeatures());
                     next_node->AddEdge(next_edge);
                     ret->AddEdge(next_edge);
                 }
@@ -79,7 +82,7 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
                 BOOST_FOREACH(const HyperNode * parse_node, parse_edge->GetTails())
                     if(!parse_node->IsTerminal())
                         next_edge->AddTail(ret->GetNode(node_map[parse_node->GetId()]));
-                next_edge->SetRule(GetUnknownRule());
+                next_edge->SetRule(GetUnknownRule(), parse_edge->GetFeatures());
                 if(next_edge->GetTails().size() > 0) {
                     vector<int> trg(next_edge->GetTails().size());
                     for(int i = 0; i < (int)trg.size(); i++)

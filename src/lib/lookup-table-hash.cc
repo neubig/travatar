@@ -38,8 +38,10 @@ LookupState * LookupTableHash::MatchNode(const HyperNode & node, const LookupSta
         ostringstream next;
         next << hash_state.GetString() << " x" << state.GetNonterms().size() << ":" << Dict::WSym(node.GetSym());
         ret = MatchState(next.str(), state);
-        if(ret != NULL)
+        if(ret != NULL) {
             ret->GetNonterms().push_back(&node);
+            ret->SetFeatures(state.GetFeatures());
+        }
     }
     return ret;
 }
