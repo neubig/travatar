@@ -22,6 +22,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
     while(in) {
         Trim(in, WHITE_SPACE);
         in >> next_char;
+        if(!in) break;
         // If the next character is a close parenthesis, close the noe on the top of the stack
         if(next_char == ')') {
             if(!stack.size()) { getline(in, line); THROW_ERROR("Unmatched close parenthesis at )" << line); }
@@ -53,7 +54,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
                 ++pos;
             }
         } else {
-            THROW_ERROR("Expecting parenthesis but got '"<<next_char<<"'");
+            THROW_ERROR("Expecting parenthesis but got '("<<(int)next_char<<")"<<next_char<<"'");
         }
     }
     return NULL;
@@ -153,15 +154,22 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // Create the sentence and root node
     if(!getline(in,line)) THROW_ERROR("partial egret output");
     ret->SetWords(Dict::ParseWords(line));
-    ostringstream root_name; root_name << "ROOT[0," << ret->GetWords().size()-1 << "]";
-    MakeEgretNode(root_name.str(), node_map, ret);
     // Get the lines one by one
+    HyperNode * head = NULL;
     while(getline(in, line)) {
-        if(line == "") return ret;
+        // If we've finished, swap the root to the first position and return
+        if(line == "") {
+            if(head == NULL) THROW_ERROR("partial egret output");
+            int head_pos = head->GetId();
+            vector<HyperNode*> & nodes = ret->GetNodes();
+            nodes[head_pos] = nodes[0]; nodes[head_pos]->SetId(head_pos);
+            nodes[0] = head; head->SetId(0);
+            return ret;
+        }
         istringstream iss(line);
         // Get the head
         iss >> buff;
-        HyperNode * head = MakeEgretNode(buff, node_map, ret);
+        head = MakeEgretNode(buff, node_map, ret);
         HyperEdge * edge = new HyperEdge(head); ret->AddEdge(edge); head->AddEdge(edge);
         // The next string should always be "=>"
         iss >> buff;

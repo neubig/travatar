@@ -95,7 +95,6 @@ public:
 "\n"
 "sentence 2 :";
 
-        HyperNode* root02  = new HyperNode(Dict::WID("ROOT"),    MakePair(0,3)); egret_exp.AddNode(root02 );
         HyperNode* nn00    = new HyperNode(Dict::WID("NN"),      MakePair(0,1)); egret_exp.AddNode(nn00   );
         HyperNode* story00 = new HyperNode(Dict::WID("story"),   MakePair(0,1)); egret_exp.AddNode(story00);
         HyperNode* npg00   = new HyperNode(Dict::WID("NP^g"),    MakePair(0,1)); egret_exp.AddNode(npg00  );
@@ -109,6 +108,9 @@ public:
         HyperNode* npg02   = new HyperNode(Dict::WID("NP^g"),    MakePair(0,3)); egret_exp.AddNode(npg02  );
         HyperNode* vpg02   = new HyperNode(Dict::WID("VP^g"),    MakePair(0,3)); egret_exp.AddNode(vpg02  );
         HyperNode* sg02    = new HyperNode(Dict::WID("S^g"),     MakePair(0,3)); egret_exp.AddNode(sg02   );
+        HyperNode* root02  = new HyperNode(Dict::WID("ROOT"),    MakePair(0,3)); egret_exp.AddNode(root02 );
+        nn00->SetId(13); egret_exp.GetNodes()[13] = nn00;
+        root02->SetId(0); egret_exp.GetNodes()[0] = root02;
         HyperEdge* edge0   = new HyperEdge(nn00);   nn00->AddEdge(edge0); edge0->AddTail(story00);  egret_exp.AddEdge(edge0);  edge0->SetScore(-5.16e-06); edge0->AddFeature(Dict::WID("parse"), -5.16e-06);
         HyperEdge* edge1   = new HyperEdge(npg00);  npg00->AddEdge(edge1); edge1->AddTail(nn00);   egret_exp.AddEdge(edge1);  edge1->SetScore(-0.17); edge1->AddFeature(Dict::WID("parse"), -0.17);
         HyperEdge* edge2   = new HyperEdge(in11);   in11->AddEdge(edge2); edge2->AddTail(of11);   egret_exp.AddEdge(edge2);  edge2->SetScore(-3.32e-06); edge2->AddFeature(Dict::WID("parse"), -3.32e-06);
