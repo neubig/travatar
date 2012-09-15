@@ -195,9 +195,9 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
 }
 
 inline void PrintNodeEgret(const HyperNode * node, ostream & out) {
-    out << Dict::WSym(node->GetSym()) << "[" 
-        << node->GetSpan().first << ","
-        << node->GetSpan().second << "]";
+    out << Dict::WSym(node->GetSym());
+    if(!node->IsTerminal())
+        out << "[" << node->GetSpan().first << "," << node->GetSpan().second << "]";
 }
 
 void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {

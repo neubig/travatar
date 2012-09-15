@@ -91,10 +91,12 @@ HyperGraph * ForestExtractor::AttachNullsTop(const HyperGraph & rule_graph,
                                            const Alignment & align,
                                            int trg_len) {
     HyperGraph * ret = new HyperGraph(rule_graph);
-    vector<bool> nulls(trg_len, true);
-    BOOST_FOREACH(const Alignment::AlignmentPair & a, align.GetAlignmentVector())
-        nulls[a.second] = false;
-    AttachNullsTop(nulls, *ret->GetNode(0));
+    if(ret->NumNodes() > 0) {
+        vector<bool> nulls(trg_len, true);
+        BOOST_FOREACH(const Alignment::AlignmentPair & a, align.GetAlignmentVector())
+            nulls[a.second] = false;
+        AttachNullsTop(nulls, *ret->GetNode(0));
+    }
     return ret;
 }
 
@@ -124,6 +126,7 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
                                            const Alignment & align,
                                            int trg_len) {
     HyperGraph * ret = new HyperGraph(rule_graph);
+    if(rule_graph.NumNodes() == 0) return ret;
     ret->DeleteNodes();
     ret->DeleteEdges();
     ret->AddNode(new HyperNode);
