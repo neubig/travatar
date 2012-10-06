@@ -1,6 +1,8 @@
 #ifndef CONFIG_TRABATAR_RUNNER_H__
 #define CONFIG_TRABATAR_RUNNER_H__
 
+#define ONLINE_TRAINING_ON
+
 #include <string>
 #include <vector>
 #include <cstdlib>
@@ -37,6 +39,14 @@ public:
         AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
+
+#ifdef ONLINE_TRAINING_ON
+        AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/avgper)");
+        AddConfigEntry("tune_step_count", "0", "The number of steps that have been executed previously for tuning");
+        AddConfigEntry("tune_step_size", "1", "The size of a single step of weight update");
+        AddConfigEntry("tune_eval_meas", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
+        AddConfigEntry("tune_weight_out", "", "Location to print the weight file after done tuning");
+#endif
 
 
     }

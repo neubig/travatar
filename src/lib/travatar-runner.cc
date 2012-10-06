@@ -7,6 +7,8 @@
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/lm-composer-bu.h>
+#include <travatar/tuner.h>
+#include <travatar/tuner-average-perceptron.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <lm/model.hh>
@@ -18,11 +20,13 @@ using namespace lm::ngram;
 
 // Run the model
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
+
     // Load the rule table
     ifstream tm_in(config.GetString("tm_file").c_str());
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
+
     // Load the translation model
     shared_ptr<LookupTable> tm;
     if(config.GetString("tm_storage") == "hash")
@@ -30,6 +34,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     else if(config.GetString("tm_storage") == "marisa")
         tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
     tm_in.close();
+
     // Create the binarizer
     shared_ptr<GraphTransformer> binarizer;
     if(config.GetString("binarize") == "left") {
@@ -41,6 +46,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     } else if(config.GetString("binarize") != "none") {
         THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
+
     // Load the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
@@ -48,12 +54,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
     SparseMap weights = Dict::ParseFeatures(weight_in);
     weight_in.close();
+
     // If weights exist, use them to override
     if(config.GetString("weight_vals") != "") {
         SparseMap new_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
         BOOST_FOREACH(const SparseMap::value_type & val, new_weights)
             weights[val.first] = val.second;
     }
+
     // Load the language model
     shared_ptr<LMComposerBU> lm;
     if(config.GetString("lm_file") != "") {
@@ -62,6 +70,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         lm.reset(bu);
     }
+
     // Open the n-best output stream if it exists
     int nbest_count = config.GetInt("nbest");
     scoped_ptr<ostream> nbest_out;
@@ -72,13 +81,15 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     } else {
         nbest_count = 1;
     }
-    // Open the n-best output stream if it exists
+
+    // Open the trace output stream if it exists
     scoped_ptr<ostream> trace_out;
     if(config.GetString("trace_out") != "") {
         trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
     }
+
     // Get the input format parser
     TreeIO * tree_io;
     if(config.GetString("in_format") == "penn")
@@ -87,6 +98,22 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tree_io = new EgretTreeIO;
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
+
+    // Load the tuner if it exists
+    shared_ptr<Tuner> tuner;
+    vector< shared_ptr<istream> > tune_ins;
+    if(config.GetString("tune_type") == "avgper") {
+        TunerAveragePerceptron * apt = new TunerAveragePerceptron();
+        apt->SetStepCount(config.GetInt("tune_step_count"));
+        tuner.reset(apt);
+    } else if(config.GetString("tune_type") != "none") {
+        THROW_ERROR("Bad tune_type option " << config.GetString("tune_type"));
+    }
+    if(tuner) {
+        BOOST_FOREACH(const string & file, config.GetStringArray("tune_refs"))
+            tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
+    }
+
     // Process one at a time
     int sent = 0;
     string line;
@@ -111,7 +138,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             lm_graph.swap(rule_graph);
         }
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
-        vector<shared_ptr<HyperPath> > nbest_list = rule_graph->GetNbest(nbest_count);
+        NbestList nbest_list = rule_graph->GetNbest(nbest_count);
         cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
         if(nbest_out.get() != NULL) {
             BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
@@ -133,6 +160,18 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                     << endl;
             }
         }
+
+        // If we are tuning load the next references and check the weights
+        if(tuner) {
+            vector<Sentence> refs;
+            BOOST_FOREACH(const shared_ptr<istream> & in, tune_ins) {
+                string line;
+                if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
+                refs.push_back(Dict::ParseWords(line));
+            }
+            tuner->AdjustWeights(*rule_graph, nbest_list, refs, weights);
+        }
+
         sent++;
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }

@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <travatar/util.h>
+#include <boost/algorithm/string.hpp>
 
 namespace travatar {
 
@@ -95,6 +96,14 @@ public:
     }
 
     // Getter functions
+    std::vector<std::string> GetStringArray(const std::string & name) const {
+        ConfigMap::const_iterator it = optArgs_.find(name);
+        if(it == optArgs_.end())
+            THROW_ERROR("Requesting bad argument "<<name<<" from configuration");
+        std::vector<std::string> ret;
+        boost::algorithm::split(ret, it->second.first, boost::is_any_of("|"));
+        return ret;
+    }
     const std::string & GetString(const std::string & name) const {
         ConfigMap::const_iterator it = optArgs_.find(name);
         if(it == optArgs_.end())

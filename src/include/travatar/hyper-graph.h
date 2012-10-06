@@ -227,7 +227,7 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
 // A single scored path through a hypergraph
 class HyperPath {
 public:
-    HyperPath() : score_(0) { }
+    HyperPath() : score_(0), is_oracle_(false) { }
     
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
     void PushNode(HyperNode * node) { remaining_nodes_.push_back(node); }
@@ -255,6 +255,8 @@ public:
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
+    bool IsOracle() const { return is_oracle_; }
+    void SetIsOracle(bool is_oracle) { is_oracle_ = is_oracle; }
 
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
@@ -265,11 +267,15 @@ protected:
     double score_;
     // For use with partial paths, which nodes are still open?
     std::vector<HyperNode*> remaining_nodes_;
+    bool is_oracle_;
 };
 inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
     L.Print(out);
     return out;
 }
+
+// Define a n-best list as a vector of pointers over hyperpaths
+typedef std::vector< boost::shared_ptr<HyperPath> > NbestList;
 
 // The hypergraph
 class HyperGraph {
