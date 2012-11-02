@@ -6,9 +6,9 @@
 #include <travatar/travatar-runner.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
+#include <travatar/weights.h>
+#include <travatar/weights-perceptron.h>
 #include <travatar/lm-composer-bu.h>
-#include <travatar/tuner.h>
-#include <travatar/tuner-average-perceptron.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <lm/model.hh>
@@ -47,26 +47,41 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
     }
 
-    // Load the weight file
+    // Load the features from the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
     if(!weight_in)
         THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
-    SparseMap weights = Dict::ParseFeatures(weight_in);
+    SparseMap init_weights = Dict::ParseFeatures(weight_in);
     weight_in.close();
 
     // If weights exist, use them to override
     if(config.GetString("weight_vals") != "") {
         SparseMap new_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
         BOOST_FOREACH(const SparseMap::value_type & val, new_weights)
-            weights[val.first] = val.second;
+            init_weights[val.first] = val.second;
     }
+
+    // Create the appropriate weights
+    // If we are using online tuning, choose weights according to the tuning method,
+    // otherwise choose plain weights
+    shared_ptr<Weights> weights;
+    // bool do_tuning = true;
+    if(config.GetString("tune_update") == "perceptron") {
+        weights.reset(new WeightsPerceptron(init_weights));
+    } else if(config.GetString("tune_update") == "none") {
+        weights.reset(new Weights(init_weights));
+        // do_tuning = false;
+    } else {
+        THROW_ERROR("Unknown online tuning update strategy");
+    }    
 
     // Load the language model
     shared_ptr<LMComposerBU> lm;
     if(config.GetString("lm_file") != "") {
-        LMComposerBU * bu = new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetLMWeight(weights[Dict::WID("lm")]);
+        LMComposerBU * bu = 
+            new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+        bu->SetLMWeight(weights->GetCurrent(Dict::WID("lm")));
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         lm.reset(bu);
     }
@@ -99,21 +114,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
-    // Load the tuner if it exists
-    shared_ptr<Tuner> tuner;
-    vector< shared_ptr<istream> > tune_ins;
-    if(config.GetString("tune_type") == "avgper") {
-        TunerAveragePerceptron * apt = new TunerAveragePerceptron();
-        apt->SetStepCount(config.GetInt("tune_step_count"));
-        tuner.reset(apt);
-    } else if(config.GetString("tune_type") != "none") {
-        THROW_ERROR("Bad tune_type option " << config.GetString("tune_type"));
-    }
-    if(tuner) {
-        BOOST_FOREACH(const string & file, config.GetStringArray("tune_refs"))
-            tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
-    }
-
     // Process one at a time
     int sent = 0;
     string line;
@@ -129,7 +129,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         }
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         shared_ptr<HyperGraph> rule_graph(tm->TransformGraph(*tree_graph));
-        rule_graph->ScoreEdges(weights);
+        rule_graph->ScoreEdges(*weights);
         rule_graph->ResetViterbiScores();
         // If we have an lm, score with the LM
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
@@ -159,17 +159,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                     << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                     << endl;
             }
-        }
-
-        // If we are tuning load the next references and check the weights
-        if(tuner) {
-            vector<Sentence> refs;
-            BOOST_FOREACH(const shared_ptr<istream> & in, tune_ins) {
-                string line;
-                if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
-                refs.push_back(Dict::ParseWords(line));
-            }
-            tuner->AdjustWeights(*rule_graph, nbest_list, refs, weights);
         }
 
         sent++;

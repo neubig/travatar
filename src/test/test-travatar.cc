@@ -9,6 +9,7 @@
 #include "test-graph-transformer.h"
 #include "test-binarizer.h"
 #include "test-base.h"
+#include "test-weights.h"
 
 using namespace std;
 using namespace travatar;
@@ -25,6 +26,7 @@ int main() {
     tests.push_back(new TestLookupTable());
     tests.push_back(new TestGraphTransformer());
     tests.push_back(new TestBinarizer());
+    tests.push_back(new TestWeights());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

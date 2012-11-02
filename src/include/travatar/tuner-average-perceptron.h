@@ -14,8 +14,8 @@ public:
     
     // Do a pairwise comparison between SparseMaps and update if necessary
     virtual void PairwiseUpdate(
-            const SparseMap & oracle_feat, double oracle_score,
-            const SparseMap & system_feat, double system_score,
+            const SparseMap & oracle_feat, double oracle_score, double oracle_loss,
+            const SparseMap & system_feat, double system_score, double system_loss,
             SparseMap & weights) {
         step_count_++;
         // Update if we made a mistake

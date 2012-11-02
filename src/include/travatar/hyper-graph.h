@@ -7,6 +7,7 @@
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
+#include <travatar/weights.h>
 #include <lm/left.hh>
 
 namespace travatar {
@@ -242,6 +243,8 @@ public:
     void SetScore(double score) { score_ = score; }
     double AddScore(double score) { return (score_ += score); }
     double GetScore() { return score_; }
+    void SetLoss(double loss) { loss_ = loss; }
+    double GetLoss() { return loss_; }
 
     std::vector<WordId> CalcTranslation(const std::vector<WordId> & src_words) { 
         int idx = 0; return CalcTranslation(idx, src_words);
@@ -264,7 +267,10 @@ public:
 
 protected:
     std::vector<HyperEdge*> edges_;
+    // The model score of the translation
     double score_;
+    // The loss of the translation
+    double loss_;
     // For use with partial paths, which nodes are still open?
     std::vector<HyperNode*> remaining_nodes_;
     bool is_oracle_;
@@ -318,23 +324,10 @@ public:
         
 
     // Score each edge in the graph
-    void ScoreEdges(const SparseMap & weights);
+    void ScoreEdges(Weights & weights);
 
     // Get the n-best paths through the graph
     std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n);
-
-    // // Check to make sure that the probabilities of edges
-    // // outgoing from a particular node add to one (in the log domain)
-    // void NormalizeEdgeProbabilities() {
-    //     BOOST_FOREACH(HyperNode* node, nodes_) {
-    //         double sum = 0;
-    //         BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-    //             sum += exp(edge->GetScore());
-    //         sum = log(sum);
-    //         BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-    //             edge->SetScore(edge->GetScore() - sum);
-    //     }
-    // }
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {

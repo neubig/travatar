@@ -51,10 +51,10 @@ SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs) {
 
 SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs) {
     SparseMap ret;
-    BOOST_FOREACH(const SparsePair & val, rhs)
+    BOOST_FOREACH(const SparsePair & val, lhs)
         if(val.second != 0)
             ret[val.first] += val.second;
-    BOOST_FOREACH(const SparsePair & val, lhs)
+    BOOST_FOREACH(const SparsePair & val, rhs)
         if(val.second != 0)
             ret[val.first] -= val.second;
     return ret;

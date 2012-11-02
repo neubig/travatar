@@ -319,9 +319,9 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
 }
 
 // Score each edge in the graph
-void HyperGraph::ScoreEdges(const SparseMap & weights) {
+void HyperGraph::ScoreEdges(Weights & weights) {
     BOOST_FOREACH(HyperEdge * edge, edges_)
-        edge->SetScore(edge->GetFeatures() * weights);
+        edge->SetScore(weights * edge->GetFeatures());
 }
 
 class QueueEntry {
