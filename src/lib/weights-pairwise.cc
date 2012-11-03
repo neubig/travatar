@@ -20,6 +20,12 @@ void WeightsPairwise::Adjust(const EvalMeasure & eval,
         }
     }
     // Update given the oracle
-    Update(nbest[oracle]->CalcFeatures(), nbest[oracle]->GetScore(), oracle_loss,
-           nbest[0]->CalcFeatures(), nbest[0]->GetScore(), eval.MeasureLoss(refs, nbest[0]->GetWords()));
+    double oracle_score = nbest[oracle]->GetScore();
+    double sys_score = nbest[0]->GetScore();
+    double sys_loss = eval.MeasureLoss(refs, nbest[0]->GetWords());
+    Update(nbest[oracle]->CalcFeatures(), oracle_score, oracle_loss,
+           nbest[0]->CalcFeatures(), sys_score, sys_loss);
+    PRINT_DEBUG("WeightsPairwise::Adjust: os=" << oracle_score << ", ol=" << oracle_loss << 
+                                       ", ss=" << sys_score << ", sl=" << sys_loss << endl <<
+                                       Dict::PrintFeatures(current_) << endl, 2);
 }

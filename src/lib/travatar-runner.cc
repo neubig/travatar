@@ -23,6 +23,9 @@ using namespace lm::ngram;
 // Run the model
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
+    // Set the debugging level
+    GlobalVars::debug = config.GetInt("debug");
+
     // Load the features from the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;

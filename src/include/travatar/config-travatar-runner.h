@@ -39,6 +39,7 @@ public:
         AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
+        AddConfigEntry("debug", "0", "What level of debugging output to print");
 
 #ifdef ONLINE_TRAINING_ON
         AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/perceptron)");

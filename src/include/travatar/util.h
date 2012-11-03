@@ -89,6 +89,17 @@ inline std::istream & operator>> (std::istream & in, std::pair<X,Y>& s) {
 
 namespace travatar {
 
+class GlobalVars {
+public:
+    static int debug;
+};
+
+#define PRINT_DEBUG(msg, lev) do {            \
+        if(lev <= GlobalVars::debug)          \
+            std::cerr << msg;                 \
+        }                                     \
+        while (0);
+
 inline bool IsDigit(char c) {
     return c >= '0' && c <= '9';
 }
