@@ -14,7 +14,7 @@ public:
     // Measure the score of the system output according to the reference
     virtual double MeasureScore(
             const std::vector<WordId> & reference,
-            const std::vector<WordId> & system) {
+            const std::vector<WordId> & system) const {
         THROW_ERROR("EvalMeasureBleu::MeasureScore not implemented");
     }
 

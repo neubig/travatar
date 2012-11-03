@@ -1,7 +1,7 @@
 #ifndef WEIGHTS_PAIRWISE_H__
 #define WEIGHTS_PAIRWISE_H__
 
-#include <travatar/sparse-map.h>
+#include <travatar/weights.h>
 
 namespace travatar {
 
@@ -17,6 +17,11 @@ public:
         const SparseMap & oracle, double oracle_score, double oracle_loss,
         const SparseMap & system, double system_score, double system_loss
     ) = 0;
+
+    // Adjust the weights according to the n-best list
+    virtual void Adjust(const EvalMeasure & eval,
+                        const std::vector<Sentence> & refs,
+                        const NbestList & nbest);
 
 protected:
 
