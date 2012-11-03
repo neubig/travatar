@@ -14,27 +14,27 @@ public:
 
     EvalMeasure() { }
 
-    // Measure the score of the system output according to the reference
+    // Measure the score of the sys output according to the ref
     virtual double MeasureScore(
-            const Sentence & reference,
-            const Sentence & system) const = 0;
+            const Sentence & ref,
+            const Sentence & sys) const = 0;
 
-    // Measure the loss of the system output according to the reference
+    // Measure the loss of the sys output according to the ref
     // If the scores are guaranteed to be between 0 and 1, does not need
     // to be overridden
     virtual double MeasureLoss(
-            const Sentence & reference,
-            const Sentence & system) const {
-        return 1 - MeasureScore(reference, system);
+            const Sentence & ref,
+            const Sentence & sys) const {
+        return 1 - MeasureScore(ref, sys);
     }
 
-    // Measure the loss of the system output according to multiple references
+    // Measure the loss of the sys output according to multiple refs
     virtual double MeasureLoss(
-            const std::vector<Sentence> & references,
-            const Sentence & system) const {
+            const std::vector<Sentence> & refs,
+            const Sentence & sys) const {
         double ret = DBL_MAX;
-        BOOST_FOREACH(const Sentence & reference, references)
-            ret = std::min(ret, MeasureLoss(reference, system));
+        BOOST_FOREACH(const Sentence & ref, refs)
+            ret = std::min(ret, MeasureLoss(ref, sys));
         return ret;
     }
 
