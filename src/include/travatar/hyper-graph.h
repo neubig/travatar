@@ -7,7 +7,6 @@
 #include <boost/foreach.hpp>
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
-#include <travatar/weights.h>
 #include <lm/left.hh>
 
 namespace travatar {
@@ -16,6 +15,7 @@ typedef int NodeId;
 class HyperNode;
 class HyperGraph;
 class TranslationRule;
+class Weights;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -228,7 +228,7 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
 // A single scored path through a hypergraph
 class HyperPath {
 public:
-    HyperPath() : score_(0), is_oracle_(false) { }
+    HyperPath() : score_(0) { }
     
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
     void PushNode(HyperNode * node) { remaining_nodes_.push_back(node); }
@@ -258,22 +258,26 @@ public:
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
     HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
-    bool IsOracle() const { return is_oracle_; }
-    void SetIsOracle(bool is_oracle) { is_oracle_ = is_oracle; }
+    WordId GetWord(int i) const { return SafeAccess(words_, i); }
+    const std::vector<WordId> & GetWords() const { return words_; }
+    std::vector<WordId> & GetWords() { return words_; }
+    void SetWords(const std::vector<WordId> & words) { words_ = words; }
 
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
     void Print(std::ostream & out) const;
 
 protected:
+    // The edges contrained in this translation
     std::vector<HyperEdge*> edges_;
+    // The actual translation itself in words
+    std::vector<WordId> words_;
     // The model score of the translation
     double score_;
     // The loss of the translation
     double loss_;
     // For use with partial paths, which nodes are still open?
     std::vector<HyperNode*> remaining_nodes_;
-    bool is_oracle_;
 };
 inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
     L.Print(out);
@@ -327,7 +331,7 @@ public:
     void ScoreEdges(Weights & weights);
 
     // Get the n-best paths through the graph
-    std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n);
+    std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n, const std::vector<WordId> & src_words);
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {

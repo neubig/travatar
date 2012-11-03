@@ -44,7 +44,7 @@ public:
         AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/avgper)");
         AddConfigEntry("tune_step_count", "0", "The number of steps that have been executed previously for tuning");
         AddConfigEntry("tune_step_size", "1", "The size of a single step of weight update");
-        AddConfigEntry("tune_eval_meas", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
+        AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
         AddConfigEntry("tune_weight_out", "", "Location to print the weight file after done tuning");
 #endif
 

@@ -11,6 +11,8 @@
 #include <travatar/lm-composer-bu.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
+#include <travatar/eval-measure-bleu.h>
+#include <travatar/eval-measure.h>
 #include <lm/model.hh>
 
 using namespace travatar;
@@ -66,15 +68,31 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // If we are using online tuning, choose weights according to the tuning method,
     // otherwise choose plain weights
     shared_ptr<Weights> weights;
-    // bool do_tuning = true;
+    bool do_tuning = true;
     if(config.GetString("tune_update") == "perceptron") {
         weights.reset(new WeightsPerceptron(init_weights));
     } else if(config.GetString("tune_update") == "none") {
         weights.reset(new Weights(init_weights));
-        // do_tuning = false;
+        do_tuning = false;
     } else {
-        THROW_ERROR("Unknown online tuning update strategy");
+        THROW_ERROR("Invalid value for tune_update: "<<config.GetString("tune_update"));
     }    
+    vector<shared_ptr<istream> > tune_ins;
+    shared_ptr<EvalMeasure> tune_eval_measure;
+    // If we need to do tuning
+    if(do_tuning) {
+        // Set the evaluation measure to be used
+        if(config.GetString("tune_loss") == "bleu") {
+            EvalMeasureBleu * meas = new EvalMeasureBleu;
+            meas->SetSmoothVal(1.0); // Use BLEU+1
+            tune_eval_measure.reset(meas);
+        } else {
+            THROW_ERROR("Invalid value for tune_loss: "<<config.GetString("tune_loss"));
+        }
+        // And open the reference files
+        BOOST_FOREACH(const string & file, config.GetStringArray("tune_refs"))
+            tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
+    }
 
     // Load the language model
     shared_ptr<LMComposerBU> lm;
@@ -131,24 +149,35 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         shared_ptr<HyperGraph> rule_graph(tm->TransformGraph(*tree_graph));
         rule_graph->ScoreEdges(*weights);
         rule_graph->ResetViterbiScores();
+
         // If we have an lm, score with the LM
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         if(lm.get() != NULL) {
             shared_ptr<HyperGraph> lm_graph(lm->TransformGraph(*rule_graph));
             lm_graph.swap(rule_graph);
         }
+
+        // Calculate the n-best list
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
-        NbestList nbest_list = rule_graph->GetNbest(nbest_count);
-        cout << Dict::PrintWords(nbest_list[0]->CalcTranslation(tree_graph->GetWords())) << endl;
+        NbestList nbest_list = rule_graph->GetNbest(nbest_count, tree_graph->GetWords());
+
+        // Print the best answer. This will generally be the answer with the highest score
+        // but we could also change it with something like MBR
+        int best_answer = 0;
+        cout << Dict::PrintWords(nbest_list[best_answer]->GetWords()) << endl;
+
+        // If we are printing the n-best list, print it
         if(nbest_out.get() != NULL) {
             BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
                 *nbest_out
                     << sent
-                    << " ||| " << Dict::PrintWords(path->CalcTranslation(tree_graph->GetWords()))
+                    << " ||| " << Dict::PrintWords(path->GetWords())
                     << " ||| " << path->GetScore()
                     << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
             }
         }
+        
+        // If we are printing a trace, create it
         if(trace_out.get() != NULL) {
             BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
                 *trace_out
@@ -160,6 +189,18 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                     << endl;
             }
         }
+
+        // If we are tuning load the next references and check the weights
+        if(do_tuning) {
+            vector<Sentence> refs;
+            BOOST_FOREACH(const shared_ptr<istream> & in, tune_ins) {
+                string line;
+                if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
+                refs.push_back(Dict::ParseWords(line));
+            }
+            weights->Adjust(*tune_eval_measure, refs, nbest_list);
+        }
+
 
         sent++;
         cerr << (sent%100==0?'!':'.'); cerr.flush();

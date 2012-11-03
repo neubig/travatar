@@ -1,5 +1,6 @@
 #include <lm/left.hh>
 #include <lm/model.hh>
+#include <travatar/weights.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
 #include <travatar/generic-string.h>
@@ -207,7 +208,7 @@ public:
     }
 };
 
-vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
+vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<WordId> & src_words) {
     priority_queue<shared_ptr<HyperPath>,
                    vector<shared_ptr<HyperPath> >, 
                    PathScoreLess> paths;
@@ -223,6 +224,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
         // cerr << " Processing " << *curr_path << endl;
         HyperNode * node = curr_path->PopNode();
         if(node == NULL) {
+            curr_path->CalcTranslation(src_words);
             ret.push_back(curr_path);
         } else {
             curr_path->AddScore(-1*node->CalcViterbiScore());
