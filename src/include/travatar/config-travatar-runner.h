@@ -41,7 +41,8 @@ public:
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
 
 #ifdef ONLINE_TRAINING_ON
-        AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/avgper)");
+        AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/perceptron)");
+        AddConfigEntry("tune_ref_files", "", "The reference files to be used for tuning");
         AddConfigEntry("tune_step_count", "0", "The number of steps that have been executed previously for tuning");
         AddConfigEntry("tune_step_size", "1", "The size of a single step of weight update");
         AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");

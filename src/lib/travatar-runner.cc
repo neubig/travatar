@@ -23,32 +23,6 @@ using namespace lm::ngram;
 // Run the model
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
-    // Load the rule table
-    ifstream tm_in(config.GetString("tm_file").c_str());
-    cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
-    if(!tm_in)
-        THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
-
-    // Load the translation model
-    shared_ptr<LookupTable> tm;
-    if(config.GetString("tm_storage") == "hash")
-        tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
-    else if(config.GetString("tm_storage") == "marisa")
-        tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
-    tm_in.close();
-
-    // Create the binarizer
-    shared_ptr<GraphTransformer> binarizer;
-    if(config.GetString("binarize") == "left") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
-    } else if(config.GetString("binarize") == "right") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
-    } else if(config.GetString("binarize") == "cky") {
-        binarizer.reset(new BinarizerCKY);
-    } else if(config.GetString("binarize") != "none") {
-        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
-    }
-
     // Load the features from the weight file
     ifstream weight_in(config.GetString("weight_file").c_str());
     cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
@@ -90,9 +64,33 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             THROW_ERROR("Invalid value for tune_loss: "<<config.GetString("tune_loss"));
         }
         // And open the reference files
-        BOOST_FOREACH(const string & file, config.GetStringArray("tune_refs"))
+        vector<string> ref_files = config.GetStringArray("tune_ref_files");
+        if(ref_files.size() == 0)
+            THROW_ERROR("When tuning, must specify at least one reference in tune_ref_files");
+        BOOST_FOREACH(const string & file, ref_files)
             tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
     }
+
+    // Create the binarizer
+    shared_ptr<GraphTransformer> binarizer;
+    if(config.GetString("binarize") == "left") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
+    } else if(config.GetString("binarize") == "right") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") == "cky") {
+        binarizer.reset(new BinarizerCKY);
+    } else if(config.GetString("binarize") != "none") {
+        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
+    }
+
+    // Get the input format parser
+    TreeIO * tree_io;
+    if(config.GetString("in_format") == "penn")
+        tree_io = new PennTreeIO;
+    else if(config.GetString("in_format") == "egret")
+        tree_io = new EgretTreeIO;
+    else
+        THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
     // Load the language model
     shared_ptr<LMComposerBU> lm;
@@ -103,6 +101,20 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         lm.reset(bu);
     }
+
+    // Load the rule table
+    ifstream tm_in(config.GetString("tm_file").c_str());
+    cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
+    if(!tm_in)
+        THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
+
+    // Load the translation model
+    shared_ptr<LookupTable> tm;
+    if(config.GetString("tm_storage") == "hash")
+        tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
+    else if(config.GetString("tm_storage") == "marisa")
+        tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
+    tm_in.close();
 
     // Open the n-best output stream if it exists
     int nbest_count = config.GetInt("nbest");
@@ -123,15 +135,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
     }
 
-    // Get the input format parser
-    TreeIO * tree_io;
-    if(config.GetString("in_format") == "penn")
-        tree_io = new PennTreeIO;
-    else if(config.GetString("in_format") == "egret")
-        tree_io = new EgretTreeIO;
-    else
-        THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
-
     // Process one at a time
     int sent = 0;
     string line;
@@ -139,7 +142,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
-        { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
             shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
