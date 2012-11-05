@@ -1,7 +1,8 @@
 #ifndef SPARSE_MAP_H__
 #define SPARSE_MAP_H__
 
-#include <travatar/util.h>
+#include <iostream>
+#include <tr1/unordered_map>
 
 namespace travatar {
 

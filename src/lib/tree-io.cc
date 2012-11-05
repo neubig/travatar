@@ -1,6 +1,10 @@
 #include <list>
+#include <travatar/dict.h>
 #include <travatar/tree-io.h>
 #include <travatar/io-util.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/symbol-set.h>
+#include <travatar/util.h>
 #include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -20,7 +24,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
     string WHITE_SPACE_OR_OPENPAREN = string(WHITE_SPACE)+"(";
     // Continue until the end of the corpus
     while(in) {
-        Trim(in, WHITE_SPACE);
+        IoUtil::Trim(in, WHITE_SPACE);
         in >> next_char;
         if(!in) break;
         // If the next character is a close parenthesis, close the noe on the top of the stack
@@ -36,20 +40,20 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
         // Otherwise, open a new node
         } else if(next_char == '(') {
             // Read the symbol
-            string sym = ReadUntil(in, WHITE_SPACE, "()");
+            string sym = IoUtil::ReadUntil(in, WHITE_SPACE, "()");
             if(!sym.length()) { getline(in, line); THROW_ERROR("Empty symbol at '("<<line<<"'"); }
             // Create a new node
-            HyperNode* node = new HyperNode(Dict::WID(sym), MakePair(pos,-1));
+            HyperNode* node = new HyperNode(Dict::WID(sym), make_pair(pos,-1));
             stack.push_back(node); hg->AddNode(node);
             HyperEdge* edge = new HyperEdge(node);
             node->AddEdge(edge); hg->AddEdge(edge);
             // If this is a terminal, add the string
-            Trim(in, WHITE_SPACE);
+            IoUtil::Trim(in, WHITE_SPACE);
             if(in.peek() != '(') {
-                string val = ReadUntil(in, ")", WHITE_SPACE_OR_OPENPAREN);
+                string val = IoUtil::ReadUntil(in, ")", WHITE_SPACE_OR_OPENPAREN);
                 WordId wid = Dict::WID(val);
                 hg->GetWords().push_back(wid);
-                HyperNode* child = new HyperNode(wid, MakePair(pos,pos+1));
+                HyperNode* child = new HyperNode(wid, make_pair(pos,pos+1));
                 hg->AddNode(child); edge->AddTail(child);
                 ++pos;
             }
@@ -77,7 +81,7 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
         node->SetSym(Dict::WID(v.second.get<string>("sym")));
         ptree::const_iterator it = v.second.get_child("span").begin();
         int l = it->second.get<int>(""); int r = (++it)->second.get<int>("");
-        node->SetSpan(MakePair(l, r));
+        node->SetSpan(make_pair(l, r));
         try {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg_span"))
                 node->GetTrgSpan().insert(t.second.get<int>(""));
@@ -139,7 +143,7 @@ HyperNode * EgretTreeIO::MakeEgretNode(const string & str_id, SymbolSet<int> & n
         new_node = new HyperNode(Dict::WID(str_id));
     } else {
         new_node = new HyperNode(Dict::WID(node_match[1]), 
-                                 MakePair(atoi(node_match[2].str().c_str()),
+                                 make_pair(atoi(node_match[2].str().c_str()),
                                           atoi(node_match[3].str().c_str())+1));
     }
     graph->AddNode(new_node);

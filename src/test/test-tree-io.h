@@ -15,14 +15,14 @@ public:
     TestTreeIO() {
         tree_str = " (A (B (C x) (D y))\n (E z))AAA";
         // Create the words
-        HyperNode* a_node = new HyperNode(Dict::WID("A"), MakePair(0,3)); tree_exp.AddNode(a_node);
-        HyperNode* b_node = new HyperNode(Dict::WID("B"), MakePair(0,2)); tree_exp.AddNode(b_node);
-        HyperNode* c_node = new HyperNode(Dict::WID("C"), MakePair(0,1)); tree_exp.AddNode(c_node);
-        HyperNode* x_node = new HyperNode(Dict::WID("x"), MakePair(0,1)); tree_exp.AddNode(x_node);
-        HyperNode* d_node = new HyperNode(Dict::WID("D"), MakePair(1,2)); tree_exp.AddNode(d_node);
-        HyperNode* y_node = new HyperNode(Dict::WID("y"), MakePair(1,2)); tree_exp.AddNode(y_node);
-        HyperNode* e_node = new HyperNode(Dict::WID("E"), MakePair(2,3)); tree_exp.AddNode(e_node);
-        HyperNode* z_node = new HyperNode(Dict::WID("z"), MakePair(2,3)); tree_exp.AddNode(z_node);
+        HyperNode* a_node = new HyperNode(Dict::WID("A"), make_pair(0,3)); tree_exp.AddNode(a_node);
+        HyperNode* b_node = new HyperNode(Dict::WID("B"), make_pair(0,2)); tree_exp.AddNode(b_node);
+        HyperNode* c_node = new HyperNode(Dict::WID("C"), make_pair(0,1)); tree_exp.AddNode(c_node);
+        HyperNode* x_node = new HyperNode(Dict::WID("x"), make_pair(0,1)); tree_exp.AddNode(x_node);
+        HyperNode* d_node = new HyperNode(Dict::WID("D"), make_pair(1,2)); tree_exp.AddNode(d_node);
+        HyperNode* y_node = new HyperNode(Dict::WID("y"), make_pair(1,2)); tree_exp.AddNode(y_node);
+        HyperNode* e_node = new HyperNode(Dict::WID("E"), make_pair(2,3)); tree_exp.AddNode(e_node);
+        HyperNode* z_node = new HyperNode(Dict::WID("z"), make_pair(2,3)); tree_exp.AddNode(z_node);
         tree_exp.SetWords(Dict::ParseWords("x y z"));
         // Make the edge for A
         HyperEdge * a_edge = new HyperEdge(a_node);
@@ -49,17 +49,17 @@ public:
 
         // Create the words
         {
-        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    MakePair(0,2)); graph_exp.AddNode(node0);
+        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    make_pair(0,2)); graph_exp.AddNode(node0);
         node0->GetTrgSpan().insert(0); node0->GetTrgSpan().insert(2);
-        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      MakePair(0,2)); graph_exp.AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      MakePair(0,2)); graph_exp.AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      MakePair(0,1)); graph_exp.AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      MakePair(0,1)); graph_exp.AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     MakePair(0,1)); graph_exp.AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("running"), MakePair(0,1)); graph_exp.AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      MakePair(1,2)); graph_exp.AddNode(node7);
-        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      MakePair(1,2)); graph_exp.AddNode(node8);
-        HyperNode* node9 = new HyperNode(Dict::WID("water"),   MakePair(1,2)); graph_exp.AddNode(node9);
+        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      make_pair(0,2)); graph_exp.AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      make_pair(0,2)); graph_exp.AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      make_pair(0,1)); graph_exp.AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      make_pair(0,1)); graph_exp.AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     make_pair(0,1)); graph_exp.AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("running"), make_pair(0,1)); graph_exp.AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      make_pair(1,2)); graph_exp.AddNode(node7);
+        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      make_pair(1,2)); graph_exp.AddNode(node8);
+        HyperNode* node9 = new HyperNode(Dict::WID("water"),   make_pair(1,2)); graph_exp.AddNode(node9);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); graph_exp.AddEdge(edge0); edge0->SetScore(1.0); edge0->AddFeature(Dict::WID("parse"), 1.0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); graph_exp.AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); graph_exp.AddEdge(edge2);
@@ -73,7 +73,7 @@ public:
         graph_exp.SetWords(Dict::ParseWords("running water"));
         }
  
-        HyperNode* quotenode = new HyperNode(Dict::WID("\""),    MakePair(0,1)); quote_exp.AddNode(quotenode);
+        HyperNode* quotenode = new HyperNode(Dict::WID("\""),    make_pair(0,1)); quote_exp.AddNode(quotenode);
         quote_exp.SetWords(Dict::ParseWords("\""));
 
         egret_str=
@@ -95,20 +95,20 @@ public:
 "\n"
 "sentence 2 :";
 
-        HyperNode* nn00    = new HyperNode(Dict::WID("NN"),      MakePair(0,1)); egret_exp.AddNode(nn00   );
-        HyperNode* story00 = new HyperNode(Dict::WID("story"),   MakePair(0,1)); egret_exp.AddNode(story00);
-        HyperNode* npg00   = new HyperNode(Dict::WID("NP^g"),    MakePair(0,1)); egret_exp.AddNode(npg00  );
-        HyperNode* in11    = new HyperNode(Dict::WID("IN"),      MakePair(1,2)); egret_exp.AddNode(in11   );
-        HyperNode* of11    = new HyperNode(Dict::WID("of"),      MakePair(1,2)); egret_exp.AddNode(of11   );
-        HyperNode* nn22    = new HyperNode(Dict::WID("NN"),      MakePair(2,3)); egret_exp.AddNode(nn22   );
-        HyperNode* man22   = new HyperNode(Dict::WID("man"),     MakePair(2,3)); egret_exp.AddNode(man22  );
-        HyperNode* npg22   = new HyperNode(Dict::WID("NP^g"),    MakePair(2,3)); egret_exp.AddNode(npg22  );
-        HyperNode* ppg12   = new HyperNode(Dict::WID("PP^g"),    MakePair(1,3)); egret_exp.AddNode(ppg12  );
-        HyperNode* adjpg02 = new HyperNode(Dict::WID("ADJP^g"),  MakePair(0,3)); egret_exp.AddNode(adjpg02);
-        HyperNode* npg02   = new HyperNode(Dict::WID("NP^g"),    MakePair(0,3)); egret_exp.AddNode(npg02  );
-        HyperNode* vpg02   = new HyperNode(Dict::WID("VP^g"),    MakePair(0,3)); egret_exp.AddNode(vpg02  );
-        HyperNode* sg02    = new HyperNode(Dict::WID("S^g"),     MakePair(0,3)); egret_exp.AddNode(sg02   );
-        HyperNode* root02  = new HyperNode(Dict::WID("ROOT"),    MakePair(0,3)); egret_exp.AddNode(root02 );
+        HyperNode* nn00    = new HyperNode(Dict::WID("NN"),      make_pair(0,1)); egret_exp.AddNode(nn00   );
+        HyperNode* story00 = new HyperNode(Dict::WID("story"),   make_pair(0,1)); egret_exp.AddNode(story00);
+        HyperNode* npg00   = new HyperNode(Dict::WID("NP^g"),    make_pair(0,1)); egret_exp.AddNode(npg00  );
+        HyperNode* in11    = new HyperNode(Dict::WID("IN"),      make_pair(1,2)); egret_exp.AddNode(in11   );
+        HyperNode* of11    = new HyperNode(Dict::WID("of"),      make_pair(1,2)); egret_exp.AddNode(of11   );
+        HyperNode* nn22    = new HyperNode(Dict::WID("NN"),      make_pair(2,3)); egret_exp.AddNode(nn22   );
+        HyperNode* man22   = new HyperNode(Dict::WID("man"),     make_pair(2,3)); egret_exp.AddNode(man22  );
+        HyperNode* npg22   = new HyperNode(Dict::WID("NP^g"),    make_pair(2,3)); egret_exp.AddNode(npg22  );
+        HyperNode* ppg12   = new HyperNode(Dict::WID("PP^g"),    make_pair(1,3)); egret_exp.AddNode(ppg12  );
+        HyperNode* adjpg02 = new HyperNode(Dict::WID("ADJP^g"),  make_pair(0,3)); egret_exp.AddNode(adjpg02);
+        HyperNode* npg02   = new HyperNode(Dict::WID("NP^g"),    make_pair(0,3)); egret_exp.AddNode(npg02  );
+        HyperNode* vpg02   = new HyperNode(Dict::WID("VP^g"),    make_pair(0,3)); egret_exp.AddNode(vpg02  );
+        HyperNode* sg02    = new HyperNode(Dict::WID("S^g"),     make_pair(0,3)); egret_exp.AddNode(sg02   );
+        HyperNode* root02  = new HyperNode(Dict::WID("ROOT"),    make_pair(0,3)); egret_exp.AddNode(root02 );
         nn00->SetId(13); egret_exp.GetNodes()[13] = nn00;
         root02->SetId(0); egret_exp.GetNodes()[0] = root02;
         HyperEdge* edge0   = new HyperEdge(nn00);   nn00->AddEdge(edge0); edge0->AddTail(story00);  egret_exp.AddEdge(edge0);  edge0->SetScore(-5.16e-06); edge0->AddFeature(Dict::WID("parse"), -5.16e-06);

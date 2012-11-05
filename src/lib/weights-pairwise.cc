@@ -1,4 +1,8 @@
 #include <travatar/weights-pairwise.h>
+#include <travatar/eval-measure.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/util.h>
+#include <travatar/dict.h>
 
 using namespace std;
 using namespace boost;
@@ -25,7 +29,14 @@ void WeightsPairwise::Adjust(const EvalMeasure & eval,
     double sys_loss = eval.MeasureLoss(refs, nbest[0]->GetWords());
     Update(nbest[oracle]->CalcFeatures(), oracle_score, oracle_loss,
            nbest[0]->CalcFeatures(), sys_score, sys_loss);
-    PRINT_DEBUG("WeightsPairwise::Adjust: os=" << oracle_score << ", ol=" << oracle_loss << 
-                                       ", ss=" << sys_score << ", sl=" << sys_loss << endl <<
-                                       Dict::PrintFeatures(current_) << endl, 2);
+    PRINT_DEBUG("WeightsPairwise::Adjust: os=" << oracle_score << ", ol=" << oracle_loss
+                                       << ", ss=" << sys_score << ", sl=" << sys_loss << endl
+                                       /* << Dict::PrintFeatures(current_) << endl */
+                                       , 1);
+    PRINT_DEBUG("Oracle["<<oracle<<"]\t"<<Dict::PrintFeatures(nbest[oracle]->CalcFeatures())<<endl
+                <<Dict::PrintWords(nbest[oracle]->GetWords())<<endl
+                <<"System[ 0 ]\t"    <<Dict::PrintFeatures(nbest[0]->CalcFeatures())<<endl
+                <<Dict::PrintWords(nbest[0]->GetWords())<<endl
+                /* <<"Final\t"          <<Dict::PrintFeatures(GetFinal())<<endl */
+                ,2);
 }

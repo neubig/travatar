@@ -3,9 +3,6 @@
 
 #include <vector>
 #include <set>
-#include <travatar/util.h>
-#include <boost/foreach.hpp>
-
 
 namespace travatar {
 
@@ -19,13 +16,7 @@ public:
     Alignment() { }
 
     // Add a single alignment
-    void AddAlignment(const AlignmentPair & al) {
-#ifdef LADER_SAFE
-        if(al.first >= len_.first || al.second >= len_.second)
-            THROW_ERROR("Out of bounds in AddAlignment: "<< al << ", " << len_);
-#endif
-        vec_.push_back(al);
-    }
+    void AddAlignment(const AlignmentPair & al);
 
     // Convert to and from strings
     std::string ToString() const;
@@ -47,14 +38,7 @@ public:
         return vec_;
     }
 
-    std::vector<std::set<int> > GetSrcAlignments() const {
-        std::vector<std::set<int> > ret;
-        BOOST_FOREACH(AlignmentPair al, vec_) {
-            if((int)ret.size() <= al.first) ret.resize(al.first+1);
-            ret[al.first].insert(al.second);
-        }
-        return ret;
-    }
+    std::vector<std::set<int> > GetSrcAlignments() const;
 
 private:
 

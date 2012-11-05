@@ -3,10 +3,14 @@
 
 #include <travatar/graph-transformer.h>
 #include <travatar/generic-string.h>
+#include <travatar/sentence.h>
 #include <boost/unordered_map.hpp>
 #include <string>
 
 namespace travatar {
+
+class HyperNode;
+class HyperGraph;
 
 // A class for right-binarizing trees
 // See:

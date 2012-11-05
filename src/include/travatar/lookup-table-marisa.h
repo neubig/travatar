@@ -2,13 +2,12 @@
 #define LOOKUP_TABLE_MARISA_H__
 
 #include <vector>
-#include <travatar/hyper-graph.h>
 #include <travatar/lookup-table.h>
 #include <marisa.h>
-#include <boost/foreach.hpp>
-
 
 namespace travatar {
+
+class HyperNode;
 
 // A single state for a partial rule match
 class LookupStateMarisa : public LookupState {
@@ -27,11 +26,7 @@ protected:
 class LookupTableMarisa : public LookupTable {
 public:
     LookupTableMarisa() { }
-    virtual ~LookupTableMarisa() {
-        BOOST_FOREACH(std::vector<TranslationRule*> & vec, rules_)
-            BOOST_FOREACH(TranslationRule * rule, vec)
-                delete rule;
-    };
+    virtual ~LookupTableMarisa();
 
     virtual LookupState * GetInitialState() {
         return new LookupStateMarisa;
@@ -48,17 +43,10 @@ protected:
     virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state);
 
     // Match the start of an edge
-    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state) {
-        const std::string & p = ((const LookupStateMarisa &)state).GetString();
-        std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
-        return MatchState(next, state);
-    }
+    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state);
     
     // Match the end of an edge
-    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) {
-        std::string next = ((const LookupStateMarisa &)state).GetString() + " )";
-        return MatchState(next, state);
-    }
+    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state);
 
     LookupStateMarisa * MatchState(const std::string & next, const LookupState & state);
 

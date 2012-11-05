@@ -1,13 +1,16 @@
 #ifndef TRAVATAR_RULE_EXTRACTOR__
 #define TRAVATAR_RULE_EXTRACTOR__
 
-#include <boost/shared_ptr.hpp>
-#include <travatar/hyper-graph.h>
-#include <travatar/alignment.h>
 #include <set>
 #include <list>
+#include <travatar/sentence.h>
 
 namespace travatar {
+
+class HyperGraph;
+class HyperNode;
+class HyperEdge;
+class Alignment;
 
 // A virtual class to overload that converts a source parse, a target sentence
 // and an alignment into a forest of matched rules

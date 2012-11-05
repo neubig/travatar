@@ -1,8 +1,9 @@
 #ifndef LM_COMPOSER_H__
 #define LM_COMPOSER_H__
 
-#include <travatar/graph-transformer.h>
 #include <string>
+#include <lm/left.hh>
+#include <travatar/graph-transformer.h>
 
 namespace travatar {
 
@@ -21,6 +22,7 @@ protected:
 public:
     LMComposer() : feature_name_("lm"), lm_(NULL), lm_weight_(1) { }
     LMComposer(lm::ngram::Model * lm) : feature_name_("lm"), lm_(lm), lm_weight_(1) { }
+
     virtual ~LMComposer() {
         if(lm_) delete lm_;
     }

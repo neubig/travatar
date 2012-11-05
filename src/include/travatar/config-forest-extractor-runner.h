@@ -5,7 +5,6 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
-#include <travatar/util.h>
 #include <travatar/config-base.h>
 
 namespace travatar {

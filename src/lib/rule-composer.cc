@@ -1,4 +1,7 @@
+#include <boost/foreach.hpp>
+#include <travatar/util.h>
 #include <travatar/rule-composer.h>
+#include <travatar/hyper-graph.h>
 
 using namespace std;
 using namespace boost;

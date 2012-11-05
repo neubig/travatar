@@ -18,7 +18,7 @@ public:
         stringstream str;
         string line;
         str << " \nAAA";
-        Trim(str, WHITE_SPACE);
+        IoUtil::Trim(str, WHITE_SPACE);
         getline(str, line);
         int ret = (line == "AAA");
         if(!ret) cerr << "Expected AAA but got "<<line<<endl;
@@ -30,7 +30,7 @@ public:
         stringstream str;
         string s1, s2;
         str << "ABCD XYZ";
-        s1 = ReadUntil(str, WHITE_SPACE);
+        s1 = IoUtil::ReadUntil(str, WHITE_SPACE);
         getline(str, s2);
         int ret = (s1 == "ABCD") && (s2 == " XYZ");
         if(!ret) 

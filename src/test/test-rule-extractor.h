@@ -26,16 +26,16 @@ public:
         align1 = Alignment::FromString(align1_str);
         // also an example of a forest
         src2_graph.reset(new HyperGraph);
-        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    MakePair(0,2)); src2_graph->AddNode(node0);
-        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      MakePair(0,2)); src2_graph->AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      MakePair(0,2)); src2_graph->AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      MakePair(0,1)); src2_graph->AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      MakePair(0,1)); src2_graph->AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     MakePair(0,1)); src2_graph->AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("running"), MakePair(0,1)); src2_graph->AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      MakePair(1,2)); src2_graph->AddNode(node7);
-        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      MakePair(1,2)); src2_graph->AddNode(node8);
-        HyperNode* node9 = new HyperNode(Dict::WID("water"),   MakePair(1,2)); src2_graph->AddNode(node9);
+        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    make_pair(0,2)); src2_graph->AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      make_pair(0,2)); src2_graph->AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      make_pair(0,2)); src2_graph->AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      make_pair(0,1)); src2_graph->AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      make_pair(0,1)); src2_graph->AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     make_pair(0,1)); src2_graph->AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("running"), make_pair(0,1)); src2_graph->AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      make_pair(1,2)); src2_graph->AddNode(node7);
+        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      make_pair(1,2)); src2_graph->AddNode(node8);
+        HyperNode* node9 = new HyperNode(Dict::WID("water"),   make_pair(1,2)); src2_graph->AddNode(node9);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); src2_graph->AddEdge(edge0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); src2_graph->AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); src2_graph->AddEdge(edge2);
@@ -80,27 +80,27 @@ public:
         // ---- Add nodes ----
         // Expected node numbers: "(ROOT0 (S1 (NP2 (PRP3 he)) (VP4 (AUX5 does) (RB6 not) (VB7 go))))";
         // Node rooted at root0
-        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,4));
+        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), make_pair(0,4));
         root0_node->SetTrgSpan(src1_graph->GetNode(0)->GetTrgSpan());
         frags_exp.AddNode(root0_node);
         // Node rooted at s1
-        HyperNode* s1_node = new HyperNode(Dict::WID("S"), MakePair(0,4));
+        HyperNode* s1_node = new HyperNode(Dict::WID("S"), make_pair(0,4));
         s1_node->SetTrgSpan(src1_graph->GetNode(1)->GetTrgSpan());
         frags_exp.AddNode(s1_node);
         // Node rooted at np2
-        HyperNode* np2_node = new HyperNode(Dict::WID("NP"), MakePair(0,1));
+        HyperNode* np2_node = new HyperNode(Dict::WID("NP"), make_pair(0,1));
         np2_node->SetTrgSpan(src1_graph->GetNode(2)->GetTrgSpan());
         frags_exp.AddNode(np2_node);
         // Node rooted at prp3
-        HyperNode* prp3_node = new HyperNode(Dict::WID("PRP"), MakePair(0,1));
+        HyperNode* prp3_node = new HyperNode(Dict::WID("PRP"), make_pair(0,1));
         prp3_node->SetTrgSpan(src1_graph->GetNode(3)->GetTrgSpan());
         frags_exp.AddNode(prp3_node);
         // Node rooted at vp4
-        HyperNode* vp4_node = new HyperNode(Dict::WID("VP"), MakePair(1,4));
+        HyperNode* vp4_node = new HyperNode(Dict::WID("VP"), make_pair(1,4));
         vp4_node->SetTrgSpan(src1_graph->GetNode(5)->GetTrgSpan());
         frags_exp.AddNode(vp4_node);
         // Node rooted at vb7
-        HyperNode* vb7_node = new HyperNode(Dict::WID("VB"), MakePair(3,4));
+        HyperNode* vb7_node = new HyperNode(Dict::WID("VB"), make_pair(3,4));
         vb7_node->SetTrgSpan(src1_graph->GetNode(10)->GetTrgSpan());
         frags_exp.AddNode(vb7_node);
         // ---- Add edges ----
@@ -206,24 +206,24 @@ public:
         frags_exp.SetWords(src3_graph->GetWords());
         // ---- Add nodes ----
         // Node rooted at root0
-        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,2));
+        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), make_pair(0,2));
         root0_node->SetTrgSpan(src3_graph->GetNode(0)->GetTrgSpan());
         frags_exp.AddNode(root0_node);
         // Node rooted at vp1
-        HyperNode* vp1_node = new HyperNode(Dict::WID("VP"), MakePair(0,2));
+        HyperNode* vp1_node = new HyperNode(Dict::WID("VP"), make_pair(0,2));
         vp1_node->SetTrgSpan(src3_graph->GetNode(1)->GetTrgSpan());
         vp1_node->GetTrgSpan().insert(1);
         frags_exp.AddNode(vp1_node);
         // Node rooted at vbd2 without "o"
-        HyperNode* vbd2_node = new HyperNode(Dict::WID("VBD"), MakePair(0,1));
+        HyperNode* vbd2_node = new HyperNode(Dict::WID("VBD"), make_pair(0,1));
         vbd2_node->SetTrgSpan(src3_graph->GetNode(2)->GetTrgSpan());
         frags_exp.AddNode(vbd2_node);
         // Node rooted at np4 without "o"
-        HyperNode* np4_node = new HyperNode(Dict::WID("NP"), MakePair(1,2));
+        HyperNode* np4_node = new HyperNode(Dict::WID("NP"), make_pair(1,2));
         np4_node->SetTrgSpan(src3_graph->GetNode(4)->GetTrgSpan());
         frags_exp.AddNode(np4_node);
         // Node rooted at nn5 without "o"
-        HyperNode* nn5_node = new HyperNode(Dict::WID("NN"), MakePair(1,2));
+        HyperNode* nn5_node = new HyperNode(Dict::WID("NN"), make_pair(1,2));
         nn5_node->SetTrgSpan(src3_graph->GetNode(5)->GetTrgSpan());
         frags_exp.AddNode(nn5_node);
         // ---- Add edges ----
@@ -261,7 +261,7 @@ public:
 
     int TestExpandNode() {
         ForestExtractor forest_ext;
-        HyperNode old_node(1, MakePair(5,6), 1);
+        HyperNode old_node(1, make_pair(5,6), 1);
         old_node.GetTrgSpan().insert(3);
         vector<bool> nulls(7, true);
         nulls[1] = false; nulls[3] = false; nulls[5] = false;
@@ -302,37 +302,37 @@ public:
         frags_exp.AddNode(pseudo_node);
         pseudo_node->SetFrontier(HyperNode::NOT_FRONTIER);
         // Node rooted at root0
-        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), MakePair(0,2));
+        HyperNode* root0_node = new HyperNode(Dict::WID("ROOT"), make_pair(0,2));
         root0_node->SetTrgSpan(src3_graph->GetNode(0)->GetTrgSpan());
         frags_exp.AddNode(root0_node);
         // Node rooted at vp1
-        HyperNode* vp1_node = new HyperNode(Dict::WID("VP"), MakePair(0,2));
+        HyperNode* vp1_node = new HyperNode(Dict::WID("VP"), make_pair(0,2));
         vp1_node->SetTrgSpan(src3_graph->GetNode(1)->GetTrgSpan());
         frags_exp.AddNode(vp1_node);
         // Node rooted at vbd2 without "o"
-        HyperNode* vbd2_node_n = new HyperNode(Dict::WID("VBD"), MakePair(0,1));
+        HyperNode* vbd2_node_n = new HyperNode(Dict::WID("VBD"), make_pair(0,1));
         vbd2_node_n->SetTrgSpan(src3_graph->GetNode(2)->GetTrgSpan());
         frags_exp.AddNode(vbd2_node_n);
         // Node rooted at vbd2 with "o"
-        HyperNode* vbd2_node_y = new HyperNode(Dict::WID("VBD"), MakePair(0,1));
+        HyperNode* vbd2_node_y = new HyperNode(Dict::WID("VBD"), make_pair(0,1));
         vbd2_node_y->SetTrgSpan(src3_graph->GetNode(2)->GetTrgSpan());
         vbd2_node_y->GetTrgSpan().insert(1);
         frags_exp.AddNode(vbd2_node_y);
         // Node rooted at np4 without "o"
-        HyperNode* np4_node_n = new HyperNode(Dict::WID("NP"), MakePair(1,2));
+        HyperNode* np4_node_n = new HyperNode(Dict::WID("NP"), make_pair(1,2));
         np4_node_n->SetTrgSpan(src3_graph->GetNode(4)->GetTrgSpan());
         frags_exp.AddNode(np4_node_n);
         // Node rooted at np4 with "o"
-        HyperNode* np4_node_y = new HyperNode(Dict::WID("NP"), MakePair(1,2));
+        HyperNode* np4_node_y = new HyperNode(Dict::WID("NP"), make_pair(1,2));
         np4_node_y->SetTrgSpan(src3_graph->GetNode(4)->GetTrgSpan());
         np4_node_y->GetTrgSpan().insert(1);
         frags_exp.AddNode(np4_node_y);
         // Node rooted at nn5 without "o"
-        HyperNode* nn5_node_n = new HyperNode(Dict::WID("NN"), MakePair(1,2));
+        HyperNode* nn5_node_n = new HyperNode(Dict::WID("NN"), make_pair(1,2));
         nn5_node_n->SetTrgSpan(src3_graph->GetNode(5)->GetTrgSpan());
         frags_exp.AddNode(nn5_node_n);
         // Node rooted at nn5 with "o"
-        HyperNode* nn5_node_y = new HyperNode(Dict::WID("NN"), MakePair(1,2));
+        HyperNode* nn5_node_y = new HyperNode(Dict::WID("NN"), make_pair(1,2));
         nn5_node_y->SetTrgSpan(src3_graph->GetNode(5)->GetTrgSpan());
         nn5_node_y->GetTrgSpan().insert(1);
         frags_exp.AddNode(nn5_node_y);

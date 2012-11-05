@@ -3,7 +3,6 @@
 
 #include <map>
 #include <vector>
-#include <travatar/dict.h>
 #include <travatar/eval-measure.h>
 
 namespace travatar {

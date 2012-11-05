@@ -2,6 +2,7 @@
 #define TEST_GRAPH_TRANSFORMER_H__
 
 #include "test-base.h"
+#include <utility>
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
@@ -9,6 +10,7 @@
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
+using namespace std;
 
 namespace travatar {
 
@@ -21,9 +23,9 @@ public:
         rule_graph_.reset(new HyperGraph);
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
         rule_graph_->SetWords(ab);
-        HyperNode * n0 = new HyperNode; n0->SetSpan(MakePair(0,2)); rule_graph_->AddNode(n0);
-        HyperNode * n1 = new HyperNode; n1->SetSpan(MakePair(0,1)); rule_graph_->AddNode(n1);
-        HyperNode * n2 = new HyperNode; n2->SetSpan(MakePair(1,2)); rule_graph_->AddNode(n2);
+        HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
+        HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
+        HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
         rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
         HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
         e0->AddFeature(Dict::WID("toy_feature"), 1.5);
@@ -83,23 +85,23 @@ public:
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
         exp_graph->SetWords(ab);
         // The root node should be "0,2"
-        HyperNode * n_root = new HyperNode; n_root->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_root);
+        HyperNode * n_root = new HyperNode; n_root->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_root);
         n_root->SetSym(Dict::WID("LMROOT"));
-        HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ab);
+        HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ab);
         n_01_ab->SetViterbiScore(-0.1286666 + -0.6368221 + -0.1);
-        HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ac);
+        HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ac);
         n_01_ac->SetViterbiScore(-0.1286666 + -0.6368221 + -0.3);
         // Options on the right node should be "x" and "y"
-        HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_x);
+        HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_x);
         n_12_x->SetViterbiScore(-0.8129134 + -0.2);
-        HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_y);
+        HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_y);
         n_12_y->SetViterbiScore(-0.8129134 + -0.5);
-        HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_t);
+        HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_t);
         n_12_t->SetViterbiScore(-100 + -2.5);
         // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
-        HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ax);
+        HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ax);
         n_02_ax->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_x->GetViterbiScore() + -0.3 + -0.4855544 - -0.8129134);
-        HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ay);
+        HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ay);
         n_02_ay->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_y->GetViterbiScore() + -0.3 + -0.30103);
         n_root->SetViterbiScore(n_02_ax->GetViterbiScore() + -0.4372497 - -0.6368221 + -0.2108534);
         // Make edges for 0,1. There are only 2, so no pruning

@@ -1,6 +1,8 @@
 #include <travatar/binarizer-directional.h>
 #include <travatar/generic-string.h>
-#include <boost/unordered_map.hpp>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
+#include <boost/foreach.hpp>
 
 using namespace travatar;
 using namespace std;
@@ -18,7 +20,7 @@ HyperNode * BinarizerDirectional::FindIndexedNode(const HyperGraph & hg, HyperGr
     }
     if(str.length() > 1) new_node->SetSym(xbar);
     ret.AddNode(new_node);
-    snmap.insert(MakePair(str, new_node));
+    snmap.insert(make_pair(str, new_node));
     return new_node;
     
 }

@@ -7,6 +7,9 @@
 
 namespace travatar {
 
+class HyperEdge;
+class HyperGraph;
+
 // A class for composing rules together
 // reference: 
 //  Galley "Scalable inference and training of context-rich syntactic

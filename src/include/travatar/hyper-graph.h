@@ -4,10 +4,11 @@
 #include <vector>
 #include <climits>
 #include <cfloat>
-#include <boost/foreach.hpp>
-#include <travatar/dict.h>
+#include <set>
+#include <utility>
 #include <travatar/sparse-map.h>
-#include <lm/left.hh>
+#include <travatar/nbest-list.h>
+#include <travatar/sentence.h>
 
 namespace travatar {
 
@@ -54,7 +55,7 @@ public:
     NodeId GetId() const { return id_; }
     void SetHead(HyperNode* head) { head_ = head; }
     HyperNode* GetHead() const { return head_; }
-    const HyperNode* GetTail(int i) const { return SafeAccess(tails_, i); }
+    const HyperNode* GetTail(int i) const { return tails_[i]; }
     HyperNode* GetTail(int i) { return tails_[i]; }
     const std::vector<HyperNode*> & GetTails() const { return tails_; }
     std::vector<HyperNode*> & GetTails() { return tails_; }
@@ -135,21 +136,7 @@ public:
     void SetViterbiScore(double viterbi_score) { viterbi_score_ = viterbi_score; }
     double GetViterbiScore() const { return viterbi_score_; }
     // Calculate new viterbi scores if necessary
-    double CalcViterbiScore() {
-        if(viterbi_score_ == -DBL_MAX) {
-            if(edges_.size() == 0)
-                THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
-            BOOST_FOREACH(HyperEdge * edge, edges_) {
-                double score = edge->GetScore();
-                BOOST_FOREACH(HyperNode * tail, edge->GetTails())
-                    score += tail->CalcViterbiScore();
-                if(score > viterbi_score_) {
-                    viterbi_score_ = score;
-                }
-            }
-        }
-        return viterbi_score_;
-    }
+    double CalcViterbiScore();
 
     // Calculate the spans and frontiers using the GHKM algorithm
     const std::set<int> & CalculateTrgSpan(
@@ -183,8 +170,8 @@ public:
     }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
-    const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
-    HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
+    const HyperEdge* GetEdge(int i) const { return edges_[i]; }
+    HyperEdge* GetEdge(int i) { return edges_[i]; }
     HyperNode::FrontierType GetFrontier() const { return frontier_; }
     bool HasTrgSpan() const { return has_trg_span_; }
     const std::set<int> & GetTrgSpan() const { return trg_span_; }
@@ -199,9 +186,9 @@ public:
     // If this covers no part of the target, return <-1, -1>
     // Otherwise return the exact part that is actually covered
     std::pair<int, int> GetTrgCovered() const {
-        if(id_ == 0) return MakePair(0, INT_MAX);
-        if(trg_span_.size() == 0) return MakePair(-1,-1);
-        return MakePair(*trg_span_.begin(), *trg_span_.rbegin()+1);
+        if(id_ == 0) return std::make_pair(0, INT_MAX);
+        if(trg_span_.size() == 0) return std::make_pair(-1,-1);
+        return std::make_pair(*trg_span_.begin(), *trg_span_.rbegin()+1);
     }
 
     // Operators
@@ -256,9 +243,9 @@ public:
 
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
-    const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_, i); }
-    HyperEdge* GetEdge(int i) { return SafeAccess(edges_, i); }
-    WordId GetWord(int i) const { return SafeAccess(words_, i); }
+    const HyperEdge* GetEdge(int i) const { return edges_[i]; }
+    HyperEdge* GetEdge(int i) { return edges_[i]; }
+    WordId GetWord(int i) const { return words_[i]; }
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
     void SetWords(const std::vector<WordId> & words) { words_ = words; }
@@ -284,9 +271,6 @@ inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
     return out;
 }
 
-// Define a n-best list as a vector of pointers over hyperpaths
-typedef std::vector< boost::shared_ptr<HyperPath> > NbestList;
-
 // The hypergraph
 class HyperGraph {
 protected:
@@ -297,41 +281,17 @@ public:
 
     HyperGraph() { };
     // First copy the edges and nodes, then refresh the pointers
-    HyperGraph(const HyperGraph & rhs) {
-        words_ = rhs.words_;
-        BOOST_FOREACH(HyperNode * node, rhs.nodes_)
-            nodes_.push_back(new HyperNode(*node));
-        BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
-            edges_.push_back(new HyperEdge(*edge));
-        BOOST_FOREACH(HyperNode * node, nodes_)
-            node->RefreshPointers(*this);
-        BOOST_FOREACH(HyperEdge * edge, edges_)
-            edge->RefreshPointers(*this);
-    }
-    ~HyperGraph() {
-        BOOST_FOREACH(HyperNode* node, nodes_)
-            delete node;
-        BOOST_FOREACH(HyperEdge* edge, edges_)
-            delete edge;
-    };
+    HyperGraph(const HyperGraph & rhs);
+    ~HyperGraph();
 
-    void DeleteNodes() {
-        BOOST_FOREACH(HyperNode* node, nodes_)
-            delete node;
-        nodes_.resize(0);
-    }
-    void DeleteEdges() {
-        BOOST_FOREACH(HyperEdge* edge, edges_)
-            delete edge;
-        edges_.resize(0);
-    }
-        
+    void DeleteNodes();
+    void DeleteEdges();
 
     // Score each edge in the graph
     void ScoreEdges(Weights & weights);
 
     // Get the n-best paths through the graph
-    std::vector<boost::shared_ptr<HyperPath> > GetNbest(int n, const std::vector<WordId> & src_words);
+    NbestList GetNbest(int n, const std::vector<WordId> & src_words);
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {
@@ -344,47 +304,28 @@ public:
 
     // Adders. Add the value, and set its ID appropriately
     // HyperGraph will take control of the added value
-    void AddNode(HyperNode * node) {
-        if(node->GetId() == -1) {
-            node->SetId(nodes_.size());
-            nodes_.push_back(node);
-        } else {
-            if((int)nodes_.size() <= node->GetId())
-                nodes_.resize(node->GetId()+1, NULL);
-            else if(nodes_[node->GetId()] != NULL)
-                THROW_ERROR("Duplicate node addition @ " << node->GetId());
-            nodes_[node->GetId()] = node;
-        }
-    }
-    void AddEdge(HyperEdge * edge) {
-        edge->SetId(edges_.size());
-        edges_.push_back(edge);
-    }
-    void AddWord(WordId id) {
-        words_.push_back(id);
-    }
+    void AddNode(HyperNode * node);
+    void AddEdge(HyperEdge * edge);
+    void AddWord(WordId id);
 
-    void ResetViterbiScores() {
-        BOOST_FOREACH(HyperNode * node, nodes_)
-            node->SetViterbiScore(-DBL_MAX);
-    }
+    void ResetViterbiScores();
 
     // Perform the inside-outside algorithm
     std::vector< std::vector<HyperEdge*> > GetReversedEdges();
     void InsideOutsideNormalize();
 
     // Accessors
-    const HyperNode* GetNode(int i) const { return SafeAccess(nodes_,i); }
-    HyperNode* GetNode(int i) { return SafeAccess(nodes_,i); }
+    const HyperNode* GetNode(int i) const { return nodes_[i]; }
+    HyperNode* GetNode(int i) { return nodes_[i]; }
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     std::vector<HyperNode*> & GetNodes() { return nodes_; }
     int NumNodes() const { return nodes_.size(); }
-    const HyperEdge* GetEdge(int i) const { return SafeAccess(edges_,i); }
-    HyperEdge* GetEdge(int i) { return SafeAccess(edges_,i); }
+    const HyperEdge* GetEdge(int i) const { return edges_[i]; }
+    HyperEdge* GetEdge(int i) { return edges_[i]; }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     int NumEdges() const { return edges_.size(); }
-    WordId GetWord(int i) const { return SafeAccess(words_, i); }
+    WordId GetWord(int i) const { return words_[i]; }
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
     void SetWords(const std::vector<WordId> & words) { words_ = words; }

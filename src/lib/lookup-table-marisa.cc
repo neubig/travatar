@@ -1,10 +1,28 @@
-#include <travatar/lookup-table-marisa.h>
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
+#include <sstream>
+#include <marisa.h>
+#include <travatar/lookup-table-marisa.h>
+#include <travatar/dict.h>
+#include <travatar/hyper-graph.h>
 
 using namespace travatar;
 using namespace std;
 using namespace boost;
+
+// Match the start of an edge
+LookupState * LookupTableMarisa::MatchStart(const HyperNode & node, const LookupState & state) {
+    const std::string & p = ((const LookupStateMarisa &)state).GetString();
+    std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
+    return MatchState(next, state);
+}
+
+// Match the end of an edge
+LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupState & state) {
+    std::string next = ((const LookupStateMarisa &)state).GetString() + " )";
+    return MatchState(next, state);
+}
 
 LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
     // First read into a map
@@ -77,3 +95,10 @@ const vector<TranslationRule*> * LookupTableMarisa::FindRules(const LookupState 
     const vector<TranslationRule*> * ret = trie_.lookup(agent) ? &rules_[agent.key().id()] : NULL;
     return ret;
 }
+
+
+LookupTableMarisa::~LookupTableMarisa() {
+    BOOST_FOREACH(std::vector<TranslationRule*> & vec, rules_)
+        BOOST_FOREACH(TranslationRule * rule, vec)
+            delete rule;
+};

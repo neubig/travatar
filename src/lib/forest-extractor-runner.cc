@@ -1,11 +1,17 @@
+#include <iostream>
+#include <fstream>
 #include <travatar/util.h>
 #include <travatar/tree-io.h>
 #include <travatar/rule-extractor.h>
 #include <travatar/forest-extractor-runner.h>
+#include <travatar/config-forest-extractor-runner.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <travatar/rule-composer.h>
 #include <travatar/rule-filter.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/alignment.h>
+#include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
 
 using namespace travatar;

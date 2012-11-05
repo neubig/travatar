@@ -1,13 +1,9 @@
 #ifndef TRAVATAR_RUNNER_H__ 
 #define TRAVATAR_RUNNER_H__
 
-#include <iostream>
-#include <fstream>
-#include <travatar/config-travatar-runner.h>
-#include <travatar/symbol-set.h>
-#include <tr1/unordered_map>
-
 namespace travatar {
+
+class ConfigTravatarRunner;
 
 // A class to build features for the filterer
 class TravatarRunner {

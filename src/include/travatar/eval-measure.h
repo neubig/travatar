@@ -3,8 +3,7 @@
 
 #include <cfloat>
 #include <vector>
-#include <travatar/util.h>
-#include <travatar/dict.h>
+#include <travatar/sentence.h>
 
 namespace travatar {
 
@@ -33,8 +32,8 @@ public:
             const std::vector<Sentence> & refs,
             const Sentence & sys) const {
         double ret = DBL_MAX;
-        BOOST_FOREACH(const Sentence & ref, refs)
-            ret = std::min(ret, MeasureLoss(ref, sys));
+        for(int i = 0; i < (int)refs.size(); i++)
+            ret = std::min(ret, MeasureLoss(refs[i], sys));
         return ret;
     }
 

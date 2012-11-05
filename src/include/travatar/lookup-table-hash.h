@@ -2,12 +2,13 @@
 #define LOOKUP_TABLE_HASH_H__
 
 #include <vector>
-#include <travatar/hyper-graph.h>
-#include <travatar/lookup-table.h>
+#include <tr1/unordered_set>
 #include <boost/foreach.hpp>
-#include <boost/tr1/unordered_set.hpp>
+#include <travatar/lookup-table.h>
 
 namespace travatar {
+
+class HyperNode;
 
 // A single state for a partial rule match
 class LookupStateHash : public LookupState {
@@ -58,35 +59,14 @@ protected:
     virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state);
 
     // Match the start of an edge
-    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state) {
-        const std::string & p = ((const LookupStateHash &)state).GetString();
-        std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
-        return MatchState(next, state);
-    }
+    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state);
     
     // Match the end of an edge
-    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) {
-        std::string next = ((const LookupStateHash &)state).GetString() + " )";
-        return MatchState(next, state);
-    }
+    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state);
 
-    LookupStateHash * MatchState(const std::string & next, const LookupState & state) {
-        if(src_matches.find(next) != src_matches.end()) {
-            // std::cerr << "Matching " << next << " --> success!" << std::endl;
-            LookupStateHash * ret = new LookupStateHash;
-            ret->SetString(next);
-            ret->SetNonterms(state.GetNonterms());
-            ret->SetFeatures(state.GetFeatures());
-            return ret;
-        } else {
-            // std::cerr << "Matching " << next << " --> failure!" << std::endl;
-            return NULL;
-        }
-    }
+    LookupStateHash * MatchState(const std::string & next, const LookupState & state);
 
-    void AddRule(TranslationRule * rule) {
-        rules_[rule->GetSrcStr()].push_back(rule);
-    }
+    void AddRule(TranslationRule * rule);
 
 protected:
     std::tr1::unordered_set<std::string> src_matches;

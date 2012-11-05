@@ -1,19 +1,25 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/tree-io.h>
+#include <travatar/translation-rule.h>
 #include <travatar/travatar-runner.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
+#include <travatar/weights-delayed-perceptron.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <travatar/eval-measure-bleu.h>
+#include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure.h>
+#include <travatar/config-travatar-runner.h>
 #include <lm/model.hh>
+#include <fstream>
 
 using namespace travatar;
 using namespace std;
@@ -48,6 +54,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     bool do_tuning = true;
     if(config.GetString("tune_update") == "perceptron") {
         weights.reset(new WeightsPerceptron(init_weights));
+    } else if(config.GetString("tune_update") == "delayed") {
+        weights.reset(new WeightsDelayedPerceptron(init_weights));
     } else if(config.GetString("tune_update") == "none") {
         weights.reset(new Weights(init_weights));
         do_tuning = false;
@@ -58,10 +66,17 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     shared_ptr<EvalMeasure> tune_eval_measure;
     // If we need to do tuning
     if(do_tuning) {
+        // Check that a place to write the weights has been specified
+        ofstream weight_out(config.GetString("tune_weight_out").c_str());
+        if(!weight_out)
+            THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
         // Set the evaluation measure to be used
         if(config.GetString("tune_loss") == "bleu") {
             EvalMeasureBleu * meas = new EvalMeasureBleu;
             meas->SetSmoothVal(1.0); // Use BLEU+1
+            tune_eval_measure.reset(meas);
+        } else if(config.GetString("tune_loss") == "ribes") {
+            EvalMeasureRibes * meas = new EvalMeasureRibes;
             tune_eval_measure.reset(meas);
         } else {
             THROW_ERROR("Invalid value for tune_loss: "<<config.GetString("tune_loss"));
@@ -145,6 +160,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
+        PRINT_DEBUG("Printing sentence " << sent << endl 
+                    << Dict::PrintWords(tree_graph->GetWords()) << endl, 1);
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL) {
@@ -207,9 +224,21 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             weights->Adjust(*tune_eval_measure, refs, nbest_list);
         }
 
-
         sent++;
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
+    
+    if(do_tuning) {
+        // Load the features from the weight file
+        ofstream weight_out(config.GetString("tune_weight_out").c_str());
+        cerr << "Writing weight file to "<<config.GetString("tune_weight_out")<<"..." << endl;
+        if(!weight_out)
+            THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
+        BOOST_FOREACH(const SparseMap::value_type & val, weights->GetFinal())
+            weight_out << Dict::WSym(val.first) << "=" << val.second << endl;
+        weight_out.close();
+    }
+
     cerr << endl << "Done translating..." << endl;
+
 }

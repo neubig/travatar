@@ -1,13 +1,15 @@
-#ifndef TRABATAR_TREE_IO__
-#define TRABATAR_TREE_IO__
+#ifndef TRAVATAR_TREE_IO__
+#define TRAVATAR_TREE_IO__
 
 #include <vector>
 #include <iostream>
-#include <sstream>
-#include <travatar/symbol-set.h>
-#include <travatar/hyper-graph.h>
 
 namespace travatar {
+
+class HyperGraph;
+class HyperNode;
+template <class T>
+class SymbolSet;
 
 // A virtual class to read in and write out parse trees
 class TreeIO {

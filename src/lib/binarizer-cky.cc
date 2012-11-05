@@ -1,6 +1,9 @@
+#include <boost/unordered_map.hpp>
+#include <boost/foreach.hpp>
 #include <travatar/binarizer-cky.h>
 #include <travatar/generic-string.h>
-#include <boost/unordered_map.hpp>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
 
 using namespace travatar;
 using namespace std;
@@ -18,7 +21,7 @@ HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & re
     }
     if(str.length() > 1) new_node->SetSym(xbar);
     ret.AddNode(new_node);
-    snmap.insert(MakePair(str, new_node));
+    snmap.insert(make_pair(str, new_node));
     return new_node;
     
 }

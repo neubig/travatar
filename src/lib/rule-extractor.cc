@@ -1,5 +1,10 @@
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
+#include <travatar/hyper-graph.h>
+#include <travatar/alignment.h>
 #include <travatar/rule-extractor.h>
+#include <travatar/util.h>
+#include <travatar/dict.h>
 #include <queue>
 #include <stack>
 #include <list>
@@ -25,7 +30,7 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
     map<int,int> old_new_ids;
     BOOST_FOREACH(HyperNode * v, src_parse.GetNodes()) {
         if(v->IsFrontier() == HyperNode::IS_FRONTIER) {
-            old_new_ids.insert(MakePair(v->GetId(), ret->NumNodes()));
+            old_new_ids.insert(make_pair(v->GetId(), ret->NumNodes()));
             HyperNode* node = new HyperNode(v->GetSym(), v->GetSpan(), ret->NumNodes());
             node->SetTrgSpan(v->GetTrgSpan());
             ret->AddNode(node);
@@ -235,7 +240,7 @@ ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
     if(trg_span.size() == 0) {
         HyperNode * next_node = new HyperNode(old_node);
         next_node->SetId(-1);
-        ret.push_back(MakePair(set<int>(), next_node));
+        ret.push_back(make_pair(set<int>(), next_node));
         return ret;
     }
     // i_node stores the new node with all nulls before
@@ -253,7 +258,7 @@ ForestExtractor::SpanNodeVector ForestExtractor::ExpandNode(
             j_node->SetId(-1);
             BOOST_FOREACH(int k, j_set)
                 j_node->GetTrgSpan().insert(k);
-            ret.push_back(MakePair(j_set, j_node));
+            ret.push_back(make_pair(j_set, j_node));
         }
     }
     return ret;

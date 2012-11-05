@@ -1,13 +1,15 @@
+#include <queue>
+#include <map>
+#include <boost/shared_ptr.hpp>
+#include <boost/tr1/unordered_set.hpp>
 #include <lm/left.hh>
 #include <lm/model.hh>
 #include <travatar/weights.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
 #include <travatar/generic-string.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/tr1/unordered_set.hpp>
-#include <queue>
-#include <map>
+#include <travatar/util.h>
+#include <travatar/dict.h>
 
 using namespace std;
 using namespace travatar;
@@ -425,4 +427,57 @@ void HyperGraph::InsideOutsideNormalize() {
     }
     for(int i = 0; i < (int)new_scores.size(); i++)
         edges_[i]->SetScore(new_scores[i]);
+}
+
+// Calculate new viterbi scores if necessary
+double HyperNode::CalcViterbiScore() {
+    if(viterbi_score_ == -DBL_MAX) {
+        if(edges_.size() == 0)
+            THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
+        BOOST_FOREACH(HyperEdge * edge, edges_) {
+            double score = edge->GetScore();
+            BOOST_FOREACH(HyperNode * tail, edge->GetTails())
+                score += tail->CalcViterbiScore();
+            if(score > viterbi_score_) {
+                viterbi_score_ = score;
+            }
+        }
+    }
+    return viterbi_score_;
+}
+
+// First copy the edges and nodes, then refresh the pointers
+HyperGraph::HyperGraph(const HyperGraph & rhs) {
+    words_ = rhs.words_;
+    BOOST_FOREACH(HyperNode * node, rhs.nodes_)
+        nodes_.push_back(new HyperNode(*node));
+    BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
+        edges_.push_back(new HyperEdge(*edge));
+    BOOST_FOREACH(HyperNode * node, nodes_)
+        node->RefreshPointers(*this);
+    BOOST_FOREACH(HyperEdge * edge, edges_)
+        edge->RefreshPointers(*this);
+}
+HyperGraph::~HyperGraph() {
+    BOOST_FOREACH(HyperNode* node, nodes_)
+        delete node;
+    BOOST_FOREACH(HyperEdge* edge, edges_)
+        delete edge;
+};
+
+void HyperGraph::DeleteNodes() {
+    BOOST_FOREACH(HyperNode* node, nodes_)
+        delete node;
+    nodes_.resize(0);
+}
+void HyperGraph::DeleteEdges() {
+    BOOST_FOREACH(HyperEdge* edge, edges_)
+        delete edge;
+    edges_.resize(0);
+}
+
+
+void HyperGraph::ResetViterbiScores() {
+    BOOST_FOREACH(HyperNode * node, nodes_)
+        node->SetViterbiScore(-DBL_MAX);
 }

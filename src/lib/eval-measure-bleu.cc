@@ -1,5 +1,6 @@
 
 #include <travatar/eval-measure-bleu.h>
+#include <cmath>
 
 using namespace std;
 using namespace travatar;

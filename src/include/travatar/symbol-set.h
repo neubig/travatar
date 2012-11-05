@@ -3,7 +3,10 @@
 
 #include <vector>
 #include <stdexcept>
-#include <travatar/util.h>
+#include <iostream>
+#include <sstream>
+#include <utility>
+#include <tr1/unordered_map>
 
 namespace travatar {
 
@@ -12,7 +15,7 @@ class SymbolSet {
 
 public:
 
-    typedef StringMap<T> Map;
+    typedef std::tr1::unordered_map<std::string,T> Map;
     typedef std::vector< std::string* > Vocab;
     typedef std::vector< T > Ids;
 
@@ -55,7 +58,7 @@ public:
                 id = vocab_.size();
                 vocab_.push_back(new std::string(sym));
             }
-            map_.insert(MakePair(sym,id));
+            map_.insert(std::make_pair(sym,id));
             return id;
         }
         return -1;
@@ -83,10 +86,13 @@ public:
         std::string line;
         int size;
         SymbolSet<T> * ret = new SymbolSet<T>;
-        getline(in, line); std::istringstream iss(line);
+        getline(in, line); 
+        std::istringstream iss(line);
         for(iss >> size; size > 0 && getline(in, line); size--)
             ret->GetId(line, true);
-        GetlineEquals(in, "");
+        getline(in,line);
+        if(line != "")
+            throw std::runtime_error("Expected empty line while reading SymbolSet, but got non-empty line");
         return ret;
     }
 

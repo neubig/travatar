@@ -2,10 +2,12 @@
 #define WEIGHTS_H__
 
 #include <travatar/sparse-map.h>
-#include <travatar/eval-measure.h>
-#include <travatar/hyper-graph.h>
+#include <travatar/nbest-list.h>
+#include <travatar/sentence.h>
 
 namespace travatar {
+
+class EvalMeasure;
 
 class Weights {
 
@@ -17,7 +19,8 @@ public:
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key) {
-        return current_[key];
+        SparseMap::const_iterator it = current_.find(key);
+        return (it != current_.end() ? current_[key] : 0.0);
     }
     virtual void SetCurrent(const SparseMap::key_type & key, double val) {
         current_[key] = val;

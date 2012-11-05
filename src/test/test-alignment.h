@@ -4,6 +4,7 @@
 #include "test-base.h"
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/scoped_ptr.hpp>
 
 namespace travatar {
@@ -13,10 +14,10 @@ class TestAlignment : public TestBase {
 public:
 
     TestAlignment() {
-        align.AddAlignment(MakePair(0,0));
-        align.AddAlignment(MakePair(0,1));
-        align.AddAlignment(MakePair(1,1));
-        align.AddAlignment(MakePair(1,3));
+        align.AddAlignment(make_pair(0,0));
+        align.AddAlignment(make_pair(0,1));
+        align.AddAlignment(make_pair(1,1));
+        align.AddAlignment(make_pair(1,3));
     }
     ~TestAlignment() { }
 

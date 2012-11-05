@@ -1,10 +1,13 @@
-#include <travatar/lm-composer-bu.h>
-#include <travatar/generic-string.h>
 #include <boost/unordered_set.hpp>
+#include <boost/foreach.hpp>
 #include <lm/left.hh>
 #include <vector>
 #include <queue>
 #include <map>
+#include <travatar/lm-composer-bu.h>
+#include <travatar/generic-string.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
 
 using namespace travatar;
 using namespace std;
@@ -60,7 +63,7 @@ const ChartEntry & LMComposerBU::BuildChart(
             const ChartEntry & my_entry = BuildChart(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
             viterbi_score += my_entry[0]->CalcViterbiScore();
         }
-        hypo_queue.push(MakePair(viterbi_score, q_id));
+        hypo_queue.push(make_pair(viterbi_score, q_id));
     }
     // For each edge on the queue, process it
     int num_popped = 0;
@@ -95,11 +98,11 @@ const ChartEntry & LMComposerBU::BuildChart(
                     if(finished.find(next_str) == finished.end()) {
                         finished.insert(next_str);
                         double next_score = top_score - my_entry[edge_pos]->CalcViterbiScore() + my_entry[edge_pos+1]->CalcViterbiScore();
-                        hypo_queue.push(MakePair(next_score, next_str));
+                        hypo_queue.push(make_pair(next_score, next_str));
                     }
                 }
                 // Add that edge to our non-terminal
-                const ChartState & child_state = SafeAccess(states, chart_node->GetId());
+                const ChartState & child_state = states[chart_node->GetId()];
                 // cerr << " Adding node context " << *chart_node << " : " << PrintContext(child_state.left) << ", " << PrintContext(child_state.right) << endl;
                 my_rule_score.NonTerminal(child_state, 0);
             } else {
@@ -118,7 +121,7 @@ const ChartEntry & LMComposerBU::BuildChart(
             next_node = new HyperNode(nodes[id]->GetSym(), nodes[id]->GetSpan());
             rule_graph.AddNode(next_node);
             states.push_back(my_state);
-            hypo_comb.insert(MakePair(my_state, next_node));
+            hypo_comb.insert(make_pair(my_state, next_node));
             chart[id]->push_back(next_node);
         } else {
             next_node = it->second;
@@ -129,7 +132,7 @@ const ChartEntry & LMComposerBU::BuildChart(
         sort(next_edge->GetTails().begin(), next_edge->GetTails().end(), NodeSrcLess());
         next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_);
         if(lm_score != 0.0)
-            next_edge->GetFeatures().insert(MakePair(Dict::WID(feature_name_), lm_score));
+            next_edge->GetFeatures().insert(make_pair(Dict::WID(feature_name_), lm_score));
         rule_graph.AddEdge(next_edge);
         next_node->AddEdge(next_edge);
         // cerr << " HERE @ " << *next_node << ": " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;
@@ -155,7 +158,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) {
     HyperGraph * ret = new HyperGraph;
     ret->SetWords(parse.GetWords());
     // Add the root node and its corresponding state
-    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), MakePair(0, nodes[0]->GetSpan().second));
+    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), make_pair(0, nodes[0]->GetSpan().second));
     ret->AddNode(root);
     states.resize(1);
     // Build the chart

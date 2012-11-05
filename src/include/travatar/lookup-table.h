@@ -4,13 +4,14 @@
 #include <vector>
 #include <map>
 #include <climits>
-#include <travatar/sparse-map.h>
+#include <boost/shared_ptr.hpp>
 #include <travatar/graph-transformer.h>
-#include <travatar/hyper-graph.h>
+#include <travatar/sparse-map.h>
 #include <travatar/translation-rule.h>
-#include <boost/foreach.hpp>
 
 namespace travatar {
+
+class HyperNode;
 
 // A single state for a partial rule match
 // This must be overloaded with a state that is used in a specific implementation
@@ -37,7 +38,7 @@ protected:
 // outputs a rule graph in the target language
 class LookupTable : public GraphTransformer {
 public:
-    LookupTable() : unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")) { }
+    LookupTable();
     virtual ~LookupTable() { };
 
     virtual HyperGraph * TransformGraph(const HyperGraph & parse);
@@ -51,7 +52,7 @@ public:
     virtual const std::vector<TranslationRule*> * FindRules(const LookupState & state) const = 0;
 
     // Get the unknown rule
-    const TranslationRule * GetUnknownRule() const { return &unk_rule_; }
+    const TranslationRule * GetUnknownRule() const;
 
     virtual LookupState * GetInitialState() = 0;
 

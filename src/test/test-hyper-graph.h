@@ -1,15 +1,18 @@
 #ifndef TEST_HYPER_GRAPH_H__
 #define TEST_HYPER_GRAPH_H__
 
+#include <fstream>
+#include <utility>
+#include <boost/shared_ptr.hpp>
 #include "test-base.h"
 #include <travatar/hyper-graph.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
-#include <boost/shared_ptr.hpp>
 
 using namespace boost;
+using namespace std;
 
 namespace travatar {
 
@@ -28,16 +31,16 @@ public:
         align1 = Alignment::FromString(align1_str);
         // also an example of a forest
         src2_graph.reset(new HyperGraph);
-        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    MakePair(0,2)); src2_graph->AddNode(node0);
-        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      MakePair(0,2)); src2_graph->AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      MakePair(0,2)); src2_graph->AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      MakePair(0,1)); src2_graph->AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      MakePair(0,1)); src2_graph->AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     MakePair(0,1)); src2_graph->AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("running"), MakePair(0,1)); src2_graph->AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      MakePair(1,2)); src2_graph->AddNode(node7);
-        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      MakePair(1,2)); src2_graph->AddNode(node8);
-        HyperNode* node9 = new HyperNode(Dict::WID("water"),   MakePair(1,2)); src2_graph->AddNode(node9);
+        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    make_pair(0,2)); src2_graph->AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      make_pair(0,2)); src2_graph->AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      make_pair(0,2)); src2_graph->AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      make_pair(0,1)); src2_graph->AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      make_pair(0,1)); src2_graph->AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     make_pair(0,1)); src2_graph->AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("running"), make_pair(0,1)); src2_graph->AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      make_pair(1,2)); src2_graph->AddNode(node7);
+        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      make_pair(1,2)); src2_graph->AddNode(node8);
+        HyperNode* node9 = new HyperNode(Dict::WID("water"),   make_pair(1,2)); src2_graph->AddNode(node9);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); src2_graph->AddEdge(edge0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); src2_graph->AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); src2_graph->AddEdge(edge2);
@@ -64,9 +67,9 @@ public:
         rule_graph_.reset(new HyperGraph);
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
         rule_graph_->SetWords(ab);
-        HyperNode * n0 = new HyperNode; n0->SetSpan(MakePair(0,2)); rule_graph_->AddNode(n0);
-        HyperNode * n1 = new HyperNode; n1->SetSpan(MakePair(0,1)); rule_graph_->AddNode(n1);
-        HyperNode * n2 = new HyperNode; n2->SetSpan(MakePair(1,2)); rule_graph_->AddNode(n2);
+        HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
+        HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
+        HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
         rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
         HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
         e0->AddFeature(Dict::WID("toy_feature"), 1.5);
@@ -125,14 +128,14 @@ public:
     int TestInsideOutsideUnbalanced() {
         // Build the initial graph
         HyperGraph hg_act;
-        HyperNode* node0 = new HyperNode(Dict::WID("N0"), MakePair(0,3)); hg_act.AddNode(node0);
-        HyperNode* node1 = new HyperNode(Dict::WID("N1"), MakePair(0,2)); hg_act.AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("N2"), MakePair(2,3)); hg_act.AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("N3"), MakePair(0,2)); hg_act.AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("N4"), MakePair(0,1)); hg_act.AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("N5"), MakePair(1,2)); hg_act.AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("N6"), MakePair(0,1)); hg_act.AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("N7"), MakePair(1,2)); hg_act.AddNode(node7);
+        HyperNode* node0 = new HyperNode(Dict::WID("N0"), make_pair(0,3)); hg_act.AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("N1"), make_pair(0,2)); hg_act.AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("N2"), make_pair(2,3)); hg_act.AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("N3"), make_pair(0,2)); hg_act.AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("N4"), make_pair(0,1)); hg_act.AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("N5"), make_pair(1,2)); hg_act.AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("N6"), make_pair(0,1)); hg_act.AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("N7"), make_pair(1,2)); hg_act.AddNode(node7);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); edge0->AddTail(node2); node0->AddEdge(edge0); hg_act.AddEdge(edge0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node3); edge1->AddTail(node2); node0->AddEdge(edge1); hg_act.AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node3); edge2->AddTail(node4); edge2->AddTail(node5); node3->AddEdge(edge2); hg_act.AddEdge(edge2);
@@ -339,7 +342,7 @@ public:
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
         exp_graph->SetWords(ab);
         // The root node should be "0,2"
-        HyperNode * n_root = new HyperNode; n_root->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_root);
+        HyperNode * n_root = new HyperNode; n_root->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_root);
         n_root->SetSym(Dict::WID("LMROOT"));
 
         // HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
@@ -357,21 +360,21 @@ public:
         // rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
         // HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
         // Start on options for the left node, there should be two nodes for "a*b" and "a*c"
-        HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ab);
+        HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ab);
         n_01_ab->SetViterbiScore(-0.1286666 + -0.6368221 + -0.1);
-        HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(MakePair(0,1)); exp_graph->AddNode(n_01_ac);
+        HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ac);
         n_01_ac->SetViterbiScore(-0.1286666 + -0.6368221 + -0.3);
         // Options on the right node should be "x" and "y"
-        HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_x);
+        HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_x);
         n_12_x->SetViterbiScore(-0.8129134 + -0.2);
-        HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_y);
+        HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_y);
         n_12_y->SetViterbiScore(-0.8129134 + -0.5);
-        HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(MakePair(1,2)); exp_graph->AddNode(n_12_t);
+        HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_t);
         n_12_t->SetViterbiScore(-100 + -2.5);
         // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
-        HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ax);
+        HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ax);
         n_02_ax->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_x->GetViterbiScore() + -0.3 + -0.4855544 - -0.8129134);
-        HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(MakePair(0,2)); exp_graph->AddNode(n_02_ay);
+        HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ay);
         n_02_ay->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_y->GetViterbiScore() + -0.3 + -0.30103);
         n_root->SetViterbiScore(n_02_ax->GetViterbiScore() + -0.4372497 - -0.6368221 + -0.2108534);
         // Make edges for 0,1. There are only 2, so no pruning

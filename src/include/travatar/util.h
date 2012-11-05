@@ -21,9 +21,6 @@
     throw std::runtime_error(oss.str()); }       \
   while (0);
 
-template <class T>
-class StringMap : public std::tr1::unordered_map<std::string,T> { };
-
 namespace std {
 
 // Unordered map equality function
@@ -104,25 +101,6 @@ inline bool IsDigit(char c) {
     return c >= '0' && c <= '9';
 }
 
-// Make a pair without all the difficult coding
-template < class X, class Y >
-inline std::pair<X,Y> MakePair(const X & x, const Y & y) {
-    return std::pair<X,Y>(x,y);
-}
-
-// // A hash for pairs
-// template < class T >
-// class PairHash {
-// private:
-// public:
-//     size_t operator()(const std::pair<T,T> & x) const {
-//         size_t hash = 5381;
-//         hash = ((hash << 5) + hash) + x.first;
-//         hash = ((hash << 5) + hash) + x.second;
-//         return hash;
-//     }
-// };
-// 
 // typedef std::tr1::unordered_map< std::pair<int, int>, double, travatar::PairHash<int> > PairProbMap;
 typedef long long WordPairId;
 typedef std::tr1::unordered_map< WordPairId, double > PairProbMap;
@@ -185,12 +163,12 @@ inline bool ApproximateDoubleEquals(const std::vector<double> & a,
 }
 
 inline bool ApproximateDoubleEquals(
-    const StringMap<double> & a,
-    const StringMap<double> & b) {
+    const std::tr1::unordered_map<std::string,double> & a,
+    const std::tr1::unordered_map<std::string,double> & b) {
     if(a.size() != b.size())
         return false;
-    for(StringMap<double>::const_iterator it = a.begin(); it != a.end(); it++) {
-        StringMap<double>::const_iterator it2 = b.find(it->first);
+    for(std::tr1::unordered_map<std::string,double>::const_iterator it = a.begin(); it != a.end(); it++) {
+        std::tr1::unordered_map<std::string,double>::const_iterator it2 = b.find(it->first);
         if(it2 == b.end() || !ApproximateDoubleEquals(it->second, it2->second))
             return false;
     }

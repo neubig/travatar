@@ -1,9 +1,9 @@
 #ifndef GRAPH_TRANSFORMER_H__
 #define GRAPH_TRANSFORMER_H__
 
-#include <travatar/hyper-graph.h>
-
 namespace travatar {
+
+class HyperGraph;
 
 class GraphTransformer {
 

@@ -1,9 +1,16 @@
 
+#include <boost/foreach.hpp>
+#include <travatar/translation-rule.h>
 #include <travatar/lookup-table.h>
+#include <travatar/dict.h>
+#include <travatar/hyper-graph.h>
 
 using namespace travatar;
 using namespace boost;
 using namespace std;
+
+LookupTable::LookupTable() : 
+    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")) { }
 
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
@@ -47,8 +54,8 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
     init_state.push_back(shared_ptr<LookupState>(GetInitialState()));
     BOOST_FOREACH(const HyperNode * node, parse.GetNodes()) {
         if(!node->IsTerminal()) {
-            rev_node_map.insert(MakePair(node_map.size(), node->GetId()));
-            node_map.insert(MakePair(node->GetId(), node_map.size()));
+            rev_node_map.insert(make_pair(node_map.size(), node->GetId()));
+            node_map.insert(make_pair(node->GetId(), node_map.size()));
             HyperNode * next_node = new HyperNode();
             ret->AddNode(next_node);
             next_node->SetSym(node->GetSym());
@@ -96,3 +103,5 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
     }
     return ret;
 }
+
+const TranslationRule * LookupTable::GetUnknownRule() const { return &unk_rule_; }

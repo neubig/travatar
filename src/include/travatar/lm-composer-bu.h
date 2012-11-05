@@ -1,10 +1,15 @@
 #ifndef LM_COMPOSER_BU_H__
 #define LM_COMPOSER_BU_H__
 
-#include <travatar/lm-composer.h>
 #include <string>
+#include <boost/shared_ptr.hpp>
+#include <lm/left.hh>
+#include <travatar/lm-composer.h>
 
 namespace travatar {
+
+class HyperNode;
+class HyperGraph;
 
 typedef std::vector<HyperNode*> ChartEntry;
 
