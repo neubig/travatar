@@ -310,7 +310,7 @@ int CheckMap(const std::tr1::unordered_map<K,V> & exp, const std::tr1::unordered
     BOOST_FOREACH(MapPair kv, act) {
         typename MapType::const_iterator it = exp.find(kv.first);
         if(it == act.end()) {
-            std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << std::endl;
+            std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] (NULL != "<<kv.second<<")" << std::endl;
             ok = 0;
         }
     }
