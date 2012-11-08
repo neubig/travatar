@@ -2,11 +2,10 @@
 #include <boost/foreach.hpp>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/util.h>
+#include <travatar/dict.h>
 
 using namespace std;
 using namespace travatar;
-
-
 
 // Calculate the potential gain for a single example given the current
 // weights
@@ -39,7 +38,11 @@ SparseMap TuneGreedyMert::CalculatePotentialGain(
 SparseMap TuneGreedyMert::Tune(
            const std::vector<std::vector<ExamplePair> > & examps,
            const SparseMap & init) {
-    SparseMap ret;
+    SparseMap potential;
+    BOOST_FOREACH(const std::vector<ExamplePair> & examp, examps)
+        potential += CalculatePotentialGain(examp, init);
+    BOOST_FOREACH(const SparseMap::value_type val, potential)
+        cout << Dict::WSym(val.first) << "=" << val.second << endl;
     THROW_ERROR("Not implemented yet");
-    return ret;
+    return init;
 }
