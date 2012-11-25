@@ -5,7 +5,6 @@ namespace travatar {
 
 class ConfigTravatarRunner;
 
-// A class to build features for the filterer
 class TravatarRunner {
 public:
 

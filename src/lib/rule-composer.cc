@@ -11,11 +11,14 @@ using namespace travatar;
 HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) {
     HyperGraph * ret = new HyperGraph(hg);
     const vector<HyperNode*> & nodes = ret->GetNodes();
-    // Add the order-1 edges
+    // Create the edges
     vector<vector<HyperEdge*> > last_edges, min_edges;
+    // Create sets to remove duplicates
     BOOST_FOREACH(HyperNode * node, nodes)
         last_edges.push_back(node->GetEdges());
     min_edges = last_edges;
+    // Check for duplicates
+    set< set<int> > dup_check;
     // For order two and up, compose each higher order with the order 1
     for(int comp_ord = 2; comp_ord <= order_; comp_ord++) {
         vector<vector<HyperEdge*> > next_edges(nodes.size());
@@ -25,9 +28,19 @@ HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) {
                 for(int tid = 0; tid < (int)par_tails.size(); tid++) {
                     BOOST_FOREACH(HyperEdge * child_edge, min_edges[par_tails[tid]->GetId()]) {
                         HyperEdge * comp = RuleComposer::ComposeEdge(*par_edge, *child_edge, tid);
-                        next_edges[nid].push_back(comp);
-                        ret->AddEdge(comp);
-                        ret->GetNode(nid)->AddEdge(comp);
+                        // Create a set to check for duplicates
+                        set<int> frag_ids;
+                        BOOST_FOREACH(const HyperEdge* frag, comp->GetFragmentEdges())
+                            frag_ids.insert(frag->GetId());
+                        // add if not duplicated
+                        if(dup_check.find(frag_ids) == dup_check.end()) {
+                            dup_check.insert(frag_ids);
+                            next_edges[nid].push_back(comp);
+                            ret->AddEdge(comp);
+                            ret->GetNode(nid)->AddEdge(comp);
+                        } else {
+                            delete comp;
+                        }
                     }
                 }
             }

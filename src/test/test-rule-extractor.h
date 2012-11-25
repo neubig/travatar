@@ -494,6 +494,36 @@ public:
         return exp_graph->CheckEqual(*act_graph);
     }
 
+    int TestTrinary() {
+        // Use the example from Galley et al.
+        string src_tree = "(S (A a) (B b))";
+        string trg_str  = "a b";
+        string align_str = "0-0 1-1";
+        istringstream iss(src_tree);
+        shared_ptr<HyperGraph> src_hg(tree_io.ReadTree(iss));
+        Sentence trg_sent = Dict::ParseWords(trg_str);
+        Alignment align = Alignment::FromString(align_str);
+        // Run the Forest algorithm
+        ForestExtractor forest_ext;
+        shared_ptr<HyperGraph> rule_hg(forest_ext.ExtractMinimalRules(*src_hg, align));
+        // Compose
+        RuleComposer rc(3);
+        shared_ptr<HyperGraph> act_hg(rc.TransformGraph(*rule_hg));
+        // Get actual rules, plus one composed rule
+        vector<string> rule_exp, rule_act;
+        BOOST_FOREACH(HyperEdge* edge, act_hg->GetEdges())
+            rule_act.push_back(forest_ext.RuleToString(*edge, src_hg->GetWords(), trg_sent));
+        rule_exp.push_back("A ( \"a\" ) ||| \"a\" ||| 1");
+        rule_exp.push_back("B ( \"b\" ) ||| \"b\" ||| 1");
+        rule_exp.push_back("S ( A ( \"a\" ) B ( \"b\" ) ) ||| \"a\" \"b\" ||| 1");
+        rule_exp.push_back("S ( A ( \"a\" ) x0:B ) ||| \"a\" x0 ||| 1");
+        rule_exp.push_back("S ( x0:A B ( \"b\" ) ) ||| x0 \"b\" ||| 1");
+        rule_exp.push_back("S ( x0:A x1:B ) ||| x0 x1 ||| 1");
+        sort(rule_exp.begin(), rule_exp.end());
+        sort(rule_act.begin(), rule_act.end());
+        return CheckVector(rule_exp, rule_act);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -506,6 +536,7 @@ public:
         done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestTrinary()" << endl; if(TestTrinary()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
