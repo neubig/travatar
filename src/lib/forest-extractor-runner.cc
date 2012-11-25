@@ -20,6 +20,10 @@ using namespace boost;
 
 // Run the model
 void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
+
+    // Set the debugging level
+    GlobalVars::debug = config.GetInt("debug");
+
     // Create the tree parser and rule extractor
     scoped_ptr<TreeIO> tree_io;
     if(config.GetString("input_format") == "penn")

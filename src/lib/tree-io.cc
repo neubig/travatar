@@ -198,6 +198,22 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     return NULL;
 }
 
+inline void PrintNodeEgret(const HyperNode * node, ostream & out) {
+    out << Dict::WSym(node->GetSym());
+    if(!node->IsTerminal())
+        out << "[" << node->GetSpan().first << "," << node->GetSpan().second << "]";
+}
+
 void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    THROW_ERROR("Not implemented yet");
+    out << "sentence :" << endl << Dict::PrintWords(tree.GetWords()) << endl;
+    BOOST_REVERSE_FOREACH(const HyperEdge * edge, tree.GetEdges()) {
+        PrintNodeEgret(edge->GetHead(), out);
+        out << " =>";
+        BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
+            out << " ";
+            PrintNodeEgret(tail, out);
+        }
+        out << " ||| " << edge->GetScore() << endl;
+    }
+    out << endl;
 }
