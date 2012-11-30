@@ -1,15 +1,15 @@
-#include <travatar/config-greedy-mert.h>
-#include <travatar/greedy-mert.h>
+#include <travatar/config-batch-tune.h>
+#include <travatar/batch-tune-runner.h>
 
 using namespace travatar;
 using namespace std;
 
 int main(int argc, char** argv) {
     // load the arguments
-    ConfigGreedyMert conf;
+    ConfigBatchTune conf;
     vector<string> args = conf.loadConfig(argc,argv);
     // train the reorderer
-    // GreedyMert runner;
-    // runner.Run(conf);
+    BatchTuneRunner runner;
+    runner.Run(conf);
     return 0;
 }

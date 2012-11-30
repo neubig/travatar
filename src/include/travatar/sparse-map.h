@@ -17,6 +17,7 @@ SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs);
 double operator*(const SparseMap & lhs, const SparseMap & rhs);
+SparseMap operator*(const SparseMap & lhs, double rhs);
 
 }
 

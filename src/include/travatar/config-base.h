@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 #include <tr1/unordered_map>
 
 
@@ -67,6 +68,11 @@ public:
     void SetUsage(const std::string & str) { usage_ = str; }
 
     const std::vector<std::string> & GetMainArgs() const { return mainArgs_; }
+    const std::string & GetMainArg(int id) const { 
+        if(id >= (int)mainArgs_.size())
+            throw std::runtime_error("Argument request is out of bounds");
+        return mainArgs_[id];
+    }
 	
 };
 

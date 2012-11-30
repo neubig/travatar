@@ -73,12 +73,26 @@ SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs) {
 
 double operator*(const SparseMap & lhs, const SparseMap & rhs) {
     double ret = 0;
-    BOOST_FOREACH(const SparsePair & val, lhs) {
-        SparseMap::const_iterator it = rhs.find(val.first);
-        if(it != rhs.end()) {
-            ret += val.second * it->second;
+    if(lhs.size() <= rhs.size()) {
+        BOOST_FOREACH(const SparsePair & val, lhs) {
+            SparseMap::const_iterator it = rhs.find(val.first);
+            if(it != rhs.end())
+                ret += val.second * it->second;
+        }
+    } else {
+        BOOST_FOREACH(const SparsePair & val, rhs) {
+            SparseMap::const_iterator it = lhs.find(val.first);
+            if(it != lhs.end())
+                ret += val.second * it->second;
         }
     }
+    return ret;
+}
+
+SparseMap operator*(const SparseMap & lhs, double rhs) {
+    SparseMap ret;
+    BOOST_FOREACH(const SparsePair & val, lhs)
+        ret[val.first] = val.second * rhs;
     return ret;
 }
 

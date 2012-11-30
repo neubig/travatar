@@ -33,9 +33,35 @@ public:
         return CheckMap(gain_exp, gain_act);
     }
 
+    int TestCalculateConvexHullOne() {
+        TuneGreedyMert mert;
+        // Create the examples
+        vector<TuneGreedyMert::ExamplePair> exps(3);
+        exps[0].first[Dict::WID("val")] = 1;
+        exps[0].first[Dict::WID("slope")] = -1;
+        exps[0].second = 0.1;
+        exps[1].first[Dict::WID("val")] = 3;
+        exps[1].first[Dict::WID("slope")] = 1;
+        exps[1].second = 0.2;
+        exps[2].first[Dict::WID("val")] = 1;
+        exps[2].first[Dict::WID("slope")] = 1;
+        exps[2].second = 0.3;
+        // Create the weights and the gradient
+        SparseMap weights, gradient;
+        weights[Dict::WID("val")] = 1;
+        gradient[Dict::WID("slope")] = 1;
+        // Here lines 0 and 1 should form the convex hull with an intersection at -1
+        vector<TuneGreedyMert::ScoredSpan> hull_exp, hull_act;
+        hull_act = mert.CalculateConvexHull(exps, weights, gradient);
+        hull_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), 0.1));
+        hull_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), 0.2));  
+        return CheckVector(hull_exp, hull_act);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCalculateConvexHullOne()" << endl; if(TestCalculateConvexHullOne()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

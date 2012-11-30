@@ -15,12 +15,18 @@ public:
 
     typedef std::pair<SparseMap,double> ExamplePair;
 
-    TuneGreedyMert() { }
+    TuneGreedyMert() : gain_threshold_(0.0001) { }
 
     // Tune new weights using greedy mert
-    SparseMap Tune(
-               const std::vector<std::vector<ExamplePair> > & examps,
-               const SparseMap & init);
+    void Tune(
+        const std::vector<std::vector<ExamplePair> > & examps,
+        SparseMap & weights);
+
+    // Tune pick a single weight to tune and tune it
+    // Return the improvement in score
+    double TuneOnce(
+        const std::vector<std::vector<ExamplePair> > & examps,
+        SparseMap & weights);
 
     // Calculate the potential gain for a single example given the current
     // weights
@@ -28,7 +34,29 @@ public:
                 const std::vector<ExamplePair> & examps,
                 const SparseMap & weights);
 
+
+    typedef std::pair<double,double> Span;
+    typedef std::pair<Span, double> ScoredSpan;
+
+    // Get the convex hull, which consists of scored spans in order of the span location
+    std::vector<ScoredSpan> CalculateConvexHull(
+                       const std::vector<ExamplePair> & examps, 
+                       const SparseMap & weights,
+                       const SparseMap & gradient);
+
+    // Perform line search given the current weights and gradient
+    std::pair<double,double> LineSearch(
+                const std::vector<std::vector<ExamplePair> > & examps, 
+                const SparseMap & weights,
+                const SparseMap & gradient);
+
+    void SetGainThreshold(double thresh) { gain_threshold_ = thresh; }
+    double GetGainThreshold() { return gain_threshold_; }
+
 protected:
+
+    // A feature must create a gain of more than this to be added
+    double gain_threshold_;
 
 };
 
