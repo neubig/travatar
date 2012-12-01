@@ -39,7 +39,6 @@ SparseMap TuneGreedyMert::CalculatePotentialGain(
 
 inline double FindIntersection(double s1, double v1, double s2, double v2) {
     return (s1==s2 ? DBL_MAX : (v1-v2)/(s2-s1));
-
 }
 
 // Get the convex hull, which consists of scored spans in order of the span location
