@@ -3,6 +3,7 @@
 
 #include <travatar/sparse-map.h>
 #include <vector>
+#include <cfloat>
 
 namespace travatar {
 
@@ -15,7 +16,7 @@ public:
 
     typedef std::pair<SparseMap,double> ExamplePair;
 
-    TuneGreedyMert() : gain_threshold_(0.0001) { }
+    TuneGreedyMert() : gain_threshold_(0.0001), range_(0, DBL_MAX) { }
 
     // Tune new weights using greedy mert
     void Tune(
@@ -48,7 +49,14 @@ public:
     std::pair<double,double> LineSearch(
                 const std::vector<std::vector<ExamplePair> > & examps, 
                 const SparseMap & weights,
-                const SparseMap & gradient);
+                const SparseMap & gradient,
+                std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
+
+
+    std::pair<double,double> FindGradientRange(
+                                const SparseMap & weights,
+                                const SparseMap & gradient,
+                                std::pair<double,double> range);
 
     void SetGainThreshold(double thresh) { gain_threshold_ = thresh; }
     double GetGainThreshold() { return gain_threshold_; }
@@ -57,6 +65,8 @@ protected:
 
     // A feature must create a gain of more than this to be added
     double gain_threshold_;
+    // The range of the weights
+    std::pair<double,double> range_;
 
 };
 

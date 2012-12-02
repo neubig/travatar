@@ -10,7 +10,20 @@ class TestTune : public TestBase {
 
 public:
 
-    TestTune() { }
+    TestTune() : examps1(3), examps2(3) {
+        valid = Dict::WID("val");
+        slopeid = Dict::WID("slope");
+        // Create the examples
+        examps1[0].first[valid] = 1; examps1[0].first[slopeid] = -1; examps1[0].second = 0.2;
+        examps1[1].first[valid] = 3; examps1[1].first[slopeid] = 1;  examps1[1].second = 0.1;
+        examps1[2].first[valid] = 1; examps1[2].first[slopeid] = 1;  examps1[2].second = 0.3;
+        examps2[0].first[valid] = 7; examps2[0].first[slopeid] = -1; examps2[0].second = 0.1;
+        examps2[1].first[valid] = 3; examps2[1].first[slopeid] = 1;  examps2[1].second = 0.2;
+        examps2[2].first[valid] = 6; examps2[2].first[slopeid] = 0;  examps2[2].second = 0.3;
+        examp_set.push_back(examps1); examp_set.push_back(examps2);
+        weights[valid] = 1;
+        gradient[slopeid] = 1; 
+    }
     ~TestTune() { }
 
     int TestCalculatePotentialGain() {
@@ -33,38 +46,52 @@ public:
         return CheckMap(gain_exp, gain_act);
     }
 
-    int TestCalculateConvexHullOne() {
+    int TestCalculateConvexHull() {
         TuneGreedyMert mert;
-        // Create the examples
-        vector<TuneGreedyMert::ExamplePair> exps(3);
-        exps[0].first[Dict::WID("val")] = 1;
-        exps[0].first[Dict::WID("slope")] = -1;
-        exps[0].second = 0.1;
-        exps[1].first[Dict::WID("val")] = 3;
-        exps[1].first[Dict::WID("slope")] = 1;
-        exps[1].second = 0.2;
-        exps[2].first[Dict::WID("val")] = 1;
-        exps[2].first[Dict::WID("slope")] = 1;
-        exps[2].second = 0.3;
-        // Create the weights and the gradient
-        SparseMap weights, gradient;
-        weights[Dict::WID("val")] = 1;
-        gradient[Dict::WID("slope")] = 1;
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
-        vector<TuneGreedyMert::ScoredSpan> hull_exp, hull_act;
-        hull_act = mert.CalculateConvexHull(exps, weights, gradient);
-        hull_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), 0.1));
-        hull_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), 0.2));  
-        return CheckVector(hull_exp, hull_act);
+        vector<TuneGreedyMert::ScoredSpan> hull1_exp, hull1_act;
+        hull1_act = mert.CalculateConvexHull(examps1, weights, gradient);
+        hull1_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), 0.2));
+        hull1_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), 0.1));  
+        vector<TuneGreedyMert::ScoredSpan> hull2_exp, hull2_act;
+        hull2_act = mert.CalculateConvexHull(examps2, weights, gradient);
+        hull2_exp.push_back(make_pair(make_pair(-DBL_MAX, 1.0), 0.1));
+        hull2_exp.push_back(make_pair(make_pair(1.0, 3.0), 0.3));
+        hull2_exp.push_back(make_pair(make_pair(3.0, DBL_MAX), 0.2));  
+        return CheckVector(hull1_exp, hull1_act) && CheckVector(hull2_exp, hull2_act);
+    }
+
+    int TestLineSearch() {
+        TuneGreedyMert mert;
+        // Here lines 0 and 1 should form the convex hull with an intersection at -1
+        pair<double,double> exp_score1(2.0,0.2);
+        pair<double,double> act_score1 = mert.LineSearch(examp_set, weights, gradient);
+        pair<double,double> exp_score2(-2.0,0.1);
+        pair<double,double> act_score2 = mert.LineSearch(examp_set, weights, gradient, make_pair(-DBL_MAX, 0.0));
+        pair<double,double> exp_score3(-3.0,0.1);
+        pair<double,double> act_score3 = mert.LineSearch(examp_set, weights, gradient, make_pair(-DBL_MAX, -3.0));
+        return 
+            CheckAlmost(exp_score1.first, act_score1.first) &&
+            CheckAlmost(exp_score1.second, act_score1.second) &&
+            CheckAlmost(exp_score3.first, act_score3.first) &&
+            CheckAlmost(exp_score3.second, act_score3.second) &&
+            CheckAlmost(exp_score2.first, act_score2.first) &&
+            CheckAlmost(exp_score2.second, act_score2.second);
     }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestCalculateConvexHullOne()" << endl; if(TestCalculateConvexHullOne()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCalculateConvexHull()" << endl; if(TestCalculateConvexHull()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLineSearch()" << endl; if(TestLineSearch()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
+
+    int valid, slopeid;
+    vector<TuneGreedyMert::ExamplePair> examps1, examps2;
+    vector<vector<TuneGreedyMert::ExamplePair> > examp_set;
+    SparseMap weights, gradient;
 
 };
 

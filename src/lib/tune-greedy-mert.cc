@@ -97,7 +97,8 @@ std::vector<TuneGreedyMert::ScoredSpan> TuneGreedyMert::CalculateConvexHull(
 pair<double,double> TuneGreedyMert::LineSearch(
                 const std::vector<std::vector<ExamplePair> > & examps, 
                 const SparseMap & weights,
-                const SparseMap & gradient) {
+                const SparseMap & gradient,
+                pair<double,double> range) {
     double base_score = 0;
     map<double,double> boundaries;
     typedef std::pair<double,double> DoublePair;
@@ -127,12 +128,11 @@ pair<double,double> TuneGreedyMert::LineSearch(
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
             zero_score = min(curr_score, zero_score);
-        // Update the span up until the last boundary
-        if(curr_score > best_span.second) 
+        // Update the span if it exceeds the previous best and is in the acceptable gradient range
+        if(curr_score > best_span.second && (last_bound < range.second && boundary.first > range.first))
             best_span = ScoredSpan(Span(last_bound, boundary.first), curr_score);
         curr_score += boundary.second;
         last_bound = boundary.first;
-
     }
     // Given the best span, find the middle
     double middle;
@@ -144,8 +144,33 @@ pair<double,double> TuneGreedyMert::LineSearch(
         middle = best_span.first.first + MARGIN;
     else
         middle = (best_span.first.first+best_span.first.second)/2;
+    middle = max(range.first, min(middle, range.second));
     PRINT_DEBUG("0 --> " << zero_score << ", " << middle << " --> " << best_span.second << endl, 0);
     return make_pair(middle, best_span.second-zero_score);
+}
+
+// Current value can be found here
+// range(-2,2)
+// original(-1)
+// change(-1,3)
+// gradient -2
+// +0.5, -1.5
+pair<double,double> TuneGreedyMert::FindGradientRange(
+                                const SparseMap & weights,
+                                const SparseMap & gradient,
+                                pair<double,double> range) {
+    pair<double,double> ret(-DBL_MAX, DBL_MAX);
+    BOOST_FOREACH(const SparseMap::value_type & grad, gradient) {
+        if(grad.second == 0) continue;
+        SparseMap::const_iterator it = weights.find(grad.first);
+        double w = (it != weights.end()) ? it->second : 0.0;
+        double l = (range.first-w)/grad.second;
+        double r = (range.second-w)/grad.second;
+        if(l > r) { double temp = l; l = r; r = temp; }
+        ret.first = max(l, ret.first);
+        ret.second = min(r, ret.second);
+    }
+    return ret; 
 }
 
 // Find the best value to tune and tune it
@@ -173,7 +198,8 @@ double TuneGreedyMert::TuneOnce(
         }
         SparseMap gradient;
         gradient[val.second] = 1;
-        pair<double,double> search_result = LineSearch(examps, weights, gradient);
+        pair<double,double> gradient_range = FindGradientRange(weights, gradient, range_);
+        pair<double,double> search_result = LineSearch(examps, weights, gradient, gradient_range);
         PRINT_DEBUG(Dict::WSym(val.second) << "=" << val.first << " --> " << search_result << " (max: " << best_result.second << ")" << endl, 1);
         if(search_result.second > best_result.second) {
             best_result = search_result;
