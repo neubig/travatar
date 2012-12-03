@@ -37,6 +37,7 @@ public:
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("pop_limit", "100", "The number of pops necessary");
         AddConfigEntry("trace_out", "", "trace output file location");
+        AddConfigEntry("forest_out", "", "forest output file location");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
 

@@ -45,7 +45,7 @@ public:
         e_edge->AddTail(z_node);
         e_node->AddEdge(e_edge); tree_exp.AddEdge(e_edge);
 
-        graph_str = "{\"words\": [\"running\", \"water\"], \"nodes\": [ {\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2], \"trg_span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]} ], \"edges\": [ {\"id\": 0, \"head\": 0, \"tails\": [1], \"score\": 1.0, \"features\": {\"parse\": 1.0}}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 8} ]}\nAAA";
+        graph_str = "{\"words\": [\"running\", \"water\"], \"nodes\": [ {\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2], \"trg_span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]} ], \"edges\": [ {\"id\": 0, \"head\": 0, \"tails\": [1], \"score\": 1.0, \"features\": {\"parse\": 1.0}}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 8, \"trg\": [\"\\\\\\\"\", -1]} ]}\nAAA";
 
         // Create the words
         {
@@ -70,6 +70,8 @@ public:
         HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); graph_exp.AddEdge(edge7);
         HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); graph_exp.AddEdge(edge8);
         HyperEdge* edge9 = new HyperEdge(node8); node8->AddEdge(edge9); graph_exp.AddEdge(edge9);
+        edge9->GetTrgWords().push_back(Dict::WID("\\\""));
+        edge9->GetTrgWords().push_back(-1);
         graph_exp.SetWords(Dict::ParseWords("running water"));
         }
  

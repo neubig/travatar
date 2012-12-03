@@ -50,6 +50,9 @@ struct Dict {
     // Get the word ID
     static std::vector<WordId> ParseQuotedWords(const std::string & str);
 
+    // Escape a string
+    static std::string EscapeString(const std::string & str);
+
 private:
     static SymbolSet<WordId> wids_;
     static bool add_;

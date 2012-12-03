@@ -145,6 +145,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         nbest_count = 1;
     }
 
+    // Open the forest output stream if it exists
+    scoped_ptr<ostream> forest_out;
+    if(config.GetString("forest_out") != "") {
+        forest_out.reset(new ofstream(config.GetString("forest_out").c_str()));
+        if(!*forest_out)
+            THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
+    } 
+
     // Open the trace output stream if it exists
     scoped_ptr<ostream> trace_out;
     if(config.GetString("trace_out") != "") {
@@ -181,7 +189,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         }
 
         // Calculate the n-best list
-        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         NbestList nbest_list = rule_graph->GetNbest(nbest_count, tree_graph->GetWords());
 
         // Print the best answer. This will generally be the answer with the highest score
@@ -211,6 +218,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                     << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                     << endl;
             }
+        }
+
+        // If we are printing a forest, print it
+        if(forest_out.get() != NULL) {
+            JSONTreeIO io;
+            io.WriteTree(*rule_graph, *forest_out);
+            *forest_out << endl;
         }
 
         // If we are tuning load the next references and check the weights

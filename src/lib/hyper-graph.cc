@@ -74,9 +74,16 @@ void HyperEdge::Print(std::ostream & out) const {
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
     }
     if(trg_words_.size()) {
-        out << ", \"trg_words\": [";
-        for(int i = 0; i < (int)trg_words_.size(); i++)
-            out << trg_words_[i] << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
+        out << ", \"trg\": [";
+        for(int i = 0; i < (int)trg_words_.size(); i++) {
+            // Handle pseudo-symbols
+            if(trg_words_[i] < 0)
+                out << trg_words_[i];
+            // Handle regular words
+            else
+                out << '"' << Dict::EscapeString(Dict::WSym(trg_words_[i])) << '"';
+            out << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
+        }
     }
     if(features_.size())
         out << ", \"features\": " << features_;

@@ -113,6 +113,15 @@ std::vector<WordId> Dict::ParseQuotedWords(const std::string & str) {
     return ret;
 }
 
+std::string Dict::EscapeString(const std::string & str) {
+    ostringstream ret;
+    for(int i = 0; i < (int)str.length(); i++) {
+        if(str[i] == '\\' || str[i] == '"') ret << '\\';
+        ret << str[i];
+    }
+    return ret.str();
+}
+
 // Adders. Add the value, and set its ID appropriately
 // HyperGraph will take control of the added value
 void HyperGraph::AddNode(HyperNode * node) {

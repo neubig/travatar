@@ -52,7 +52,6 @@ public:
                 const SparseMap & gradient,
                 std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
 
-
     std::pair<double,double> FindGradientRange(
                                 const SparseMap & weights,
                                 const SparseMap & gradient,
