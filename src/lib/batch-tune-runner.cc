@@ -10,6 +10,9 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
+#include <travatar/tuning-example-forest.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/tree-io.h>
 
 using namespace travatar;
 using namespace std;
@@ -44,7 +47,16 @@ void BatchTuneRunner::LoadNbests(istream & sys_in,
 
 void BatchTuneRunner::LoadForests(istream & sys_in, 
                                   vector<shared_ptr<TuningExample> > & examps) {
-    THROW_ERROR("Not implemented yet");
+    JSONTreeIO io;
+    HyperGraph * curr_ptr;
+    int id = 0;
+    while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
+        examps.push_back(
+            shared_ptr<TuningExample>(
+                new TuningExampleForest(
+                    shared_ptr<HyperGraph>(curr_ptr),
+                    SafeAccess(refs_,id++))));
+    }
 }
 
 // Run the model
@@ -79,7 +91,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         ref_len_ += ref.size();
     }
 
-    // Create the evaluation measure (BLEU for now)
+    // Create the evaluation measure
     if(config.GetString("eval") == "bleu") {
         eval_.reset(new EvalMeasureBleu);
     } else if(config.GetString("eval") == "ribes") {
