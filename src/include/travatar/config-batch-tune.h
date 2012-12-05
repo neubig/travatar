@@ -14,8 +14,8 @@ class ConfigBatchTune : public ConfigBase {
 public:
 
     ConfigBatchTune() : ConfigBase() {
-        minArgs_ = 2;
-        maxArgs_ = 2;
+        minArgs_ = 1;
+        maxArgs_ = 1;
 
 // TODO: support multiple references
         SetUsage(
@@ -23,9 +23,11 @@ public:
 "  by Graham Neubig\n"
 "\n"
 "Runs batched tuning over n-best lists.\n"
-"  Usage: travatar NBEST_LIST REFERENCE\n"
+"  Usage: travatar [-nbest NBEST_LIST or -forest FOREST] REFERENCE\n"
 );
 
+        AddConfigEntry("nbest", "", "The pointer to a file containing the n-best list of system output");
+        AddConfigEntry("forest", "", "The pointer to a file containing translation forests");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
         AddConfigEntry("threshold", "0.0001", "What level of thresholding to use");
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes)");
