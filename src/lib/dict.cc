@@ -27,10 +27,9 @@ SparseMap Dict::ParseFeatures(std::istream & iss) {
     std::string buff;
     SparseMap ret;
     while(iss >> buff) {
-        std::vector<std::string> columns;
-        boost::algorithm::split(columns, buff, boost::is_any_of("="));
-        if(columns.size() != 2) THROW_ERROR("Bad feature string @ " << buff);
-        ret.insert(make_pair(Dict::WID(columns[0]), atof(columns[1].c_str())));
+        size_t pos = buff.rfind('=');
+        if(pos == string::npos) THROW_ERROR("Bad feature string @ " << buff);
+        ret.insert(make_pair(Dict::WID(buff.substr(0, pos)), atof(buff.substr(pos+1).c_str())));
     }
     return ret;
 }

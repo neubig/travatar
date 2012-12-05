@@ -8,7 +8,7 @@ using namespace std::tr1;
 using namespace travatar;
 
 // Measure the score of the sys output according to the ref
-double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys) const {
+double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
 
     // check reference length, raise RuntimeError if no words are found.
     if(ref.size() == 0)

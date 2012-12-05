@@ -20,7 +20,9 @@ public:
     // Measure the score of the system output according to the reference
     virtual double MeasureScore(
             const Sentence & reference,
-            const Sentence & system) const;
+            const Sentence & system,
+            int ref_cache_id = INT_MAX,
+            int sys_cache_id = INT_MAX);
 
     // int GetNgramOrder() const { return ngram_order_; }
     // void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }

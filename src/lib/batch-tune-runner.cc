@@ -1,13 +1,15 @@
-#include <travatar/tune-greedy-mert.h>
+#include <fstream>
+#include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <travatar/dict.h>
+#include <travatar/util.h>
 #include <travatar/config-batch-tune.h>
 #include <travatar/batch-tune-runner.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
-#include <travatar/dict.h>
-#include <travatar/util.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <fstream>
+#include <travatar/tune-greedy-mert.h>
+#include <travatar/tuning-example-nbest.h>
 
 using namespace travatar;
 using namespace std;
@@ -51,7 +53,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Convert the n-best list into example pairs for tuning
     PRINT_DEBUG("Loading nbest..." << endl, 1);
-    vector<vector<TuneGreedyMert::ExamplePair> > examps;
+    vector<shared_ptr<TuningExample> > examps;
     regex threebars(" \\|\\|\\| ");
     while(getline(nbest_in, line)) {
         vector<string> columns;
@@ -64,14 +66,14 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         SparseMap feat = Dict::ParseFeatures(columns[3]);
         // Calculate the score
         const Sentence & ref = SafeAccess(refs,id);
-        double score = eval->MeasureScore(ref, hyp) * ref.size() / ref_len;
+        double score = eval->MeasureScore(ref, hyp, id) * ref.size() / ref_len;
         // Add the example
-        if((int)examps.size() <= id) {
+        while((int)examps.size() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            examps.resize(id+1);
+            examps.push_back(shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
-        examps[id].push_back(TuneGreedyMert::ExamplePair(feat, score));
+        ((TuningExampleNbest&)*examps[id]).AddHypothesis(feat, score);
     }
     PRINT_DEBUG(endl, 1);
     
