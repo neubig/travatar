@@ -156,28 +156,31 @@ const MertHull& MertHull::operator*=(const MertHull& other) {
 }
 
 // recursively construct translation
-void MertLine::ConstructTranslation(vector<WordId>* trans) const {
-  const MertLine* cur = this;
-  // ant_trans is the translations for the tails in REVERSE order
-  vector<vector<WordId> > ant_trans;
-  while(!cur->edge) {
-    ant_trans.resize(ant_trans.size() + 1);
-    cur->p2->ConstructTranslation(&ant_trans.back());
-    cur = cur->p1.get();
-  }
-  size_t ant_size = ant_trans.size();
-  assert(ant_size == (int)cur->edge->GetTails().size());
-  BOOST_FOREACH(WordId id, cur->edge->GetTrgWords()) {
-    if(id >= 0) {
-      trans->push_back(id);
-    } else {
-      // Because tails are in reverse order, we must access them accordingly
-      BOOST_FOREACH(WordId cid, SafeAccess(ant_trans, ant_size + id))
-        trans->push_back(cid);
+void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<WordId>* trans) const {
+    WordId unk_id = Dict::WID("<unk>");
+    const MertLine* cur = this;
+    // ant_trans is the translations for the tails in REVERSE order
+    vector<vector<WordId> > ant_trans;
+    while(!cur->edge) {
+        ant_trans.resize(ant_trans.size() + 1);
+        cur->p2->ConstructTranslation(sent, &ant_trans.back());
+        cur = cur->p1.get();
     }
-  }
-  // THROW_ERROR("MertLine::ConstructTranslation: Not implemented yet");
-  // cur->edge->rule_->ESubstitute(pants, trans);
+    size_t ant_size = ant_trans.size();
+    assert(ant_size == (int)cur->edge->GetTails().size());
+    BOOST_FOREACH(WordId id, cur->edge->GetTrgWords()) {
+        if(id == unk_id) {
+            pair<int,int> span = cur->edge->GetHead()->GetSpan();
+            if(span.second-span.first != 1) THROW_ERROR("Bad span in unknown rule: " << span);
+            trans->push_back(SafeAccess(sent, span.first));
+        } else if(id >= 0) {
+            trans->push_back(id);
+        } else {
+            // Because tails are in reverse order, we must access them accordingly
+            BOOST_FOREACH(WordId cid, SafeAccess(ant_trans, ant_size + id))
+                trans->push_back(cid);
+        }
+    }
 }
 
 void MertLine::CollectEdgesUsed(std::vector<bool>* edges_used) const {

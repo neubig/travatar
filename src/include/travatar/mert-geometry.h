@@ -47,7 +47,7 @@ struct MertLine {
   // recursively recover the Viterbi translation that will result from setting
   // the weights to origin + axis * x, where x is any value from this->x up
   // until the next largest x in the containing MertHull
-  void ConstructTranslation(std::vector<WordId>* trans) const;
+  void ConstructTranslation(const std::vector<WordId> & sent, std::vector<WordId>* trans) const;
   void CollectEdgesUsed(std::vector<bool>* edges_used) const;
 };
 

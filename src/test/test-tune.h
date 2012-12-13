@@ -134,7 +134,7 @@ public:
     int TestLatticeHull() {
         EvalMeasureBleu bleu;
         Sentence ref = Dict::ParseWords("c a");
-        TuningExampleForest tef(&bleu, forest, ref, 1);
+        TuningExampleForest tef(&bleu, forest, ref, 1, 1);
         tef.CalculatePotentialGain(weights);
         ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
         // The hypotheses are
@@ -152,7 +152,7 @@ public:
     int TestForestHull() {
         EvalMeasureBleu bleu;
         Sentence ref = Dict::ParseWords("c a");
-        TuningExampleForest tef(&bleu, forest2, ref, 2);
+        TuningExampleForest tef(&bleu, forest2, ref, 2, 1);
         tef.CalculatePotentialGain(weights);
         ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
         // The hypotheses are
@@ -167,6 +167,27 @@ public:
         return CheckVector(exp_hull, act_hull);
     }
 
+    int TestForestUnk() {
+        EvalMeasureBleu bleu;
+        shared_ptr<HyperGraph> rule_graph(new HyperGraph);
+        Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
+        rule_graph->SetWords(exp_sent);
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); rule_graph->AddNode(n0);
+        SparseMap f01; f01[valid] = -10; f01[slopeid] = 1;
+        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("\"<unk>\""));
+        e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
+        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("\"<unk>\""));
+        n0->AddEdge(e02); rule_graph->AddEdge(e02);
+        TuningExampleForest tef(&bleu, rule_graph, exp_sent, 2, 1);
+        tef.CalculatePotentialGain(weights);
+        // The check here should break
+        ConvexHull act_hull = tef.CalculateConvexHull(weights, gradient);
+        ConvexHull exp_hull;
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), 1.0));
+        exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX), 1.0));
+        return CheckVector(act_hull,exp_hull);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -174,6 +195,7 @@ public:
         done++; cout << "TestLineSearch()" << endl; if(TestLineSearch()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLatticeHull()" << endl; if(TestLatticeHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

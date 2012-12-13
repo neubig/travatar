@@ -32,7 +32,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
-    curr_score_ = measure_->MeasureScore(ref_, sent, id_);
+    curr_score_ = measure_->MeasureScore(ref_, sent, id_) * mult_;
     // TODO: calculate the best score according to this forest
     double gain = oracle_score_ - curr_score_;
     // Add this to all existing values
@@ -89,8 +89,8 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
         for(int i = 0; i < (int)top_hull.size(); i++) {
             const MertLine & line = *top_hull.GetLines()[i];
             Sentence sent;
-            line.ConstructTranslation(&sent);
-            double score = measure_->MeasureScore(ref_, sent, id_);
+            line.ConstructTranslation(forest_->GetWords(), &sent);
+            double score = measure_->MeasureScore(ref_, sent, id_) * mult_;
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
             if(PosZero(line.x) == 0) {
                 // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_score_<<": @curr"<<endl;

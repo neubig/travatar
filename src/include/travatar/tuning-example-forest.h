@@ -22,10 +22,11 @@ public:
     TuningExampleForest(EvalMeasure * measure,
                         const boost::shared_ptr<HyperGraph> & forest,
                         const Sentence & ref,
-                        int id) : 
+                        int id,
+                        double mult) : 
                             measure_(measure), forest_(forest),
-                            ref_(ref), oracle_score_(1.0),
-                            curr_score_(-DBL_MAX), id_(id) {
+                            ref_(ref), oracle_score_(mult),
+                            curr_score_(-DBL_MAX), id_(id), mult_(mult) {
         FindActiveFeatures();
     }
 
@@ -63,6 +64,8 @@ protected:
     std::set<int> active_;
     // The ID of this example
     int id_;
+    // Multiplier
+    double mult_;
 
 };
 

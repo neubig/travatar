@@ -62,6 +62,7 @@ WordId Dict::WID(const std::string & str) {
 
 std::string Dict::WSymEscaped(WordId id) {
     std::string ret = wids_.GetSymbol(id);
+    boost::replace_all(ret, "\\", "\\\\");
     boost::replace_all(ret, "\"", "\\\"");
     return ret;
 }

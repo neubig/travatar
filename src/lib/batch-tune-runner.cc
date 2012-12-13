@@ -52,13 +52,14 @@ void BatchTuneRunner::LoadForests(istream & sys_in,
     int id = 0;
     while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
         PRINT_DEBUG("Loading line " << id << endl, 1);
+        const Sentence & ref = SafeAccess(refs_,id);
         examps.push_back(
             shared_ptr<TuningExample>(
                 new TuningExampleForest(
                     eval_.get(),
                     shared_ptr<HyperGraph>(curr_ptr),
-                    SafeAccess(refs_,id),
-                    id)));
+                    ref, id, ref.size() / (double)ref_len_
+                    )));
         id++;
     }
 }
