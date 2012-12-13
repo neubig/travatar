@@ -10,7 +10,7 @@ using namespace travatar;
 using namespace boost;
 
 // Calculate the potential gain for a single example given the current weights
-SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) const {
+SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) {
     // Find the hypothesis to be chosen with the current weights
     int hyp = -1;
     double hyp_score = -DBL_MAX;

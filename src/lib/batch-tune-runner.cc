@@ -51,11 +51,15 @@ void BatchTuneRunner::LoadForests(istream & sys_in,
     HyperGraph * curr_ptr;
     int id = 0;
     while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
+        PRINT_DEBUG("Loading line " << id << endl, 1);
         examps.push_back(
             shared_ptr<TuningExample>(
                 new TuningExampleForest(
+                    eval_.get(),
                     shared_ptr<HyperGraph>(curr_ptr),
-                    SafeAccess(refs_,id++))));
+                    SafeAccess(refs_,id),
+                    id)));
+        id++;
     }
 }
 
@@ -64,6 +68,17 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
+
+    // Load the features from the weight file
+    SparseMap weights;
+    if(config.GetString("weight_file") != "") {
+        cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
+        ifstream weight_in(config.GetString("weight_file").c_str());
+        if(!weight_in)
+            THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
+        weights = Dict::ParseFeatures(weight_in);
+        weight_in.close();
+    }
 
     // Open the references
     ifstream ref_in(config.GetMainArg(0).c_str());
@@ -107,12 +122,27 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         LoadNbests(sys_in, examps);
     else
         LoadForests(sys_in, examps);
+
+    // Set the weight ranges
+    TuneGreedyMert tgm;
+    if(config.GetString("weight_ranges") != "") {
+        vector<string> ranges, range_vals;
+        boost::split(ranges, config.GetString("weight_ranges"), boost::is_any_of(" "));
+        BOOST_FOREACH(const string & range, ranges) {
+            boost::split(range_vals, range, boost::is_any_of("|"));
+            if(range_vals.size() != 2 && range_vals.size() != 3)
+                THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
+            WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
+            double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
+            double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
+            tgm.SetRange(id, min_score, max_score);
+        }
+    }
+
     
     // Perform MERT
     PRINT_DEBUG("Tuning..." << endl, 1);
-    TuneGreedyMert tgm;
     tgm.SetGainThreshold(config.GetDouble("threshold"));
-    SparseMap weights;
     tgm.Tune(examps, weights);
 
     // Print result

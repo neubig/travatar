@@ -4,6 +4,7 @@
 #include "test-base.h"
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
+#include <travatar/tuning-example-forest.h>
 
 namespace travatar {
 
@@ -25,7 +26,55 @@ public:
         feat22[valid] = 6; feat22[slopeid] = 0;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat22, 0.3);
         examp_set.push_back(examps1); examp_set.push_back(examps2);
         weights[valid] = 1;
-        gradient[slopeid] = 1; 
+        gradient[slopeid] = 1;
+                
+        forest.reset(new HyperGraph);
+        {
+        // Two nodes
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest->AddNode(n0);
+        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest->AddNode(n1);
+        // And two edges between each node
+        SparseMap f01; f01[valid] = 1; f01[slopeid] = -1;
+        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("x0 \"a\""));
+        e01->SetFeatures(f01); e01->AddTail(n1); n0->AddEdge(e01); forest->AddEdge(e01);
+        SparseMap f02; f02[valid] = 3; f02[slopeid] =  1;
+        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("\"b\" x0"));
+        e02->SetFeatures(f02); e02->AddTail(n1); n0->AddEdge(e02); forest->AddEdge(e02);
+        SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(Dict::ParseQuotedWords("\"c\""));
+        e11->SetFeatures(f11);                   n1->AddEdge(e11); forest->AddEdge(e11);
+        SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(Dict::ParseQuotedWords("\"d\""));
+        e12->SetFeatures(f12);                   n1->AddEdge(e12); forest->AddEdge(e12);         
+        }
+
+        forest2.reset(new HyperGraph);
+        {
+        // Four
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest2->AddNode(n0);
+        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest2->AddNode(n1);
+        HyperNode* n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); forest2->AddNode(n2);
+        HyperNode* n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); forest2->AddNode(n3);
+        // And edges for each node
+        SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
+        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("x0 x1"));
+        e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); forest2->AddEdge(e01);
+        SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
+        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("x1 x0"));
+        e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); forest2->AddEdge(e02);
+        SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(Dict::ParseQuotedWords("\"c\""));
+        e11->SetFeatures(f11); n1->AddEdge(e11); forest2->AddEdge(e11);
+        SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(Dict::ParseQuotedWords("\"d\""));
+        e12->SetFeatures(f12); n1->AddEdge(e12); forest2->AddEdge(e12);         
+        SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
+        HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgWords(Dict::ParseQuotedWords("\"a\""));
+        e21->SetFeatures(f21); n2->AddEdge(e21); forest2->AddEdge(e21);
+        SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
+        HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgWords(Dict::ParseQuotedWords("\"b\""));
+        e31->SetFeatures(f31); n3->AddEdge(e31); forest2->AddEdge(e31);
+        }
     }
     ~TestTune() { }
 
@@ -82,17 +131,56 @@ public:
             CheckAlmost(exp_score2.second, act_score2.second);
     }
 
+    int TestLatticeHull() {
+        EvalMeasureBleu bleu;
+        Sentence ref = Dict::ParseWords("c a");
+        TuningExampleForest tef(&bleu, forest, ref, 1);
+        tef.CalculatePotentialGain(weights);
+        ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
+        // The hypotheses are
+        // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2)
+        // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
+        // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
+        // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        return CheckVector(exp_hull, act_hull);
+    }
+
+    int TestForestHull() {
+        EvalMeasureBleu bleu;
+        Sentence ref = Dict::ParseWords("c a");
+        TuningExampleForest tef(&bleu, forest2, ref, 2);
+        tef.CalculatePotentialGain(weights);
+        ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
+        // The hypotheses are
+        // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2)
+        // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
+        // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
+        // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        return CheckVector(exp_hull, act_hull);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateConvexHull()" << endl; if(TestCalculateConvexHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLineSearch()" << endl; if(TestLineSearch()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLatticeHull()" << endl; if(TestLatticeHull()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
     int valid, slopeid;
     vector<shared_ptr<TuningExample> > examp_set;
+    shared_ptr<HyperGraph> forest, forest2;
     SparseMap weights, gradient;
 
 };

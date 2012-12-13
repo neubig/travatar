@@ -43,16 +43,19 @@ pair<double,double> TuneGreedyMert::LineSearch(
     // if(boundaries.size() == 0) return make_pair(-DBL_MAX, -DBL_MAX);
     // Find the place with the best score on the plane
     ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), 0);
-    double last_bound = -DBL_MAX, curr_score = base_score, zero_score = DBL_MAX;
+    double last_bound = -DBL_MAX, curr_score = base_score;
+    zero_score_ = DBL_MAX;
     BOOST_FOREACH(const DoublePair & boundary, boundaries) {
         // Find the score at zero. If there is a boundary directly at zero, break ties
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
-            zero_score = min(curr_score, zero_score);
+            zero_score_ = curr_score;
         // Update the span if it exceeds the previous best and is in the acceptable gradient range
         if(curr_score > best_span.second && (last_bound < range.second && boundary.first > range.first))
             best_span = ScoredSpan(Span(last_bound, boundary.first), curr_score);
+        // cerr << "bef: " << boundary << " curr_score=" << curr_score << endl;
         curr_score += boundary.second;
+        // cerr << "aft: " << boundary << " curr_score=" << curr_score << endl;
         last_bound = boundary.first;
     }
     // Given the best span, find the middle
@@ -66,8 +69,8 @@ pair<double,double> TuneGreedyMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_score << ", " << middle << " --> " << best_span.second << endl, 0);
-    return make_pair(middle, best_span.second-zero_score);
+    PRINT_DEBUG("0 --> " << zero_score_ << ", " << middle << " --> " << best_span.second << endl, 2);
+    return make_pair(middle, best_span.second-zero_score_);
 }
 
 // Current value can be found here
@@ -112,20 +115,24 @@ double TuneGreedyMert::TuneOnce(
     // Perform line search for each weight
     pair<double,double> best_result(0,0);
     SparseMap best_gradient;
+    string best_str = "NA";
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
         if(val.first < best_result.second) {
-            PRINT_DEBUG(Dict::WSym(val.second) << "=" << val.first << " (max: " << best_result.second << "): BREAK!" << endl, 1);
+            PRINT_DEBUG(Dict::WSym(val.second) << "=" << val.first << " (max: " << best_str << "=" << best_result.second << "): BREAK!" << endl, 0);
             break;
         }
         SparseMap gradient;
         gradient[val.second] = 1;
-        pair<double,double> gradient_range = FindGradientRange(weights, gradient, range_);
+        RangeMap::const_iterator it = ranges_.find(val.second);
+        pair<double,double> range = (it == ranges_.end() ? ranges_[-1] : it->second);
+        pair<double,double> gradient_range = FindGradientRange(weights, gradient, range);
         pair<double,double> search_result = LineSearch(examps, weights, gradient, gradient_range);
-        PRINT_DEBUG(Dict::WSym(val.second) << "=" << val.first << " --> " << search_result << " (max: " << best_result.second << ")" << endl, 1);
         if(search_result.second > best_result.second) {
             best_result = search_result;
             best_gradient = gradient;
+            best_str = Dict::WSym(val.second);
         }
+        PRINT_DEBUG("gain?("<<Dict::WSym(val.second)<<")=" << val.first << " --> gain@" << search_result.first <<"="<< search_result.second << ", score="<<zero_score_+search_result.second<<" (max: " << best_str << "=" <<  best_result.second << ")" << endl, 1);
     }
     // Update with the best value
     if(best_result.second > gain_threshold_) {

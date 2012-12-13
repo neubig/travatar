@@ -4,25 +4,39 @@
 #include <boost/shared_ptr.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/sentence.h>
+#include <set>
+#include <cfloat>
 
 namespace travatar {
 
+class EvalMeasure;
 class HyperGraph;
+class MertHull;
+class MertHullWeightFunction;
 
 class TuningExampleForest : public TuningExample {
 
 public:
 
     // Constructor tanking the forest and the reference
-    TuningExampleForest(const boost::shared_ptr<HyperGraph> & forest,
-                        const Sentence & ref) : 
-                            forest_(forest), ref_(ref), oracle_score_(1.0) { }
+    TuningExampleForest(EvalMeasure * measure,
+                        const boost::shared_ptr<HyperGraph> & forest,
+                        const Sentence & ref,
+                        int id) : 
+                            measure_(measure), forest_(forest),
+                            ref_(ref), oracle_score_(1.0),
+                            curr_score_(-DBL_MAX), id_(id) {
+        FindActiveFeatures();
+    }
 
     virtual ~TuningExampleForest() { }
 
+    // Find the featutres that are active in this forest
+    void FindActiveFeatures();
+
     // Calculate the gain that could be achieved by each feature
     // for this particular forest (oracle-current best)
-    virtual SparseMap CalculatePotentialGain(const SparseMap & weights) const;
+    virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
 
     // Calculate the convex hull for this example given the current weights
     // and gradients
@@ -32,10 +46,23 @@ public:
 
 protected:
 
+    // Recursively calculate the MERT hull
+    const MertHull & CalculateMertHull(
+                            const MertHullWeightFunction & func,
+                            std::vector<boost::shared_ptr<MertHull> > & hulls, 
+                            int node_id) const;
+
+    EvalMeasure * measure_;
     boost::shared_ptr<HyperGraph> forest_;
     Sentence ref_;
     // The score that the best hypothesis in the forest achieves
     double oracle_score_;
+    // The score that the forest achieves with the current weights
+    double curr_score_;
+    // A set of features that are active in the forest
+    std::set<int> active_;
+    // The ID of this example
+    int id_;
 
 };
 

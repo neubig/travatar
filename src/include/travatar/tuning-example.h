@@ -19,7 +19,7 @@ public:
 
     // Calculate the potential gain provided for this particular example
     // given by this weight (will only work for sentence-based measures)
-    virtual SparseMap CalculatePotentialGain(const SparseMap & weights) const = 0;
+    virtual SparseMap CalculatePotentialGain(const SparseMap & weights) = 0;
 
     // Calculate the convex hull for this example given the current weights and gradients
     virtual ConvexHull CalculateConvexHull(

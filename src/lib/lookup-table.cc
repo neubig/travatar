@@ -48,6 +48,7 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
     // First, for each non-terminal in the input graph, make a node in the output graph
     // and lookup the rules matching each node
     HyperGraph * ret = new HyperGraph;
+    ret->SetWords(parse.GetWords());
     std::map<int,int> node_map, rev_node_map;
     vector<vector<shared_ptr<LookupState> > > lookups;
     vector<shared_ptr<LookupState> > init_state;

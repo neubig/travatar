@@ -112,6 +112,7 @@ public:
         // Create the rule graph
         // string src1_tree = "(S0 (NP1 (PRP2 he3)) (VP4 (AUX5 does6) (RB7 not8) (VB9 go10)))";
         HyperGraph exp_rule_graph;
+        exp_rule_graph.SetWords(src1_graph->GetWords());
         // Create the nodes to represent the non-terminals
         HyperNode * s0_node = new HyperNode; s0_node->SetSym(Dict::WID("S")); s0_node->SetSpan(src1_graph->GetNode(0)->GetSpan()); exp_rule_graph.AddNode(s0_node);
         HyperNode * np1_node = new HyperNode; np1_node->SetSym(Dict::WID("NP")); np1_node->SetSpan(src1_graph->GetNode(1)->GetSpan()); exp_rule_graph.AddNode(np1_node);

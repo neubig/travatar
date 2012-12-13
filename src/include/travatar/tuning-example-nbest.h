@@ -18,7 +18,7 @@ public:
 
     // Calculate the gain that could be achieved by each feature
     // for this particular n-best list
-    virtual SparseMap CalculatePotentialGain(const SparseMap & weights) const;
+    virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
 
     // Calculate the convex hull for this example given the current weights and gradients
     virtual ConvexHull CalculateConvexHull(

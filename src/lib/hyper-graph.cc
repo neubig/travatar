@@ -209,27 +209,25 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
     return frontier_;
 }
 
-class PathScoreLess {
+class PathScoreMore {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
-        if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() < y->GetScore();
-        return x->GetEdges().size() < y->GetEdges().size();
+        if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() > y->GetScore();
+        return x->GetEdges().size() > y->GetEdges().size();
     }
 };
 
 vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<WordId> & src_words) {
-    priority_queue<shared_ptr<HyperPath>,
-                   vector<shared_ptr<HyperPath> >, 
-                   PathScoreLess> paths;
+    set<shared_ptr<HyperPath>, PathScoreMore> paths;
     shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
     init_path->AddScore(nodes_[0]->CalcViterbiScore());
     // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
-    paths.push(init_path);
+    paths.insert(init_path);
     vector<shared_ptr<HyperPath> > ret;
     while(paths.size() > 0 && (int)ret.size() < n) {
-        shared_ptr<HyperPath> curr_path = paths.top();
-        paths.pop();
+        shared_ptr<HyperPath> curr_path = *paths.begin();
+        paths.erase(paths.begin());
         // cerr << " Processing " << *curr_path << endl;
         HyperNode * node = curr_path->PopNode();
         if(node == NULL) {
@@ -250,8 +248,10 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<Wor
                 // are doing a depth-first left-to-right traversal
                 BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
                     next_path->PushNode(tail);
-                paths.push(next_path);
+                paths.insert(next_path);
             }
+            while((int)paths.size() > n)
+                paths.erase(*paths.rbegin());
         }
         
     }

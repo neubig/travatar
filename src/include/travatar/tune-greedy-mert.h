@@ -2,8 +2,10 @@
 #define TUNE_GREEDY_MERT_H__
 
 #include <travatar/sparse-map.h>
+#include <travatar/sentence.h>
 #include <vector>
 #include <cfloat>
+#include <tr1/unordered_map>
 
 namespace travatar {
 
@@ -16,7 +18,9 @@ class TuneGreedyMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001), range_(0, DBL_MAX) { }
+    TuneGreedyMert() : gain_threshold_(0.0001), zero_score_(0.0) {
+        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
+    }
 
     // Tune new weights using greedy mert
     void Tune(
@@ -43,13 +47,18 @@ public:
 
     void SetGainThreshold(double thresh) { gain_threshold_ = thresh; }
     double GetGainThreshold() { return gain_threshold_; }
+    void SetRange(int id, double min, double max) {
+        ranges_[id] = std::pair<double,double>(min,max);
+    }
 
 protected:
 
     // A feature must create a gain of more than this to be added
     double gain_threshold_;
     // The range of the weights
-    std::pair<double,double> range_;
+    typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;
+    RangeMap ranges_;
+    double zero_score_;
 
 };
 

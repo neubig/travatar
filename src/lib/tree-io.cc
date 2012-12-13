@@ -71,7 +71,10 @@ void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
 
 HyperGraph * JSONTreeIO::ReadTree(istream & in) {
     ptree pt;
-    string line; getline(in, line); istringstream line_in(line);
+    string line; 
+    if(!getline(in, line))
+        return NULL;
+    istringstream line_in(line);
     json_parser::read_json(line_in, pt);
     HyperGraph * ret = new HyperGraph;
     // Get each of the nodes

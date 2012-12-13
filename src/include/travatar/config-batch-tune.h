@@ -31,7 +31,8 @@ public:
         AddConfigEntry("debug", "0", "What level of debugging output to print");
         AddConfigEntry("threshold", "0.0001", "What level of thresholding to use");
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes)");
-        AddConfigEntry("weight_range", ":", "The range of weights to allow, separated by a colon. Leave blank for infinity. Specific weights can be specified by separating with a pipe and adding a the name followed by equals and the range.");
+        AddConfigEntry("weight_file", "", "File of initial weights");
+        AddConfigEntry("weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
 
     }
 	
