@@ -15,6 +15,7 @@ namespace travatar {
 class TuningExample;
 class TuneGreedyMert;
 class OutputCollector;
+class ThreadPool;
 
 struct LineSearchResult {
 
@@ -41,8 +42,8 @@ public:
                    TuneGreedyMert & tgm,
                    int feature,
                    double potential,
-                   OutputCollector & collector) :
-        id_(id), tgm_(&tgm), feature_(feature), potential_(potential), collector_(&collector) { }
+                   OutputCollector * collector) :
+        id_(id), tgm_(&tgm), feature_(feature), potential_(potential), collector_(collector) { }
     void Run();
 protected:
     int id_;
@@ -59,7 +60,9 @@ class TuneGreedyMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1) {
+    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1),
+                       thread_pool_(NULL), out_collect_(NULL),
+                       task_id_(0) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -103,8 +106,10 @@ public:
     TuningExample & GetExample(int id) {
         return *SafeAccess(examps_, id);
     }
-    void SetThreads(int threads) { threads_ = threads; }
-    int NumThreads() const { return threads_; }
+    void SetThreadPool(ThreadPool * thread_pool, OutputCollector * out_collect) {
+        thread_pool_ = thread_pool;
+        out_collect_ = out_collect;
+    }
 
 protected:
 
@@ -130,6 +135,11 @@ protected:
 
     // The number of threads to use
     int threads_;
+
+    // Thread management
+    ThreadPool * thread_pool_;
+    OutputCollector * out_collect_;
+    int task_id_;
 
 };
 

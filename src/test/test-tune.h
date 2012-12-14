@@ -131,7 +131,7 @@ public:
             CheckAlmost(exp_score3.before, act_score3.before) &&
             CheckAlmost(exp_score3.after, act_score3.after) &&
             CheckAlmost(exp_score2.pos, act_score2.pos) &&
-            CheckAlmost(exp_score2.before, act_score2.before);
+            CheckAlmost(exp_score2.before, act_score2.before) &&
             CheckAlmost(exp_score2.after, act_score2.after);
     }
 

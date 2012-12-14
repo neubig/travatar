@@ -31,7 +31,10 @@ void GreedyMertTask::Run() {
     }
     ostringstream oss;
     oss << "gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl;
-    collector_->Write(id_, oss.str(), "");
+    if(collector_)
+        collector_->Write(id_, oss.str(), "");
+    else
+        cerr << oss.str();
 }
 
 void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
@@ -133,6 +136,8 @@ pair<double,double> TuneGreedyMert::FindGradientRange(
 
 // Find the best value to tune and tune it
 double TuneGreedyMert::TuneOnce() {
+    best_result_ = LineSearchResult();
+    best_gradient_ = SparseMap();
     PRINT_DEBUG("Calculating potential gains..." << endl, 1);
     SparseMap potential;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
@@ -144,26 +149,24 @@ double TuneGreedyMert::TuneOnce() {
         if(val.second >= gain_threshold_)
             vals.push_back(make_pair(val.second, val.first));
     sort(vals.begin(), vals.end());
-    // Perform line search for each weight
-    pair<double,double> best_result(0,0);
-    SparseMap best_gradient;
     // Dispatch jobs until the best value exceeds the expected value
-    OutputCollector out_collect;
-    ThreadPool pool(threads_, 1000);
-    int task_id = 0;
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
         if(val.first < best_result_.gain)
             break;
-        GreedyMertTask* task = new GreedyMertTask(task_id++, *this, val.second, val.first, out_collect);
-        pool.Submit(task);
+        GreedyMertTask* task = new GreedyMertTask(task_id_++, *this, val.second, val.first, out_collect_);
+        // If the threads are not correct
+        if(thread_pool_)
+            thread_pool_->Submit(task);
+        else
+            task->Run();
     }
     // Update with the best value
-    if(best_result.second > gain_threshold_) {
-        PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient) << " * " << best_result.first << endl, 0);
-        weights_ += best_gradient * best_result.first;
+    if(best_result_.gain > gain_threshold_) {
+        PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient_) << " * " << best_result_.pos << endl, 0);
+        weights_ += best_gradient_ * best_result_.pos;
     }
     PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights_) << endl, 0);
-    return best_result.second;
+    return best_result_.gain;
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
