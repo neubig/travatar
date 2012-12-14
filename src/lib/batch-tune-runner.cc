@@ -18,8 +18,7 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-void BatchTuneRunner::LoadNbests(istream & sys_in, 
-                                 vector<shared_ptr<TuningExample> > & examps) {
+void BatchTuneRunner::LoadNbests(istream & sys_in, TuneGreedyMert & tgm) {
     string line;
     regex threebars(" \\|\\|\\| ");
     while(getline(sys_in, line)) {
@@ -35,25 +34,24 @@ void BatchTuneRunner::LoadNbests(istream & sys_in,
         const Sentence & ref = SafeAccess(refs_,id);
         double score = eval_->MeasureScore(ref, hyp, id) * ref.size() / ref_len_;
         // Add the example
-        while((int)examps.size() <= id) {
+        while((int)tgm.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            examps.push_back(shared_ptr<TuningExample>(new TuningExampleNbest()));
+            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
-        ((TuningExampleNbest&)*examps[id]).AddHypothesis(feat, score);
+        ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, score);
     }
     PRINT_DEBUG(endl, 1);
 }
 
-void BatchTuneRunner::LoadForests(istream & sys_in, 
-                                  vector<shared_ptr<TuningExample> > & examps) {
+void BatchTuneRunner::LoadForests(istream & sys_in, TuneGreedyMert & tgm) {
     JSONTreeIO io;
     HyperGraph * curr_ptr;
     int id = 0;
     while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
         PRINT_DEBUG("Loading line " << id << endl, 1);
         const Sentence & ref = SafeAccess(refs_,id);
-        examps.push_back(
+        tgm.AddExample(
             shared_ptr<TuningExample>(
                 new TuningExampleForest(
                     eval_.get(),
@@ -117,15 +115,14 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     }
 
     // Convert the n-best lists or forests into example pairs for tuning
+    TuneGreedyMert tgm;
     PRINT_DEBUG("Loading system output..." << endl, 1);
-    vector<shared_ptr<TuningExample> > examps;
     if(use_nbest)
-        LoadNbests(sys_in, examps);
+        LoadNbests(sys_in, tgm);
     else
-        LoadForests(sys_in, examps);
+        LoadForests(sys_in, tgm);
 
     // Set the weight ranges
-    TuneGreedyMert tgm;
     if(config.GetString("weight_ranges") != "") {
         vector<string> ranges, range_vals;
         boost::split(ranges, config.GetString("weight_ranges"), boost::is_any_of(" "));
@@ -144,9 +141,10 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     // Perform MERT
     PRINT_DEBUG("Tuning..." << endl, 1);
     tgm.SetGainThreshold(config.GetDouble("threshold"));
-    tgm.Tune(examps, weights);
+    tgm.SetWeights(weights);
+    tgm.Tune();
 
     // Print result
-    cout << Dict::PrintFeatures(weights) << endl;
+    cout << Dict::PrintFeatures(tgm.GetWeights()) << endl;
 
 }

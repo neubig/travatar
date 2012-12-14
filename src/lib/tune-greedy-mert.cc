@@ -14,10 +14,41 @@ using namespace travatar;
 
 #define MARGIN 1
 
-// TODO: Make it possible to calculate with only some examples
-// Return the optimal value and the score achieved at that value
-pair<double,double> TuneGreedyMert::LineSearch(
-                const vector<shared_ptr<TuningExample> > & examps, 
+void GreedyMertTask::Run() {
+    // Check to make sure that our potential is still higher than the current best
+    double best = tgm_->GetBestGain();
+    if(potential_ <= best)
+        return;
+    // Mak the gradient and find the ranges
+    SparseMap gradient;
+    gradient[feature_] = 1;
+    pair<double,double> gradient_range = tgm_->FindGradientRange(feature_);
+    LineSearchResult result = tgm_->LineSearch(tgm_->GetWeights(), gradient, gradient_range);
+    if(result.gain > best) {
+        tgm_->UpdateBest(gradient, result);
+        best = result.gain;
+    }
+    PRINT_DEBUG("gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl, 1);
+}
+
+void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
+    mutex::scoped_lock lock(result_mutex_);
+    if(best_result_.gain < result.gain) {
+        best_gradient_ = gradient;
+        best_result_ = result;
+        cerr << "NEW MAX: " << Dict::WSym(gradient.begin()->first) << "=" << result.gain << endl;
+    }
+}
+
+pair<double,double> TuneGreedyMert::FindGradientRange(WordId feat) {
+    RangeMap::const_iterator it = ranges_.find(feat);
+    pair<double,double> range = (it == ranges_.end() ? ranges_[-1] : it->second);
+    SparseMap gradient; gradient[feat] = 1;
+    return FindGradientRange(weights_, gradient, range);
+}
+
+LineSearchResult TuneGreedyMert::LineSearch(
+
                 const SparseMap & weights,
                 const SparseMap & gradient,
                 pair<double,double> range) {
@@ -25,7 +56,7 @@ pair<double,double> TuneGreedyMert::LineSearch(
     map<double,double> boundaries;
     typedef pair<double,double> DoublePair;
     // Create the search plane
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps) {
+    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
         // Calculate the convex hull
         ConvexHull convex_hull = examp->CalculateConvexHull(weights, gradient);
         PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 2);
@@ -44,12 +75,12 @@ pair<double,double> TuneGreedyMert::LineSearch(
     // Find the place with the best score on the plane
     ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), 0);
     double last_bound = -DBL_MAX, curr_score = base_score;
-    zero_score_ = DBL_MAX;
+    double zero_score = DBL_MAX;
     BOOST_FOREACH(const DoublePair & boundary, boundaries) {
         // Find the score at zero. If there is a boundary directly at zero, break ties
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
-            zero_score_ = curr_score;
+            zero_score = curr_score;
         // Update the span if it exceeds the previous best and is in the acceptable gradient range
         if(curr_score > best_span.second && (last_bound < range.second && boundary.first > range.first))
             best_span = ScoredSpan(Span(last_bound, boundary.first), curr_score);
@@ -69,8 +100,8 @@ pair<double,double> TuneGreedyMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_score_ << ", " << middle << " --> " << best_span.second << endl, 2);
-    return make_pair(middle, best_span.second-zero_score_);
+    PRINT_DEBUG("0 --> " << zero_score << ", " << middle << " --> " << best_span.second << endl, 2);
+    return LineSearchResult(middle, zero_score, best_span.second);
 }
 
 // Current value can be found here
@@ -98,13 +129,11 @@ pair<double,double> TuneGreedyMert::FindGradientRange(
 }
 
 // Find the best value to tune and tune it
-double TuneGreedyMert::TuneOnce(
-           const vector<shared_ptr<TuningExample> > & examps,
-           SparseMap & weights) {
+double TuneGreedyMert::TuneOnce() {
     PRINT_DEBUG("Calculating potential gains..." << endl, 1);
     SparseMap potential;
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps)
-        potential += examp->CalculatePotentialGain(weights);
+    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
+        potential += examp->CalculatePotentialGain(weights_);
     // Order the weights in descending order
     typedef pair<double,int> DIPair;
     vector<DIPair> vals;
@@ -115,37 +144,22 @@ double TuneGreedyMert::TuneOnce(
     // Perform line search for each weight
     pair<double,double> best_result(0,0);
     SparseMap best_gradient;
-    string best_str = "NA";
+    // Dispatch jobs until the best value exceeds the expected value
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
-        if(val.first < best_result.second) {
-            PRINT_DEBUG(Dict::WSym(val.second) << "=" << val.first << " (max: " << best_str << "=" << best_result.second << "): BREAK!" << endl, 0);
+        if(val.first < best_result_.gain)
             break;
-        }
-        SparseMap gradient;
-        gradient[val.second] = 1;
-        RangeMap::const_iterator it = ranges_.find(val.second);
-        pair<double,double> range = (it == ranges_.end() ? ranges_[-1] : it->second);
-        pair<double,double> gradient_range = FindGradientRange(weights, gradient, range);
-        pair<double,double> search_result = LineSearch(examps, weights, gradient, gradient_range);
-        if(search_result.second > best_result.second) {
-            best_result = search_result;
-            best_gradient = gradient;
-            best_str = Dict::WSym(val.second);
-        }
-        PRINT_DEBUG("gain?("<<Dict::WSym(val.second)<<")=" << val.first << " --> gain@" << search_result.first <<"="<< search_result.second << ", score="<<zero_score_+search_result.second<<" (max: " << best_str << "=" <<  best_result.second << ")" << endl, 1);
+        THROW_ERROR("TODO: GreedyMertTask run");
     }
     // Update with the best value
     if(best_result.second > gain_threshold_) {
         PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient) << " * " << best_result.first << endl, 0);
-        weights += best_gradient * best_result.first;
+        weights_ += best_gradient * best_result.first;
     }
-    PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl, 0);
+    PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights_) << endl, 0);
     return best_result.second;
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
-void TuneGreedyMert::Tune(
-     const vector<shared_ptr<TuningExample> > & examps,
-     SparseMap & weights) {
-    while(TuneOnce(examps, weights) > gain_threshold_);
+void TuneGreedyMert::Tune() {
+    while (TuneOnce() > gain_threshold_);
 }

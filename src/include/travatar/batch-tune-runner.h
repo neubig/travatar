@@ -11,6 +11,7 @@ namespace travatar {
 class ConfigBatchTune;
 class TuningExample;
 class EvalMeasure;
+class TuneGreedyMert;
 
 class BatchTuneRunner {
 public:
@@ -24,10 +25,8 @@ public:
 private:
 
     // Load n-best lists or forests
-    void LoadNbests(std::istream & sys_in, 
-                    std::vector<boost::shared_ptr<TuningExample> > & examps);
-    void LoadForests(std::istream & sys_in, 
-                     std::vector<boost::shared_ptr<TuningExample> > & examps);
+    void LoadNbests(std::istream & sys_in, TuneGreedyMert & tgm);
+    void LoadForests(std::istream & sys_in, TuneGreedyMert & tgm);
 
     // The evaluation measure to use
     int ref_len_;

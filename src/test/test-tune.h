@@ -115,20 +115,24 @@ public:
 
     int TestLineSearch() {
         TuneGreedyMert mert;
+        mert.SetExamples(examp_set);
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
-        pair<double,double> exp_score1(2.0,0.2);
-        pair<double,double> act_score1 = mert.LineSearch(examp_set, weights, gradient);
-        pair<double,double> exp_score2(-2.0,0.1);
-        pair<double,double> act_score2 = mert.LineSearch(examp_set, weights, gradient, make_pair(-DBL_MAX, 0.0));
-        pair<double,double> exp_score3(-3.0,0.1);
-        pair<double,double> act_score3 = mert.LineSearch(examp_set, weights, gradient, make_pair(-DBL_MAX, -3.0));
+        LineSearchResult exp_score1(2.0,0.2,0.4);
+        LineSearchResult act_score1 = mert.LineSearch(weights, gradient);
+        LineSearchResult exp_score2(-2.0,0.2,0.3);
+        LineSearchResult act_score2 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, 0.0));
+        LineSearchResult exp_score3(-3.0,0.2,0.3);
+        LineSearchResult act_score3 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, -3.0));
         return 
-            CheckAlmost(exp_score1.first, act_score1.first) &&
-            CheckAlmost(exp_score1.second, act_score1.second) &&
-            CheckAlmost(exp_score3.first, act_score3.first) &&
-            CheckAlmost(exp_score3.second, act_score3.second) &&
-            CheckAlmost(exp_score2.first, act_score2.first) &&
-            CheckAlmost(exp_score2.second, act_score2.second);
+            CheckAlmost(exp_score1.pos, act_score1.pos) &&
+            CheckAlmost(exp_score1.before, act_score1.before) &&
+            CheckAlmost(exp_score1.after, act_score1.after) &&
+            CheckAlmost(exp_score3.pos, act_score3.pos) &&
+            CheckAlmost(exp_score3.before, act_score3.before) &&
+            CheckAlmost(exp_score3.after, act_score3.after) &&
+            CheckAlmost(exp_score2.pos, act_score2.pos) &&
+            CheckAlmost(exp_score2.before, act_score2.before);
+            CheckAlmost(exp_score2.after, act_score2.after);
     }
 
     int TestLatticeHull() {
