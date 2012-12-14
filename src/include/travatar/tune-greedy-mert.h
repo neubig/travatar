@@ -37,13 +37,15 @@ struct LineSearchResult {
 // A task
 class GreedyMertTask : public Task {
 public:
-    GreedyMertTask(TuneGreedyMert & tgm,
+    GreedyMertTask(int id,
+                   TuneGreedyMert & tgm,
                    int feature,
                    double potential,
                    OutputCollector & collector) :
-        tgm_(&tgm), feature_(feature), potential_(potential), collector_(&collector) { }
+        id_(id), tgm_(&tgm), feature_(feature), potential_(potential), collector_(&collector) { }
     void Run();
 protected:
+    int id_;
     TuneGreedyMert * tgm_;
     int feature_;
     double potential_;

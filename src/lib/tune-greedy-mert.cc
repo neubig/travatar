@@ -29,7 +29,9 @@ void GreedyMertTask::Run() {
         tgm_->UpdateBest(gradient, result);
         best = result.gain;
     }
-    PRINT_DEBUG("gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl, 1);
+    ostringstream oss;
+    oss << "gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl;
+    collector_->Write(id_, oss.str(), "");
 }
 
 void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
@@ -148,10 +150,11 @@ double TuneGreedyMert::TuneOnce() {
     // Dispatch jobs until the best value exceeds the expected value
     OutputCollector out_collect;
     ThreadPool pool(threads_, 1000);
+    int task_id = 0;
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
         if(val.first < best_result_.gain)
             break;
-        GreedyMertTask* task = new GreedyMertTask(*this, val.second, val.first, out_collect);
+        GreedyMertTask* task = new GreedyMertTask(task_id++, *this, val.second, val.first, out_collect);
         pool.Submit(task);
     }
     // Update with the best value

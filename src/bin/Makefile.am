@@ -9,4 +9,4 @@ forest_extractor_SOURCES = forest-extractor.cc
 forest_extractor_LDADD = ../lib/libtravatar.la -lboost_thread -lboost_regex -lz -lmarisa
 
 batch_tune_SOURCES = batch-tune.cc
-batch_tune_LDADD = ../lib/libtravatar.la -lboost_thread -lboost_regex
+batch_tune_LDADD = ../lib/libtravatar.la -lboost_thread -lboost_regex -lz -lmarisa
