@@ -57,7 +57,7 @@ class TuneGreedyMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001) {
+    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -101,6 +101,8 @@ public:
     TuningExample & GetExample(int id) {
         return *SafeAccess(examps_, id);
     }
+    void SetThreads(int threads) { threads_ = threads; }
+    int NumThreads() const { return threads_; }
 
 protected:
 
@@ -123,6 +125,9 @@ protected:
     
     // A Mutex to prevent conflicts in the result update
     boost::mutex result_mutex_;
+
+    // The number of threads to use
+    int threads_;
 
 };
 

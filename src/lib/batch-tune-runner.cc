@@ -116,6 +116,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Convert the n-best lists or forests into example pairs for tuning
     TuneGreedyMert tgm;
+    tgm.SetThreads(config.GetInt("threads"));
     PRINT_DEBUG("Loading system output..." << endl, 1);
     if(use_nbest)
         LoadNbests(sys_in, tgm);

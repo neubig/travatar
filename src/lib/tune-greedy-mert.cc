@@ -7,6 +7,7 @@
 #include <travatar/util.h>
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
+#include <travatar/output-collector.h>
 
 using namespace std;
 using namespace boost;
@@ -145,10 +146,13 @@ double TuneGreedyMert::TuneOnce() {
     pair<double,double> best_result(0,0);
     SparseMap best_gradient;
     // Dispatch jobs until the best value exceeds the expected value
+    OutputCollector out_collect;
+    ThreadPool pool(threads_, 1000);
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
         if(val.first < best_result_.gain)
             break;
-        THROW_ERROR("TODO: GreedyMertTask run");
+        GreedyMertTask* task = new GreedyMertTask(*this, val.second, val.first, out_collect);
+        pool.Submit(task);
     }
     // Update with the best value
     if(best_result.second > gain_threshold_) {

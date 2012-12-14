@@ -29,6 +29,7 @@ public:
         AddConfigEntry("nbest", "", "The pointer to a file containing the n-best list of system output");
         AddConfigEntry("forest", "", "The pointer to a file containing translation forests");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("threads", "1", "The number of threads to use");
         AddConfigEntry("threshold", "0.0001", "What level of thresholding to use");
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes)");
         AddConfigEntry("weight_file", "", "File of initial weights");
