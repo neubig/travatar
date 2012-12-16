@@ -27,6 +27,7 @@ void TuningExampleForest::FindActiveFeatures() {
 void TuningExampleForest::CalculateOracle() {
     Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
     oracle_score_ = measure_->MeasureScore(ref_, oracle_sent, id_);
+    PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
     oracle_score_ *= mult_;
 }
 
