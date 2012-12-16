@@ -24,6 +24,12 @@ void TuningExampleForest::FindActiveFeatures() {
             active_.insert(feat.first);
 }
 
+void TuningExampleForest::CalculateOracle() {
+    Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
+    oracle_score_ = measure_->MeasureScore(ref_, oracle_sent, id_);
+    oracle_score_ *= mult_;
+}
+
 // Calculate the potential gain for a single example given the current weights
 SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights) {
     // Find the best according to the weights
@@ -33,7 +39,8 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
     curr_score_ = measure_->MeasureScore(ref_, sent, id_) * mult_;
-    // TODO: calculate the best score according to this forest
+    // Find the potential gain
+    oracle_score_ = max(oracle_score_, curr_score_);
     double gain = oracle_score_ - curr_score_;
     // Add this to all existing values
     SparseMap ret;

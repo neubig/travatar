@@ -67,6 +67,7 @@ const ChartEntry & LMComposerBU::BuildChart(
     }
     // For each edge on the queue, process it
     int num_popped = 0;
+    WordId feature_id = Dict::WID(feature_name_);
     while(hypo_queue.size() != 0) {
         if(num_popped++ >= stack_pop_limit_) break;
         // Get the score, id string, and edge
@@ -132,7 +133,7 @@ const ChartEntry & LMComposerBU::BuildChart(
         sort(next_edge->GetTails().begin(), next_edge->GetTails().end(), NodeSrcLess());
         next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_);
         if(lm_score != 0.0)
-            next_edge->GetFeatures().insert(make_pair(Dict::WID(feature_name_), lm_score));
+            next_edge->GetFeatures().insert(make_pair(feature_id, lm_score));
         rule_graph.AddEdge(next_edge);
         next_node->AddEdge(next_edge);
         // cerr << " HERE @ " << *next_node << ": " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;

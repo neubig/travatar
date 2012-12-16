@@ -32,6 +32,8 @@ public:
 
     double GetLMWeight() const { return lm_weight_; }
     void SetLMWeight(double lm_weight) { lm_weight_ = lm_weight; }
+    const std::string & GetFeatureName() const { return feature_name_; }
+    void SetFeatureName(const std::string & feature_name) { feature_name_ = feature_name; }
 
 };
 

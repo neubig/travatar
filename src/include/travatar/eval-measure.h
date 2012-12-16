@@ -8,6 +8,8 @@
 
 namespace travatar {
 
+class HyperGraph;
+
 class EvalMeasure {
 
 public:
@@ -44,6 +46,9 @@ public:
             ret = std::min(ret, MeasureLoss(refs[i], sys));
         return ret;
     }
+
+    // Find the oracle sentence for this evaluatio measure
+    virtual Sentence CalculateOracle(const HyperGraph & graph, const Sentence & ref);
 
     // Clear the cache
     virtual void ClearCache() { }

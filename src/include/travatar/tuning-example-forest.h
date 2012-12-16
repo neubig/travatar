@@ -28,12 +28,16 @@ public:
                             ref_(ref), oracle_score_(mult),
                             curr_score_(-DBL_MAX), id_(id), mult_(mult) {
         FindActiveFeatures();
+        CalculateOracle();
     }
 
     virtual ~TuningExampleForest() { }
 
     // Find the featutres that are active in this forest
     void FindActiveFeatures();
+
+    // Calculate the oracle of this sentence
+    void CalculateOracle();
 
     // Calculate the gain that could be achieved by each feature
     // for this particular forest (oracle-current best)
