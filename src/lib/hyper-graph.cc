@@ -213,7 +213,7 @@ class PathScoreMore {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
         if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() > y->GetScore();
-        return x->GetEdges().size() > y->GetEdges().size();
+        return x->GetEdges() > y->GetEdges();
     }
 };
 
@@ -251,7 +251,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<Wor
                 paths.insert(next_path);
             }
             while((int)paths.size() > n)
-                paths.erase(*paths.rbegin());
+                paths.erase(boost::prior(paths.end()));
         }
         
     }
