@@ -117,20 +117,12 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Convert the n-best lists or forests into example pairs for tuning
     TuneGreedyMert tgm;
+    tgm.SetThreads(config.GetInt("threads"));
     PRINT_DEBUG("Loading system output..." << endl, 1);
     if(use_nbest)
         LoadNbests(sys_in, tgm);
     else
         LoadForests(sys_in, tgm);
-
-    // Create the threads
-    shared_ptr<ThreadPool> thread_pool;
-    shared_ptr<OutputCollector> out_collect;
-    if(config.GetInt("threads") != 1) {
-        thread_pool.reset(new ThreadPool(config.GetInt("threads"), 1000));
-        out_collect.reset(new OutputCollector);
-        tgm.SetThreadPool(thread_pool.get(), out_collect.get());
-    }
 
     // Set the weight ranges
     if(config.GetString("weight_ranges") != "") {
@@ -156,5 +148,4 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Print result
     cout << Dict::PrintFeatures(tgm.GetWeights()) << endl;
-
 }

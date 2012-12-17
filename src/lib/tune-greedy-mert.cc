@@ -149,17 +149,30 @@ double TuneGreedyMert::TuneOnce() {
         if(val.second >= gain_threshold_)
             vals.push_back(make_pair(val.second, val.first));
     sort(vals.begin(), vals.end());
+
+    // Create the threads
+    shared_ptr<ThreadPool> thread_pool;
+    shared_ptr<OutputCollector> out_collect;
+    int task_id = 0;
+    if(threads_) {
+        thread_pool.reset(new ThreadPool(threads_, 1000));
+        out_collect.reset(new OutputCollector);
+    }
+
     // Dispatch jobs until the best value exceeds the expected value
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
         if(val.first < best_result_.gain)
             break;
-        GreedyMertTask* task = new GreedyMertTask(task_id_++, *this, val.second, val.first, out_collect_);
+        GreedyMertTask* task = new GreedyMertTask(task_id++, *this, val.second, val.first, out_collect.get());
         // If the threads are not correct
-        if(thread_pool_)
-            thread_pool_->Submit(task);
+        if(thread_pool)
+            thread_pool->Submit(task);
         else
             task->Run();
     }
+    if(thread_pool)
+        thread_pool->Stop(true);
+
     // Update with the best value
     if(best_result_.gain > gain_threshold_) {
         PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient_) << " * " << best_result_.pos << endl, 0);

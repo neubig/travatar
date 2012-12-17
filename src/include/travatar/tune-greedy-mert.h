@@ -60,9 +60,7 @@ class TuneGreedyMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1),
-                       thread_pool_(NULL), out_collect_(NULL),
-                       task_id_(0) {
+    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -93,6 +91,8 @@ public:
     int NumExamples() { return examps_.size(); }
     const SparseMap & GetWeights() const { return weights_; }
     void SetWeights(const SparseMap & weights) { weights_ = weights; }
+    int GetThreads() const { return threads_; }
+    void SetThreads(int threads) { threads_ = threads; }
     void SetGainThreshold(double thresh) { gain_threshold_ = thresh; }
     double GetGainThreshold() { return gain_threshold_; }
     void SetRange(int id, double min, double max) {
@@ -105,10 +105,6 @@ public:
     }
     TuningExample & GetExample(int id) {
         return *SafeAccess(examps_, id);
-    }
-    void SetThreadPool(ThreadPool * thread_pool, OutputCollector * out_collect) {
-        thread_pool_ = thread_pool;
-        out_collect_ = out_collect;
     }
 
 protected:
@@ -135,11 +131,6 @@ protected:
 
     // The number of threads to use
     int threads_;
-
-    // Thread management
-    ThreadPool * thread_pool_;
-    OutputCollector * out_collect_;
-    int task_id_;
 
 };
 

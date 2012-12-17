@@ -29,6 +29,9 @@ public:
 
     // Stop the remaining values
     void Stop(bool process_remaining);
+    
+    // Wait until all of the running threads have stopped
+    void Wait();
 
 protected:
     // The function executed by each thread, which will wait for a task, then

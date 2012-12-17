@@ -42,6 +42,14 @@ void ThreadPool::Submit(Task* task) {
     thread_needed_.notify_all();
 }
 
+void ThreadPool::Wait() {
+    while(!tasks_.empty()) {
+        boost::mutex::scoped_lock lock(mutex_);
+        thread_available_.wait(lock);
+    }
+    sleep(1);
+}
+
 void ThreadPool::Stop(bool process_remaining) {
     {
         mutex::scoped_lock lock(mutex_);
