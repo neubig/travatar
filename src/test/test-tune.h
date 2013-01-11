@@ -148,7 +148,7 @@ public:
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
         exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
         exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
         return CheckVector(exp_hull, act_hull);
     }
@@ -166,7 +166,7 @@ public:
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
         exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
         exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
         return CheckVector(exp_hull, act_hull);
     }
