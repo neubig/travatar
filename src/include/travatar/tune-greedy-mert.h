@@ -60,7 +60,8 @@ class TuneGreedyMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1) {
+    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1), 
+                       early_terminate_(true) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -98,6 +99,7 @@ public:
     void SetRange(int id, double min, double max) {
         ranges_[id] = std::pair<double,double>(min,max);
     }
+    bool GetEarlyTerminate() const { return early_terminate_; }
     double GetBestGain() const { return best_result_.gain; }
     const SparseMap & GetWeights() { return weights_; }
     void AddExample(const boost::shared_ptr<TuningExample> & examp) {
@@ -131,6 +133,10 @@ protected:
 
     // The number of threads to use
     int threads_;
+
+    // Whether to terminate as soon as we have a value that exceeds the
+    // gain threshold
+    bool early_terminate_;
 
 };
 
