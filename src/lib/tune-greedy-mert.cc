@@ -18,7 +18,8 @@ using namespace travatar;
 void GreedyMertTask::Run() {
     // Check to make sure that our potential is still higher than the current best
     double best = tgm_->GetBestGain();
-    if(potential_ <= best)
+    if((potential_ <= best) ||
+       (tgm_->GetEarlyTerminate() && best >= tgm_->GetGainThreshold()))
         return;
     // Mak the gradient and find the ranges
     SparseMap gradient;
@@ -161,7 +162,8 @@ double TuneGreedyMert::TuneOnce() {
 
     // Dispatch jobs until the best value exceeds the expected value
     BOOST_REVERSE_FOREACH(const DIPair & val, vals) {
-        if(val.first < best_result_.gain)
+        if((val.first < best_result_.gain) || 
+           (early_terminate_ && best_result_.gain >= gain_threshold_))
             break;
         GreedyMertTask* task = new GreedyMertTask(task_id++, *this, val.second, val.first, out_collect.get());
         // If the threads are not correct
