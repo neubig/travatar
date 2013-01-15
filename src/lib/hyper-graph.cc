@@ -445,9 +445,8 @@ double HyperNode::CalcViterbiScore() {
             double score = edge->GetScore();
             BOOST_FOREACH(HyperNode * tail, edge->GetTails())
                 score += tail->CalcViterbiScore();
-            if(score > viterbi_score_) {
+            if(score > viterbi_score_)
                 viterbi_score_ = score;
-            }
         }
     }
     return viterbi_score_;

@@ -10,7 +10,7 @@ using namespace boost;
 using namespace std;
 
 LookupTable::LookupTable() : 
-    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")) { }
+    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")), match_all_unk_(true) { }
 
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
@@ -67,7 +67,8 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
     // For each node
     BOOST_FOREACH(HyperNode * next_node, ret->GetNodes()) {
         // If there is at least one matching node
-        if(lookups[next_node->GetId()].size() > 0) {
+        int my_size = lookups[next_node->GetId()].size();
+        if(my_size > 0) {
             // For each matched portion of the source tree
             BOOST_FOREACH(const shared_ptr<LookupState> & state, lookups[next_node->GetId()]) {
                 // For each tail in the 
@@ -83,8 +84,9 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
                     ret->AddEdge(next_edge);
                 }
             }
+        }
         // For unmatched nodes, add an unknown rule for every edge in the parse
-        } else {
+        if(my_size == 0 || match_all_unk_) {
             BOOST_FOREACH(const HyperEdge * parse_edge, parse.GetNode(rev_node_map[next_node->GetId()])->GetEdges()) {
                 HyperEdge * next_edge = new HyperEdge(next_node);
                 BOOST_FOREACH(const HyperNode * parse_node, parse_edge->GetTails())

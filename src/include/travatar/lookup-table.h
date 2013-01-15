@@ -76,6 +76,8 @@ protected:
     virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) = 0;
 
     TranslationRule unk_rule_;
+    // Match all nodes with the unknown rule, not just when no other rule is matched
+    bool match_all_unk_;
 
 };
 
