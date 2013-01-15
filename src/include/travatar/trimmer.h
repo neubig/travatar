@@ -2,6 +2,7 @@
 #define TRIMMER_H__
 
 #include <travatar/graph-transformer.h>
+#include <map>
 
 namespace travatar {
 

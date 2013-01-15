@@ -172,6 +172,9 @@ public:
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return edges_[i]; }
     HyperEdge* GetEdge(int i) { return edges_[i]; }
+    void SetEdges(const std::vector<HyperEdge*> edges) {
+        edges_ = edges;
+    }
     HyperNode::FrontierType GetFrontier() const { return frontier_; }
     bool HasTrgSpan() const { return has_trg_span_; }
     const std::set<int> & GetTrgSpan() const { return trg_span_; }
