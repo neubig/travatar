@@ -35,8 +35,8 @@ GetOptions(
     # "=s" => \$,
 );
 
-if((not $SEED_WEIGHTS) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or (not $MOSES_DIR) or (not $WORKING_DIR) or (not $LM) or (not $TM)) {
-    die "Must specify seed-weights, src, ref, travatar-dir, moses-dir, lm, tm, and working-dir";
+if((not $SEED_WEIGHTS) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or (not $MOSES_DIR) or (not $WORKING_DIR) or (not $TM)) {
+    die "Must specify seed-weights, src, ref, travatar-dir, moses-dir, tm, and working-dir";
 }
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 
@@ -80,7 +80,8 @@ sub load_weights {
 foreach my $iter (1 .. $MAX_ITERS) {
     my $prev = "$WORKING_DIR/run$iter";
     my $next = "$WORKING_DIR/run".($iter+1);
-    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -lm_file $LM -tm_file $TM -weight_file $prev.weights -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    my $lmopt = ($LM ? "-lm_file $LM" : "");
+    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST $lmopt -tm_file $TM -weight_file $prev.weights -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $prev.weights < $prev.nbest > $prev.nbest-dense") or die "couldn't densify";
     safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $prev.scores.dat --ffile $prev.features.dat -r $REF -n $prev.nbest-dense") or die "couldn't extract";

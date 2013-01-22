@@ -75,8 +75,13 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             THROW_ERROR("File sizes don't match: src="<<has_src
                         <<", trg="<<has_trg<<", align="<<has_align);
         // Parse into the appropriate data structures
-        istringstream src_iss(src_line);
-        scoped_ptr<HyperGraph> src_graph(tree_io->ReadTree(src_iss));
+        shared_ptr<HyperGraph> src_graph;
+        try {
+            istringstream src_iss(src_line);
+            src_graph.reset(tree_io->ReadTree(src_iss));
+        } catch (std::runtime_error & e) {
+            THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
+        }
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
         // Binarizer if necessary
         if(binarizer.get() != NULL)
