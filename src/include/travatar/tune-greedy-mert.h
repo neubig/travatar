@@ -61,7 +61,7 @@ class TuneGreedyMert {
 public:
 
     TuneGreedyMert() : gain_threshold_(0.0001), threads_(1), 
-                       early_terminate_(true) {
+                       early_terminate_(false) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
