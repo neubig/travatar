@@ -1,0 +1,99 @@
+#include <iostream>
+#include <fstream>
+#include <travatar/util.h>
+#include <travatar/tree-io.h>
+#include <travatar/tree-converter-runner.h>
+#include <travatar/config-tree-converter-runner.h>
+#include <travatar/binarizer-directional.h>
+#include <travatar/binarizer-cky.h>
+#include <travatar/unary-flattener.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+
+using namespace travatar;
+using namespace std;
+using namespace boost;
+
+// Run the model
+void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
+
+    // Set the debugging level
+    GlobalVars::debug = config.GetInt("debug");
+
+    // Create the tree input
+    scoped_ptr<TreeIO> tree_in, tree_out;
+    if(config.GetString("input_format") == "penn")
+        tree_in.reset(new PennTreeIO);
+    else
+        THROW_ERROR("Invalid -input_format type: " << config.GetString("input_format"));
+    // Create the tree output
+    if(config.GetString("output_format") == "penn")
+        tree_out.reset(new PennTreeIO);
+    else if(config.GetString("output_format") != "word")
+        THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
+
+    // Create the binarizer
+    scoped_ptr<GraphTransformer> binarizer;
+    if(config.GetString("binarize") == "left") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
+    } else if(config.GetString("binarize") == "right") {
+        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+    } else if(config.GetString("binarize") == "cky") {
+        binarizer.reset(new BinarizerCKY());
+    } else if(config.GetString("binarize") != "none") {
+        THROW_ERROR("Invalid binarizer type " << config.GetString("binarize"));
+    }
+    // Create the flattener
+    scoped_ptr<GraphTransformer> flattener;
+    if(config.GetBool("flatten")) {
+        flattener.reset(new UnaryFlattener());
+    }
+
+    // Open the file (or cin)
+    const vector<string> & argv = config.GetMainArgs();
+    istream * src_in;
+    if(argv.size() == 1 && argv[0] != "-") {
+        src_in = new ifstream(argv[0].c_str());
+        if(!src_in) THROW_ERROR("Could not find src file: " << argv[0]);
+    } else {
+        src_in = &cin;
+    }
+
+    // Get the lines
+    string src_line;
+    int has_src;
+    int sent = 0;
+    cerr << "Transforming trees (.=10,000, !=100,000 sentences)" << endl;
+    while(true) {
+        // Load one line from each file and check that they all exist
+        has_src = getline(*src_in, src_line) ? 1 : 0;
+        if(!has_src) break;
+        // Parse into the appropriate data structures
+        shared_ptr<HyperGraph> src_graph;
+        try {
+            istringstream src_iss(src_line);
+            src_graph.reset(tree_in->ReadTree(src_iss));
+        } catch (std::runtime_error & e) {
+            THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
+        }
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
+        // Binarizer if necessary
+        if(binarizer.get() != NULL)
+            src_graph.reset(binarizer->TransformGraph(*src_graph));
+        // Flattener if necessary
+        if(flattener.get() != NULL)
+            src_graph.reset(flattener->TransformGraph(*src_graph));
+        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
+        // Write out the tree
+        if(tree_out.get() != NULL) {
+            tree_out->WriteTree(*src_graph, cout);
+        }
+        sent++;
+        if(sent % 10000 == 0) {
+            cerr << (sent % 100000 == 0 ? '!' : '.'); cerr.flush();
+        }
+    }
+    cerr << endl;
+}
