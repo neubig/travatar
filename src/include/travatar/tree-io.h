@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include "travatar/sentence.h"
 
 namespace travatar {
 
@@ -24,6 +25,8 @@ class PennTreeIO : public TreeIO {
 public:
     virtual ~PennTreeIO() { }
     virtual HyperGraph * ReadTree(std::istream & in);
+    void WriteNode(const std::vector<WordId> & words,
+                   const HyperNode & node, std::ostream & out);
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 

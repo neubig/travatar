@@ -88,7 +88,7 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
         // Write out the tree
         if(tree_out.get() != NULL) {
-            tree_out->WriteTree(*src_graph, cout);
+            tree_out->WriteTree(*src_graph, cout); cout << endl;
         }
         sent++;
         if(sent % 10000 == 0) {

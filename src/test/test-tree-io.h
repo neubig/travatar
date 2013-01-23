@@ -184,11 +184,22 @@ public:
         return quote_exp.CheckEqual(*hg_act);
     }
 
+    int TestWritePenn() {
+        string tree_str = "(A (B (C x) (D y)) (E z))";
+        PennTreeIO penn;
+        istringstream iss(tree_str);
+        shared_ptr<HyperGraph> graph(penn.ReadTree(iss));
+        ostringstream oss; penn.WriteTree(*graph, oss);
+        string act_str = oss.str();
+        return CheckEqual(tree_str, act_str);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWritePenn()" << endl; if(TestWritePenn()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadEgret()" << endl; if(TestReadEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTreeIO Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;

@@ -7,6 +7,7 @@
 #include <travatar/alignment.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
+#include <travatar/unary-flattener.h>
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
@@ -19,6 +20,15 @@ class TestGraphTransformer : public TestBase {
 public:
 
     TestGraphTransformer() {
+        // Example unary graph
+        unary_graph_.reset(new HyperGraph);
+        {
+            src_.resize(1); src_[0] = Dict::WID("s");
+            unary_graph_->SetWords(src_);
+            HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,1));   unary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
+            HyperNode * nb = new HyperNode; nb->SetSpan(make_pair(0,1)); unary_graph_->AddNode(nb); nb->SetSym(Dict::WID("B"));
+            HyperEdge * e = new HyperEdge(na); unary_graph_->AddEdge(e); e->AddTail(nb); na->AddEdge(e);
+        }
         // Example rule graph
         rule_graph_.reset(new HyperGraph);
         vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
@@ -164,16 +174,42 @@ public:
         return exp_graph->CheckEqual(*act_graph);
     }
 
+    int TestUnaryFlatten() {
+        UnaryFlattener flat;
+        istringstream iss("(A (B s))");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(flat.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A_B s)", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
+
+    int TestUnaryFlatten2() {
+        UnaryFlattener flat;
+        istringstream iss("(A s)");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(flat.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A s)", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestLMIntersection()" << endl; if(TestLMIntersection()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestUnaryFlatten()" << endl; if(TestUnaryFlatten()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestUnaryFlatten2()" << endl; if(TestUnaryFlatten2()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
 private:
-    PennTreeIO tree_io;
-    boost::scoped_ptr<HyperGraph> rule_graph_;
+    PennTreeIO tree_io_;
+    std::vector<WordId> src_;
+    boost::scoped_ptr<HyperGraph> rule_graph_, unary_graph_;
     boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
 
 };

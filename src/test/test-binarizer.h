@@ -125,9 +125,7 @@ public:
     }
 
 private:
-    PennTreeIO tree_io;
     boost::scoped_ptr<HyperGraph> trinary_graph_, unordered_graph_;
-    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
     vector<WordId> src_;
 
 };

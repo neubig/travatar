@@ -64,8 +64,24 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
     return NULL;
 }
 
+void PennTreeIO::WriteNode(const vector<WordId> & words, 
+                           const HyperNode & node, ostream & out) {
+    if (node.NumEdges() > 1)
+        THROW_ERROR("Cannot write hypergraphs of degree > 1 to Penn format");
+    if (node.NumEdges() == 1) {
+        out << "(" << Dict::WSym(node.GetSym());
+        BOOST_FOREACH(const HyperNode * child, node.GetEdge(0)->GetTails()) {
+            out << " ";
+            WriteNode(words, *child, out);
+        }
+        out << ")";
+    } else {
+        out << Dict::WSym(words[node.GetSpan().first]);
+    }
+}
+
 void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    THROW_ERROR("Not implemented yet");
+    WriteNode(tree.GetWords(), *tree.GetNode(0), out);
 }
 
 
