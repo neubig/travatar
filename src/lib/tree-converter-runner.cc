@@ -31,6 +31,10 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     // Create the tree output
     if(config.GetString("output_format") == "penn")
         tree_out.reset(new PennTreeIO);
+    else if(config.GetString("output_format") == "egret")
+        tree_out.reset(new EgretTreeIO);
+    else if(config.GetString("output_format") == "json")
+        tree_out.reset(new JSONTreeIO);
     else if(config.GetString("output_format") != "word")
         THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
 
@@ -89,6 +93,8 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         // Write out the tree
         if(tree_out.get() != NULL) {
             tree_out->WriteTree(*src_graph, cout); cout << endl;
+        } else if (config.GetString("output_format") == "phrases") {
+            HERE
         }
         sent++;
         if(sent % 10000 == 0) {

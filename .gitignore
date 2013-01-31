@@ -22,6 +22,7 @@ m4
 missing
 src/bin/travatar
 src/bin/forest-extractor
+src/bin/tree-converter
 src/bin/batch-tune
 src/test/test-travatar
 src/include/travatar/stamp-h1
