@@ -10,7 +10,7 @@ using namespace boost;
 using namespace std;
 
 LookupTable::LookupTable() : 
-    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")), match_all_unk_(true) { }
+    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), Dict::ParseFeatures("unk=1")), match_all_unk_(false) { }
 
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
