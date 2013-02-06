@@ -39,6 +39,7 @@ public:
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("forest_out", "", "forest output file location");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
+        AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
 
 #ifdef ONLINE_TRAINING_ON

@@ -56,6 +56,10 @@ public:
 
     virtual LookupState * GetInitialState() = 0;
 
+    // Match all unknown words or not
+    void SetMatchAllUnk(bool match_all_unk) { match_all_unk_ = match_all_unk; }
+    bool GetMatchAllUnk() { return match_all_unk_; }
+
 protected:
 
     // Match a single node

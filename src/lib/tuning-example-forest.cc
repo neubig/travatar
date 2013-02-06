@@ -25,11 +25,16 @@ void TuningExampleForest::FindActiveFeatures() {
 }
 
 void TuningExampleForest::CalculateOracle() {
-    Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
-    PRINT_DEBUG("Oracle sentence:" << endl << Dict::PrintWords(oracle_sent) << endl, 1);
-    oracle_score_ = measure_->MeasureScore(ref_, oracle_sent, id_);
-    PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
-    oracle_score_ *= mult_;
+    try {
+        Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
+        PRINT_DEBUG("Oracle sentence:" << endl << Dict::PrintWords(oracle_sent) << endl, 1);
+        oracle_score_ = measure_->MeasureScore(ref_, oracle_sent, id_);
+        PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
+        oracle_score_ *= mult_;
+    } catch (std::runtime_error & e) {
+        PRINT_DEBUG("ERROR IN ORACLE CALCULATION " << e.what(), 0);
+        oracle_score_ = mult_; // set to 1
+    }
 }
 
 // Calculate the potential gain for a single example given the current weights

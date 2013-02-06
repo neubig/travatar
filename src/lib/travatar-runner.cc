@@ -132,6 +132,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
     else if(config.GetString("tm_storage") == "marisa")
         tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
+    tm->SetMatchAllUnk(config.GetBool("all_unk"));
     tm_in.close();
 
     // Open the n-best output stream if it exists

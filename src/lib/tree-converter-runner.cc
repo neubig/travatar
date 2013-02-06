@@ -29,13 +29,15 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     else
         THROW_ERROR("Invalid -input_format type: " << config.GetString("input_format"));
     // Create the tree output
+    bool word_out = config.GetString("output_format") == "word",
+         phrase_out = config.GetString("output_format") == "phrase";
     if(config.GetString("output_format") == "penn")
         tree_out.reset(new PennTreeIO);
     else if(config.GetString("output_format") == "egret")
         tree_out.reset(new EgretTreeIO);
     else if(config.GetString("output_format") == "json")
         tree_out.reset(new JSONTreeIO);
-    else if(config.GetString("output_format") != "word")
+    else if(!word_out)
         THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
 
     // Create the binarizer
@@ -93,8 +95,12 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         // Write out the tree
         if(tree_out.get() != NULL) {
             tree_out->WriteTree(*src_graph, cout); cout << endl;
-        } else if (config.GetString("output_format") == "phrases") {
-            HERE
+        } else if (word_out) {
+            cout << Dict::PrintWords(src_graph->GetWords()) << endl;
+        } else if (phrase_out) {
+            THROW_ERROR("Phrases not implemented yet");
+        } else {
+            THROW_ERROR("Unknown output format");
         }
         sent++;
         if(sent % 10000 == 0) {

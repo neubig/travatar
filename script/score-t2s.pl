@@ -31,7 +31,7 @@ if($LEX_PROB_FILE) {
     open FILE, "<:utf8", $LEX_PROB_FILE or die "Couldn't open $LEX_PROB_FILE\n";
     while(<FILE>) {
         chomp;
-        my @arr = split(/\t/);
+        my @arr = split(/[\t ]/);
         if(@arr != 3) {
             print STDERR "Bad line $_\n";
             exit 1;
