@@ -21,10 +21,11 @@ my $SRC_CLASSES = ""; # Classes for source words in mkcls format
 my $TRG_FILE = ""; # The target file you want to train on
 my $TRG_FORMAT = "word"; # The target file format (word/penn/egret)
 my $TRG_WORDS = ""; # A file of plain-text sentences from the target
+my $TRG_CLASSES = ""; # Classes for source words in mkcls format
 
 my $ALIGN_FILE = ""; # A file containing alignments
 my $ALIGN = "giza"; # The type of alignment to use (giza)
-my $SYMMETRIZE = "intersection"; # The type of symmetrization to use (intersection)
+my $SYMMETRIZE = "grow"; # The type of symmetrization to use (grow)
 GetOptions(
     "work_dir=s" => \$WORK_DIR,
     "travatar_dir=s" => \$TRAVATAR_DIR,
@@ -113,7 +114,7 @@ if(not $ALIGN_FILE) {
         safesystem("$GIZA -CoocurrenceFile $STPREF.cooc -c $STPREF.snt -m1 5 -m2 0 -m3 3 -m4 3 -model1dumpfrequency 1 -model4smoothfactor 0.4 -nodumps 1 -nsmooth 4 -o $STPREF.giza -onlyaldumps 1 -p0 0.999 -s $SRC_VCB -t $TRG_VCB");
         safesystem("$GIZA -CoocurrenceFile $TSPREF.cooc -c $TSPREF.snt -m1 5 -m2 0 -m3 3 -m4 3 -model1dumpfrequency 1 -model4smoothfactor 0.4 -nodumps 1 -nsmooth 4 -o $TSPREF.giza -onlyaldumps 1 -p0 0.999 -s $TRG_VCB -t $SRC_VCB");
         # Symmetrize the alignments
-        HERE
+        safesystem("$TRAVATAR_DIR/script/train/symmetrize.pl HERE HERE");
         
     } else {
         die "Unknown alignment type $ALIGN";
@@ -143,23 +144,23 @@ sub safesystem {
 sub create_vcb {
     my ($words, $vcb) = @_;
     # Read and count the vcb
-    open FILE0, "<:utf8", $words or die "Couldn't open $words\n";
+    open WORDS, "<:utf8", $words or die "Couldn't open $words\n";
     my %vals;
-    while(<FILE0>) {
+    while(<WORDS>) {
         chomp;
         for(split(/ +/)) { $vals{$_}++; }
     }
-    close FILE0;
+    close WORDS;
     delete $vals{""};
     # Write the vcb
-    open FILE0, ">:utf8", $vcb or die "Couldn't open $vcb\n";
+    open VCB, ">:utf8", $vcb or die "Couldn't open $vcb\n";
     print VCB "1\tUNK\t0\n";
     my $id=2;
     for(sort keys %vals) {
-        printf FILE0 "%d\t%s\t%d\n",$id,$_,$vals{$_};
+        printf VCB "%d\t%s\t%d\n",$id,$_,$vals{$_};
         $vals{$_} = $id++;
     }
-    close FILE0;
+    close VCB;
     return %vals;
 }
 
