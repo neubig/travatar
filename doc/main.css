@@ -1,0 +1,22 @@
+#all { float:center; width:850px; }
+#main { float:right; width: 650px; }
+#sidebar { float:left; width:200px; }
+
+
+pre {
+	font-size: 12px;
+	padding: 2;
+	margin: 20px;
+	background: #f0f0f0;
+	border: 1px solid #ccc;
+	width: 600px;
+    white-space: pre-wrap;       /* css-3 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+h1, h2, h3, h4, p, li {
+    font-family:"Arial",Sans-serif;
+}

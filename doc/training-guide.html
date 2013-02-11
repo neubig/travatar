@@ -1,0 +1,209 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - Training</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.php">Home</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.php">Training Guide</a></li>
+<li><a href="parsing.php">Parsing</a></li>
+<li><a href="training-options.php">Training Options</a></li>
+</ul>
+
+<p>Decoding</p>
+
+<ul>
+<li><a href="decode-options.php">Decoding Options</a></li>
+</ul>
+
+</div>
+<div id="main">
+
+<h1>Training travatar</h1>
+
+<p>
+This guide will take you through the steps required to create a translation model for travatar.
+In particular, we will use English-Japanese translation as an example, but this should work for other languages as well.
+</p>
+
+<h2>Installing Software</h2>
+
+<p>
+First, let's create a directory to work in and change to it:
+</p>
+
+<pre>
+mkdir ~/travatar-tutorial
+cd ~/travatar-tutorial
+</pre>
+
+<p>
+In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, a <b>word aligner</b>, and a <b>language model toolkit</b>.
+In this tutorial, in addition to travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment, and <a href="http://hlt.fbk.eu/en/irstlm">IRSTLM</a> for language model estimation.
+First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
+</p>
+
+<p>
+First, you must get the latest version of travatar.
+Follow the directions on the <a href="index.html#download">download</a> page and place the compiled program in the <tt>travatar</tt> directory below <tt>travatar-tutorial</tt>.
+If you can run the following commands and get the help message, everythin should be working properly.
+</p>
+
+<pre>
+cd ~/travatar/tutorial
+travatar/src/bin/travatar --help
+</pre>
+
+<p>
+For the Stanford parser, you must have Java installed on your machine, but as long as you have Java you just need to unzip the archive:
+</p>
+
+<pre>
+unzip stanford-parser*.zip
+</pre>
+
+<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.3, change the version number):</p>
+
+<pre>
+tar -xzf kytea-0.4.3.tar.gz
+cd kytea-0.4.3.tar.gz
+./configure
+make
+cd ~/travatar-tutorial
+</pre>
+
+<p>
+GIZA++ can be compiled as follows, and we additionally copy all of the binaries into the top directory for convenience later:
+</p>
+
+<pre>
+tar -xzf giza-pp*.tar.gz
+cd giza-pp
+make
+cp GIZA++-v2/GIZA++ GIZA++-v2/*.out mkcls-v2/mkcls .
+cd ~/travatar-tutorial
+</pre>
+
+<p>
+IRSTLM can be compiled as follows (again, change the version number if you are not using 5.80.01. You may also have to install <tt>autoconf</tt> and <tt>automake</tt> first if you don't have them already installed):
+</p>
+
+<pre>
+tar -xzf irstlm-5.80.01.tgz
+cd irstlm-5.80.01
+./regenerate-makefiles.sh
+./configure
+make
+cd ~/travatar-tutorial
+</pre>
+
+<h2>Creating a Directory and Collect Data</h2>
+
+<p>
+Next, we need to collect data for training the translation and language models.
+In this guide, we will use data from the <a href="http://www.phontron.com/kftt">Kyoto Free Translation Task</a>.
+You can acquire this data using the following command:
+</p>
+
+<pre>
+wget http://www.phontron.com/kftt/download/kftt-data-1.0.tar.gz
+tar -xzf kftt-data-1.0.tar.gz
+</pre>
+
+<h2>Data Preparation</h2>
+
+<p>
+The next step is preparing the data in a format so that travatar's training and translation can work.
+This will consist of parsing the input, and tokenizing the output.
+First, let's make a directory for the data we will use.
+</p>
+
+<pre>
+mkdir data
+</pre>
+
+<h3>Tokenization</h3>
+
+<p>
+The first thing we need to do is tokenize our data (in other words, divide it into words).
+For English, or other languages, there is a tokenizer included in the Stanford parser toolkit.
+Let's run it on the English training data as follows:
+</p>
+
+<pre>
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-train.en &gt; data/kyoto-train.tok.en
+</pre>
+
+<p>
+If you take a look at <tt>data/kyoto-train.tok.en</tt> you should see that the words have been tokenized.
+Next, we do the same for <tt>kyoto-dev</tt>, <tt>kyoto-test</tt>, and <tt>kyoto-tune</tt>.
+</p>
+
+<pre>
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-dev.en &gt; data/kyoto-dev.tok.en
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-test.en &gt; data/kyoto-test.tok.en
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-tune.en &gt; data/kyoto-tune.tok.en
+</pre>
+
+<p>
+Next, we tokenize Japanese with KyTea.
+We add <tt>-notags</tt> and <tt>-wsconst D</tt> to suppress the output of POS tags and prevent segmentation of numbers.
+</p>
+
+<pre>
+kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-train.ja &gt; data/kyoto-train.tok.ja
+kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-dev.ja &gt; data/kyoto-dev.tok.ja
+kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-test.ja &gt; data/kyoto-test.tok.ja
+kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-tune.ja &gt; data/kyoto-tune.tok.ja
+</pre>
+
+<p>You can also check to see that the Japanese has been properly segmented into words.</p>
+
+<h3>Cleaning the Training Data</h3>
+
+<p>
+When very long sentences exist in the training data, they can cause parsing and alignment to take a very long time, or even worse, fail.
+To get rid of these sentences from the training data, we use a script included with travatar to clean the corpus.
+(By changing the <tt>-max_len</tt> setting, you can change the maximum length of the data.)
+HERE
+</p>
+
+<pre>
+
+</pre>
+
+<p>
+In addition, as you will probably want to go through this tutorial quickly, we will use only some of the training data (e.g. the first 20000 lines).
+</p>
+
+<p>
+Note that if you want to actually make a good translation system, you should use all of the data you have.
+If you want to do the tutorial with the full data set, just substitute <tt>kyoto-head</tt> into <tt>kyoto-clean</tt> for the rest of the tutorial.
+</p>
+
+<h3>Parsing</h3>
+
+<p>
+Next, we will use the Stanford parser to parse the 
+
+<p>
+Note that using the Stanford parser is relatively simple, but you should use a different parser (we recommend Egret) if you want to get the best translation performance.
+See more details on the <a href="parsing.html">parsing</a> page.
+</p>
+
+</div>
+</div>
+
+</body>
+</html>

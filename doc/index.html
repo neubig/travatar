@@ -1,0 +1,141 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - A Tree-to-String Translation Toolkit</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+    <meta name="description" content="travatar is a tree-to-string machine translation system including a decoder based on tree transducers and training pipeline."/>
+    <meta name="keywords" content="travatar, tree-to-string translation, machine translation system, open source"/>
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.php">Home</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.php">Training Guide</a></li>
+<li><a href="parsing.php">Parsing</a></li>
+<li><a href="training-options.php">Training Options</a></li>
+</ul>
+
+<p>Decoding</p>
+
+<ul>
+<li><a href="decode-options.php">Decoding Options</a></li>
+</ul>
+
+</div>
+<div id="main">
+
+<h1>travatar</h1>
+
+<p>
+This is the home of travatar, a tree-to-string statistical machine translation system.
+In other words, when performing translation, you first <a href="parsing.html">parse</a> the input using a syntactic parser, then travatar will perform translation for you.
+This is particularly effective for language pairs that require a large amount of reordering, such as English-Japanese.
+</p>
+
+<ul>
+<li><a href="#download">Download/Install</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#development">Development</a></li>
+</ul>
+
+<a name="download">
+<h2>Download/Install</h2>
+
+<h3>Download</h3>
+
+<p>
+<b>Latest Version:</b>
+<p>Currently, travatar is only available in NAIST. If you are in NAIST, run the following command to grab and compile travatar:</p>
+<pre>
+git clone ~neubig/work/travatar
+</pre>
+<!-- <a href="download/travatar-0.1.0.tar.gz">travatar 0.1.0</a> -->
+
+<!-- <p>
+<b>Bleeding-Edge Code:</b> <a href="http://www.github.com/neubig/travatar" target="_blank">@github</a><br/> -->
+
+<!--
+<p>
+The code of travatar is distributed according to the <a href="http://www.gnu.org/copyleft/lesser.html" target="_blank">LGPL</a>, and can be distributed freely (for research, commercial, or other purposes).
+</p>
+-->
+
+
+<h3>Install</h3>
+
+<p>
+Travatar is mainly developed on linux, but should also work on Mac OSX, and Windows (via cygwin).
+In order to install travatar, you must have <a href="http://www.boost.org/">Boost</a> installed, and it is likely that you should have <tt>autotools</tt> as well.
+The easiest way to install these programs on Linux is:
+</p>
+
+<pre>
+sudo apt-get install libboost-all-dev autoconf automake autotools-dev
+</pre>
+
+<p>
+Once they are installed, you can compile travatar by the following commands:
+</p>
+
+<pre>
+cd travatar
+autoreconf -i
+./configure
+make
+src/bin/travatar --help
+</pre>
+
+<p>
+If the final command prints the travatar help, everything is working properly.
+</p>
+
+<a name="documentation">
+<h2>Program Documentation</h2>
+
+<h3>Training</h3>
+
+<p>
+In order to run travatar, you will have to train a model.
+Please take a look at the <a href="training-guide.html">step-by-step guide</a> to creating a model for travatar.
+There are also a number of <a href="training-options.html">training options</a> that will affect how training works.
+</p>
+
+<h3>Translating</h3>
+
+<p>
+In order to translate with travatar, you use the model defined in the previous step.
+In the most simple of situations, you must simply run the following command, substituting travatar.ini with the appropriate configuration file:
+</p>
+
+<pre>
+cat input-parsed.txt | travatar -config_file travatar.ini &gt; output-words.txt
+</pre>
+
+<p>
+Here, <tt>input-parsed.txt</tt> is a file containing one syntactic <a href="parsing.html">parse tree</a> per line.
+</p>
+
+<a name="development">
+<h2>Development</h2>
+
+<h3>Contributors</h3>
+
+<ul>
+<li><a href="http://www.phontron.com">Graham Neubig</a> (project leader, all coding)</li>
+</ul>
+
+<p>If you have any questions about travatar, please send them to the travatar-users mailing list, which you can join by sending mail to <tt>travatar-users+subscribe</tt> with the domain <tt>googlegroups.com</tt>. (If you don't get a reply, you can also send questions to <tt>neubig</tt> at <tt>gmail.com</tt>.)</p> 
+
+</div>
+</div>
+
+</body>
+</html>
