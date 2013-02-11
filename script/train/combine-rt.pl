@@ -4,9 +4,6 @@ use strict;
 use utf8;
 use Getopt::Long;
 use List::Util qw(sum min max shuffle);
-binmode STDIN, ":utf8";
-binmode STDOUT, ":utf8";
-binmode STDERR, ":utf8";
 
 my $OPERATOR = "intersection";
 GetOptions(
@@ -18,8 +15,8 @@ if(@ARGV != 2) {
     exit 1;
 }
 
-open FILE0, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
-open FILE1, "<:utf8", $ARGV[1] or die "Couldn't open $ARGV[1]\n";
+*FILE0 = open_or_zcat($ARGV[0]) or die;
+*FILE1 = open_or_zcat($ARGV[1]) or die;
 
 my @ss;
 my %buffer;
@@ -60,4 +57,20 @@ while(1) {
         print "$pid ||| ".join(" ", map { "$_=".$buffer{$pid}->{$_} } sort keys %{$buffer{$pid}})."\n";
         delete $buffer{$pid};
     }
+}
+
+# utilities
+sub open_or_zcat {
+  my $fn = shift;
+  my $read = $fn;
+  $fn = $fn.".gz" if ! -e $fn && -e $fn.".gz";
+  $fn = $fn.".bz2" if ! -e $fn && -e $fn.".bz2";
+  if ($fn =~ /\.bz2$/) {
+      $read = "bzcat $fn|";
+  } elsif ($fn =~ /\.gz$/) {
+      $read = "gzip -cd $fn|";
+  }
+  my $hdl;
+  open($hdl,$read) or die "Can't read $fn ($read)";
+  return $hdl;
 }

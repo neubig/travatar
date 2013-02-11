@@ -27,20 +27,21 @@ public:
 "  Usage: travatar < INPUT > OUTPUT\n"
 );
 
+        AddConfigEntry("config_file", "", "The location of the configuration file");
+        AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
+        AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
+        AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("forest_out", "", "forest output file location");
         AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");
-        AddConfigEntry("tm_file", "", "Translation model file location");
-        AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("lm_file", "", "Language model file location");
-        AddConfigEntry("weight_file", "", "Weight file location");
-        AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
         AddConfigEntry("nbest_out", "", "n-best output file location");
-        AddConfigEntry("pop_limit", "100", "The number of pops necessary");
+        AddConfigEntry("pop_limit", "2000", "The number of pops necessary");
+        AddConfigEntry("tm_file", "", "Translation model file location");
+        AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("trace_out", "", "trace output file location");
-        AddConfigEntry("forest_out", "", "forest output file location");
-        AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right)");
-        AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
-        AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("weight_file", "", "Weight file location");
+        AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
 
 #ifdef ONLINE_TRAINING_ON
         AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/perceptron)");
