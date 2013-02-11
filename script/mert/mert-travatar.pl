@@ -8,21 +8,19 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my ($SEED_WEIGHTS, $SRC, $REF, $LM, $TM, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS);
+my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS);
 
 my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;
 my $NBEST = 100;
 GetOptions(
     # Necessary
-    "seed-weights=s" => \$SEED_WEIGHTS,
-    "src=s" => \$SRC,
-    "ref=s" => \$REF,
-    "lm=s" => \$LM,
-    "tm=s" => \$TM,
     "travatar-dir=s" => \$TRAVATAR_DIR,
     "moses-dir=s" => \$MOSES_DIR,
     "working-dir=s" => \$WORKING_DIR,
+    "src=s" => \$SRC,
+    "ref=s" => \$REF,
+    "travatar-config=s" => \$TRAVATAR_CONFIG,
     # Options
     "travatar=s" => \$TRAVATAR,
     "decoder-options=s" => \$DECODER_OPTIONS,
@@ -35,11 +33,51 @@ GetOptions(
     # "=s" => \$,
 );
 
-if((not $SEED_WEIGHTS) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or (not $MOSES_DIR) or (not $WORKING_DIR) or (not $TM)) {
-    die "Must specify seed-weights, src, ref, travatar-dir, moses-dir, tm, and working-dir";
+if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or (not $MOSES_DIR) or (not $WORKING_DIR)) {
+    die "Must specify travatar-config, src, ref, travatar-dir, moses-dir, tm, and working-dir";
 }
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 
+
+if(@ARGV != 0) {
+    print STDERR "Usage: $0\n";
+    exit 1;
+}
+
+# Make the working directory and filter the model
+safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
+safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rt.pl -src $SRC\"") or die "Couldn't filter";
+# Find the number of weights contained in the model
+my %init_weights = load_weights($TRAVATAR_CONFIG);
+my $weight_cnt = keys %init_weights;
+die "Couldn't find any weights in the model" if not $weight_cnt;
+
+# Do the outer loop
+my ($iter, $prev, $next);
+foreach $iter (1 .. $MAX_ITERS) {
+    $prev = "$WORKING_DIR/run$iter";
+    $next = "$WORKING_DIR/run".($iter+1);
+    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -config_file $prev.ini -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
+    safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
+    safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $prev.ini < $prev.nbest > $prev.nbest-dense") or die "couldn't densify";
+    safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $prev.scores.dat --ffile $prev.features.dat -r $REF -n $prev.nbest-dense") or die "couldn't extract";
+    safesystem("$TRAVATAR_DIR/script/mert/make-init-opt.pl < $prev.ini > $prev.init.opt") or die "couldn't make init opt";
+    my $feats = join(",", map { "$WORKING_DIR/run$_.features.dat" } (1 .. $iter));
+    my $scores = join(",", map { "$WORKING_DIR/run$_.scores.dat" } (1 .. $iter));
+    safesystem("$MOSES_DIR/bin/mert -d $weight_cnt --scconfig case:true --scfile $scores --ffile $feats --ifile $prev.init.opt -n 20 > $prev.mert.out 2> $prev.mert.log") or die "couldn't mert"; 
+    print `grep Best $prev.mert.log`;
+    safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -log $prev.mert.log $prev.ini > $next.ini") or die "couldn't make init opt";
+    my %wprev = load_weights("$prev.weights");
+    my %wnext = load_weights("$next.weights");
+    my $diff = 0;
+    for(keys %wprev) { $diff += abs($wprev{$_} - $wnext{$_}); }
+    last if($diff < $MIN_DIFF);
+}
+
+safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -model $next.ini $TRAVATAR_CONFIG > $WORKING_DIR/travatar.ini") or die "couldn't make init opt";
+
+# Auxiliary functions
 sub safesystem {
   print STDERR "Executing: @_\n";
   system(@_);
@@ -57,43 +95,23 @@ sub safesystem {
   }
 }
 
-if(@ARGV != 0) {
-    print STDERR "Usage: $0\n";
-    exit 1;
-}
-
-# Make the working directory
-safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
-safesystem("cp $SEED_WEIGHTS $WORKING_DIR/run1.weights") or die "couldn't copy";
-my $weight_cnt = `wc -l $WORKING_DIR/run1.weights`; chomp $weight_cnt;
-
 # Load weights
 sub load_weights {
     my $fname = shift;
     open FILE0, "<:utf8", $fname or die "Couldn't open $fname\n";
-    my %ret = map { chomp; my ($k, $v) = split(/=/); $k => $v } <FILE0>;
+    my %ret;
+    while(<FILE0>) {
+        chomp;
+        if(/^\[weight_vals\]$/) {
+            while(<FILE0>) {
+                chomp;
+                last if not $_;
+                my ($k, $v) = split(/=/);
+                $ret{$k} = $v;
+            }
+            last;
+        }
+    }
     close FILE0;
     return %ret;
-}
-
-# Do the outer loop
-foreach my $iter (1 .. $MAX_ITERS) {
-    my $prev = "$WORKING_DIR/run$iter";
-    my $next = "$WORKING_DIR/run".($iter+1);
-    my $lmopt = ($LM ? "-lm_file $LM" : "");
-    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST $lmopt -tm_file $TM -weight_file $prev.weights -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
-    safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
-    safesystem("$TRAVATAR_DIR/script/mert/densify-nbest.pl $prev.weights < $prev.nbest > $prev.nbest-dense") or die "couldn't densify";
-    safesystem("$MOSES_DIR/bin/extractor --scconfig case:true --scfile $prev.scores.dat --ffile $prev.features.dat -r $REF -n $prev.nbest-dense") or die "couldn't extract";
-    safesystem("$TRAVATAR_DIR/script/mert/make-init-opt.pl < $prev.weights > $prev.init.opt") or die "couldn't make init opt";
-    my $feats = join(",", map { "$WORKING_DIR/run$_.features.dat" } (1 .. $iter));
-    my $scores = join(",", map { "$WORKING_DIR/run$_.scores.dat" } (1 .. $iter));
-    safesystem("$MOSES_DIR/bin/mert -d $weight_cnt --scconfig case:true --scfile $scores --ffile $feats --ifile $prev.init.opt -n 20 > $prev.mert.out 2> $prev.mert.log") or die "couldn't mert"; 
-    print `grep Best $prev.mert.log`;
-    safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl $prev.weights $prev.mert.log > $next.weights") or die "couldn't make init opt";
-    my %wprev = load_weights("$prev.weights");
-    my %wnext = load_weights("$next.weights");
-    my $diff = 0;
-    for(keys %wprev) { $diff += abs($wprev{$_} - $wnext{$_}); }
-    last if($diff < $MIN_DIFF);
 }

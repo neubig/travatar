@@ -42,7 +42,8 @@ public:
     
     void PrintConf() const;
 
-    std::vector<std::string> loadConfig(int argc, char** argv);
+    std::vector<std::string> LoadConfig(int argc, char** argv);
+    void LoadConfig(const std::string & file_name);
     void AddConfigEntry(const std::string & name, const std::string & val, const std::string & desc);
 
     // Getter functions

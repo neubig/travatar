@@ -40,7 +40,6 @@ public:
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("trace_out", "", "trace output file location");
-        AddConfigEntry("weight_file", "", "Weight file location");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
 
 #ifdef ONLINE_TRAINING_ON

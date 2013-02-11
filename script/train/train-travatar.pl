@@ -201,7 +201,7 @@ if(not $CONFIG_FILE) {
     my $TINI_FILE = "$WORK_DIR/model/travatar.ini";
     open TINI, ">:utf8", $TINI_FILE or die "Couldn't open $TINI_FILE\n";
     print TINI "[tm_file]\n$TM_FILE\n\n";
-    print TINI "[lm_file]\n$LM_FILE\n\n" if not $NO_LM;
+    print TINI "[lm_file]\n$LM_FILE\n\n" if ($NO_LM ne "true");
     print TINI "[binarize]\n$BINARIZE\n\n"; 
     # Default values for the weights
     print TINI "[weight_vals]\negfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\n\n";

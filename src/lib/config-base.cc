@@ -1,6 +1,7 @@
 #include <travatar/config-base.h>
 #include <travatar/util.h>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
 
 using namespace std;
 using namespace travatar;
@@ -32,7 +33,29 @@ void ConfigBase::PrintConf() const {
     }
 }
 
-std::vector<std::string> ConfigBase::loadConfig(int argc, char** argv) {
+void ConfigBase::LoadConfig(const string & file_name) {
+    ifstream in(file_name.c_str());
+    if(!in) THROW_ERROR("Could not open config file " << file_name);
+    string line;
+    while(getline(in, line)) {
+        if(line.size() == 0 || line[0] == '#')
+            continue;
+        if(line.size() <= 2 || line[0] != '[' || line[line.length()-1] != ']')
+            THROW_ERROR("Bad line in config: " << endl << line);
+        string id = line.substr(1, line.size()-2);
+        ostringstream oss;
+        int num = 0;
+        while(getline(in, line) && line.size() != 0) {
+            if(num++ != 0) oss << ' ';
+            oss << line;
+        }
+        if(num == 0)
+            THROW_ERROR("Empty config string for item " << id);
+        SetString(id, oss.str());
+    }
+}
+
+std::vector<std::string> ConfigBase::LoadConfig(int argc, char** argv) {
     for(int i = 1; i < argc; i++) {
         if(argv[i][0] == '-') {
             std::string name(argv[i]+1); 

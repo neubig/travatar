@@ -11,20 +11,21 @@
 
 <p>Travatar Main</p>
 <ul>
-<li><a href="index.php">Home</a></li>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
 </ul>
 
 <p>Training</p>
 <ul>
-<li><a href="training-guide.php">Training Guide</a></li>
-<li><a href="parsing.php">Parsing</a></li>
-<li><a href="training-options.php">Training Options</a></li>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
 </ul>
 
 <p>Decoding</p>
 
 <ul>
-<li><a href="decode-options.php">Decoding Options</a></li>
+<li><a href="decode-options.html">Decoding Options</a></li>
 </ul>
 
 </div>
@@ -35,6 +36,7 @@
 <p>
 This guide will take you through the steps required to create a translation model for travatar.
 In particular, we will use English-Japanese translation as an example, but this should work for other languages as well.
+If you have any trouble with this tutorial, feel free to ask questions, as mentioned on the <a href="index.html#development">front page</a>.
 </p>
 
 <h2>Installing Software</h2>
@@ -78,8 +80,9 @@ unzip stanford-parser*.zip
 <pre>
 tar -xzf kytea-0.4.3.tar.gz
 cd kytea-0.4.3.tar.gz
-./configure
+./configure --prefix=$HOME/travatar-tutorial/usr
 make
+make install
 cd ~/travatar-tutorial
 </pre>
 
@@ -103,8 +106,9 @@ IRSTLM can be compiled as follows (again, change the version number if you are n
 tar -xzf irstlm-5.80.01.tgz
 cd irstlm-5.80.01
 ./regenerate-makefiles.sh
-./configure
+./configure --prefix=$HOME/travatar-tutorial/usr
 make
+make install
 cd ~/travatar-tutorial
 </pre>
 
@@ -142,19 +146,13 @@ Let's run it on the English training data as follows:
 </p>
 
 <pre>
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-train.en &gt; data/kyoto-train.tok.en
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en &gt; data/kyoto-train.tok.en
 </pre>
 
 <p>
 If you take a look at <tt>data/kyoto-train.tok.en</tt> you should see that the words have been tokenized.
-Next, we do the same for <tt>kyoto-dev</tt>, <tt>kyoto-test</tt>, and <tt>kyoto-tune</tt>.
+Next, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
-
-<pre>
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-dev.en &gt; data/kyoto-dev.tok.en
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-test.en &gt; data/kyoto-test.tok.en
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer kftt-data-1.0/data/orig/kyoto-tune.en &gt; data/kyoto-tune.tok.en
-</pre>
 
 <p>
 Next, we tokenize Japanese with KyTea.
@@ -162,30 +160,35 @@ We add <tt>-notags</tt> and <tt>-wsconst D</tt> to suppress the output of POS ta
 </p>
 
 <pre>
-kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-train.ja &gt; data/kyoto-train.tok.ja
-kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-dev.ja &gt; data/kyoto-dev.tok.ja
-kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-test.ja &gt; data/kyoto-test.tok.ja
-kytea-0.4.3/src/bin/kytea -model kytea-0.4.3/data/model.bin -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-tune.ja &gt; data/kyoto-tune.tok.ja
+usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-train.ja &gt; data/kyoto-train.tok.ja
 </pre>
 
-<p>You can also check to see that the Japanese has been properly segmented into words.</p>
+<p>
+You can also check to see that the Japanese has been properly segmented into words.
+Again, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
+</p>
 
 <h3>Cleaning the Training Data</h3>
 
 <p>
 When very long sentences exist in the training data, they can cause parsing and alignment to take a very long time, or even worse, fail.
 To get rid of these sentences from the training data, we use a script included with travatar to clean the corpus.
-(By changing the <tt>-max_len</tt> setting, you can change the maximum length of the data.)
-HERE
+(By changing the <tt>-max_len</tt> setting, you can change the maximum length of the data used.)
 </p>
 
 <pre>
-
+travatar/script/train/clean-corpus.pl data/kyoto-train.tok.en data/kyoto-train.tok.ja data/kyoto-clean.tok.en data/kyoto-clean.tok.ja
 </pre>
 
 <p>
 In addition, as you will probably want to go through this tutorial quickly, we will use only some of the training data (e.g. the first 20000 lines).
 </p>
+
+<pre>
+head -20000 &lt; data/kyoto-clean.tok.en &gt; data/kyoto-head.tok.en
+head -20000 &lt; data/kyoto-clean.tok.ja &gt; data/kyoto-head.tok.ja
+</pre>
+
 
 <p>
 Note that if you want to actually make a good translation system, you should use all of the data you have.
@@ -195,12 +198,121 @@ If you want to do the tutorial with the full data set, just substitute <tt>kyoto
 <h3>Parsing</h3>
 
 <p>
-Next, we will use the Stanford parser to parse the 
+Next, we will use the Stanford parser to parse the source side English sentences.
+This can be done with the following command.
+</p>
+
+<pre>
+java -mx2000m -cp stanford-parser-2012-11-12/stanford-parser.jar:stanford-parser-2012-11-12/stanford-parser-2.0.4-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-head.tok.en data/kyoto-head.parse.en
+</pre>
 
 <p>
-Note that using the Stanford parser is relatively simple, but you should use a different parser (we recommend Egret) if you want to get the best translation performance.
-See more details on the <a href="parsing.html">parsing</a> page.
+And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-tune</tt>.
 </p>
+
+<p>
+There are a couple things that should be noted about parsing.
+The first is that it takes a long time to parse many sentences, which can be solved to some extent by using multiple cores or multiple machines.
+The second is that while the Stanford parser is robust and easy to use, there are other parsers that can achieve better accuracy than the Stanford parser.
+These are highly recommended if you want to improve travatar's translation accuracy, as changing parsers can result in a very significant gain of up to several BLEU points.
+Both of these issues are discussed in more detail on the <a href="parsing.html">parsing page</a>.
+</p>
+
+<h2>Training the Language Model</h2>
+
+<p>
+As with most statistical translation systems, travatar can use a language model (LM) to improve the fluency of its output.
+In order to train the LM, we first make a language model directory:
+</p>
+
+<pre>
+mkdir lm
+</pre>
+
+<p>
+Then run a series of three commands that add start and finish tokens to the training data,
+</p>
+
+<pre>
+irstlm-5.80.01/scripts/add-start-end.sh &lt; data/kyoto-train.tok.ja &gt; lm/kyoto-train.startend.ja
+</pre>
+
+<p>
+and build a language model:
+</p>
+
+<pre>
+IRSTLM=$HOME/travatar-tutorial/usr/ irstlm-5.80.01/scripts/build-lm.sh -i lm/kyoto-train.startend.ja  -t ./tmp -p -s improved-kneser-ney -n 5 -o lm/kyoto-train.ja.lm
+</pre>
+
+<p>
+Here, <tt>IRSTLM</tt> indicates the install path we used when we installed SRILM, <tt>-i</tt> indicates our training data  <tt>./tmp</tt> is a directory for temporary files,  <tt>-s</tt> is our smoothing method, <tt>-n</tt> is the order of the language model, and <tt>-o</tt> is our output model.
+Finally, we compile the model to ARPA format, which travatar can read:
+</p>
+
+<pre>
+irstlm-5.80.01/src/compile-lm --text yes lm/kyoto-train.ja.lm.gz lm/kyoto-train.ja.arpa
+</pre>
+
+<h2>Training the Translation Model</h2>
+
+<p>
+Training the translation model requires the parsed training data, so you have to wait until the parsing is finished, at least for the training set.
+In order to prevent lower case words and upper case words from being treated differently, we will first want to convert all the data to lower case:
+</p>
+
+<pre>
+travatar/script/tree/lowercase.pl &lt; data/kyoto-train.parse.en &lt; data/kyoto-train.parselow.en
+travatar/script/tree/lowercase.pl &lt; data/kyoto-train.tok.ja &lt; data/kyoto-train.toklow.ja
+</pre>
+
+<p>
+And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
+Once this data is prepared, we run the following training script.
+Note that this takes our parsed English, tokenized Japanese, and language model as input.
+We specify the directories for GIZA++ and travatar, and also our working directory, where the model will be stored.
+This will take a little while, so we will run it in the background using <tt>nohup</tt> at the beginning and <tt>&amp;</tt> at the end.
+In addition, if you have a computer with multiple cores, you can specify the number of cores you would like to use with <tt>-threads</tt> (for example, with 2 threads below).
+</p>
+
+<pre>
+nohup travatar/script/train/train-travatar.pl -work_dir $HOME/travatar-tutorial/train -lm_file $HOME/travatar-tutorial/lm/kyoto-train.ja.arpa -src_file data/kyoto-head.parselow.en -trg_file data/kyoto-head.toklow.ja -travatar_dir travatar -bin_dir giza-pp -threads 2 &amp;&gt; train.log &amp;
+</pre>
+
+<p>
+If training ends very quickly, there is probably something wrong, so check <tt>train.log</tt> for any error messages.
+There are a couple of <a href="training-options.html">options for training</a> that can improve the accuracy of translation, so once you have gone through the tutorial it will be worth checking them out.
+</p>
+
+<h2>Tuning</h2>
+
+<p>
+The above training creates the fundamental translation model, and we are able to perform translation.
+However, to achieve reasonable accuracy, we must perform tuning, which adjusts the weights of the translation model, language model, word penalties, etc.
+</p>
+
+<p>
+This is done with the <tt>mert-travatar.pl</tt> script in the following fashion.
+This also takes a considerable amount of time, as we have to translate the development set several times.
+At the moment, <tt>mert-travatar</tt> requires that you have a working copy of <a href="http://www.statmt.org">Moses</a> installed to the mosesdecoder, although this will be fixed in the near future.
+</p>
+
+<pre>
+nohup ~/work/travatar/script/mert/mert-travatar.pl -travatar-config train/model/travatar.ini -nbest 100 -src data/kyoto-dev.parselow.en -ref data/kyoto-dev.toklow.ja -travatar-dir travatar -moses-dir mosesdecoder -working-dir tune &amp;&gt; mert.log &amp;
+</pre>
+
+<p>
+Again, if this finishes very quickly, there is probably an error in mert.log.
+</p>
+
+<h2>Testing</h2>
+
+<p>
+When tuning finishes, there will be an appropriately tuned model in <tt>tune/travatar.ini</tt>.
+We can now use this model to translate text using the travatar decoder.
+</p>
+
+
 
 </div>
 </div>

@@ -32,20 +32,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
 
-    // Load the features from the weight file
-    ifstream weight_in(config.GetString("weight_file").c_str());
-    cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
-    if(!weight_in)
-        THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
-    SparseMap init_weights = Dict::ParseFeatures(weight_in);
-    weight_in.close();
-
-    // If weights exist, use them to override
-    if(config.GetString("weight_vals") != "") {
-        SparseMap new_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
-        BOOST_FOREACH(const SparseMap::value_type & val, new_weights)
-            init_weights[val.first] = val.second;
-    }
+    // Set weights
+    if(config.GetString("weight_vals") == "")
+        THROW_ERROR("You must specify weights through -weight_vals. If you really don't want any weights, just set -weight_vals dummy=0");
+    SparseMap init_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
 
     // Create the appropriate weights
     // If we are using online tuning, choose weights according to the tuning method,
