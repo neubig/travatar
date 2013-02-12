@@ -487,3 +487,29 @@ void HyperGraph::ResetViterbiScores() {
     BOOST_FOREACH(HyperNode * node, nodes_)
         node->SetViterbiScore(-DBL_MAX);
 }
+
+int HyperGraph::Append(const HyperGraph & rhs) {
+    int node_start = nodes_.size();
+    int edge_start = edges_.size();
+    // Append the nodes
+    BOOST_FOREACH(const HyperNode * node, rhs.GetNodes())
+        nodes_.push_back(new HyperNode(*node));
+    BOOST_FOREACH(const HyperEdge * edge, rhs.GetEdges())
+        edges_.push_back(new HyperEdge(*edge));
+    // Re-adjust the links
+    for(int i = node_start; i < (int)nodes_.size(); i++) {
+        nodes_[i]->SetId(i);
+        vector<HyperEdge*> & node_edges = nodes_[i]->GetEdges();
+        for(int j = 0; j < (int)node_edges.size(); j++)
+            node_edges[j] = edges_[node_edges[j]->GetId()+edge_start];
+    }
+    for(int i = edge_start; i < (int)edges_.size(); i++) {
+        edges_[i]->SetId(i);
+        edges_[i]->SetHead(nodes_[edges_[i]->GetHead()->GetId()+node_start]);
+        vector<HyperNode*> & edge_tails = edges_[i]->GetTails();
+        for(int j = 0; j < (int)edge_tails.size(); j++)
+            edge_tails[j] = nodes_[edge_tails[j]->GetId()+node_start];
+    }
+    // Return the node id
+    return node_start;
+}

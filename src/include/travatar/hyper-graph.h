@@ -301,6 +301,10 @@ public:
         nodes_[0]->CalculateFrontier(src_spans, std::set<int>());
     }
 
+    // Append one hypergraph to another and return the root node of the
+    // appended graph
+    int Append(const HyperGraph & rhs);
+
     // Check to make sure two hypergraphs are equal
     //  (print an error and return zero if not)
     int CheckEqual(const HyperGraph & rhs) const;

@@ -419,6 +419,29 @@ public:
         return exp_graph->CheckEqual(*act_graph);
     }
 
+    int TestAppend() {
+        // also an example of a forest
+        HyperGraph hga, hgb, hgab_exp;
+        { 
+            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), make_pair(0,1)); hga.AddNode(nodeA1);
+            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), make_pair(0,1)); hga.AddNode(nodeA2);
+            HyperEdge* edgeA = new HyperEdge(nodeA1); edgeA->AddTail(nodeA2); nodeA2->AddEdge(edgeA); hga.AddEdge(edgeA);
+            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), make_pair(0,1)); hgb.AddNode(nodeB1);
+            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), make_pair(0,1)); hgb.AddNode(nodeB2);
+            HyperEdge* edgeB = new HyperEdge(nodeB1); edgeB->AddTail(nodeB2); nodeB2->AddEdge(edgeB); hgb.AddEdge(edgeB);
+            hga.Append(hgb);
+        }
+        { 
+            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), make_pair(0,1)); hgab_exp.AddNode(nodeA1);
+            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), make_pair(0,1)); hgab_exp.AddNode(nodeA2);
+            HyperEdge* edgeA = new HyperEdge(nodeA1); edgeA->AddTail(nodeA2); nodeA2->AddEdge(edgeA); hgab_exp.AddEdge(edgeA);
+            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), make_pair(0,1)); hgab_exp.AddNode(nodeB1);
+            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), make_pair(0,1)); hgab_exp.AddNode(nodeB2);
+            HyperEdge* edgeB = new HyperEdge(nodeB1); edgeB->AddTail(nodeB2); nodeB2->AddEdge(edgeB); hgab_exp.AddEdge(edgeB);
+        }
+        return hgab_exp.CheckEqual(hga);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCopy()" << endl; if(TestCopy()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -431,6 +454,7 @@ public:
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutside()" << endl; if(TestInsideOutside()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutsideUnbalanced()" << endl; if(TestInsideOutsideUnbalanced()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAppend()" << endl; if(TestAppend()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
