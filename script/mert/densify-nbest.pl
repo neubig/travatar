@@ -17,6 +17,11 @@ my %poss;
 open FILE0, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
 while(<FILE0>) {
     chomp;
+    last if $_ eq "[weight_vals]";
+}
+while(<FILE0>) {
+    chomp;
+    last if not $_;
     s/=.*//g;
     $poss{$_} = scalar(keys %poss);
 }

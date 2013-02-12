@@ -39,16 +39,18 @@ Here is a short list, in approximate order of priority:
 </p>
 
 <ul>
-<li>Implementation of MERT with corpus-level BLEU using all travatar code. (Assigned to Graham)</li>
-<li>Forest pruning code so that forests with language model integration can still be output in reasonable space, which will allow for forest-based MERT. (Assigned to Graham)</li>
+<li>Implementation of MERT with corpus-level BLEU using all travatar code (and forests).</li>
+<li>Forest pruning code so that forests with language model integration can still be output in reasonable space, which will allow for forest-based MERT.</li>
 <li>Support for parallelization in the decoder.</li>
+<li>Utility scripts to make it possible to do preprocessing in parallel (parsing, detokenization).</li>
 <li>Finish the implementation of online learning algorithms such as MIRA.</li>
 <li>Implementation of a translation scorer (BLEU, RIBES).</li>
 <li>On-disk storage of the rule table and language model.</li>
 <li>More efficient storage of the rule table in memory.</li>
 <li>Support for minimum Bayes risk (MBR) decoding.</li>
-<li>Better rule table filtering code.</li>
-<li>Speed improvements for the tree scoring code.</li>
+<li>Smoothing of rule table probabilities.</li>
+<li>Better rule table filtering code <tt>filter-rt.pl</tt> (currently this does not filter <i>all</i> the rules).</li>
+<li>Speed improvements for the rule scoring code <tt>score-t2s.pl</tt>.</li>
 </ul>
 
 <p>If you are interested in helping to implement any of these, we'd love to have your help! Please send mail to the travatar-users mailing list, which you can join by sending mail to <tt>travatar-users+subscribe</tt> with the domain <tt>googlegroups.com</tt>. (You can also send questions to <tt>neubig</tt> at <tt>gmail.com</tt>.)</p> 

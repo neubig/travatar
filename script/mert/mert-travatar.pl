@@ -68,8 +68,8 @@ foreach $iter (1 .. $MAX_ITERS) {
     safesystem("$MOSES_DIR/bin/mert -d $weight_cnt --scconfig case:true --scfile $scores --ffile $feats --ifile $prev.init.opt -n 20 > $prev.mert.out 2> $prev.mert.log") or die "couldn't mert"; 
     print `grep Best $prev.mert.log`;
     safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -log $prev.mert.log $prev.ini > $next.ini") or die "couldn't make init opt";
-    my %wprev = load_weights("$prev.weights");
-    my %wnext = load_weights("$next.weights");
+    my %wprev = load_weights("$prev.ini");
+    my %wnext = load_weights("$next.ini");
     my $diff = 0;
     for(keys %wprev) { $diff += abs($wprev{$_} - $wnext{$_}); }
     last if($diff < $MIN_DIFF);

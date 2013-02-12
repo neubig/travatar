@@ -13,7 +13,18 @@ if(@ARGV != 0) {
     exit 1;
 }
 
-my @arr = map { chomp; s/.*=//g; $_ } <STDIN>;
+while(<STDIN>) {
+    chomp;
+    last if $_ eq "[weight_vals]";
+}
+
+my @arr;
+while(<STDIN>) {
+    chomp;
+    last if not $_;
+    s/.*=//g;
+    push @arr, $_;
+}
 my $s = sum(map { abs($_) } @arr);
 print join(" ", map { $_/$s } @arr)."\n";
 print join(" ", map { 0 } @arr)."\n";
