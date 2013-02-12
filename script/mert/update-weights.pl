@@ -11,9 +11,11 @@ binmode STDERR, ":utf8";
 
 my $LOG = "";
 my $MODEL = "";
+my $WEIGHTS = "";
 GetOptions(
     "log=s" => \$LOG,
     "model=s" => \$MODEL,
+    "weights=s" => \$WEIGHTS,
 );
 
 if(@ARGV != 1) {
@@ -21,7 +23,7 @@ if(@ARGV != 1) {
     exit 1;
 }
 
-my (@weights, @names);
+my (@weights, @names, %wmap);
 if($LOG) {
     open FILE1, "<:utf8", $LOG or die "Couldn't open $LOG\n";
     while(<FILE1>) {
@@ -46,6 +48,13 @@ if($LOG) {
         push @weights, $weight;
     }
     close FILE1;
+} elsif($WEIGHTS) {
+    open FILE1, "<:utf8", $WEIGHTS or die "Couldn't open $WEIGHTS\n";
+    while(<FILE1>) {
+        chomp;
+        for(split(/ /)) { my ($k,$v) = split(/=/); $wmap{$k} = $v; }
+    }
+    close FILE1;
 } else {
     die "Must specify either -log or -model";
 }
@@ -61,11 +70,16 @@ while(<FILE0>) {
 while(<FILE0>) {
     chomp;
     last if not $_;
-    die "Weight sizes don't match" if not @weights;
     my ($oldname, $oldweight) = split(/=/);
-    my $newname = shift(@names);
-    my $newweight = shift(@weights);
-    die "newname ($newname) and oldname ($oldname) don't match" if($newname and ($newname ne $oldname));
+    my $newweight;
+    if(%wmap) {
+        $newweight = $wmap{$oldname};
+    } else {
+        die "Weight sizes don't match" if not @weights;
+        my $newname = shift(@names);
+        $newweight = shift(@weights);
+        die "newname ($newname) and oldname ($oldname) don't match" if($newname and ($newname ne $oldname));
+    }
     print "$oldname=$newweight\n";
 }
 die "Weight sizes don't match" if @weights;

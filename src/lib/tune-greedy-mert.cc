@@ -33,7 +33,7 @@ void GreedyMertTask::Run() {
     ostringstream oss;
     oss << "gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl;
     if(collector_)
-        collector_->Write(id_, oss.str(), "");
+        collector_->Write(id_, "", oss.str());
     else
         cerr << oss.str();
 }

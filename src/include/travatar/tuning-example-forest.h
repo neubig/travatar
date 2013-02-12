@@ -20,15 +20,12 @@ public:
 
     // Constructor tanking the forest and the reference
     TuningExampleForest(EvalMeasure * measure,
-                        const boost::shared_ptr<HyperGraph> & forest,
                         const Sentence & ref,
                         int id,
                         double mult) : 
-                            measure_(measure), forest_(forest),
+                            measure_(measure),
                             ref_(ref), oracle_score_(mult),
                             curr_score_(-DBL_MAX), id_(id), mult_(mult) {
-        FindActiveFeatures();
-        CalculateOracle();
     }
 
     virtual ~TuningExampleForest() { }
@@ -48,6 +45,12 @@ public:
     virtual ConvexHull CalculateConvexHull(
                                 const SparseMap & weights,
                                 const SparseMap & gradient) const;
+    
+    // Add a forest hypothesis
+    void AddHypothesis(const boost::shared_ptr<HyperGraph> & forest) {
+        forest_ = forest;
+        // forests_.push_back(forest);
+    }
 
 protected:
 
@@ -58,6 +61,7 @@ protected:
                             int node_id) const;
 
     EvalMeasure * measure_;
+    std::vector<boost::shared_ptr<HyperGraph> > forests_;
     boost::shared_ptr<HyperGraph> forest_;
     Sentence ref_;
     // The score that the best hypothesis in the forest achieves

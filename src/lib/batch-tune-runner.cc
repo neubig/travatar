@@ -50,15 +50,19 @@ void BatchTuneRunner::LoadForests(istream & sys_in, TuneGreedyMert & tgm) {
     HyperGraph * curr_ptr;
     int id = 0;
     while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
+        if(id % 100 == 0)
+            PRINT_DEBUG(id << ".", 1);
         PRINT_DEBUG("Loading line " << id << endl, 1);
         const Sentence & ref = SafeAccess(refs_,id);
-        tgm.AddExample(
-            shared_ptr<TuningExample>(
-                new TuningExampleForest(
-                    eval_.get(),
-                    shared_ptr<HyperGraph>(curr_ptr),
-                    ref, id, ref.size() / (double)ref_len_
-                    )));
+        // Add the example
+        if((int)tgm.NumExamples() <= id) {
+            tgm.AddExample(
+                shared_ptr<TuningExample>(
+                    new TuningExampleForest(
+                        eval_.get(),
+                        ref, id, ref.size() / (double)ref_len_)));
+        }
+        ((TuningExampleForest&)tgm.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
         id++;
     }
 }
@@ -71,11 +75,11 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Load the features from the weight file
     SparseMap weights;
-    if(config.GetString("weight_file") != "") {
-        cerr << "Reading weight file from "<<config.GetString("weight_file")<<"..." << endl;
-        ifstream weight_in(config.GetString("weight_file").c_str());
+    if(config.GetString("weight_in") != "") {
+        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
+        ifstream weight_in(config.GetString("weight_in").c_str());
         if(!weight_in)
-            THROW_ERROR("Could not find weights: " << config.GetString("weight_file"));
+            THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
         weights = Dict::ParseFeatures(weight_in);
         weight_in.close();
     }
@@ -90,12 +94,6 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     bool use_forest = config.GetString("forest") != "";
     if(!(use_nbest ^ use_forest))
         THROW_ERROR("Must specify either -nbest or -forest and not both");
-    string sys_file = use_nbest ? 
-                      config.GetString("nbest") : 
-                      config.GetString("forest");
-    ifstream sys_in(sys_file.c_str());
-    if(!sys_in)
-        THROW_ERROR(sys_file << " could not be opened for reading");
 
     // Load the references
     PRINT_DEBUG("Loading references..." << endl, 1);
@@ -119,10 +117,18 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     TuneGreedyMert tgm;
     tgm.SetThreads(config.GetInt("threads"));
     PRINT_DEBUG("Loading system output..." << endl, 1);
-    if(use_nbest)
-        LoadNbests(sys_in, tgm);
-    else
-        LoadForests(sys_in, tgm);
+    string sys_file = use_nbest ? config.GetString("nbest") : config.GetString("forest");
+    vector<string> sys_files;
+    boost::split(sys_files,sys_file,boost::is_any_of(","));
+    BOOST_FOREACH(const string & my_sys, sys_files) {
+        ifstream sys_in(my_sys.c_str());
+        if(!sys_in)
+            THROW_ERROR(sys_file << " could not be opened for reading");
+        if(use_nbest)
+            LoadNbests(sys_in, tgm);
+        else
+            LoadForests(sys_in, tgm);
+    }
 
     // Set the weight ranges
     if(config.GetString("weight_ranges") != "") {

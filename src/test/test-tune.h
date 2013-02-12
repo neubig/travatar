@@ -138,8 +138,8 @@ public:
     int TestLatticeHull() {
         EvalMeasureBleu bleu;
         Sentence ref = Dict::ParseWords("c a");
-        TuningExampleForest tef(&bleu, forest, ref, 1, 1);
-        tef.CalculatePotentialGain(weights);
+        TuningExampleForest tef(&bleu, ref, 1, 1);
+        tef.AddHypothesis(forest);
         ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
         // The hypotheses are
         // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2)
@@ -156,7 +156,8 @@ public:
     int TestForestHull() {
         EvalMeasureBleu bleu;
         Sentence ref = Dict::ParseWords("c a");
-        TuningExampleForest tef(&bleu, forest2, ref, 2, 1);
+        TuningExampleForest tef(&bleu, ref, 2, 1);
+        tef.AddHypothesis(forest2);
         tef.CalculatePotentialGain(weights);
         ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
         // The hypotheses are
@@ -182,7 +183,8 @@ public:
         e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
         HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("\"<unk>\""));
         n0->AddEdge(e02); rule_graph->AddEdge(e02);
-        TuningExampleForest tef(&bleu, rule_graph, exp_sent, 2, 1);
+        TuningExampleForest tef(&bleu, exp_sent, 2, 1);
+        tef.AddHypothesis(rule_graph);
         tef.CalculatePotentialGain(weights);
         // The check here should break
         ConvexHull act_hull = tef.CalculateConvexHull(weights, gradient);

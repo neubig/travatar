@@ -80,19 +80,28 @@ inline double PosZero(double dub) { return (dub == -0.0 ? 0.0 : dub); }
 ConvexHull TuningExampleForest::CalculateConvexHull(
                         const SparseMap & weights,
                         const SparseMap & gradient) const {
+    ConvexHull ret;
     // Find if any features in the gradient are not active
-    bool active = false;
-    BOOST_FOREACH(const SparseMap::value_type & val, gradient) {
-        set<WordId>::const_iterator it = active_.find(val.first);
-        if(it != active_.end()) {
-            active = true;
-            break;
+    bool active = (active_.size() == 0);
+    if(!active) {
+        BOOST_FOREACH(const SparseMap::value_type & val, gradient) {
+            set<WordId>::const_iterator it = active_.find(val.first);
+            if(it != active_.end()) {
+                active = true;
+                break;
+            }
         }
     }
-    ConvexHull ret;
+    // Calculate the score of the current best hypothesis
+    forest_->ResetViterbiScores();
+    Weights wval(weights);
+    forest_->ScoreEdges(wval);
+    NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
+    Sentence sent = nbest_list[0]->GetWords();
+    double curr_score = measure_->MeasureScore(ref_, sent, id_) * mult_;
     // If we are not active, return the simple convex hull
     if(!active) {
-        ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_score_));
+        ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_score));
     // Otherwise, calculate the convex hull from the forest
     } else {
         vector<shared_ptr<MertHull> > hulls(forest_->NumNodes());
@@ -107,8 +116,8 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
             double score = measure_->MeasureScore(ref_, sent, id_) * mult_;
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
             if(PosZero(line.x) == 0) {
-                // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_score_<<": @curr"<<endl;
-                ret.push_back(make_pair(make_pair(-DBL_MIN,+DBL_MIN),curr_score_));
+                // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_score <<": @curr"<<endl;
+                ret.push_back(make_pair(make_pair(-DBL_MIN,+DBL_MIN),curr_score));
             }
             ret.push_back(make_pair(make_pair(PosZero(line.x)+DBL_MIN,PosZero(next)-DBL_MIN),score));
             // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << score<<": " <<Dict::PrintWords(sent)<<endl;
