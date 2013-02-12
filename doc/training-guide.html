@@ -309,10 +309,38 @@ Again, if this finishes very quickly, there is probably an error in mert.log.
 
 <p>
 When tuning finishes, there will be an appropriately tuned model in <tt>tune/travatar.ini</tt>.
-We can now use this model to translate text using the travatar decoder.
+We can now use this model to translate the test text using the travatar decoder.
+Before training, we will want to filter the model file to remove rules that are not needed for translation and reduce the memory footprint:
 </p>
 
+<pre>
+mkdir test
+travatar/script/train/filter-model.pl tune/travatar.ini test/filtered-test.ini test/filtered-test "travatar/script/train/filter-rt.pl -src data/kyoto-test.parselow.en"
+</pre>
 
+<p>
+Here the final argument in quotes is what command we will use to filter the rule table.
+You should change the <tt>-src</tt> option to whatever file you will be translating.
+Once we are done filtering, we can translate the test set as follows:
+</p>
+
+<pre>
+travatar/src/bin/travatar -config_file test/filtered-test.ini &lt; data/kyoto-test.parselow.en &gt; test/kyoto-test.out
+</pre>
+
+<p>
+Finally, we can measure the accuracy using BLEU score.
+There is currently no script included with travatar to do this, so we will use Moses's <tt>multi-bleu.perl</tt> (this should be fixed soon).
+</p>
+
+<pre>
+mosesdecoder/scripts/generic/multi-bleu.perl data/kyoto-test.tok.ja &lt; test/kyoto-test.out
+</pre>
+
+<p>
+If everything went OK, you should get a BLEU of around 10-12 with the smaller data, or more with the full training set.
+If you want to improve the accuracy even more, please be sure to visit the <a href="parsing.html">parsing</a> or <a href="training-options.html">training options</a> sections for mroe details!
+</p>
 
 </div>
 </div>
