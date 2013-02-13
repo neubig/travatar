@@ -4,13 +4,13 @@
 #include <boost/shared_ptr.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/sentence.h>
+#include <travatar/hyper-graph.h>
 #include <set>
 #include <cfloat>
 
 namespace travatar {
 
 class EvalMeasure;
-class HyperGraph;
 class MertHull;
 class MertHullWeightFunction;
 
@@ -47,10 +47,7 @@ public:
                                 const SparseMap & gradient) const;
     
     // Add a forest hypothesis
-    void AddHypothesis(const boost::shared_ptr<HyperGraph> & forest) {
-        forest_ = forest;
-        // forests_.push_back(forest);
-    }
+    void AddHypothesis(const boost::shared_ptr<HyperGraph> & forest);
 
 protected:
 
@@ -61,7 +58,6 @@ protected:
                             int node_id) const;
 
     EvalMeasure * measure_;
-    std::vector<boost::shared_ptr<HyperGraph> > forests_;
     boost::shared_ptr<HyperGraph> forest_;
     Sentence ref_;
     // The score that the best hypothesis in the forest achieves

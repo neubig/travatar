@@ -17,6 +17,23 @@ using namespace boost;
 
 // ~TuningExampleForest::TuningExampleForest() { }
 
+// This function combines multiple forests into a single one via a shared
+// root node. This allows forests from multiple runs to be searched together
+void TuningExampleForest::AddHypothesis(const shared_ptr<HyperGraph> & hg) {
+    // Make the root node if necessary
+    if(forest_.get() == NULL) {
+        forest_.reset(new HyperGraph());
+        forest_->AddNode(new HyperNode);
+        forest_->SetWords(hg->GetWords());
+    }
+    // Append the forest, and add an edge connecting to the root node
+    int id = forest_->Append(*hg);
+    HyperNode *root = forest_->GetNode(0), *child = forest_->GetNode(id);
+    HyperEdge *edge = new HyperEdge(root);
+    edge->AddTail(child); edge->AddTrgWord(-1);
+    root->AddEdge(edge); forest_->AddEdge(edge);
+}
+
 void TuningExampleForest::FindActiveFeatures() {
     active_.clear();
     BOOST_FOREACH(const HyperEdge * edge, forest_->GetEdges())
@@ -55,7 +72,6 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
         ret.insert(make_pair(id, gain));
     return ret;
 }
-
 
 // Perform the inside step using memoized recursion
 const MertHull & TuningExampleForest::CalculateMertHull(
