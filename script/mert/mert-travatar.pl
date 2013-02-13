@@ -14,6 +14,7 @@ my $MERT_SOLVER = "moses";
 my $EVAL = "bleu"; # The evaluation measure to use
 my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;
+my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
 my $NBEST = 100;
 GetOptions(
     # Necessary
@@ -27,6 +28,7 @@ GetOptions(
     "travatar=s" => \$TRAVATAR,
     "decoder-options=s" => \$DECODER_OPTIONS,
     "max-iters=i" => \$MAX_ITERS,
+    "cand-type=s" => \$CAND_TYPE,
     "nbest=i" => \$NBEST,
     "mert-solver=s" => \$MERT_SOLVER,
     "eval=s" => \$EVAL
@@ -42,6 +44,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
     die "Must specify travatar-config, src, ref, travatar-dir, tm, and working-dir";
 }
 ($MERT_SOLVER eq "moses") or ($MERT_SOLVER eq "batch-tune") or die "Bad MERT solver: $MERT_SOLVER";
+($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
 ($EVAL eq "bleu") or (($EVAL eq "ribes") and ($MERT_SOLVER eq "batch-tune")) or die "Bad evaluation measure $EVAL";
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
@@ -65,13 +68,17 @@ if($MERT_SOLVER eq "batch-tune") {
     close FILE0;
 }
 
-
 # Do the outer loop
 my ($iter, $prev, $next);
 foreach $iter (1 .. $MAX_ITERS) {
     $prev = "$WORKING_DIR/run$iter";
     $next = "$WORKING_DIR/run".($iter+1);
-    safesystem("$TRAVATAR $DECODER_OPTIONS -nbest $NBEST -config_file $prev.ini -nbest_out $prev.nbest < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    # Candidate options
+    my $CAND_OPTIONS;
+    if($CAND_TYPE eq "nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
+    elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest"; }
+    # Do the decoding
+    safesystem("$TRAVATAR $DECODER_OPTIONS $CAND_OPTIONS -config_file $prev.ini < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {
@@ -84,8 +91,13 @@ foreach $iter (1 .. $MAX_ITERS) {
         print `grep Best $prev.mert.log`;
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -log $prev.mert.log $prev.ini > $next.ini") or die "couldn't make init opt";
     } elsif($MERT_SOLVER eq "batch-tune") {
-        my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
-        safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval $EVAL -weight_in $prev.weights $REF > $next.weights");
+        if($CAND_TYPE eq "nbest") {
+            my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval $EVAL -weight_in $prev.weights $REF > $next.weights");
+        } elsif($CAND_TYPE eq "forest") {
+            my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -forest $forests -eval $EVAL -weight_in $prev.weights $REF > $next.weights");
+        }
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
     my %wprev = load_weights("$prev.ini");

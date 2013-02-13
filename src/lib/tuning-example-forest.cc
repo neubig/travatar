@@ -67,6 +67,8 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     oracle_score_ = max(oracle_score_, curr_score_);
     double gain = oracle_score_ - curr_score_;
     // Add this to all existing values
+    if(active_.size() == 0)
+        FindActiveFeatures();
     SparseMap ret;
     BOOST_FOREACH(WordId id, active_)
         ret.insert(make_pair(id, gain));
