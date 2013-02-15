@@ -48,35 +48,82 @@ public:
         e12->SetFeatures(f12);                   n1->AddEdge(e12); forest->AddEdge(e12);         
         }
 
-        forest2.reset(new HyperGraph);
-        {
-        // Four
-        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest2->AddNode(n0);
-        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest2->AddNode(n1);
-        HyperNode* n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); forest2->AddNode(n2);
-        HyperNode* n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); forest2->AddNode(n3);
-        // And edges for each node
-        SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
-        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("x0 x1"));
-        e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); forest2->AddEdge(e01);
-        SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
-        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("x1 x0"));
-        e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); forest2->AddEdge(e02);
-        SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
-        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(Dict::ParseQuotedWords("\"c\""));
-        e11->SetFeatures(f11); n1->AddEdge(e11); forest2->AddEdge(e11);
-        SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
-        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(Dict::ParseQuotedWords("\"d\""));
-        e12->SetFeatures(f12); n1->AddEdge(e12); forest2->AddEdge(e12);         
-        SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
-        HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgWords(Dict::ParseQuotedWords("\"a\""));
-        e21->SetFeatures(f21); n2->AddEdge(e21); forest2->AddEdge(e21);
-        SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
-        HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgWords(Dict::ParseQuotedWords("\"b\""));
-        e31->SetFeatures(f31); n3->AddEdge(e31); forest2->AddEdge(e31);
-        }
+        forest2.reset(CreateForestTwo(true, true));
+        forest2c.reset(CreateForestTwo(true, false));
+        forest2d.reset(CreateForestTwo(false, true));
+        // forest2a.reset(new HyperGraph);
+        // forest2b.reset(new HyperGraph);
+        // {
+        // // Four nodes
+        // HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest2->AddNode(n0);
+        // HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest2->AddNode(n1);
+        // HyperNode* n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); forest2->AddNode(n2);
+        // HyperNode* n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); forest2->AddNode(n3);
+        // // And edges for each node
+        // SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
+        // HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("x0 x1"));
+        // e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); forest2->AddEdge(e01);
+        // SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
+        // HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("x1 x0"));
+        // e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); forest2->AddEdge(e02);
+        // SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+        // HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(Dict::ParseQuotedWords("\"c\""));
+        // e11->SetFeatures(f11); n1->AddEdge(e11); forest2->AddEdge(e11);
+        // SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+        // HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(Dict::ParseQuotedWords("\"d\""));
+        // e12->SetFeatures(f12); n1->AddEdge(e12); forest2->AddEdge(e12);         
+        // SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
+        // HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgWords(Dict::ParseQuotedWords("\"a\""));
+        // e21->SetFeatures(f21); n2->AddEdge(e21); forest2->AddEdge(e21);
+        // SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
+        // HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgWords(Dict::ParseQuotedWords("\"b\""));
+        // e31->SetFeatures(f31); n3->AddEdge(e31); forest2->AddEdge(e31);
+        // }
     }
     ~TestTune() { }
+
+    // Create a forest using c and/or d
+    HyperGraph * CreateForestTwo(bool use_c, bool use_d) {
+        HyperGraph * ret = new HyperGraph;
+        // Four nodes
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); ret->AddNode(n0);
+        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); ret->AddNode(n1);
+        HyperNode *n2 = NULL, *n3 = NULL;
+        if(use_c) {
+            n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); ret->AddNode(n2);
+        }
+        if(use_d) {
+            n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); ret->AddNode(n3);
+        }
+        // And edges for each node
+        if(use_c) {
+            SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
+            HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("x0 x1"));
+            e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); ret->AddEdge(e01);
+        }
+        if(use_d) {
+            SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
+            HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("x1 x0"));
+            e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); ret->AddEdge(e02);
+        }
+        SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(Dict::ParseQuotedWords("\"c\""));
+        e11->SetFeatures(f11); n1->AddEdge(e11); ret->AddEdge(e11);
+        SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(Dict::ParseQuotedWords("\"d\""));
+        e12->SetFeatures(f12); n1->AddEdge(e12); ret->AddEdge(e12);         
+        if(use_c) {
+            SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
+            HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgWords(Dict::ParseQuotedWords("\"a\""));
+            e21->SetFeatures(f21); n2->AddEdge(e21); ret->AddEdge(e21);
+        }
+        if(use_d) {
+            SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
+            HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgWords(Dict::ParseQuotedWords("\"b\""));
+            e31->SetFeatures(f31); n3->AddEdge(e31); ret->AddEdge(e31);
+        }
+        return ret;
+    }
 
     int TestCalculatePotentialGain() {
         TuneGreedyMert mert;
@@ -172,6 +219,26 @@ public:
         return CheckVector(exp_hull, act_hull);
     }
 
+    int TestMultipleForests() {
+        EvalMeasureBleu bleu;
+        Sentence ref = Dict::ParseWords("c a");
+        TuningExampleForest tef(&bleu, ref, 2, 1);
+        tef.AddHypothesis(forest2c);
+        tef.AddHypothesis(forest2d);
+        tef.CalculatePotentialGain(weights);
+        ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
+        // The hypotheses are
+        // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2)
+        // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
+        // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
+        // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        return CheckVector(exp_hull, act_hull);
+    }
+
     int TestForestUnk() {
         EvalMeasureBleu bleu;
         shared_ptr<HyperGraph> rule_graph(new HyperGraph);
@@ -201,6 +268,7 @@ public:
         done++; cout << "TestLineSearch()" << endl; if(TestLineSearch()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLatticeHull()" << endl; if(TestLatticeHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
@@ -208,7 +276,7 @@ public:
 
     int valid, slopeid;
     vector<shared_ptr<TuningExample> > examp_set;
-    shared_ptr<HyperGraph> forest, forest2;
+    shared_ptr<HyperGraph> forest, forest2, forest2c, forest2d;
     SparseMap weights, gradient;
 
 };
