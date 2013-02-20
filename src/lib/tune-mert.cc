@@ -113,6 +113,27 @@ pair<double,double> TuneMert::FindGradientRange(
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
-void TuneMert::Tune() {
-    THROW_ERROR("Not implemented yet");
+void TuneMert::RunTuning() {
+    // Find all included weights
+    SparseMap potential;
+    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
+        examp->CountWeights(potential);
+
+    SparseMap curr_weights = weights_;
+    double gain = DBL_MAX;
+    while(gain > gain_threshold_) {
+        gain = 0;
+        BOOST_FOREACH(SparseMap::value_type val, potential) {
+            // Create the gradient
+            SparseMap gradient; gradient[val.first] = 1;
+            LineSearchResult result = TuneMert::LineSearch(curr_weights, gradient, examps_);
+            if(result.gain > 0) {
+                gain += result.gain;
+                curr_weights += gradient * result.pos;
+                PRINT_DEBUG("Features: " << Dict::PrintFeatures(curr_weights) << endl << result.after->ConvertToString() << endl, 0);
+            }
+        }
+    }
+
+    weights_ = curr_weights;
 }

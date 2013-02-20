@@ -19,7 +19,7 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-void BatchTuneRunner::LoadNbests(istream & sys_in, TuneGreedyMert & tgm) {
+void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm) {
     string line;
     regex threebars(" \\|\\|\\| ");
     while(getline(sys_in, line)) {
@@ -45,10 +45,11 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, TuneGreedyMert & tgm) {
     PRINT_DEBUG(endl, 1);
 }
 
-void BatchTuneRunner::LoadForests(istream & sys_in, TuneGreedyMert & tgm) {
+void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
     JSONTreeIO io;
     HyperGraph * curr_ptr;
     int id = 0;
+    bool normalize_len = false;
     while((curr_ptr = io.ReadTree(sys_in)) != NULL) {
         if(id % 100 == 0)
             PRINT_DEBUG(id << ".", 1);
@@ -56,11 +57,12 @@ void BatchTuneRunner::LoadForests(istream & sys_in, TuneGreedyMert & tgm) {
         const Sentence & ref = SafeAccess(refs_,id);
         // Add the example
         if((int)tgm.NumExamples() <= id) {
+            double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0);
             tgm.AddExample(
                 shared_ptr<TuningExample>(
                     new TuningExampleForest(
                         eval_.get(),
-                        ref, id, ref.size() / (double)ref_len_)));
+                        ref, id, norm)));
         }
         ((TuningExampleForest&)tgm.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
         id++;
@@ -113,9 +115,16 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         THROW_ERROR("Bad eval measure: " << config.GetString("eval"));
     }
 
+    // Chose the MERT
+    shared_ptr<Tune> tgm;
+    if(config.GetString("algorithm") == "mert") {
+        tgm.reset(new TuneMert);
+    } else if(config.GetString("algorithm") == "greedy-mert") {
+        tgm.reset(new TuneGreedyMert);
+        ((TuneGreedyMert&)*tgm).SetThreads(config.GetInt("threads"));
+    }
+
     // Convert the n-best lists or forests into example pairs for tuning
-    TuneGreedyMert tgm;
-    tgm.SetThreads(config.GetInt("threads"));
     PRINT_DEBUG("Loading system output..." << endl, 1);
     string sys_file = use_nbest ? config.GetString("nbest") : config.GetString("forest");
     vector<string> sys_files;
@@ -125,9 +134,9 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         if(!sys_in)
             THROW_ERROR(sys_file << " could not be opened for reading");
         if(use_nbest)
-            LoadNbests(sys_in, tgm);
+            LoadNbests(sys_in, *tgm);
         else
-            LoadForests(sys_in, tgm);
+            LoadForests(sys_in, *tgm);
     }
 
     // Set the weight ranges
@@ -141,17 +150,17 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
             WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
             double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
             double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
-            tgm.SetRange(id, min_score, max_score);
+            tgm->SetRange(id, min_score, max_score);
         }
     }
 
     
     // Perform MERT
     PRINT_DEBUG("Tuning..." << endl, 1);
-    tgm.SetGainThreshold(config.GetDouble("threshold"));
-    tgm.SetWeights(weights);
-    tgm.Tune();
+    tgm->SetGainThreshold(config.GetDouble("threshold"));
+    tgm->SetWeights(weights);
+    tgm->RunTuning();
 
     // Print result
-    cout << Dict::PrintFeatures(tgm.GetWeights()) << endl;
+    cout << Dict::PrintFeatures(tgm->GetWeights()) << endl;
 }

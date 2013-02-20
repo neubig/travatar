@@ -40,6 +40,9 @@ public:
     // for this particular forest (oracle-current best)
     virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
 
+    // Count weights
+    virtual void CountWeights(SparseMap & weights);
+
     // Calculate the convex hull for this example given the current weights
     // and gradients
     virtual ConvexHull CalculateConvexHull(

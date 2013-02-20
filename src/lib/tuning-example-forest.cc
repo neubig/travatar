@@ -55,6 +55,13 @@ void TuningExampleForest::CalculateOracle() {
     }
 }
 
+// Add weights
+void TuningExampleForest::CountWeights(SparseMap & weights) {
+    BOOST_FOREACH(const HyperEdge * edge, forest_->GetEdges())
+        BOOST_FOREACH(const SparseMap::value_type & feat, edge->GetFeatures())
+            weights[feat.first] = 1;
+}
+
 // Calculate the potential gain for a single example given the current weights
 SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights) {
     // Find the best according to the weights

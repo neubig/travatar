@@ -131,10 +131,6 @@ double TuneGreedyMert::TuneOnce() {
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
-void TuneGreedyMert::Tune() {
+void TuneGreedyMert::RunTuning() {
     while (TuneOnce() > gain_threshold_);
-}
-
-double TuneGreedyMert::GetBestGain() const {
-    return best_result_.gain;
 }

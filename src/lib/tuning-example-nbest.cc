@@ -9,6 +9,13 @@ using namespace std;
 using namespace travatar;
 using namespace boost;
 
+// Add weights
+void TuningExampleNbest::CountWeights(SparseMap & weights) {
+    BOOST_FOREACH(const ExamplePair & examp, nbest_)
+        BOOST_FOREACH(const SparseMap::value_type & val, examp.first)
+            weights[val.first] = 1;
+}
+
 // Calculate the potential gain for a single example given the current weights
 SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) {
     // Find the hypothesis to be chosen with the current weights
