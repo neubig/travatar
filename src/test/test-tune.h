@@ -18,12 +18,12 @@ public:
         // Create the examples
         SparseMap feat10, feat11, feat12, feat20, feat21, feat22;
         shared_ptr<TuningExample> examps1(new TuningExampleNbest()), examps2(new TuningExampleNbest());
-        feat10[valid] = 1; feat10[slopeid] = -1; ((TuningExampleNbest&)*examps1).AddHypothesis(feat10, 0.2);
-        feat11[valid] = 3; feat11[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat11, 0.1);
-        feat12[valid] = 1; feat12[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat12, 0.3);
-        feat20[valid] = 7; feat20[slopeid] = -1; ((TuningExampleNbest&)*examps2).AddHypothesis(feat20, 0.1);
-        feat21[valid] = 3; feat21[slopeid] = 1;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat21, 0.2);
-        feat22[valid] = 6; feat22[slopeid] = 0;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat22, 0.3);
+        feat10[valid] = 1; feat10[slopeid] = -1; ((TuningExampleNbest&)*examps1).AddHypothesis(feat10, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
+        feat11[valid] = 3; feat11[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat11, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
+        feat12[valid] = 1; feat12[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat12, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
+        feat20[valid] = 7; feat20[slopeid] = -1; ((TuningExampleNbest&)*examps2).AddHypothesis(feat20, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
+        feat21[valid] = 3; feat21[slopeid] = 1;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat21, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
+        feat22[valid] = 6; feat22[slopeid] = 0;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat22, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
         examp_set.push_back(examps1); examp_set.push_back(examps2);
         weights[valid] = 1;
         gradient[slopeid] = 1;
@@ -132,11 +132,11 @@ public:
         // Create the examples
         TuningExampleNbest examps;
         SparseMap x1; x1[Dict::WID("a")] = 1; x1[Dict::WID("b")] = 1;
-        examps.AddHypothesis(x1, 1.0);
+        examps.AddHypothesis(x1, EvalStatsPtr(new EvalStatsAverage(1.0, 1)));
         SparseMap x2; x2[Dict::WID("a")] = 1; x2[Dict::WID("c")] = 1;
-        examps.AddHypothesis(x2, 0.5);
+        examps.AddHypothesis(x2, EvalStatsPtr(new EvalStatsAverage(0.5, 1)));
         SparseMap x3; x3[Dict::WID("a")] = 1; x3[Dict::WID("d")] = 1;
-        examps.AddHypothesis(x3, 0.0);
+        examps.AddHypothesis(x3, EvalStatsPtr(new EvalStatsAverage(0.0, 1)));
         // Find the expected and actual potential gain
         SparseMap gain_act = examps.CalculatePotentialGain(weights);
         // Both b and c are different between x1 and x2, and should be active
@@ -150,13 +150,13 @@ public:
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
         ConvexHull hull1_exp, hull1_act;
         hull1_act = examp_set[0]->CalculateConvexHull(weights, gradient);
-        hull1_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), 0.2));
-        hull1_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), 0.1));  
+        hull1_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
+        hull1_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));  
         ConvexHull hull2_exp, hull2_act;
         hull2_act = examp_set[1]->CalculateConvexHull(weights, gradient);
-        hull2_exp.push_back(make_pair(make_pair(-DBL_MAX, 1.0), 0.1));
-        hull2_exp.push_back(make_pair(make_pair(1.0, 3.0), 0.3));
-        hull2_exp.push_back(make_pair(make_pair(3.0, DBL_MAX), 0.2));  
+        hull2_exp.push_back(make_pair(make_pair(-DBL_MAX, 1.0), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));
+        hull2_exp.push_back(make_pair(make_pair(1.0, 3.0), EvalStatsPtr(new EvalStatsAverage(0.3, 1))));
+        hull2_exp.push_back(make_pair(make_pair(3.0, DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
         return CheckVector(hull1_exp, hull1_act) && CheckVector(hull2_exp, hull2_act);
     }
 
@@ -164,22 +164,22 @@ public:
         TuneGreedyMert mert;
         mert.SetExamples(examp_set);
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
-        LineSearchResult exp_score1(2.0,0.2,0.4);
+        LineSearchResult exp_score1(2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.4, 1)));
         LineSearchResult act_score1 = mert.LineSearch(weights, gradient);
-        LineSearchResult exp_score2(-2.0,0.2,0.3);
+        LineSearchResult exp_score2(-2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
         LineSearchResult act_score2 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, 0.0));
-        LineSearchResult exp_score3(-3.0,0.2,0.3);
+        LineSearchResult exp_score3(-3.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
         LineSearchResult act_score3 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, -3.0));
         return 
             CheckAlmost(exp_score1.pos, act_score1.pos) &&
-            CheckAlmost(exp_score1.before, act_score1.before) &&
-            CheckAlmost(exp_score1.after, act_score1.after) &&
+            CheckAlmost(exp_score1.before->ConvertToScore(), act_score1.before->ConvertToScore()) &&
+            CheckAlmost(exp_score1.after->ConvertToScore(), act_score1.after->ConvertToScore()) &&
             CheckAlmost(exp_score3.pos, act_score3.pos) &&
-            CheckAlmost(exp_score3.before, act_score3.before) &&
-            CheckAlmost(exp_score3.after, act_score3.after) &&
+            CheckAlmost(exp_score3.before->ConvertToScore(), act_score3.before->ConvertToScore()) &&
+            CheckAlmost(exp_score3.after->ConvertToScore(), act_score3.after->ConvertToScore()) &&
             CheckAlmost(exp_score2.pos, act_score2.pos) &&
-            CheckAlmost(exp_score2.before, act_score2.before) &&
-            CheckAlmost(exp_score2.after, act_score2.after);
+            CheckAlmost(exp_score2.before->ConvertToScore(), act_score2.before->ConvertToScore()) &&
+            CheckAlmost(exp_score2.after->ConvertToScore(), act_score2.after->ConvertToScore());
     }
 
     int TestLatticeHull() {
@@ -193,10 +193,10 @@ public:
         // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
         // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
-        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
-        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
-        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0, 1))));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4), 1))));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(0.0, 1))));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0, 1))));
         return CheckVector(exp_hull, act_hull);
     }
 
@@ -212,10 +212,10 @@ public:
         // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
         // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
-        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
-        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
-        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(0.0))));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
         return CheckVector(exp_hull, act_hull);
     }
 
@@ -232,10 +232,10 @@ public:
         // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
         // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
-        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   1.0));
-        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   exp((log(0.5)*2)/4)));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),0.0));
-        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), 0.0));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
+        exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(0.0))));
+        exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
         return CheckVector(exp_hull, act_hull);
     }
 
@@ -256,8 +256,8 @@ public:
         // The check here should break
         ConvexHull act_hull = tef.CalculateConvexHull(weights, gradient);
         ConvexHull exp_hull;
-        exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), 1.0));
-        exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX), 1.0));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(1.0))));
+        exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
         return CheckVector(act_hull,exp_hull);
     }
 

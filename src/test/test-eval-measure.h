@@ -21,7 +21,7 @@ public:
         // System is longer than ref, so there is no brevity penalty
         // Precision for BLEU+1 is ((3/5)*(2/5)*(1/4)*(1/3))^(1/4)
         double bleu_exp = exp(log((3.0/5.0) * (2.0/5.0) * (1.0/4.0) * (1.0/3.0))/4);
-        double bleu_act = eval_measure_bleu.MeasureScore(ref_sent, sys_sent);
+        double bleu_act = eval_measure_bleu.CalculateStats(ref_sent, sys_sent)->ConvertToScore();
         return CheckEqual(bleu_exp, bleu_act);
     }
 

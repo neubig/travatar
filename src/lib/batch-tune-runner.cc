@@ -33,14 +33,14 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, TuneGreedyMert & tgm) {
         SparseMap feat = Dict::ParseFeatures(columns[3]);
         // Calculate the score
         const Sentence & ref = SafeAccess(refs_,id);
-        double score = eval_->MeasureScore(ref, hyp, id) * ref.size() / ref_len_;
+        shared_ptr<EvalStats> stats = eval_->CalculateStats(ref, hyp, id);
         // Add the example
         while((int)tgm.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
             tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
-        ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, score);
+        ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, stats);
     }
     PRINT_DEBUG(endl, 1);
 }

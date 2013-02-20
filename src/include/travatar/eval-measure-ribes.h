@@ -5,6 +5,7 @@
 #include <vector>
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
+#include <boost/shared_ptr.hpp>
 
 namespace travatar {
 
@@ -17,12 +18,12 @@ public:
         RIBES_VERSION_("1.02.3"), alpha_(alpha), beta_(beta)
          { }
 
-    // Measure the score of the system output according to the reference
-    virtual double MeasureScore(
-            const Sentence & reference,
-            const Sentence & system,
-            int ref_cache_id = INT_MAX,
-            int sys_cache_id = INT_MAX);
+    // Calculate the stats for a single sentence
+    virtual boost::shared_ptr<EvalStats> CalculateStats(
+                const Sentence & ref,
+                const Sentence & sys,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX);
 
     // int GetNgramOrder() const { return ngram_order_; }
     // void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }

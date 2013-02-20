@@ -45,7 +45,7 @@ void TuningExampleForest::CalculateOracle() {
     try {
         Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
         PRINT_DEBUG("Oracle sentence:" << endl << Dict::PrintWords(oracle_sent) << endl, 1);
-        oracle_score_ = measure_->MeasureScore(ref_, oracle_sent, id_);
+        oracle_score_ = measure_->CalculateStats(ref_, oracle_sent, id_)->ConvertToScore();
         PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
         oracle_score_ *= mult_;
     } catch (std::runtime_error & e) {
@@ -62,7 +62,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
-    curr_score_ = measure_->MeasureScore(ref_, sent, id_) * mult_;
+    curr_score_ = measure_->CalculateStats(ref_, sent, id_)->ConvertToScore() * mult_;
     // Find the potential gain
     oracle_score_ = max(oracle_score_, curr_score_);
     double gain = oracle_score_ - curr_score_;
@@ -116,10 +116,11 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
-    double curr_score = measure_->MeasureScore(ref_, sent, id_) * mult_;
+    EvalStatsPtr curr_stats = measure_->CalculateStats(ref_, sent, id_);
+    curr_stats->TimesEquals(mult_);
     // If we are not active, return the simple convex hull
     if(!active) {
-        ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_score));
+        ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_stats));
     // Otherwise, calculate the convex hull from the forest
     } else {
         vector<shared_ptr<MertHull> > hulls(forest_->NumNodes());
@@ -131,13 +132,14 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
             const MertLine & line = *top_hull.GetLines()[i];
             Sentence sent;
             line.ConstructTranslation(forest_->GetWords(), &sent);
-            double score = measure_->MeasureScore(ref_, sent, id_) * mult_;
+            EvalStatsPtr stats = measure_->CalculateStats(ref_, sent, id_);
+            stats->TimesEquals(mult_);
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
             if(PosZero(line.x) == 0) {
-                // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_score <<": @curr"<<endl;
-                ret.push_back(make_pair(make_pair(-DBL_MIN,+DBL_MIN),curr_score));
+                // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_stats <<": @curr"<<endl;
+                ret.push_back(make_pair(make_pair(-DBL_MIN,+DBL_MIN),curr_stats));
             }
-            ret.push_back(make_pair(make_pair(PosZero(line.x)+DBL_MIN,PosZero(next)-DBL_MIN),score));
+            ret.push_back(make_pair(make_pair(PosZero(line.x)+DBL_MIN,PosZero(next)-DBL_MIN),stats));
             // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << score<<": " <<Dict::PrintWords(sent)<<endl;
             // // *********** DEBUG *************
             // if(line.x < 0 && next > 0) {

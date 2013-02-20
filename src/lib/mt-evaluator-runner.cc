@@ -39,7 +39,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
             Sentence sys_sent = Dict::ParseWords(line);
             double max_eval = 0;
             BOOST_FOREACH(const vector<Sentence> & refs, ref_sentences) {
-                max_eval = max(max_eval, eval_meas->MeasureScore(refs[id],sys_sent));
+                max_eval = max(max_eval, eval_meas->CalculateStats(refs[id],sys_sent)->ConvertToScore());
             }
             id++;
             total_eval += max_eval;

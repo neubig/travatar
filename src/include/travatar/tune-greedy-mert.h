@@ -9,6 +9,7 @@
 #include <travatar/sentence.h>
 #include <travatar/util.h>
 #include <travatar/thread-pool.h>
+#include <travatar/eval-measure.h>
 
 namespace travatar {
 
@@ -20,16 +21,18 @@ class ThreadPool;
 struct LineSearchResult {
 
     LineSearchResult() :
-        pos(0.0), before(0.0), after(0.0), gain(0.0) { }
-    LineSearchResult(double p, double b, double a) :
-        pos(p), before(b), after(a), gain(a-b) { }
+        pos(0.0), gain(0.0) { }
+    LineSearchResult(double p, const EvalStatsPtr & b, const EvalStatsPtr & a) :
+        pos(p), before(b->Clone()), after(a->Clone()), gain(b->ConvertToScore()-a->ConvertToScore()) { }
+    LineSearchResult(double p, const EvalStats & b, const EvalStats & a) :
+        pos(p), before(b.Clone()), after(a.Clone()), gain(b.ConvertToScore()-a.ConvertToScore()) { }
 
     // The gradient position
     double pos;
     // The total score before
-    double before;
+    EvalStatsPtr before;
     // The total score after
-    double after;
+    EvalStatsPtr after;
     // The gain between before and after
     double gain;
 

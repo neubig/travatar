@@ -6,6 +6,7 @@
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/util.h>
 #include <travatar/dict.h>
+#include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
 
@@ -31,7 +32,7 @@ void GreedyMertTask::Run() {
         best = result.gain;
     }
     ostringstream oss;
-    oss << "gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before<<"-->"<<result.after<<" (max: " << best << ")" << endl;
+    oss << "gain?("<<Dict::WSym(feature_)<<")=" << potential_ << " --> gain@" << result.pos <<"="<< result.gain << ", score="<<result.before->ConvertToString()<<"-->"<<result.after->ConvertToString()<<" (max: " << best << ")" << endl;
     if(collector_)
         collector_->Write(id_, "", oss.str());
     else
@@ -55,13 +56,12 @@ pair<double,double> TuneGreedyMert::FindGradientRange(WordId feat) {
 }
 
 LineSearchResult TuneGreedyMert::LineSearch(
-
                 const SparseMap & weights,
                 const SparseMap & gradient,
                 pair<double,double> range) {
-    double base_score = 0;
-    map<double,double> boundaries;
-    typedef pair<double,double> DoublePair;
+    EvalStatsPtr base_stats;
+    map<double,EvalStatsPtr> boundaries;
+    typedef pair<double,EvalStatsPtr> DoublePair;
     // Create the search plane
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
         // Calculate the convex hull
@@ -69,31 +69,39 @@ LineSearchResult TuneGreedyMert::LineSearch(
         PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 2);
         if(convex_hull.size() == 0) continue;
         // Update the base values
-        base_score += convex_hull[0].second;
+        if(base_stats) base_stats->PlusEquals(*convex_hull[0].second);
+        else           base_stats = convex_hull[0].second->Clone();
         // Add all the changed values
         for(int i = 1; i < (int)convex_hull.size(); i++) {
-            double diff = convex_hull[i].second-convex_hull[i-1].second;
-            if(diff != 0)
-                boundaries[convex_hull[i].first.first] += diff;
+            EvalStatsPtr diff = convex_hull[i].second->Plus(*convex_hull[i-1].second->Times(-1));
+            if(diff->IsZero()) {
+                map<double,EvalStatsPtr>::iterator it = boundaries.find(convex_hull[i].first.first);
+                if(it != boundaries.end()) it->second->PlusEquals(*diff);
+                else boundaries.insert(make_pair(convex_hull[i].first.first, diff));
+            }
         }
     }
-    boundaries[DBL_MAX] = -DBL_MAX;
+    boundaries[DBL_MAX] = base_stats;
     // if(boundaries.size() == 0) return make_pair(-DBL_MAX, -DBL_MAX);
     // Find the place with the best score on the plane
-    ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), 0);
-    double last_bound = -DBL_MAX, curr_score = base_score;
-    double zero_score = DBL_MAX;
+    ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), base_stats);
+    double best_score = -DBL_MAX;
+    EvalStatsPtr curr_stats = base_stats, zero_stats;
+    double last_bound = -DBL_MAX;
     BOOST_FOREACH(const DoublePair & boundary, boundaries) {
         // Find the score at zero. If there is a boundary directly at zero, break ties
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
-            zero_score = curr_score;
+            zero_stats = curr_stats;
         // Update the span if it exceeds the previous best and is in the acceptable gradient range
-        if(curr_score > best_span.second && (last_bound < range.second && boundary.first > range.first))
-            best_span = ScoredSpan(Span(last_bound, boundary.first), curr_score);
-        // cerr << "bef: " << boundary << " curr_score=" << curr_score << endl;
-        curr_score += boundary.second;
-        // cerr << "aft: " << boundary << " curr_score=" << curr_score << endl;
+        double curr_score = curr_stats->ConvertToScore();
+        if(curr_score > best_score && (last_bound < range.second && boundary.first > range.first)) {
+            best_span = ScoredSpan(Span(last_bound, boundary.first), curr_stats);
+            best_score = curr_score;
+        }
+        // cerr << "bef: " << boundary << " curr_stats=" << curr_stats << endl;
+        curr_stats->PlusEquals(*boundary.second);
+        // cerr << "aft: " << boundary << " curr_stats=" << curr_stats << endl;
         last_bound = boundary.first;
     }
     // Given the best span, find the middle
@@ -107,8 +115,8 @@ LineSearchResult TuneGreedyMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_score << ", " << middle << " --> " << best_span.second << endl, 2);
-    return LineSearchResult(middle, zero_score, best_span.second);
+    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << endl, 2);
+    return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
 // Current value can be found here

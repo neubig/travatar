@@ -3,12 +3,14 @@
 
 #include <vector>
 #include <travatar/sparse-map.h>
+#include <travatar/eval-measure.h>
+#include <boost/shared_ptr.hpp>
 
 namespace travatar {
 
 // A span, a span with a score, and a convex hull (collection of scored spans)
 typedef std::pair<double,double> Span;
-typedef std::pair<Span, double> ScoredSpan;
+typedef std::pair<Span, EvalStatsPtr> ScoredSpan;
 typedef std::vector<ScoredSpan> ConvexHull;
 
 class TuningExample {

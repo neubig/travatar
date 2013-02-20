@@ -14,23 +14,27 @@ void WeightsPairwise::Adjust(EvalMeasure & eval,
                              const NbestList & nbest) {
     // Find the oracle
     int oracle = -1;
-    double oracle_loss = DBL_MAX;
+    double oracle_eval = -DBL_MAX;
     for(int i = 0; i < (int)nbest.size(); i++) {
         const shared_ptr<HyperPath> & path = nbest[i];
-        double my_loss = eval.MeasureLoss(refs, path->GetWords());
-        if(my_loss < oracle_loss) {
+        double my_eval = -DBL_MAX;
+        BOOST_FOREACH(const Sentence & ref, refs)
+            my_eval = max(my_eval, eval.CalculateStats(ref, path->GetWords())->ConvertToScore());
+        if(my_eval > oracle_eval) {
             oracle = i;
-            oracle_loss = my_loss;
+            oracle_eval = my_eval;
         }
     }
     // Update given the oracle
     double oracle_score = nbest[oracle]->GetScore();
     double sys_score = nbest[0]->GetScore();
-    double sys_loss = eval.MeasureLoss(refs, nbest[0]->GetWords());
-    Update(nbest[oracle]->CalcFeatures(), oracle_score, oracle_loss,
-           nbest[0]->CalcFeatures(), sys_score, sys_loss);
-    PRINT_DEBUG("WeightsPairwise::Adjust: os=" << oracle_score << ", ol=" << oracle_loss
-                                       << ", ss=" << sys_score << ", sl=" << sys_loss << endl
+    double sys_eval = -DBL_MAX;
+    BOOST_FOREACH(const Sentence & ref, refs)
+        sys_eval = max(sys_eval, eval.CalculateStats(ref, nbest[0]->GetWords())->ConvertToScore());
+    Update(nbest[oracle]->CalcFeatures(), oracle_score, oracle_eval,
+           nbest[0]->CalcFeatures(), sys_score, sys_eval);
+    PRINT_DEBUG("WeightsPairwise::Adjust: os=" << oracle_score << ", oe=" << oracle_eval
+                                       << ", ss=" << sys_score << ", se=" << sys_eval << endl
                                        /* << Dict::PrintFeatures(current_) << endl */
                                        , 1);
     PRINT_DEBUG("Oracle["<<oracle<<"]\t"<<Dict::PrintFeatures(nbest[oracle]->CalcFeatures())<<endl

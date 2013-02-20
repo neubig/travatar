@@ -6,9 +6,10 @@
 using namespace std;
 using namespace std::tr1;
 using namespace travatar;
+using namespace boost;
 
 // Measure the score of the sys output according to the ref
-double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
 
     // check reference length, raise RuntimeError if no words are found.
     if(ref.size() == 0)
@@ -16,7 +17,7 @@ double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys
 
     // check sysothesis length, return "zeros" if no words are found
     if(sys.size() == 0)
-        return 0.0;
+        return shared_ptr<EvalStats>(new EvalStatsAverage(0, 1));
     
     // calculate brevity penalty (BP), not exceeding 1.0
     double bp = min(1.0, exp(1.0 - 1.0 * ref.size()/sys.size())); 
@@ -88,10 +89,10 @@ double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys
     // At least two word correspondences are needed for rank correlation
     int n = intlist.size();
     if (n == 1 && ref.size() == 1)
-        return 1.0 * (pow(1.0/sys.size(), alpha_)) * (pow(bp, beta_));
+        return shared_ptr<EvalStats>(new EvalStatsAverage(1.0 * (pow(1.0/sys.size(), alpha_)) * (pow(bp, beta_)), 1));
     // if not, return score 0.0
     else if(n < 2)
-        return 0.0;
+        return shared_ptr<EvalStats>(new EvalStatsAverage(0, 1));
     
     // calculation of rank correlation coefficient
     // count "ascending pairs" (intlist[i] < intlist[j])
@@ -108,6 +109,6 @@ double EvalMeasureRibes::MeasureScore(const Sentence & ref, const Sentence & sys
     double precision = 1.0 * n / sys.size();
     
     // RIBES = (normalized Kendall's tau) * (unigram_precision ** alpha) * (brevity_penalty ** beta)
-    return nkt * (pow(precision, alpha_)) * (pow(bp, beta_));
+    return shared_ptr<EvalStats>(new EvalStatsAverage(nkt * (pow(precision, alpha_)) * (pow(bp, beta_)), 1));
 
 }

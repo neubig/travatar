@@ -2,8 +2,10 @@
 #define TUNING_EXAMPLE_NBEST_H__
 
 #include <vector>
+#include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/tuning-example.h>
+#include <boost/shared_ptr.hpp>
 
 namespace travatar {
 
@@ -14,7 +16,7 @@ public:
     virtual ~TuningExampleNbest() { }
 
     // A pair of features and scores
-    typedef std::pair<SparseMap,double> ExamplePair;
+    typedef std::pair<SparseMap,boost::shared_ptr<EvalStats> > ExamplePair;
 
     // Calculate the gain that could be achieved by each feature
     // for this particular n-best list
@@ -26,7 +28,7 @@ public:
                                 const SparseMap & gradient) const;
 
     // Add a new hypothesis to the n-best list
-    void AddHypothesis(const SparseMap & feats, double score) {
+    void AddHypothesis(const SparseMap & feats, boost::shared_ptr<EvalStats> score) {
         nbest_.push_back(std::make_pair(feats,score));
     }
 

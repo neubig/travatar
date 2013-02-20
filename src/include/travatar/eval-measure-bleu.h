@@ -8,26 +8,43 @@
 
 namespace travatar {
 
+class EvalStatsBleu : public EvalStats {
+public:
+    EvalStatsBleu(const std::vector<EvalStatsDataType> vals, double smooth = 0)
+                            : smooth_(smooth) {
+        vals_ = vals;
+    }
+    virtual double ConvertToScore() const;
+    virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_)); }
+private:
+    double smooth_;
+};
+
 class EvalMeasureBleu : public EvalMeasure {
 
 public:
+
+    // Whether to use corpus-based or sentence-by-sentence BLEU
+    typedef enum { CORPUS, SENTENCE } BleuScope;
+
     // NgramStats are a mapping between ngrams and the number of occurrences
     typedef std::map<std::vector<WordId>,int> NgramStats;
 
     // A cache to hold the stats
     typedef std::map<int,boost::shared_ptr<NgramStats> > StatsCache;
 
-    EvalMeasureBleu() : ngram_order_(4), smooth_val_(1.0) { }
+    EvalMeasureBleu() : ngram_order_(4), smooth_val_(0), scope_(CORPUS) { }
 
-    // Measure the score of the system output according to the reference
-    virtual double MeasureScore(
-            const Sentence & reference,
-            const Sentence & system,
-            int ref_cache_id = INT_MAX,
-            int sys_cache_id = INT_MAX);
+    // Calculate the stats for a single sentence
+    virtual boost::shared_ptr<EvalStats> CalculateStats(
+                const Sentence & ref,
+                const Sentence & sys,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX);
 
-    // Evaluate BLEU with pre-computed n-gram stats to save time
-    double MeasureScore(const NgramStats & ref_ngrams,
+    // Calculate the stats with cached n-grams
+    boost::shared_ptr<EvalStats> CalculateStats(
+                        const NgramStats & ref_ngrams,
                         int ref_len,
                         const NgramStats & sys_ngrams,
                         int sys_len);
@@ -50,6 +67,8 @@ protected:
     double smooth_val_;
     // A cache to hold the stats
     StatsCache cache_;
+    // The scope
+    BleuScope scope_;
 
     // Get the stats that are in a cache
     boost::shared_ptr<NgramStats> GetCachedStats(const Sentence & sent, int cache_id);

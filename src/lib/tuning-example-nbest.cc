@@ -24,7 +24,7 @@ SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) 
     // Find all features that have the potential to cause a gain
     SparseMap ret;
     BOOST_FOREACH(const ExamplePair & examp, nbest_) {
-        double gain = examp.second - nbest_[hyp].second;
+        double gain = examp.second->ConvertToScore() - nbest_[hyp].second->ConvertToScore();
         if(gain <= 0) continue; // Skip examples with no or negative gain
         BOOST_FOREACH(const SparseMap::value_type val, examp.first - nbest_[hyp].first)
             if(val.second != 0) // Skip examples with same value as current ans
@@ -79,7 +79,7 @@ ConvexHull TuningExampleNbest::CalculateConvexHull(
                 best_pos = my_pos;
             }
         }
-        PRINT_DEBUG("Adding hull: " << prev_pos << ", " << best_pos << ", " << lines[i].second << endl, 2);
+        PRINT_DEBUG("Adding hull: " << prev_pos << ", " << best_pos << ", " << lines[i].second->ConvertToString() << endl, 2);
         hull.push_back(make_pair(make_pair(prev_pos, best_pos), lines[i].second));
         i = best_j;
         prev_pos = best_pos;

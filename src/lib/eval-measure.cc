@@ -77,7 +77,7 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     double best_score = 0;
     BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
         Sentence curr = path->GetWords();
-        double score = this->MeasureScore(ref, curr);
+        double score = this->CalculateStats(ref, curr)->ConvertToScore();
         if(score > best_score) {
             ret = curr;
             best_score = score;
