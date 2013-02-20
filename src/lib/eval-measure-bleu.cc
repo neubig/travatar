@@ -56,7 +56,12 @@ shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngr
         }
     }
     vals[vals_n-1] = ref_len;
-    return shared_ptr<EvalStats>(new EvalStatsBleu(vals, smooth_val_));
+    // Create the stats for this sentence
+    EvalStatsPtr ret(new EvalStatsBleu(vals, smooth_val_));
+    // If we are using sentence based, take the average immediately
+    if(scope_ == SENTENCE)
+        ret = EvalStatsPtr(new EvalStatsAverage(ret->ConvertToScore()));
+    return ret;
 }
 
 double EvalStatsBleu::ConvertToScore() const {

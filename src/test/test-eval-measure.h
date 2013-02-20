@@ -15,7 +15,7 @@ public:
     ~TestEvalMeasure() { }
 
     int TestBleuScore() {
-        EvalMeasureBleu eval_measure_bleu;
+        EvalMeasureBleu eval_measure_bleu(4, 1, EvalMeasureBleu::SENTENCE);
         string ref = "taro met hanako", sys = "the taro met the hanako";
         Sentence ref_sent = Dict::ParseWords(ref), sys_sent = Dict::ParseWords(sys);
         // System is longer than ref, so there is no brevity penalty

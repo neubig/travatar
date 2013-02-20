@@ -36,7 +36,7 @@ public:
         return true;
     }
     // Utility functions
-    virtual std::string ConvertToString() {
+    virtual std::string ConvertToString() const {
         std::ostringstream oss;
         oss << ConvertToScore();
         return oss.str();
@@ -67,9 +67,28 @@ public:
         ret->TimesEquals(mult);
         return ret;
     }
+    virtual bool Equals(const EvalStats & rhs) const {
+        if(vals_.size() != rhs.vals_.size()) return false;
+        for(int i = 0; i < (int)vals_.size(); i++)
+            if(abs(vals_[i]-rhs.vals_[i]) > 1e-6)
+                return false;
+        return true;
+    }
+    const std::vector<EvalStatsDataType> & GetVals() const { return vals_; }
 protected:
     std::vector<EvalStatsDataType> vals_;
 };
+
+inline bool operator==(const EvalStats & lhs, const EvalStats & rhs) {
+    return lhs.Equals(rhs);
+}
+inline bool operator==(const EvalStatsPtr & lhs, const EvalStatsPtr & rhs) {
+    return *lhs == *rhs;
+}
+inline std::ostream &operator<<( std::ostream &out, const EvalStats &L ) {
+    out << L.ConvertToString();
+    return out;
+}
 
 // Simple sentence-averaged stats
 class EvalStatsAverage : public EvalStats {
@@ -79,7 +98,7 @@ public:
         vals_[0] = val;
         vals_[1] = denom;
     }
-    double ConvertToScore() const { return vals_[0]/vals_[1]; }
+    double ConvertToScore() const { return vals_[1] ? vals_[0]/vals_[1] : 0; }
     EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsAverage(vals_[0], vals_[1])); }
     // Getters
     double GetVal() const { return vals_[0]; }

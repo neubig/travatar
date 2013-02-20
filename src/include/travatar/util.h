@@ -42,6 +42,15 @@ inline bool operator==(const std::tr1::unordered_map<K, T> & lhs,
 // Output function for pairs
 template <class X, class Y>
 inline std::ostream& operator << ( std::ostream& out, 
+                                   const std::pair< X, boost::shared_ptr<Y> >& rhs )
+{
+    out << "[" << rhs.first << ", " << *rhs.second << "]";
+    return out;
+}
+
+// Output function for pairs
+template <class X, class Y>
+inline std::ostream& operator << ( std::ostream& out, 
                                    const std::pair< X, Y >& rhs )
 {
     out << "[" << rhs.first << ", " << rhs.second << "]";

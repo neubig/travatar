@@ -33,7 +33,8 @@ public:
     // A cache to hold the stats
     typedef std::map<int,boost::shared_ptr<NgramStats> > StatsCache;
 
-    EvalMeasureBleu() : ngram_order_(4), smooth_val_(0), scope_(CORPUS) { }
+    EvalMeasureBleu(int ngram_order = 4, double smooth_val = 1, BleuScope scope = CORPUS) : 
+        ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope) { }
 
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(

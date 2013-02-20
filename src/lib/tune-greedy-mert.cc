@@ -74,34 +74,34 @@ LineSearchResult TuneGreedyMert::LineSearch(
         // Add all the changed values
         for(int i = 1; i < (int)convex_hull.size(); i++) {
             EvalStatsPtr diff = convex_hull[i].second->Plus(*convex_hull[i-1].second->Times(-1));
-            if(diff->IsZero()) {
+            if(!diff->IsZero()) {
                 map<double,EvalStatsPtr>::iterator it = boundaries.find(convex_hull[i].first.first);
                 if(it != boundaries.end()) it->second->PlusEquals(*diff);
-                else boundaries.insert(make_pair(convex_hull[i].first.first, diff));
+                else                       boundaries.insert(make_pair(convex_hull[i].first.first, diff));
             }
         }
     }
-    boundaries[DBL_MAX] = base_stats;
+    boundaries[DBL_MAX] = base_stats->Times(0);
     // if(boundaries.size() == 0) return make_pair(-DBL_MAX, -DBL_MAX);
     // Find the place with the best score on the plane
     ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), base_stats);
     double best_score = -DBL_MAX;
-    EvalStatsPtr curr_stats = base_stats, zero_stats;
+    EvalStatsPtr curr_stats = base_stats->Clone(), zero_stats;
     double last_bound = -DBL_MAX;
     BOOST_FOREACH(const DoublePair & boundary, boundaries) {
         // Find the score at zero. If there is a boundary directly at zero, break ties
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
-            zero_stats = curr_stats;
+            zero_stats = curr_stats->Clone();
         // Update the span if it exceeds the previous best and is in the acceptable gradient range
         double curr_score = curr_stats->ConvertToScore();
         if(curr_score > best_score && (last_bound < range.second && boundary.first > range.first)) {
-            best_span = ScoredSpan(Span(last_bound, boundary.first), curr_stats);
+            best_span = ScoredSpan(Span(last_bound, boundary.first), curr_stats->Clone());
             best_score = curr_score;
         }
-        // cerr << "bef: " << boundary << " curr_stats=" << curr_stats << endl;
+        // cerr << "bef: " << boundary << " curr_stats=" << *curr_stats << endl;
         curr_stats->PlusEquals(*boundary.second);
-        // cerr << "aft: " << boundary << " curr_stats=" << curr_stats << endl;
+        // cerr << "aft: " << boundary << " curr_stats=" << *curr_stats << endl;
         last_bound = boundary.first;
     }
     // Given the best span, find the middle

@@ -164,11 +164,11 @@ public:
         TuneGreedyMert mert;
         mert.SetExamples(examp_set);
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
-        LineSearchResult exp_score1(2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.4, 1)));
+        LineSearchResult exp_score1(2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.4, 2)));
         LineSearchResult act_score1 = mert.LineSearch(weights, gradient);
-        LineSearchResult exp_score2(-2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
+        LineSearchResult exp_score2(-2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
         LineSearchResult act_score2 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, 0.0));
-        LineSearchResult exp_score3(-3.0, EvalStatsPtr(new EvalStatsAverage(0.2, 1)),EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
+        LineSearchResult exp_score3(-3.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
         LineSearchResult act_score3 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, -3.0));
         return 
             CheckAlmost(exp_score1.pos, act_score1.pos) &&
@@ -183,7 +183,7 @@ public:
     }
 
     int TestLatticeHull() {
-        EvalMeasureBleu bleu;
+        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 1, 1);
         tef.AddHypothesis(forest);
@@ -201,7 +201,7 @@ public:
     }
 
     int TestForestHull() {
-        EvalMeasureBleu bleu;
+        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 2, 1);
         tef.AddHypothesis(forest2);
@@ -220,7 +220,7 @@ public:
     }
 
     int TestMultipleForests() {
-        EvalMeasureBleu bleu;
+        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 2, 1);
         tef.AddHypothesis(forest2c);
@@ -240,7 +240,7 @@ public:
     }
 
     int TestForestUnk() {
-        EvalMeasureBleu bleu;
+        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
         shared_ptr<HyperGraph> rule_graph(new HyperGraph);
         Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
         rule_graph->SetWords(exp_sent);
