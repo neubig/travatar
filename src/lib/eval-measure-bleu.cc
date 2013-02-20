@@ -64,22 +64,47 @@ shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngr
     return ret;
 }
 
-double EvalStatsBleu::ConvertToScore() const {
+BleuReport EvalStatsBleu::CalcBleuReport() const {
+    BleuReport report;
     int ngram_order = (vals_.size()-1)/2;
-    double log_bleu = 0.0, brevity;
+    double log_bleu = 0.0;
+    // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
-        if (vals_[0] == 0)
-            return 0.0;
-        if ( i > 0 )
-            log_bleu += log((double)vals_[2*i]+smooth_)-log((double)vals_[2*i+1]+smooth_);
-        else
-            log_bleu += log((double)vals_[2*i])-log((double)vals_[2*i+1]);
+        double smooth = (i == 0 ? 0 : smooth_);
+        double prec = (vals_[2*i]+smooth)/(vals_[2*i+1]+smooth);
+        report.precs.push_back(prec);
+        log_bleu += log(prec);
     }
     log_bleu /= ngram_order;
-    brevity = 1.0-(double)vals_[vals_.size()-1]/vals_[1]; // vals_[vals__n-1] is the ref length, vals_[1] is the test length
-    if (brevity < 0.0)
-        log_bleu += brevity;
+    // vals_[vals__n-1] is the ref length, vals_[1] is the test length
+    report.ref_len = vals_[vals_.size()-1];
+    report.sys_len = vals_[1];
+    // Calculate the brevity penalty
+    report.ratio = (double)report.sys_len/report.ref_len;
+    double log_bp = 1.0-(double)report.ref_len/report.sys_len;
+    if (log_bp < 0.0) {
+        log_bleu += log_bp;
+        report.brevity = exp(log_bp);
+    } else {
+        report.brevity = 1.0;
+    }
     // Sanity check
     if(log_bleu > 0) THROW_ERROR("Found a BLEU larger than one: " << exp(log_bleu))
-    return exp(log_bleu);
+    report.bleu = exp(log_bleu);
+    return report;
+}
+
+
+std::string EvalStatsBleu::ConvertToString() const {
+    BleuReport report = CalcBleuReport();
+    ostringstream oss;
+    oss << "BLEU = " << report.bleu << ", " << SafeAccess(report.precs, 0);
+    for(int i = 1; i < (int)report.precs.size(); i++)
+        oss << "/" << report.precs[i];
+    oss << " (BP=" << report.brevity << ", ratio=" << report.ratio << ", hyp_len=" << report.sys_len << ", ref_len=" << report.ref_len << ")";
+    return oss.str();
+}
+
+double EvalStatsBleu::ConvertToScore() const {
+    return CalcBleuReport().bleu;
 }

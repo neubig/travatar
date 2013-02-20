@@ -48,6 +48,7 @@ void TuningExampleForest::CalculateOracle() {
         oracle_score_ = measure_->CalculateStats(ref_, oracle_sent, id_)->ConvertToScore();
         PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
         oracle_score_ *= mult_;
+        oracle_score_ = 1;
     } catch (std::runtime_error & e) {
         PRINT_DEBUG("ERROR IN ORACLE CALCULATION " << e.what(), 0);
         oracle_score_ = mult_; // set to 1

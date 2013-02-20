@@ -24,28 +24,29 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     
     // Load the evaluation measure
     shared_ptr<EvalMeasure> eval_meas;
-    if(config.GetString("eval") == "bleup1") 
-        eval_meas.reset(new EvalMeasureBleu);
+    if(config.GetString("eval") == "bleu") 
+        eval_meas.reset(new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS));
+    else if(config.GetString("eval") == "bleup1") 
+        eval_meas.reset(new EvalMeasureBleu(4,1,EvalMeasureBleu::SENTENCE));
     else
         THROW_ERROR("Unknown evaluation measure: " << config.GetString("eval"));
 
     // Calculate the scores
     BOOST_FOREACH(const string & filename, config.GetMainArgs()) {
+        EvalStatsPtr total_stats;
         int id = 0;
-        double total_eval = 0;
         ifstream sysin(filename.c_str());
         if(!sysin) THROW_ERROR("Could not open system file: " << filename);
         while(getline(sysin, line)) {
             Sentence sys_sent = Dict::ParseWords(line);
-            double max_eval = 0;
-            BOOST_FOREACH(const vector<Sentence> & refs, ref_sentences) {
-                max_eval = max(max_eval, eval_meas->CalculateStats(refs[id],sys_sent)->ConvertToScore());
-            }
+            if(total_stats.get() == NULL)
+                total_stats = eval_meas->CalculateStats(ref_sentences[0][id],sys_sent);
+            else
+                total_stats->PlusEquals(*eval_meas->CalculateStats(ref_sentences[0][id], sys_sent));
             id++;
-            total_eval += max_eval;
         }
         if(config.GetMainArgs().size() > 1) cout << filename << ": ";
-        cout << total_eval/id << endl;
+        cout << total_stats->ConvertToString() << endl;
     }
     
 

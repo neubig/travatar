@@ -2,6 +2,7 @@
 #define TEST_TUNE_H__
 
 #include "test-base.h"
+#include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
@@ -161,15 +162,13 @@ public:
     }
 
     int TestLineSearch() {
-        TuneGreedyMert mert;
-        mert.SetExamples(examp_set);
         // Here lines 0 and 1 should form the convex hull with an intersection at -1
         LineSearchResult exp_score1(2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.4, 2)));
-        LineSearchResult act_score1 = mert.LineSearch(weights, gradient);
+        LineSearchResult act_score1 = TuneMert::LineSearch(weights, gradient, examp_set);
         LineSearchResult exp_score2(-2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
-        LineSearchResult act_score2 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, 0.0));
+        LineSearchResult act_score2 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-DBL_MAX, 0.0));
         LineSearchResult exp_score3(-3.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
-        LineSearchResult act_score3 = mert.LineSearch(weights, gradient, make_pair(-DBL_MAX, -3.0));
+        LineSearchResult act_score3 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-DBL_MAX, -3.0));
         return 
             CheckAlmost(exp_score1.pos, act_score1.pos) &&
             CheckAlmost(exp_score1.before->ConvertToScore(), act_score1.before->ConvertToScore()) &&

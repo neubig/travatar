@@ -8,6 +8,13 @@
 
 namespace travatar {
 
+typedef struct {
+    double bleu; // BLEU score
+    std::vector<double> precs; // n-gram precisions
+    double ref_len, sys_len; // Reference and syste, lengths
+    double ratio, brevity; // The ref/sys ratio and brevity penalty
+} BleuReport;
+
 class EvalStatsBleu : public EvalStats {
 public:
     EvalStatsBleu(const std::vector<EvalStatsDataType> vals, double smooth = 0)
@@ -15,7 +22,9 @@ public:
         vals_ = vals;
     }
     virtual double ConvertToScore() const;
+    virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_)); }
+    BleuReport CalcBleuReport() const;
 private:
     double smooth_;
 };
@@ -33,7 +42,7 @@ public:
     // A cache to hold the stats
     typedef std::map<int,boost::shared_ptr<NgramStats> > StatsCache;
 
-    EvalMeasureBleu(int ngram_order = 4, double smooth_val = 1, BleuScope scope = CORPUS) : 
+    EvalMeasureBleu(int ngram_order = 4, double smooth_val = 0, BleuScope scope = CORPUS) : 
         ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope) { }
 
     // Calculate the stats for a single sentence

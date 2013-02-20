@@ -1,5 +1,5 @@
-#ifndef TUNE_GREEDY_MERT_H__
-#define TUNE_GREEDY_MERT_H__
+#ifndef TUNE_MERT_H__
+#define TUNE_MERT_H__
 
 #include <vector>
 #include <cfloat>
@@ -10,58 +10,55 @@
 #include <travatar/util.h>
 #include <travatar/thread-pool.h>
 #include <travatar/eval-measure.h>
-#include <travatar/tune-mert.h>
 
 namespace travatar {
 
 class TuningExample;
-class TuneGreedyMert;
+class TuneMert;
 class OutputCollector;
 class ThreadPool;
 
-// A task
-class GreedyMertTask : public Task {
-public:
-    GreedyMertTask(int id,
-                   TuneGreedyMert & tgm,
-                   int feature,
-                   double potential,
-                   OutputCollector * collector) :
-        id_(id), tgm_(&tgm), feature_(feature), potential_(potential), collector_(collector) { }
-    void Run();
-protected:
-    int id_;
-    TuneGreedyMert * tgm_;
-    int feature_;
-    double potential_;
-    OutputCollector * collector_;
+struct LineSearchResult {
+
+    LineSearchResult() :
+        pos(0.0), gain(0.0) { }
+    LineSearchResult(double p, const EvalStatsPtr & b, const EvalStatsPtr & a) :
+        pos(p), before(b->Clone()), after(a->Clone()), gain(a->ConvertToScore()-b->ConvertToScore()) { }
+    LineSearchResult(double p, const EvalStats & b, const EvalStats & a) :
+        pos(p), before(b.Clone()), after(a.Clone()), gain(a.ConvertToScore()-b.ConvertToScore()) { }
+
+    // The gradient position
+    double pos;
+    // The total score before
+    EvalStatsPtr before;
+    // The total score after
+    EvalStatsPtr after;
+    // The gain between before and after
+    double gain;
+
 };
 
-// Does MERT in a greedy fashion, at each point testing the value that
-// could potentially raise the evaluation by the largest amount. At the
-// moment this only works for sentence-decomposable evaluation measures.
-class TuneGreedyMert {
+// Performs MERT
+class TuneMert {
 
 public:
 
-    TuneGreedyMert() : gain_threshold_(0.0001), threads_(1), 
-                       early_terminate_(false) {
+    // **** Static Utility Members ****
+
+    // Perform line search given the current weights and gradient
+    static LineSearchResult LineSearch(
+      const SparseMap & weights,
+      const SparseMap & gradient,
+      std::vector<boost::shared_ptr<TuningExample> > & examps,
+      std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
+
+    // **** Non-static Members ****
+    TuneMert() : gain_threshold_(0.000001) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
-    // Tune new weights using greedy mert
+    // Tune weights using MERT mert
     void Tune();
-
-    // Tune pick a single weight to tune and tune it
-    // Return the improvement in score
-    double TuneOnce();
-
-    // Perform line search given the current weights and gradient
-    LineSearchResult LineSearch(
-      const SparseMap & weights,
-      const SparseMap & gradient,
-      std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
-
 
     std::pair<double,double> FindGradientRange(WordId feat);
     std::pair<double,double> FindGradientRange(
@@ -72,21 +69,15 @@ public:
 
     void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
-    const std::vector<boost::shared_ptr<TuningExample> > & GetExamples() const { return examps_; }
-    std::vector<boost::shared_ptr<TuningExample> > & GetExamples() { return examps_; }
     void SetExamples(const std::vector<boost::shared_ptr<TuningExample> > & examps) { examps_ = examps; }
     int NumExamples() { return examps_.size(); }
     const SparseMap & GetWeights() const { return weights_; }
     void SetWeights(const SparseMap & weights) { weights_ = weights; }
-    int GetThreads() const { return threads_; }
-    void SetThreads(int threads) { threads_ = threads; }
     void SetGainThreshold(double thresh) { gain_threshold_ = thresh; }
     double GetGainThreshold() { return gain_threshold_; }
     void SetRange(int id, double min, double max) {
         ranges_[id] = std::pair<double,double>(min,max);
     }
-    bool GetEarlyTerminate() const { return early_terminate_; }
-    double GetBestGain() const;
     const SparseMap & GetWeights() { return weights_; }
     void AddExample(const boost::shared_ptr<TuningExample> & examp) {
         examps_.push_back(examp);
@@ -106,23 +97,12 @@ protected:
 
     // The current value of the weights
     SparseMap weights_;
+    
+    // All weights that can be adjusted
+    SparseMap existant_weights_;
 
     // The examples to use
     std::vector<boost::shared_ptr<TuningExample> > examps_;
-
-    // The best line search result we've found so far and its gradient
-    LineSearchResult best_result_;
-    SparseMap best_gradient_;
-    
-    // A Mutex to prevent conflicts in the result update
-    boost::mutex result_mutex_;
-
-    // The number of threads to use
-    int threads_;
-
-    // Whether to terminate as soon as we have a value that exceeds the
-    // gain threshold
-    bool early_terminate_;
 
 };
 
