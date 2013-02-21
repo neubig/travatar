@@ -23,6 +23,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     string line;
     while(getline(refin, line))
         ref_sentences[0].push_back(Dict::ParseWords(line));
+    int ref_len = ref_sentences[0].size();
     
     // Load the evaluation measure
     vector<shared_ptr<EvalMeasure> > eval_measures;
@@ -58,9 +59,14 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         int col = 0;
         // Print the evaluation for this file, with the filename if multiple files are being evaluated
         if(config.GetMainArgs().size() > 1) { cout << filename; col++; }
-        BOOST_FOREACH(EvalStatsPtr stats, total_stats) {
+        if(id == ref_len) {
+            BOOST_FOREACH(EvalStatsPtr stats, total_stats) {
+                if(col++) cout << "\t";
+                cout << stats->ConvertToString();
+            }
+        } else {
             if(col++) cout << "\t";
-            cout << stats->ConvertToString();
+            cout << "FAILED: Reference (" << ref_len << ") and System (" << id << ") lengths don't match";
         }
         cout << endl;
     }
