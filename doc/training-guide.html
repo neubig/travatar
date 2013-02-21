@@ -294,15 +294,14 @@ However, to achieve reasonable accuracy, we must perform tuning, which adjusts t
 <p>
 This is done with the <tt>mert-travatar.pl</tt> script in the following fashion.
 This also takes a considerable amount of time, as we have to translate the development set several times.
-At the moment, <tt>mert-travatar</tt> requires that you have a working copy of <a href="http://www.statmt.org">Moses</a> installed to the mosesdecoder, although this will be fixed in the near future.
 </p>
 
 <pre>
-nohup ~/work/travatar/script/mert/mert-travatar.pl -travatar-config train/model/travatar.ini -nbest 100 -src data/kyoto-dev.parselow.en -ref data/kyoto-dev.toklow.ja -travatar-dir travatar -moses-dir mosesdecoder -working-dir tune &amp;&gt; mert.log &amp;
+nohup ~/work/travatar/script/mert/mert-travatar.pl -travatar-config train/model/travatar.ini -nbest 100 -src data/kyoto-dev.parselow.en -ref data/kyoto-dev.toklow.ja -travatar-dir travatar -working-dir tune &amp;&gt; tune.log &amp;
 </pre>
 
 <p>
-Again, if this finishes very quickly, there is probably an error in mert.log.
+Again, if this finishes very quickly, there is probably an error in <tt>tune.log</tt>.
 </p>
 
 <h2>Testing</h2>
@@ -329,16 +328,16 @@ travatar/src/bin/travatar -config_file test/filtered-test.ini &lt; data/kyoto-te
 </pre>
 
 <p>
-Finally, we can measure the accuracy using BLEU score.
-There is currently no script included with travatar to do this, so we will use Moses's <tt>multi-bleu.perl</tt> (this should be fixed soon).
+Finally, we can measure the accuracy of our translations using an automatic evaluation metric.
+We do this by passing the reference and system output to the <tt>mt-evaluate</tt> program included with travatar.
 </p>
 
 <pre>
-mosesdecoder/scripts/generic/multi-bleu.perl data/kyoto-test.tok.ja &lt; test/kyoto-test.out
+travatar/src/bin/mt-evaluator -ref data/kyoto-test.tok.ja test/kyoto-test.out
 </pre>
 
 <p>
-If everything went OK, you should get a BLEU of around 10-12 with the smaller data, or more with the full training set.
+If everything went OK, you should get a BLEU of around 10-12, RIBES of around 56-58 with the smaller data, or more with the full training set.
 If you want to improve the accuracy even more, please be sure to visit the <a href="parsing.html">parsing</a> or <a href="training-options.html">training options</a> sections for more details!
 </p>
 

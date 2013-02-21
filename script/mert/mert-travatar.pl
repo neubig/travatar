@@ -10,7 +10,7 @@ binmode STDERR, ":utf8";
 
 my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS);
 
-my $MERT_SOLVER = "moses";
+my $MERT_SOLVER = "batch-tune"; # Can be set to "moses" to use Moses's MERT solver
 my $EVAL = "bleu"; # The evaluation measure to use
 my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;

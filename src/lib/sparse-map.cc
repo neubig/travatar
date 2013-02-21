@@ -100,7 +100,6 @@ void NormalizeL1(SparseMap & weights, double denom) {
     double curr = 0;
     BOOST_FOREACH(const SparsePair & val, weights)
         curr += abs(val.second);
-    cerr << "curr == " << curr << endl;
     if(curr == 0) return;
     denom = denom/curr;
     BOOST_FOREACH(SparseMap::value_type & val, weights)
