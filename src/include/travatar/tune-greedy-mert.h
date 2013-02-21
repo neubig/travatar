@@ -49,21 +49,15 @@ public:
                        early_terminate_(false) { }
 
     // Tune new weights using greedy mert
-    virtual void RunTuning();
+    virtual double RunTuning(SparseMap & weights);
 
     // Tune pick a single weight to tune and tune it
     // Return the improvement in score
-    double TuneOnce();
-
-    std::pair<double,double> FindGradientRange(WordId feat);
-    std::pair<double,double> FindGradientRange(
-                                const SparseMap & weights,
-                                const SparseMap & gradient,
-                                std::pair<double,double> range);
-
+    LineSearchResult TuneOnce(SparseMap & weights);
 
     void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
+    const SparseMap & GetCurrentWeights() { return curr_weights_; }
     double GetBestGain() { return best_result_.gain; }
     bool GetEarlyTerminate() { return early_terminate_; }
     int GetThreads() const { return threads_; }
@@ -74,6 +68,9 @@ protected:
     // The best line search result we've found so far and its gradient
     LineSearchResult best_result_;
     SparseMap best_gradient_;
+
+    // Create weights
+    SparseMap curr_weights_;
     
     // A Mutex to prevent conflicts in the result update
     boost::mutex result_mutex_;

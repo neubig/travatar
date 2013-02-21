@@ -18,6 +18,7 @@ SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs);
 double operator*(const SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator*(const SparseMap & lhs, double rhs);
+void NormalizeL1(SparseMap & map, double val = 1.0);
 
 }
 

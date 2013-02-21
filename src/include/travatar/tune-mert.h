@@ -56,15 +56,8 @@ public:
     // **** Non-static Members ****
     TuneMert() { }
 
-    // Tune weights using MERT mert
-    virtual void RunTuning();
-
-    std::pair<double,double> FindGradientRange(WordId feat);
-    std::pair<double,double> FindGradientRange(
-                                const SparseMap & weights,
-                                const SparseMap & gradient,
-                                std::pair<double,double> range);
-
+    // Tune new weights using MERT
+    virtual double RunTuning(SparseMap & weights);
 
     // void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 

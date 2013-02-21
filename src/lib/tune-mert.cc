@@ -16,13 +16,6 @@ using namespace travatar;
 
 #define MARGIN 1
 
-pair<double,double> TuneMert::FindGradientRange(WordId feat) {
-    RangeMap::const_iterator it = ranges_.find(feat);
-    pair<double,double> range = (it == ranges_.end() ? ranges_[-1] : it->second);
-    SparseMap gradient; gradient[feat] = 1;
-    return FindGradientRange(weights_, gradient, range);
-}
-
 LineSearchResult TuneMert::LineSearch(
                 const SparseMap & weights,
                 const SparseMap & gradient,
@@ -88,52 +81,31 @@ LineSearchResult TuneMert::LineSearch(
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
-// Current value can be found here
-// range(-2,2)
-// original(-1)
-// change(-1,3)
-// gradient -2
-// +0.5, -1.5
-pair<double,double> TuneMert::FindGradientRange(
-                                const SparseMap & weights,
-                                const SparseMap & gradient,
-                                pair<double,double> range) {
-    pair<double,double> ret(-DBL_MAX, DBL_MAX);
-    BOOST_FOREACH(const SparseMap::value_type & grad, gradient) {
-        if(grad.second == 0) continue;
-        SparseMap::const_iterator it = weights.find(grad.first);
-        double w = (it != weights.end()) ? it->second : 0.0;
-        double l = (range.first-w)/grad.second;
-        double r = (range.second-w)/grad.second;
-        if(l > r) { double temp = l; l = r; r = temp; }
-        ret.first = max(l, ret.first);
-        ret.second = min(r, ret.second);
-    }
-    return ret; 
-}
-
 // Tune new weights using greedy mert until the threshold is exceeded
-void TuneMert::RunTuning() {
+double TuneMert::RunTuning(SparseMap & weights) {
     // Find all included weights
     SparseMap potential;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
         examp->CountWeights(potential);
 
-    SparseMap curr_weights = weights_;
+    LineSearchResult result;
     double gain = DBL_MAX;
     while(gain > gain_threshold_) {
         gain = 0;
         BOOST_FOREACH(SparseMap::value_type val, potential) {
             // Create the gradient
             SparseMap gradient; gradient[val.first] = 1;
-            LineSearchResult result = TuneMert::LineSearch(curr_weights, gradient, examps_);
+            result = TuneMert::LineSearch(weights, gradient, examps_);
             if(result.gain > 0) {
                 gain += result.gain;
-                curr_weights += gradient * result.pos;
-                PRINT_DEBUG("Features: " << Dict::PrintFeatures(curr_weights) << endl << result.after->ConvertToString() << endl, 0);
+                weights += gradient * result.pos;
+                PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl << result.after->ConvertToString() << endl, 0);
             }
         }
     }
 
-    weights_ = curr_weights;
+    // Normalize so that weights add to 1
+    NormalizeL1(weights);
+
+    return result.after->ConvertToScore();
 }

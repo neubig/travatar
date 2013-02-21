@@ -154,13 +154,33 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         }
     }
 
-    
-    // Perform MERT
-    PRINT_DEBUG("Tuning..." << endl, 1);
+    // Set other tuning options
     tgm->SetGainThreshold(config.GetDouble("threshold"));
-    tgm->SetWeights(weights);
-    tgm->RunTuning();
+    
+    // Perform MERT with initial values
+    PRINT_DEBUG("Tuning..." << endl, 1); 
+    SparseMap best_weights = weights;
+    double best_score = tgm->RunTuning(best_weights);
+
+    // Perform MERT with random restarts
+    for(int i = 1; i < config.GetInt("restarts"); i++) {
+        // Print out the current values
+        cerr << "Current score: " << best_score << endl;
+        cerr << "Current feats: " << Dict::PrintFeatures(best_weights) << endl;
+        // Randomize the weights
+        SparseMap rand_weights = weights;
+        BOOST_FOREACH(SparseMap::value_type & rand_weights, weights)
+            rand_weights.second = rand()/(double)RAND_MAX;
+        double rand_score = tgm->RunTuning(rand_weights);
+        // If the new value is better than the current best, update
+        if(rand_score > best_score) {
+            best_score = rand_score;
+            best_weights = rand_weights;
+        }
+    }
 
     // Print result
-    cout << Dict::PrintFeatures(tgm->GetWeights()) << endl;
+    cerr << "Final score: " << best_score << endl;
+    cerr << "Final feats: " << Dict::PrintFeatures(best_weights) << endl;
+    cout << Dict::PrintFeatures(best_weights) << endl;
 }
