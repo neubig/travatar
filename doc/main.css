@@ -17,6 +17,13 @@ pre {
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
-h1, h2, h3, h4, p, li {
+h1, h2, h3, h4, p, li, td, th {
     font-family:"Arial",Sans-serif;
+}
+
+td, th {
+	font-size: 14px;
+    border: 1px solid #ccc;
+    background: #f0f0f0;
+    padding: 2;
 }

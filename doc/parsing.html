@@ -1,0 +1,242 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - Training</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+</ul>
+
+<p>Decoding</p>
+
+<ul>
+<li><a href="decode-options.html">Decoding Options</a></li>
+</ul>
+
+</div>
+<div id="main">
+
+<h1>Parsing for Travatar</h1>
+
+<p>
+Travatar is a tree-to-string translation system, which means that it requires source language parse trees to perform translation.
+Within this framework, better parse trees will often directly improve your translation accuracy, so it is worth investing a little bit of time to created good trees.
+It can also use packed forests, which encode a large number of trees at decoding time, so using a parser that has the ability to output packed forests is also effective.
+</p>
+
+<h2>Parsing English</h2>
+
+<p>
+For parsing English, you can use any phrase structure parser of your choosing.
+One (somewhat old) data point to help you choose which parser to use is the following results for English-Japanese translation on the <a href="http://www.phontron.com/kftt">Kyoto Free Translation Task</a>.
+</p>
+
+<table align=center>
+<tr><th>eval\parse</th><th>(Moses)<th>Stanford</th><th>Berkeley</th><th>Egret</th><th>Egret+Forest</th></tr>
+<tr><th>BLEU</th> <td>19.59</td> <td>19.36</td> <td>19.54</td> <td>20.00</td> <td>20.25</td></tr>
+<tr><th>RIBES</th><td>64.16</td> <td>65.17</td> <td>66.19</td> <td>66.83</td> <td>67.93</td></tr>
+</table>
+
+<p>Below we will describe about the Stanford and Egret parsers.</p>
+
+<h3>Stanford Parser</h3>
+
+<p>
+As mentioned in the <a href="training-guide.html">training guide</a>, the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> is a good baseline parser for creating your parse trees.
+This is because it has tools for automatic tokenization, and also because it almost never fails at parsing, except on extremely long sentences.
+To install the parser, if you haven't already, download and unzip the parser archive.
+Next, we can use the parser to tokenize and parse our text.
+</p>
+
+<h4>Tokenization</h4>
+
+<p>
+Tokenization can be run on an English input file as follows.
+You will have to replace <tt>stanford-parser.jar</tt> with the full path to <tt>stanford-parser.jar</tt> in the parser distribution.
+</p>
+
+<pre>
+java -cp stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines input.txt &gt; tokenized.txt
+</pre>
+
+<h4>Parsing</h4>
+
+<p>
+Next, we will use the Stanford parser to parse the source side English sentences.
+Again, you will need to specify the full path to both parser jar files.
+</p>
+
+<pre>
+java -mx2000m -cp stanford-parser.jar:stanford-parser-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz tokenized.txt stanford-parsed.txt
+</pre>
+
+<h3>Egret</h3>
+
+<p>
+<a href="http://code.google.com/p/egret-parser/">Egret</a> is a parser that is able to both achieve higher accuracy (in our experience) than that Stanford parser, and also output packed forests that can be used in translation.
+</p>
+
+<h4>Installation</h4>
+
+<p>
+Download Egret from the <a href="http://code.google.com/p/egret-parser/">official home page</a> and unzip it.
+You can then run the following command in the top directory to compile:
+</p>
+<pre>
+bash make-linux.sh
+</pre>
+
+<h4>Parsing 1-best Trees</h4>
+
+<p>
+For travatar training (currently) only 1-best trees are supported for rule learning, so we will first describe how to create 1-best trees.
+But first, before parsing, you must tokenize the text, which can be done with the Stanford parser.
+Given the tokenized file <tt>tokenized.txt</tt>, we then run Egret as follows, where <tt>$EGRET_DIR</tt> is the directory to which you downloaded Egret.
+</p>
+
+<pre>
+$EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egret-parsed.txt
+</pre>
+
+<p>
+Unfortunately, for some sentences, Egret's parsing fails and generates an empty tree "(())", maybe one in every 10000 or so sentences.
+This means that we will not be able to extract rules from, or translate any failed sentences.
+If we already have parse trees from the Stanford parser, which is less accurate but more robust, we can use the script <tt>replace-failed-parse.pl</tt> included with travatar to replace only failed parses.
+</p>
+
+<pre>
+$TRAVATAR_DIR/script/tree/replace-failed-parse.pl stanford-parsed.txt egret-parsed.txt &gt; egret-parsefixed.txt
+</pre>
+
+<p>
+If parsing is taking a lot of time, you can parse in parallel by running Egret on multiple processors and specifying <tt>-range</tt> to indicate which sentences you want to parse in that particular instance.
+For example, if you have 1000 sentences to parse, you could run the following
+</p>
+
+<pre>
+$EGRET_DIR/egret -range=1-500 -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egret-parsed-1.txt &amp;
+$EGRET_DIR/egret -range=501-1000 -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egret-parsed-2.txt &amp;
+</pre>
+
+<p>
+and then combine the two files together when both processes finish running.
+</p>
+
+<h4>Parsing Forests</h4>
+
+<p>
+Creating forests with Egret just requires a few extra options.
+An example of the command can be found below:
+</p>
+
+<pre>
+$EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar -nbest4threshold=100 -printForest &gt; egret-forest.txt
+</pre>
+
+<p>
+Here <tt>nbest4threshold=100</tt> indicates that we will only keep nodes or edges that appear in the 100 best parse trees.
+This is generally a good setting, but you can increase or reduce this number if you want larger or smaller forests, or reference the Egret manual for other settings.
+</p>
+
+<p>
+Again, as some parses may fail, you can replace them with parses from the Stanford parser.
+In order to do so, we first convert the Stanford trees to forests with the <tt>tree-converter</tt> tool provided with travatar, and then use the <tt>replace-failed-parse.pl</tt> script as we did before.
+</p>
+
+<pre>
+$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret &lt; stanford-parse.txt &gt; stanford-forest.txt
+$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format forest stanford-forest.txt egret-forest.txt &gt; egret-forestfixed.txt
+</pre>
+
+<p>
+When using forests in decoding, we must pass the option "<tt>-in_format egret</tt>" to travatar.
+When running <tt>mert-travatar.pl</tt>, this can be done using "<tt>-decoder-options '-in_format egret'</tt>".
+</p>
+
+<h2>Parsing Japanese</h2>
+
+<p>
+The following directions are for parsing Japanese.
+In Japanese, dependency parsers are the most widely used method for parsing, so we first create a dependency parse, then use heuristic rules to convert this into the format used by travatar.
+We have found that the <a href="TODO">Eda dependency parser</a> gives good results, so we will use it here.
+</p>
+
+<h3>Eda</h3>
+
+<p>
+To perform parsing with <a href="TODO">Eda</a>, you will first have to install both Eda and <a href="http://www.phontron.com/kytea">KyTea</a>, a Japanese tokenizer and POS tagger.
+</p>
+
+<h4>Installation</h4>
+
+<p>
+Download each of the tools from the website.
+Install KyTea using the following commands:
+</p>
+
+<pre>
+tar -xzf kytea-X.X.X.tar.gz
+cd kytea-X.X.X
+./configure
+make
+sudo make install
+</pre>
+
+<p>
+Next, build Eda:
+</p>
+
+<pre>
+tar -xzf eda-X.X.X.tar.gz
+cd eda
+make
+</pre>
+
+<p>
+And we will assume that <tt>$EDA_DIR</tt> is set to the directory that Eda is installed to.
+</p>
+
+<h4>Parsing</h4>
+
+<p>
+Parsing Japanese with Eda and turning it into a format usable by travatar is a string of several commands, but can be done in a single step.
+</p>
+
+<pre>
+cat input.txt |
+    kytea -wsconst D | 
+    $EDA_DIR/treeify.py |
+    $EDA_DIR/src/eda/eda \
+      -v $EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat \
+      -w $EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat |
+    $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl |
+    $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl &gt;
+        eda-parse.txt
+</pre>
+
+<p>
+Describing each of these commands briefly, <tt>kytea</tt> performs word segmentation and POS tagging, <tt>treeify.py</tt> converts KyTea's output to a format that eda can read, and <tt>eda</tt> performs dependency parsing.
+<tt>ja-adjust-dep.pl</tt> adjusts some peculiarities of Japanese dependency annotation (most notably making punctuation and auxiliary verbs children instead of heads), and <tt>ja-dep2cfg.pl</tt> converts dependency trees to CFG trees and performs binarization according to some linguistically motivated head rules.
+The output of this sequence of commands should be sufficient for using as input to travatar.
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
