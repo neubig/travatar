@@ -27,7 +27,7 @@ public:
 );
 
         AddConfigEntry("ref", "", "A reference file");
-        AddConfigEntry("eval", "bleup1", "Comma separated evaluation types");
+        AddConfigEntry("eval", "bleu,ribes", "Comma separated evaluation types (bleu,bleup1,ribes)");
 
     }
 	

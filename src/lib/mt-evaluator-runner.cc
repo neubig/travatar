@@ -5,7 +5,9 @@
 #include <travatar/config-mt-evaluator-runner.h>
 #include <travatar/dict.h>
 #include <travatar/eval-measure-bleu.h>
+#include <travatar/eval-measure-ribes.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace travatar;
 using namespace std;
@@ -23,30 +25,44 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         ref_sentences[0].push_back(Dict::ParseWords(line));
     
     // Load the evaluation measure
-    shared_ptr<EvalMeasure> eval_meas;
-    if(config.GetString("eval") == "bleu") 
-        eval_meas.reset(new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS));
-    else if(config.GetString("eval") == "bleup1") 
-        eval_meas.reset(new EvalMeasureBleu(4,1,EvalMeasureBleu::SENTENCE));
-    else
-        THROW_ERROR("Unknown evaluation measure: " << config.GetString("eval"));
+    vector<shared_ptr<EvalMeasure> > eval_measures;
+    vector<string> eval_ids;
+    algorithm::split(eval_ids, config.GetString("eval"), is_any_of(","));
+    BOOST_FOREACH(const string & eval, eval_ids) {
+        if(eval == "bleu") 
+            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS)));
+        else if(eval == "bleup1") 
+            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureBleu(4,1,EvalMeasureBleu::SENTENCE)));
+        else if(eval == "ribes")
+            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureRibes));
+        else
+            THROW_ERROR("Unknown evaluation measure: " << config.GetString("eval"));
+    }
 
     // Calculate the scores
     BOOST_FOREACH(const string & filename, config.GetMainArgs()) {
-        EvalStatsPtr total_stats;
+        vector<EvalStatsPtr> total_stats(eval_measures.size());
         int id = 0;
         ifstream sysin(filename.c_str());
         if(!sysin) THROW_ERROR("Could not open system file: " << filename);
         while(getline(sysin, line)) {
             Sentence sys_sent = Dict::ParseWords(line);
-            if(total_stats.get() == NULL)
-                total_stats = eval_meas->CalculateStats(ref_sentences[0][id],sys_sent);
-            else
-                total_stats->PlusEquals(*eval_meas->CalculateStats(ref_sentences[0][id], sys_sent));
+            for(int i = 0; i < (int)eval_measures.size(); i++) {
+                if(total_stats[i].get() == NULL)
+                    total_stats[i] = eval_measures[i]->CalculateStats(ref_sentences[0][id],sys_sent);
+                else
+                    total_stats[i]->PlusEquals(*eval_measures[i]->CalculateStats(ref_sentences[0][id], sys_sent));
+            }
             id++;
         }
-        if(config.GetMainArgs().size() > 1) cout << filename << ": ";
-        cout << total_stats->ConvertToString() << endl;
+        int col = 0;
+        // Print the evaluation for this file, with the filename if multiple files are being evaluated
+        if(config.GetMainArgs().size() > 1) { cout << filename; col++; }
+        BOOST_FOREACH(EvalStatsPtr stats, total_stats) {
+            if(col++) cout << "\t";
+            cout << stats->ConvertToString();
+        }
+        cout << endl;
     }
     
 

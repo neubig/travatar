@@ -9,6 +9,18 @@
 
 namespace travatar {
 
+class EvalStatsRibes : public EvalStatsAverage {
+public:
+    EvalStatsRibes(double val, double denom = 1.0)
+        : EvalStatsAverage(val,denom) { }
+    virtual std::string ConvertToString() const {
+        std::ostringstream oss;
+        oss << "RIBES = " << ConvertToScore();
+        return oss.str();
+    }
+    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsRibes(vals_[0], vals_[1])); }
+};
+
 class EvalMeasureRibes : public EvalMeasure {
 
 public:
