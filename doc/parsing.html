@@ -219,8 +219,7 @@ Parsing Japanese with Eda and turning it into a format usable by travatar is a s
 
 <pre>
 cat input.txt |
-    kytea -wsconst D | 
-    $EDA_DIR/treeify.py |
+    kytea -wsconst D -out eda | 
     $EDA_DIR/src/eda/eda \
       -v $EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat \
       -w $EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat |
