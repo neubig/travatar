@@ -1,0 +1,73 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - Training Options</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+</ul>
+
+<p>Decoding</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+</ul>
+
+</div>
+<div id="main">
+
+<h1>Training Options</h1>
+
+<p>
+The following options are accepted by travatar's <tt>train-travatar.pl</tt> script. There is a possibility that this documentation is out-of-date, so check inside <tt>travatar-train.pl</tt> to confirm the latest version.
+</p>
+
+<pre>
+-work_dir  The working directory to use
+-travatar_dir  The directory of travatar
+-bin_dir  A directory for external bin files (mainly GIZA)
+-threads  The number of threads to use
+-src_file  The source file you want to train on
+-src_words  A file of plain-text sentences from the source
+-src_format  The source file format (penn/egret)
+-trg_file  The target file you want to train on
+-trg_words  The target file format (word/penn/egret)
+-trg_format  A file of plain-text sentences from the target
+-lex_srctrg  of the source word given the target P(f|e)
+-lex_trgsrc  of the target word given the source P(e|f)
+-align_file  A file containing alignments
+-align  The type of alignment to use (giza)
+-symmetrize  The type of symmetrization to use (grow)
+-normalize  Normalize rule counts to probabilities
+-binarize  Binarize trees in a certain direction
+-compose  The number of rules to compose
+-attach  Where to attach rules
+-nonterm_len  The maximum number of non-terminals in a rule
+-term_len  The maximum number of terminals in a rule
+-nbest_rules  The maximum number of rules for each source
+-tm_file  An already created TM file
+-lm_file  An already created LM file
+-config_file  Where to output the configuration file
+-no_lm  Indicates that no LM will be used
+</pre>
+
+</div>
+</div>
+
+</body>
+</html>

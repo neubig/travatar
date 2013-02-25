@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - Decoding Options</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+</ul>
+
+<p>Decoding</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+</ul>
+
+</div>
+<div id="main">
+
+<h1>Decoding Options</h1>
+
+<p>
+Travatar supports the following options during decoding.
+There is a possibility that this documenation is out of date, so you can confirm the latest options using <tt>travatar --help</tt>.
+</p>
+
+<pre>
+-config_file 	The location of the configuration file
+-all_unk 	If this is true, translating the word as-is will be an option even when a rule exists
+-binarize 	How to binarize the trees (none/left/right)
+-debug 	What level of debugging output to print
+-forest_out 	forest output file location
+-in_format 	The format of the input (penn/egret)
+-lm_file 	Language model file location
+-nbest 	The length of the n-best list
+-nbest_out 	n-best output file location
+-pop_limit 	The number of pops necessary
+-tm_file 	Translation model file location
+-tm_storage 	Method of storing the rule table (marisa/hash)
+-trace_out 	trace output file location
+-weight_vals 	Weight values in format "name1=val1 name2=val2", existing features override the file, other features are left unchanged
+-tune_update 	How to update the weights after each sentence is translated (none/perceptron)
+-tune_ref_files 	The reference files to be used for tuning
+-tune_step_count 	The number of steps that have been executed previously for tuning
+-tune_step_size 	The size of a single step of weight update
+-tune_loss 	The evaluation measure to use in tuning (bleu/ribes)
+-tune_weight_out 	Location to print the weight file after done tuning
+</pre>
+
+</div>
+</div>
+
+</body>
+</html>

@@ -10,39 +10,39 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 # Directory options
-my $WORK_DIR = ""; # The working directory to use
-my $TRAVATAR_DIR = ""; # The directory of travatar
-my $BIN_DIR = ""; # A directory for external bin files (mainly GIZA)
+my $WORK_DIR = "";
+my $TRAVATAR_DIR = ""; 
+my $BIN_DIR = "";
 
 # Parallelization options
-my $THREADS = "1"; # The number of threads to use
+my $THREADS = "1";
 
 # Input/output options
-my $SRC_FILE = ""; # The source file you want to train on
-my $SRC_WORDS = ""; # A file of plain-text sentences from the source
-my $SRC_FORMAT = "penn"; # The source file format (penn/egret)
+my $SRC_FILE = "";
+my $SRC_WORDS = "";
+my $SRC_FORMAT = "penn";
 
-my $TRG_FILE = ""; # The target file you want to train on
-my $TRG_FORMAT = "word"; # The target file format (word/penn/egret)
-my $TRG_WORDS = ""; # A file of plain-text sentences from the target
+my $TRG_FILE = "";
+my $TRG_FORMAT = "word";
+my $TRG_WORDS = "";
 
 # Files containing lexical translation probabilities
-my $LEX_SRCTRG = ""; # of the source word given the target P(f|e)
-my $LEX_TRGSRC = ""; # of the target word given the source P(e|f)
+my $LEX_SRCTRG = "";
+my $LEX_TRGSRC = "";
 
 # Alignment options
-my $ALIGN_FILE = ""; # A file containing alignments
-my $ALIGN = "giza"; # The type of alignment to use (giza)
-my $SYMMETRIZE = "grow"; # The type of symmetrization to use (grow)
+my $ALIGN_FILE = "";
+my $ALIGN = "giza";
+my $SYMMETRIZE = "grow";
 
 # Rule extraction options
-my $NORMALIZE = "false"; # Normalize rule counts to probabilities
-my $BINARIZE = "right"; # Binarize trees in a certain direction
-my $COMPOSE = "4"; # The number of rules to compose
-my $ATTACH = "top"; # Where to attach rules
-my $NONTERM_LEN = "2"; # The maximum number of non-terminals in a rule
-my $TERM_LEN = "10"; # The maximum number of terminals in a rule
-my $NBEST_RULES = "20"; # The maximum number of rules for each source
+my $NORMALIZE = "false";
+my $BINARIZE = "right";
+my $COMPOSE = "4";
+my $ATTACH = "top";
+my $NONTERM_LEN = "2";
+my $TERM_LEN = "10";
+my $NBEST_RULES = "20";
 
 # Model files
 my $TM_FILE = "";
@@ -51,30 +51,32 @@ my $NO_LM = "false";
 my $CONFIG_FILE = "";
 
 GetOptions(
-    "work_dir=s" => \$WORK_DIR,
-    "travatar_dir=s" => \$TRAVATAR_DIR,
-    "bin_dir=s" => \$BIN_DIR,
-    "threads=s" => \$THREADS,
-    "src_file=s" => \$SRC_FILE,
-    "src_words=s" => \$SRC_WORDS,
-    "src_format=s" => \$SRC_FORMAT,
-    "trg_file=s" => \$TRG_FILE,
-    "trg_words=s" => \$TRG_WORDS,
-    "trg_format=s" => \$TRG_FORMAT,
-    "lex_srctrg=s" => \$LEX_SRCTRG,
-    "lex_trgsrc=s" => \$LEX_TRGSRC,
-    "align_file=s" => \$ALIGN_FILE,
-    "nbest_rules=s" => \$NBEST_RULES,
-    "normalize=s" => \$NORMALIZE,
-    "binarize=s" => \$BINARIZE,
-    "compose=s" => \$COMPOSE,
-    "attach=s" => \$ATTACH,
-    "nonterm_len=s" => \$NONTERM_LEN,
-    "term_len=s" => \$TERM_LEN,
-    "tm_file=s" => \$TM_FILE,
-    "lm_file=s" => \$LM_FILE,
-    "config_file=s" => \$CONFIG_FILE,
-    "no_lm=s" => \$NO_LM,
+    "work_dir=s" => \$WORK_DIR, # The working directory to use
+    "travatar_dir=s" => \$TRAVATAR_DIR, # The directory of travatar
+    "bin_dir=s" => \$BIN_DIR, # A directory for external bin files (mainly GIZA)
+    "threads=s" => \$THREADS, # The number of threads to use
+    "src_file=s" => \$SRC_FILE, # The source file you want to train on
+    "src_words=s" => \$SRC_WORDS, # A file of plain-text sentences from the source
+    "src_format=s" => \$SRC_FORMAT, # The source file format (penn/egret)
+    "trg_file=s" => \$TRG_FILE, # The target file you want to train on
+    "trg_words=s" => \$TRG_WORDS, # The target file format (word/penn/egret)
+    "trg_format=s" => \$TRG_FORMAT, # A file of plain-text sentences from the target
+    "lex_srctrg=s" => \$LEX_SRCTRG, # of the source word given the target P(f|e)
+    "lex_trgsrc=s" => \$LEX_TRGSRC, # of the target word given the source P(e|f)
+    "align_file=s" => \$ALIGN_FILE, # A file containing alignments
+    "align=s" => \$ALIGN, # The type of alignment to use (giza)
+    "symmetrize=s" => \$SYMMETRIZE, # The type of symmetrization to use (grow)
+    "normalize=s" => \$NORMALIZE, # Normalize rule counts to probabilities
+    "binarize=s" => \$BINARIZE, # Binarize trees in a certain direction
+    "compose=s" => \$COMPOSE, # The number of rules to compose
+    "attach=s" => \$ATTACH, # Where to attach rules
+    "nonterm_len=s" => \$NONTERM_LEN, # The maximum number of non-terminals in a rule
+    "term_len=s" => \$TERM_LEN, # The maximum number of terminals in a rule
+    "nbest_rules=s" => \$NBEST_RULES, # The maximum number of rules for each source
+    "tm_file=s" => \$TM_FILE, # An already created TM file
+    "lm_file=s" => \$LM_FILE, # An already created LM file
+    "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
+    "no_lm=s" => \$NO_LM, # Indicates that no LM will be used
 );
 if(@ARGV != 0) {
     print STDERR "Usage: $0 --work-dir=work --src-file=src.txt --trg-file=trg.txt\n";
