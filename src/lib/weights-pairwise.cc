@@ -12,6 +12,7 @@ using namespace travatar;
 void WeightsPairwise::Adjust(EvalMeasure & eval,
                              const std::vector<Sentence> & refs,
                              const NbestList & nbest) {
+    cerr << "ADJUST" << endl;
     // Find the oracle
     int oracle = -1;
     double oracle_eval = -DBL_MAX;

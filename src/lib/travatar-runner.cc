@@ -57,7 +57,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // If we need to do tuning
     if(do_tuning) {
         // Check that a place to write the weights has been specified
-        ofstream weight_out(config.GetString("tune_weight_out").c_str());
+        string weight_out_file = config.GetString("tune_weight_out");
+        if(weight_out_file.length() == 0)
+            THROW_ERROR("Tuning is active, but -tune_weight_out was not specified");
+        ofstream weight_out(weight_out_file.c_str());
         if(!weight_out)
             THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
         // Set the evaluation measure to be used
@@ -132,7 +135,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
         if(!*nbest_out)
             THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
-    } else {
+    } else if (!do_tuning) {
         nbest_count = 1;
     }
 
@@ -226,7 +229,9 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                 if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
                 refs.push_back(Dict::ParseWords(line));
             }
+            cerr << "TUNING" << endl;
             weights->Adjust(*tune_eval_measure, refs, nbest_list);
+            cerr << "DONE TUNING" << endl;
         }
 
         sent++;
