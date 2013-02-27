@@ -1,5 +1,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
@@ -43,7 +44,9 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     shared_ptr<Weights> weights;
     bool do_tuning = true;
     if(config.GetString("tune_update") == "perceptron") {
-        weights.reset(new WeightsPerceptron(init_weights));
+        WeightsPerceptron * ptr = new WeightsPerceptron(init_weights);
+        ptr->SetL1Coeff(config.GetDouble("tune_l1_coeff"));
+        weights.reset(ptr);
     } else if(config.GetString("tune_update") == "delayed") {
         weights.reset(new WeightsDelayedPerceptron(init_weights));
     } else if(config.GetString("tune_update") == "none") {
@@ -80,6 +83,20 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             THROW_ERROR("When tuning, must specify at least one reference in tune_ref_files");
         BOOST_FOREACH(const string & file, ref_files)
             tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
+        // Set the weight ranges
+        if(config.GetString("tune_weight_ranges") != "") {
+            vector<string> ranges, range_vals;
+            boost::split(ranges, config.GetString("tune_weight_ranges"), boost::is_any_of(" "));
+            BOOST_FOREACH(const string & range, ranges) {
+                boost::split(range_vals, range, boost::is_any_of("|"));
+                if(range_vals.size() != 2 && range_vals.size() != 3)
+                    THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
+                WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
+                double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
+                double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
+                weights->SetRange(id, min_score, max_score);
+            }
+        }
     }
 
     // Create the binarizer

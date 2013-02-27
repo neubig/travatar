@@ -43,12 +43,14 @@ public:
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
 
 #ifdef ONLINE_TRAINING_ON
-        AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/perceptron)");
+        AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
         AddConfigEntry("tune_ref_files", "", "The reference files to be used for tuning");
+        AddConfigEntry("tune_l1_coeff", "0", "The L1 regularization coefficient for tuning");
         AddConfigEntry("tune_step_count", "0", "The number of steps that have been executed previously for tuning");
         AddConfigEntry("tune_step_size", "1", "The size of a single step of weight update");
-        AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
+        AddConfigEntry("tune_update", "none", "How to update the weights after each sentence is translated (none/perceptron)");
         AddConfigEntry("tune_weight_out", "", "Location to print the weight file after done tuning");
+        AddConfigEntry("tune_weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
 #endif
 
 

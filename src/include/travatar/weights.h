@@ -4,6 +4,7 @@
 #include <travatar/sparse-map.h>
 #include <travatar/nbest-list.h>
 #include <travatar/sentence.h>
+#include <cfloat>
 
 namespace travatar {
 
@@ -13,9 +14,13 @@ class Weights {
 
 public:
 
-    Weights() { }
+    Weights() {
+        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
+    }
     Weights(const SparseMap & current) :
-        current_(current) { }
+        current_(current) {
+        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
+    }
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key) {
@@ -39,8 +44,18 @@ public:
         std::cerr << "Doing nothing!" << std::endl;
     }
 
+    void SetRange(int id, double min, double max) {
+        ranges_[id] = std::pair<double,double>(min,max);
+    }
+    std::pair<double,double> GetRange(int id) {
+        RangeMap::const_iterator it = ranges_.find(id);
+        return (it == ranges_.end() ? ranges_[-1] : it->second);
+    }
+
 protected:
     SparseMap current_;
+    typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;
+    RangeMap ranges_;
 
 };
 
