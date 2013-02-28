@@ -246,9 +246,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                 if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
                 refs.push_back(Dict::ParseWords(line));
             }
-            cerr << "TUNING" << endl;
             weights->Adjust(*tune_eval_measure, refs, nbest_list);
-            cerr << "DONE TUNING" << endl;
         }
 
         sent++;
