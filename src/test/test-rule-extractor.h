@@ -284,7 +284,12 @@ public:
         set_exp[2].insert(2);
         node_exp[3]->GetTrgSpan().insert(2); node_exp[3]->GetTrgSpan().insert(4);
         set_exp[3].insert(2); set_exp[3].insert(4);
-        return CheckVector(set_exp, set_act) && CheckPtrVector(node_exp, node_act); 
+        bool ret = CheckVector(set_exp, set_act) && CheckPtrVector(node_exp, node_act); 
+        BOOST_FOREACH(ForestExtractor::SpanNodeVector::value_type val, sn_act)
+            delete val.second;
+        BOOST_FOREACH(HyperNode * ptr, node_exp)
+            delete ptr;
+        return ret;
     }
 
     int TestExhaustiveNullExtraction() {

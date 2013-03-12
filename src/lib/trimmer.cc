@@ -18,9 +18,9 @@ HyperGraph * Trimmer::TransformGraph(const HyperGraph & hg) {
     FindActive(hg, active_nodes, active_edges);
     HyperGraph * ret = new HyperGraph(hg);
     // Make the new edge/node arrays
-    ret->GetEdges().clear();
+    ret->DeleteEdges();
     ret->GetEdges().resize(active_edges.size());
-    ret->GetNodes().clear();
+    ret->DeleteNodes();
     ret->GetNodes().resize(active_nodes.size());
     // Add the active edges/nodes
     BOOST_FOREACH(const HyperEdge * edge, hg.GetEdges()) {
