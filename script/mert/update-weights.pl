@@ -44,8 +44,7 @@ if($LOG) {
         chomp;
         last if not $_;
         my ($name, $weight) = split(/=/);
-        push @names, $name;
-        push @weights, $weight;
+        $wmap{$name} = $weight;
     }
     close FILE1;
 } elsif($WEIGHTS) {
