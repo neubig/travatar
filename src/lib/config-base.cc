@@ -55,7 +55,7 @@ void ConfigBase::LoadConfig(const string & file_name) {
     }
 }
 
-std::vector<std::string> ConfigBase::LoadConfig(int argc, char** argv) {
+std::vector<std::string> ConfigBase::LoadConfig(int argc, char** argv, bool print_help) {
     for(int i = 1; i < argc; i++) {
         if(argv[i][0] == '-') {
             std::string name(argv[i]+1); 
@@ -76,7 +76,8 @@ std::vector<std::string> ConfigBase::LoadConfig(int argc, char** argv) {
         DIE_HELP("Wrong number of arguments");
     }
 
-    PrintConf();
+    if(print_help)
+        PrintConf();
     return mainArgs_;
 }
 

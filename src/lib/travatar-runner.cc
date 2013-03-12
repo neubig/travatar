@@ -7,6 +7,7 @@
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
 #include <travatar/travatar-runner.h>
+#include <travatar/trimmer-nbest.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/weights.h>
@@ -164,6 +165,11 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
     } 
 
+    // Get the class to trim the forest if necessary
+    scoped_ptr<Trimmer> trimmer_;
+    if(config.GetInt("forest_nbest_trim") != 0)
+        trimmer_.reset(new TrimmerNbest(config.GetInt("forest_nbest_trim")));
+
     // Open the trace output stream if it exists
     scoped_ptr<ostream> trace_out;
     if(config.GetString("trace_out") != "") {
@@ -233,8 +239,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
         // If we are printing a forest, print it
         if(forest_out.get() != NULL) {
+            // Trim if needed
+            shared_ptr<HyperGraph> out_for = rule_graph;
+            if(trimmer_.get() != NULL)
+                out_for.reset(trimmer_->TransformGraph(*out_for));
+            // Print
             JSONTreeIO io;
-            io.WriteTree(*rule_graph, *forest_out);
+            io.WriteTree(*out_for, *forest_out);
             *forest_out << endl;
         }
 

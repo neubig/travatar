@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     if(config_file.length() == 0)
         THROW_ERROR("Must specify configuration using -config_file");
     conf.LoadConfig(config_file);
-    conf.LoadConfig(argc, argv);
+    conf.LoadConfig(argc, argv, false);
     // train the reorderer
     TravatarRunner runner;
     runner.Run(conf);

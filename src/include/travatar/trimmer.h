@@ -21,6 +21,10 @@ public:
 
     virtual HyperGraph * TransformGraph(const HyperGraph & hg);
 
+protected:
+    // A utility function to add an ID to a map only if it doesn't exist
+    void AddId(std::map<int,int> & id_map, int id);
+
 };
 
 }

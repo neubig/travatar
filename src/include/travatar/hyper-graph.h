@@ -9,6 +9,7 @@
 #include <travatar/sparse-map.h>
 #include <travatar/nbest-list.h>
 #include <travatar/sentence.h>
+#include <travatar/util.h>
 
 namespace travatar {
 
@@ -322,8 +323,8 @@ public:
     void InsideOutsideNormalize();
 
     // Accessors
-    const HyperNode* GetNode(int i) const { return nodes_[i]; }
-    HyperNode* GetNode(int i) { return nodes_[i]; }
+    const HyperNode* GetNode(int i) const { return SafeAccess(nodes_, i); }
+    HyperNode* GetNode(int i) { return SafeAccess(nodes_, i); }
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     std::vector<HyperNode*> & GetNodes() { return nodes_; }
     int NumNodes() const { return nodes_.size(); }

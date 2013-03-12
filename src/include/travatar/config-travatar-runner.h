@@ -31,7 +31,8 @@ public:
         AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
-        AddConfigEntry("forest_out", "", "forest output file location");
+        AddConfigEntry("forest_out", "", "Forest output file location");
+        AddConfigEntry("forest_nbest_trim", "", "Trim the forest so it only includes edges in the n-best");
         AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");
         AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");

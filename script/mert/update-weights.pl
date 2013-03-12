@@ -72,17 +72,21 @@ while(<FILE0>) {
     last if not $_;
     my ($oldname, $oldweight) = split(/=/);
     my $newweight;
-    if(%wmap) {
-        $newweight = $wmap{$oldname};
-    } else {
+    if(!%wmap) {
         die "Weight sizes don't match" if not @weights;
         my $newname = shift(@names);
         $newweight = shift(@weights);
         die "newname ($newname) and oldname ($oldname) don't match" if($newname and ($newname ne $oldname));
+        print "$oldname=$newweight\n";
     }
-    print "$oldname=$newweight\n";
 }
-die "Weight sizes don't match" if @weights;
+if(%wmap) {
+    while(my ($k,$v) = each(%wmap)) {
+        print "$k=$v\n";
+    }
+} else {
+    die "Weight sizes don't match" if @weights;
+}
 print "\n";
 # Print the rest of the file
 while(<FILE0>) {

@@ -76,7 +76,7 @@ foreach $iter (1 .. $MAX_ITERS) {
     # Candidate options
     my $CAND_OPTIONS;
     if($CAND_TYPE eq "nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
-    elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest"; }
+    elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
     safesystem("$TRAVATAR $DECODER_OPTIONS $CAND_OPTIONS -config_file $prev.ini < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";

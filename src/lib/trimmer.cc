@@ -8,10 +8,14 @@ using namespace std;
 using namespace travatar;
 using namespace boost;
 
+void Trimmer::AddId(std::map<int,int> & id_map, int id) {
+    if(id_map.find(id) == id_map.end())
+        id_map.insert(make_pair(id, id_map.size()));
+}
+
 HyperGraph * Trimmer::TransformGraph(const HyperGraph & hg) {
     std::map<int,int> active_nodes, active_edges;
-    // FindActive(hg, active_nodes, active_edges);
-    THROW_ERROR("FindActive not finished");
+    FindActive(hg, active_nodes, active_edges);
     HyperGraph * ret = new HyperGraph(hg);
     // Make the new edge/node arrays
     ret->GetEdges().clear();
@@ -35,12 +39,19 @@ HyperGraph * Trimmer::TransformGraph(const HyperGraph & hg) {
         BOOST_FOREACH(HyperNode* tail, edge->GetTails())
             new_tails.push_back(ret->GetNodes()[active_nodes[tail->GetId()]]);
         edge->SetTails(new_tails);
+        edge->SetHead(ret->GetNodes()[active_nodes[edge->GetHead()->GetId()]]);
     }
     BOOST_FOREACH(HyperNode * node, ret->GetNodes()) {
         vector<HyperEdge*> new_edges;
         BOOST_FOREACH(HyperEdge* edge, node->GetEdges())
-            new_edges.push_back(ret->GetEdges()[active_edges[edge->GetId()]]);
+            if(active_edges.find(edge->GetId()) != active_edges.end())
+                new_edges.push_back(ret->GetEdges()[active_edges[edge->GetId()]]);
         node->SetEdges(new_edges);
     }
+    // Replace the IDs
+    BOOST_FOREACH(HyperEdge * edge, ret->GetEdges())
+        edge->SetId(active_edges[edge->GetId()]);
+    BOOST_FOREACH(HyperNode * node, ret->GetNodes())
+        node->SetId(active_nodes[node->GetId()]);
     return ret;
 }
