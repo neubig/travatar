@@ -40,6 +40,7 @@ my $NORMALIZE = "false";
 my $BINARIZE = "right";
 my $COMPOSE = "4";
 my $ATTACH = "top";
+my $ATTACH_LEN = "1";
 my $NONTERM_LEN = "2";
 my $TERM_LEN = "10";
 my $NBEST_RULES = "20";
@@ -69,7 +70,8 @@ GetOptions(
     "normalize=s" => \$NORMALIZE, # Normalize rule counts to probabilities
     "binarize=s" => \$BINARIZE, # Binarize trees in a certain direction
     "compose=s" => \$COMPOSE, # The number of rules to compose
-    "attach=s" => \$ATTACH, # Where to attach rules
+    "attach=s" => \$ATTACH, # Where to attach nulls
+    "attach_len=s" => \$ATTACH_LEN, # The number of nulls to attach
     "nonterm_len=s" => \$NONTERM_LEN, # The maximum number of non-terminals in a rule
     "term_len=s" => \$TERM_LEN, # The maximum number of terminals in a rule
     "nbest_rules=s" => \$NBEST_RULES, # The maximum number of rules for each source
@@ -182,7 +184,7 @@ if(not $TM_FILE) {
     safesystem("mkdir $WORK_DIR/model") or die;
     # First extract the rules
     my $EXTRACT_FILE = "$WORK_DIR/model/extract.gz";
-    my $EXTRACT_OPTIONS = "-normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
+    my $EXTRACT_OPTIONS = "-normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
     safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
