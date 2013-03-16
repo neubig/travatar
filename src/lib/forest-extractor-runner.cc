@@ -74,6 +74,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         if(has_src + has_trg + has_align != 3)
             THROW_ERROR("File sizes don't match: src="<<has_src
                         <<", trg="<<has_trg<<", align="<<has_align);
+        PRINT_DEBUG("Extracting from:" << endl << src_line << endl << trg_line << endl << align_line << endl, 1);
         // Parse into the appropriate data structures
         shared_ptr<HyperGraph> src_graph;
         try {

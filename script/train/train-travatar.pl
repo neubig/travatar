@@ -81,13 +81,15 @@ GetOptions(
     "no_lm=s" => \$NO_LM, # Indicates that no LM will be used
 );
 if(@ARGV != 0) {
-    print STDERR "Usage: $0 --work-dir=work --src-file=src.txt --trg-file=trg.txt\n";
+    print STDERR "Usage: $0 --work_dir=work --src_file=src.txt --trg_file=trg.txt\n";
     exit 1;
 }
 
 # Sanity check!
-((!$WORK_DIR) or (!$SRC_FILE) or (!$TRG_FILE) or (!$TRAVATAR_DIR) or (!$BIN_DIR)) and
-    die "Must specify -work_dir ($WORK_DIR) -src_file ($SRC_FILE) -trg_file ($TRG_FILE) -travatar_dir ($TRAVATAR_DIR) -bin_dir ($BIN_DIR)";
+((!$WORK_DIR) or (!$SRC_FILE) or (!$TRG_FILE) or (!$TRAVATAR_DIR)) and
+    die "Must specify -work_dir ($WORK_DIR) -src_file ($SRC_FILE) -trg_file ($TRG_FILE) -travatar_dir ($TRAVATAR_DIR)";
+(!$BIN_DIR) and (!$ALIGN_FILE) and
+    die "Must specify -bin_dir ($BIN_DIR) or -align_file ($ALIGN_FILE)";
 for($SRC_FILE, $TRG_FILE, $TRAVATAR_DIR, $SRC_WORDS, $TRG_WORDS, $ALIGN_FILE, $LEX_SRCTRG, $LEX_TRGSRC, $LM_FILE) {
     die "File specified but not found: $_" if $_ and not -e $_;
 }
