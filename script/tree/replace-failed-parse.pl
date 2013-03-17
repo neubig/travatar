@@ -9,10 +9,10 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my $ARG = "";
+my $FORMAT = "";
 my $NOBUF = "";
 GetOptions(
-    "arg=s" => \$ARG,
+    "format=s" => \$FOREST,
     "nobuf!" => \$NOBUF,
 );
 

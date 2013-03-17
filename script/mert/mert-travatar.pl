@@ -93,10 +93,10 @@ foreach $iter (1 .. $MAX_ITERS) {
     } elsif($MERT_SOLVER eq "batch-tune") {
         if($CAND_TYPE eq "nbest") {
             my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval $EVAL -weight_in $prev.weights $REF > $next.weights");
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval $EVAL -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log");
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -forest $forests -eval $EVAL -weight_in $prev.weights $REF > $next.weights");
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -forest $forests -eval $EVAL -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log");
         }
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
