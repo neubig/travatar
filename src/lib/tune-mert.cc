@@ -28,7 +28,7 @@ LineSearchResult TuneMert::LineSearch(
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps) {
         // Calculate the convex hull
         ConvexHull convex_hull = examp->CalculateConvexHull(weights, gradient);
-        PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 2);
+        PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 3);
         if(convex_hull.size() == 0) continue;
         // Update the base values
         if(base_stats) base_stats->PlusEquals(*convex_hull[0].second);
@@ -77,7 +77,7 @@ LineSearchResult TuneMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << endl, 2);
+    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << endl, 3);
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
@@ -87,25 +87,29 @@ double TuneMert::RunTuning(SparseMap & weights) {
     SparseMap potential;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
         examp->CountWeights(potential);
-
-    LineSearchResult result;
-    double gain = DBL_MAX;
-    while(gain > gain_threshold_) {
-        gain = 0;
+    double best_score = 0;
+    PRINT_DEBUG("Starting MERT Run: " << Dict::PrintFeatures(weights) << endl, 2);
+    while(true) {
+        // Initialize the best result
+        LineSearchResult best_result;
+        SparseMap best_gradient;
+        // Perform line search over one gradient
         BOOST_FOREACH(SparseMap::value_type val, potential) {
-            // Create the gradient
             SparseMap gradient; gradient[val.first] = 1;
-            result = TuneMert::LineSearch(weights, gradient, examps_);
-            if(result.gain > 0) {
-                gain += result.gain;
-                weights += gradient * result.pos;
-                PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl << result.after->ConvertToString() << endl, 0);
+            LineSearchResult result = TuneMert::LineSearch(weights, gradient, examps_);
+            if(result.gain > best_result.gain) {
+                best_result = result;
+                best_gradient = gradient;
+                best_score = result.after->ConvertToScore();
             }
         }
+        if(best_result.gain <= gain_threshold_) break;
+        weights += best_gradient * best_result.pos;
+        PRINT_DEBUG("Change: " << Dict::PrintFeatures(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintFeatures(weights) << endl << best_result.after->ConvertToString() << endl, 2);
     }
 
     // Normalize so that weights add to 1
     NormalizeL1(weights);
 
-    return result.after->ConvertToScore();
+    return best_score;
 }

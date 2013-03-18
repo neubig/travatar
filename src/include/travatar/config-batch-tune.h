@@ -33,7 +33,7 @@ public:
         AddConfigEntry("threshold", "1e-6", "Terminate when gains are less than this");
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes)");
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
-        AddConfigEntry("restarts", "10", "The number of random tuning restarts");
+        AddConfigEntry("restarts", "20", "The number of random tuning restarts");
         AddConfigEntry("weight_in", "", "File of initial weights");
         AddConfigEntry("weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
 

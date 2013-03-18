@@ -57,7 +57,7 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
     // Initialize
     best_result_ = LineSearchResult();
     best_gradient_ = SparseMap();
-    PRINT_DEBUG("Calculating potential gains..." << endl, 1);
+    PRINT_DEBUG("Calculating potential gains..." << endl, 2);
     SparseMap potential;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
         potential += examp->CalculatePotentialGain(weights);
@@ -96,11 +96,11 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
 
     // Update with the best value
     if(best_result_.gain > gain_threshold_) {
-        PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient_) << " * " << best_result_.pos << endl, 0);
+        PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient_) << " * " << best_result_.pos << endl, 2);
         weights += best_gradient_ * best_result_.pos;
     }
 
-    PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl, 0);
+    PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl, 2);
     return best_result_;
 }
 

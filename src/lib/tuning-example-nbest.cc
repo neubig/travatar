@@ -86,7 +86,7 @@ ConvexHull TuningExampleNbest::CalculateConvexHull(
                 best_pos = my_pos;
             }
         }
-        PRINT_DEBUG("Adding hull: " << prev_pos << ", " << best_pos << ", " << lines[i].second->ConvertToString() << endl, 2);
+        PRINT_DEBUG("Adding hull: " << prev_pos << ", " << best_pos << ", " << lines[i].second->ConvertToString() << endl, 4);
         hull.push_back(make_pair(make_pair(prev_pos, best_pos), lines[i].second));
         i = best_j;
         prev_pos = best_pos;
