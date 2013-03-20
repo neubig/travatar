@@ -244,3 +244,27 @@ void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     }
     out << endl;
 }
+
+HyperGraph * MosesXMLTreeIO::ReadTree(istream & in) {
+    THROW_ERROR("Moses XML is not supported as an input format (yet)");
+}
+
+void MosesXMLTreeIO::WriteNode(const vector<WordId> & words, 
+                           const HyperNode & node, ostream & out) {
+    if (node.NumEdges() > 1)
+        THROW_ERROR("Cannot write hypergraphs of degree > 1 to Moses XML format");
+    if (node.NumEdges() == 1) {
+        out << "<tree label=\"" << Dict::EncodeXML(Dict::WSym(node.GetSym())) << "\"> ";
+        BOOST_FOREACH(const HyperNode * child, node.GetEdge(0)->GetTails()) {
+            out << " ";
+            WriteNode(words, *child, out);
+        }
+        out << "</tree>";
+    } else {
+        out << Dict::EncodeXML(Dict::WSym(words[node.GetSpan().first]));
+    }
+}
+
+void MosesXMLTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
+    WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+}

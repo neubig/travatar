@@ -52,6 +52,7 @@ struct Dict {
 
     // Escape a string
     static std::string EscapeString(const std::string & str);
+    static std::string EncodeXML(const std::string & str);
 
 private:
     static SymbolSet<WordId> wids_;

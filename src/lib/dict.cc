@@ -122,24 +122,18 @@ std::string Dict::EscapeString(const std::string & str) {
     return ret.str();
 }
 
-// Adders. Add the value, and set its ID appropriately
-// HyperGraph will take control of the added value
-void HyperGraph::AddNode(HyperNode * node) {
-    if(node->GetId() == -1) {
-        node->SetId(nodes_.size());
-        nodes_.push_back(node);
-    } else {
-        if((int)nodes_.size() <= node->GetId())
-            nodes_.resize(node->GetId()+1, NULL);
-        else if(nodes_[node->GetId()] != NULL)
-            THROW_ERROR("Duplicate node addition @ " << node->GetId());
-        nodes_[node->GetId()] = node;
+std::string Dict::EncodeXML(const std::string & data) {
+    std::string buffer;
+    buffer.reserve(data.size());
+    for(size_t pos = 0; pos != data.size(); ++pos) {
+        switch(data[pos]) {
+            case '&':  buffer.append("&amp;");       break;
+            case '\"': buffer.append("&quot;");      break;
+            case '\'': buffer.append("&apos;");      break;
+            case '<':  buffer.append("&lt;");        break;
+            case '>':  buffer.append("&gt;");        break;
+            default:   buffer.append(1, data[pos]);  break;
+        }
     }
-}
-void HyperGraph::AddEdge(HyperEdge * edge) {
-    edge->SetId(edges_.size());
-    edges_.push_back(edge);
-}
-void HyperGraph::AddWord(WordId id) {
-    words_.push_back(id);
+    return buffer;
 }

@@ -513,3 +513,25 @@ int HyperGraph::Append(const HyperGraph & rhs) {
     // Return the node id
     return node_start;
 }
+
+// Adders. Add the value, and set its ID appropriately
+// HyperGraph will take control of the added value
+void HyperGraph::AddNode(HyperNode * node) {
+    if(node->GetId() == -1) {
+        node->SetId(nodes_.size());
+        nodes_.push_back(node);
+    } else {
+        if((int)nodes_.size() <= node->GetId())
+            nodes_.resize(node->GetId()+1, NULL);
+        else if(nodes_[node->GetId()] != NULL)
+            THROW_ERROR("Duplicate node addition @ " << node->GetId());
+        nodes_[node->GetId()] = node;
+    }
+}
+void HyperGraph::AddEdge(HyperEdge * edge) {
+    edge->SetId(edges_.size());
+    edges_.push_back(edge);
+}
+void HyperGraph::AddWord(WordId id) {
+    words_.push_back(id);
+}

@@ -38,7 +38,7 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 
-// Read in the format of the Egret parser
+// Read in and write the format of the Egret parser
 class EgretTreeIO : public TreeIO {
 public:
     virtual ~EgretTreeIO() { }
@@ -46,6 +46,17 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 private:
     HyperNode * MakeEgretNode(const std::string & str_id, SymbolSet<int> & node_map, HyperGraph * graph);
+};
+
+// Read in and write Moses XML tree format
+class MosesXMLTreeIO : public TreeIO {
+public:
+    virtual ~MosesXMLTreeIO() { }
+    virtual HyperGraph * ReadTree(std::istream & in);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+    void WriteNode(const std::vector<WordId> & words,
+                   const HyperNode & node, std::ostream & out);
+private:
 };
 
 }
