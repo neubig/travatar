@@ -183,4 +183,5 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
     // Print result
     PRINT_DEBUG("Best: " << Dict::PrintFeatures(best_weights) << " => " << best_score << endl, 0);
+    cout << Dict::PrintFeatures(best_weights) << endl;
 }
