@@ -37,6 +37,8 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_out.reset(new EgretTreeIO);
     else if(config.GetString("output_format") == "json")
         tree_out.reset(new JSONTreeIO);
+    else if(config.GetString("output_format") == "mosesxml")
+        tree_out.reset(new MosesXMLTreeIO);
     else if(!word_out)
         THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
 

@@ -254,12 +254,12 @@ void MosesXMLTreeIO::WriteNode(const vector<WordId> & words,
     if (node.NumEdges() > 1)
         THROW_ERROR("Cannot write hypergraphs of degree > 1 to Moses XML format");
     if (node.NumEdges() == 1) {
-        out << "<tree label=\"" << Dict::EncodeXML(Dict::WSym(node.GetSym())) << "\"> ";
+        out << "<tree label=\"" << Dict::EncodeXML(Dict::WSym(node.GetSym())) << "\">";
         BOOST_FOREACH(const HyperNode * child, node.GetEdge(0)->GetTails()) {
             out << " ";
             WriteNode(words, *child, out);
         }
-        out << "</tree>";
+        out << " </tree>";
     } else {
         out << Dict::EncodeXML(Dict::WSym(words[node.GetSpan().first]));
     }
