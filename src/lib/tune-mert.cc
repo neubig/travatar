@@ -28,14 +28,16 @@ LineSearchResult TuneMert::LineSearch(
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps) {
         // Calculate the convex hull
         ConvexHull convex_hull = examp->CalculateConvexHull(weights, gradient);
-        PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 3);
+        PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 5);
         if(convex_hull.size() == 0) continue;
         // Update the base values
         if(base_stats) base_stats->PlusEquals(*convex_hull[0].second);
         else           base_stats = convex_hull[0].second->Clone();
+        PRINT_DEBUG("convex_hull[0]: " << convex_hull[0] << endl, 5);
         // Add all the changed values
         for(int i = 1; i < (int)convex_hull.size(); i++) {
             EvalStatsPtr diff = convex_hull[i].second->Plus(*convex_hull[i-1].second->Times(-1));
+            PRINT_DEBUG("convex_hull["<<i<<"]: " << convex_hull[i] << endl, 5);
             if(!diff->IsZero()) {
                 map<double,EvalStatsPtr>::iterator it = boundaries.find(convex_hull[i].first.first);
                 if(it != boundaries.end()) it->second->PlusEquals(*diff);
@@ -77,7 +79,7 @@ LineSearchResult TuneMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << endl, 3);
+    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << "\t@gradient " << Dict::PrintFeatures(gradient) << endl, 3);
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
@@ -97,14 +99,17 @@ double TuneMert::RunTuning(SparseMap & weights) {
         BOOST_FOREACH(SparseMap::value_type val, potential) {
             SparseMap gradient; gradient[val.first] = 1;
             LineSearchResult result = TuneMert::LineSearch(weights, gradient, examps_);
+            if(best_score && result.before->ConvertToScore() != best_score)
+                THROW_ERROR("before (" << result.before->ConvertToScore() << ") is != to best_score (" << best_score << "), change=" << result.before->ConvertToScore() - best_score);
             if(result.gain > best_result.gain) {
+                // Calculate the next score and make sure it is better than the previous
                 best_result = result;
                 best_gradient = gradient;
-                best_score = result.after->ConvertToScore();
             }
         }
         if(best_result.gain <= gain_threshold_) break;
         weights += best_gradient * best_result.pos;
+        best_score = best_result.after->ConvertToScore();
         PRINT_DEBUG("Change: " << Dict::PrintFeatures(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintFeatures(weights) << endl << best_result.after->ConvertToString() << endl, 2);
     }
 

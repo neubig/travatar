@@ -40,6 +40,11 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
         // Get matched words
         const vector<int> & ref_match = ref_count[sys[i]];
         const vector<int> & sys_match = sys_count[sys[i]];
+        cerr << "i=" << i << ", ref_match=";
+        BOOST_FOREACH(int val, ref_match) cerr << val << " ";
+        cerr << " sys_match=";
+        BOOST_FOREACH(int val, sys_match) cerr << val << " ";
+        cerr << endl;
 
         // if we can determine one-to-one word correspondence by only unigram
         // one-to-one correspondence
@@ -47,11 +52,11 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
             intlist.push_back(ref_match[0]);
         // if not, we consider context words
         } else {
-            // These vectors store all sysotheses that are still matching on the right or left
+            // These vectors store all hypotheses that are still matching on the right or left
             vector<int> left_ref = ref_match, left_sys = sys_match,
                         right_ref = ref_match, right_sys = sys_match;
             for(int window = 1; window < max(i, (int)sys.size()-i); window++) {
-                // Update the possible sysotheses on the left
+                // Update the possible hypotheses on the left
                 if(window <= i) {
                     vector<int> new_left_ref, new_left_sys;
                     BOOST_FOREACH(int j, left_ref)
@@ -66,7 +71,7 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
                     }
                     left_ref = new_left_ref; left_sys = new_left_sys;
                 }
-                // Update the possible sysotheses on the right
+                // Update the possible hypotheses on the right
                 if(i+window < (int)sys.size()) {
                     vector<int> new_right_ref, new_right_sys;
                     BOOST_FOREACH(int j, right_ref)

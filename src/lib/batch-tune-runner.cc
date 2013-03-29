@@ -178,7 +178,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
             best_score = rand_score;
             best_weights = rand_weights;
         }
-        PRINT_DEBUG("Rand: " << Dict::PrintFeatures(rand_weights) << " => " << rand_score << endl, 1);
+        PRINT_DEBUG("Rand "<<i<<": " << Dict::PrintFeatures(rand_weights) << " => " << rand_score << endl, 1);
     }
 
     // Print result

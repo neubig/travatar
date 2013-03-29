@@ -136,13 +136,23 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
         CalculateMertHull(func, hulls, 0);
         MertHull top_hull = *hulls[0];
         top_hull.Sort();
+        PRINT_DEBUG("Hull for: " << Dict::PrintWords(ref_) << endl, 6);
         for(int i = 0; i < (int)top_hull.size(); i++) {
             const MertLine & line = *top_hull.GetLines()[i];
             Sentence sent;
             line.ConstructTranslation(forest_->GetWords(), &sent);
             EvalStatsPtr stats = measure_->CalculateStats(ref_, sent, id_);
-            stats->TimesEquals(mult_);
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
+            // If the score is exactly the same as last, just update the right side
+            // if(ret.size()) 
+            //     cerr << "DEBUGGING stats: " << *stats << ", " << *ret.rbegin()->second << endl;
+            PRINT_DEBUG("Forest: " << *stats << "\t" << Dict::PrintWords(sent) << endl, 6);
+            if(ret.size() && (*ret.rbegin()->second == *stats)) {
+                ret.rbegin()->first.second = PosZero(next)-DBL_MIN;
+                continue;
+            }
+            // Otherwise, find the score
+            stats->TimesEquals(mult_);
             if(PosZero(line.x) == 0) {
                 // cerr << "l=" << PosZero(line.x)+DBL_MIN << ",r=" << PosZero(next)-DBL_MIN << ",s=" << curr_stats <<": @curr"<<endl;
                 ret.push_back(make_pair(make_pair(-DBL_MIN,+DBL_MIN),curr_stats));

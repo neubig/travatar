@@ -69,9 +69,10 @@ public:
     }
     virtual bool Equals(const EvalStats & rhs) const {
         if(vals_.size() != rhs.vals_.size()) return false;
-        for(int i = 0; i < (int)vals_.size(); i++)
-            if(abs(vals_[i]-rhs.vals_[i]) > 1e-6)
+        for(int i = 0; i < (int)vals_.size(); i++) {
+            if(fabs(vals_[i]-rhs.vals_[i]) > 1e-6)
                 return false;
+        }
         return true;
     }
     const std::vector<EvalStatsDataType> & GetVals() const { return vals_; }
