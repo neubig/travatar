@@ -99,8 +99,10 @@ double TuneMert::RunTuning(SparseMap & weights) {
         BOOST_FOREACH(SparseMap::value_type val, potential) {
             SparseMap gradient; gradient[val.first] = 1;
             LineSearchResult result = TuneMert::LineSearch(weights, gradient, examps_);
-            if(best_score && result.before->ConvertToScore() != best_score)
-                THROW_ERROR("before (" << result.before->ConvertToScore() << ") is != to best_score (" << best_score << "), change=" << result.before->ConvertToScore() - best_score);
+            // Redo the gain in comparison to the currently saved best score.
+            // Given that ties might exist, it is safer to take the gain this way in case
+            // a tie results in a change in the best hypothesis.
+            result.gain = result.after->ConvertToScore() - best_score;
             if(result.gain > best_result.gain) {
                 // Calculate the next score and make sure it is better than the previous
                 best_result = result;

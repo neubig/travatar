@@ -40,11 +40,11 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
         // Get matched words
         const vector<int> & ref_match = ref_count[sys[i]];
         const vector<int> & sys_match = sys_count[sys[i]];
-        cerr << "i=" << i << ", ref_match=";
-        BOOST_FOREACH(int val, ref_match) cerr << val << " ";
-        cerr << " sys_match=";
-        BOOST_FOREACH(int val, sys_match) cerr << val << " ";
-        cerr << endl;
+        // cerr << "i=" << i << ", ref_match=";
+        // BOOST_FOREACH(int val, ref_match) cerr << val << " ";
+        // cerr << " sys_match=";
+        // BOOST_FOREACH(int val, sys_match) cerr << val << " ";
+        // cerr << endl;
 
         // if we can determine one-to-one word correspondence by only unigram
         // one-to-one correspondence
