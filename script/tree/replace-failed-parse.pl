@@ -9,10 +9,10 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my $FORMAT = "";
+my $FORMAT = "penn";
 my $NOBUF = "";
 GetOptions(
-    "format=s" => \$FOREST,
+    "format=s" => \$FORMAT,
     "nobuf!" => \$NOBUF,
 );
 
@@ -26,13 +26,53 @@ open FILE1, "<:utf8", $ARGV[1] or die "Couldn't open $ARGV[1]\n";
 
 $| = 1 if $NOBUF;
 
-my ($s0, $s1);
-while(($s0 = <FILE0>) and ($s1 = <FILE1>)) {
-    chomp $s0; chomp $s1;
-    # If s1 is failed, print $s0
-    if(($s1 eq "") or ($s1 =~ /^\(\(\)\)$/)) {
-        print "$s0\n";
-    } else {
-        print "$s1\n";
+
+if($FORMAT eq "penn") {
+    my ($s0, $s1);
+    while(defined($s0 = <FILE0>) and defined($s1 = <FILE1>)) {
+        chomp $s0; chomp $s1;
+        # If s1 is failed, print $s0
+        if(($s1 eq "") or ($s1 =~ /^\(\(\)\)$/)) {
+            print "$s0\n";
+        } else {
+            print "$s1\n";
+        }
     }
+} elsif ($FORMAT eq "egret") {
+    while(1) {
+        my $correct = &get_egret(\*FILE0);
+        my $sketchy = &get_egret(\*FILE1);
+        die "Found sentence in suspicious file, but not correcft: $sketchy\n" if $sketchy and not $correct;
+        last if not $correct;
+        print ($sketchy ? $sketchy : $correct);
+    }
+} else {
+    die "Bad tree format $FORMAT\n";
+}
+
+sub get_egret {
+    my $handle = shift;
+    my ($ret, $buf);
+    if(defined($buf = <$handle>)) {
+        $buf =~ /^sentence/ or die "Bad forest header: $buf";
+        $ret .= $buf;
+    } else {
+        return undef;
+    }
+    defined($buf = <$handle>) or die "Stopped in the middle of a forest";
+    $ret .= $buf;
+    defined($buf = <$handle>) or die "Stopped in the middle of a forest";
+    $ret .= $buf;
+    chomp $buf;
+    # Failed parses get no tree!
+    if(not $buf) {
+        $buf = <$handle>;
+        return undef;
+    }
+    while($buf = <$handle>) {
+        $ret .= $buf;
+        chomp $buf;
+        last if not $buf;
+    }
+    return $ret;
 }

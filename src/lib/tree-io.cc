@@ -242,7 +242,6 @@ void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
         }
         out << " ||| " << edge->GetScore() << endl;
     }
-    out << endl;
 }
 
 HyperGraph * MosesXMLTreeIO::ReadTree(istream & in) {

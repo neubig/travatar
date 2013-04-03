@@ -118,6 +118,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tree_io = new PennTreeIO;
     else if(config.GetString("in_format") == "egret")
         tree_io = new EgretTreeIO;
+    else if(config.GetString("in_format") == "moses")
+        tree_io = new MosesXMLTreeIO;
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 

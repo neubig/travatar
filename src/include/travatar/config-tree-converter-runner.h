@@ -22,11 +22,11 @@ public:
 "  by Graham Neubig\n"
 "\n"
 "Converts parse trees in a number of ways.\n"
-"  Usage: tree-converter [SRG_TREES]\n"
+"  Usage: tree-converter [SRC_TREES]\n"
 );
 
-        AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
-        AddConfigEntry("output_format", "penn", "The format of the output (penn/json/word)");
+        AddConfigEntry("input_format", "penn", "The format of the input (penn/json/egret)");
+        AddConfigEntry("output_format", "penn", "The format of the output (penn/json/egret/word)");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right/cky)");
         AddConfigEntry("flatten", "false", "Whether to flatten unary productions");
         AddConfigEntry("debug", "0", "How much debug output to produce");

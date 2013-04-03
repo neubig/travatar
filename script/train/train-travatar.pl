@@ -210,7 +210,7 @@ if(not $CONFIG_FILE) {
     print TINI "[lm_file]\n$LM_FILE\n\n" if ($NO_LM ne "true");
     print TINI "[binarize]\n$BINARIZE\n\n"; 
     # Default values for the weights
-    print TINI "[weight_vals]\negfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\n\n";
+    print TINI "[weight_vals]\negfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\nparse=1\n\n";
     close TINI;
     print "Finished training! You can find the configuation file in:\n$TINI_FILE\n";
 }
