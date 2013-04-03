@@ -124,7 +124,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                     int win = 0, tie = 0, loss = 0;
                     for(int l = 0; l < bootstrap; l++, idi++, idj++) {
                         if(bootstrap_scores[idi] > bootstrap_scores[idj]) win++;
-                        else if(bootstrap_scores[idi] > bootstrap_scores[idj]) loss++;
+                        else if(bootstrap_scores[idi] < bootstrap_scores[idj]) loss++;
                         else tie++;
                     }
                     cout << "  " << eval_ids[k] << "\t"
