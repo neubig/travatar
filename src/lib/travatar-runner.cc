@@ -183,7 +183,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Process one at a time
     int sent = 0;
     string line;
-    cerr << "Translating..." << endl;
+    // cerr << "Started translating at " << HERE << endl;
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
