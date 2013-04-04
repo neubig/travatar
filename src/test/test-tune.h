@@ -247,7 +247,7 @@ public:
         SparseMap f01; f01[valid] = -10; f01[slopeid] = 1;
         HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(Dict::ParseQuotedWords("\"<unk>\""));
         e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
-        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("\"<unk>\""));
+        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(Dict::ParseQuotedWords("\"hello\""));
         n0->AddEdge(e02); rule_graph->AddEdge(e02);
         TuningExampleForest tef(&bleu, exp_sent, 2, 1);
         tef.AddHypothesis(rule_graph);
@@ -255,7 +255,7 @@ public:
         // The check here should break
         ConvexHull act_hull = tef.CalculateConvexHull(weights, gradient);
         ConvexHull exp_hull;
-        exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(1.0))));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(0.0))));
         exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
         return CheckVector(act_hull,exp_hull);
     }
