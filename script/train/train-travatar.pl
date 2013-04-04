@@ -47,6 +47,7 @@ my $NBEST_RULES = "20";
 
 # Model files
 my $TM_FILE = "";
+my $GZIP_TM = "false"; # Whether to gzip the rule table
 my $LM_FILE = "";
 my $NO_LM = "false";
 my $CONFIG_FILE = "";
@@ -194,9 +195,16 @@ if(not $TM_FILE) {
     my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
     my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=0 --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
+    # Whether to create the model zipped or not
+    my $zip_cmd;
+    if($GZIP_TM eq "true") {
+        $TM_FILE = "$WORK_DIR/model/rule-table.gz";
+        $zip_cmd = "| gzip";
+    } else {
+        $TM_FILE = "$WORK_DIR/model/rule-table";
+    }
     # Finally, combine the table
-    $TM_FILE = "$WORK_DIR/model/rule-table.gz";
-    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl $RT_TRGSRC $RT_SRCTRG | gzip > $TM_FILE") or die;
+    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl $RT_TRGSRC $RT_SRCTRG $zip_cmd > $TM_FILE") or die;
 }
 
 # ******* 5: Create a configuration file ********
