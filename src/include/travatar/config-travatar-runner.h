@@ -30,7 +30,7 @@ public:
         AddConfigEntry("config_file", "", "The location of the configuration file");
         AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
-        AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("debug", "1", "What level of debugging output to print");
         AddConfigEntry("forest_out", "", "Forest output file location");
         AddConfigEntry("forest_nbest_trim", "0", "Trim the forest so it only includes edges in the n-best");
         AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");

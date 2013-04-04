@@ -19,6 +19,7 @@
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure.h>
+#include <travatar/timer.h>
 #include <travatar/config-travatar-runner.h>
 #include <lm/model.hh>
 #include <fstream>
@@ -33,6 +34,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
+
+    // Create the timer
+    Timer timer;
+    timer.start();
 
     // Set weights
     if(config.GetString("weight_vals") == "")
@@ -124,6 +129,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
     // Load the language model
+    PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
     shared_ptr<LMComposerBU> lm;
     if(config.GetString("lm_file") != "") {
         LMComposerBU * bu = 
@@ -134,12 +140,11 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }
 
     // Load the rule table
+    PRINT_DEBUG(endl << "Loading translation model [" << timer << " sec]" << endl, 1);
     ifstream tm_in(config.GetString("tm_file").c_str());
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
-
-    // Load the translation model
     shared_ptr<LookupTable> tm;
     if(config.GetString("tm_storage") == "hash")
         tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
@@ -183,7 +188,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Process one at a time
     int sent = 0;
     string line;
-    // cerr << "Started translating at " << HERE << endl;
+    PRINT_DEBUG("Started translating [" << timer << " sec]" << endl, 1);
     while(1) {
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
@@ -265,6 +270,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         sent++;
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
+    PRINT_DEBUG(endl << "Done translating [" << timer << " sec]" << endl, 1);
     
     if(do_tuning) {
         // Load the features from the weight file
@@ -276,7 +282,5 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             weight_out << Dict::WSym(val.first) << "=" << val.second << endl;
         weight_out.close();
     }
-
-    cerr << endl << "Done translating..." << endl;
 
 }

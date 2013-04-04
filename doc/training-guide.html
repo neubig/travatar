@@ -336,7 +336,7 @@ travatar/src/bin/travatar -config_file test/filtered-test.ini &lt; data/kyoto-te
 
 <p>
 Finally, we can measure the accuracy of our translations using an automatic evaluation metric.
-We do this by passing the reference and system output to the <tt>mt-evaluate</tt> program included with travatar.
+We do this by passing the reference and system output to the <tt>mt-evaluator</tt> program included with travatar (when comparing multiple systems, you can also add the <tt>-bootstrap 10000</tt> option to measure statistical significance).
 </p>
 
 <pre>
