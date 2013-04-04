@@ -17,6 +17,9 @@ using namespace boost;
 // Run the model
 void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
 
+    // Set the debugging level
+    GlobalVars::debug = config.GetInt("debug");
+
     // Load the reference
     ifstream refin(config.GetString("ref").c_str());
     if(!refin) THROW_ERROR("Could not open reference: " << config.GetString("ref"));
@@ -51,8 +54,12 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         for(int i = 0; i < ref_len; i++) ids[i] = i;
         for(int i = 0; i < bootstrap; i++) {
             random_shuffle(ids.begin(), ids.end());
-            for(int j = 0; j < ref_len/2; j++)
+            PRINT_DEBUG("Set " << i << ":", 2);
+            for(int j = 0; j < ref_len/2; j++) {
                 bootstrap_sets[ids[j]].push_back(i);
+                PRINT_DEBUG(" " << ids[j], 2);
+            }
+            PRINT_DEBUG(endl, 2);
         }
     }
 
@@ -75,13 +82,14 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
             for(int i = 0; i < eval_count; i++) {
                 EvalStatsPtr stats = eval_measures[i]->CalculateStats(ref_sentences[0][id],sys_sent);
                 // Add the regular stats
-                if(total_stats[i].get() == NULL) total_stats[i] = stats;
+                if(total_stats[i].get() == NULL) total_stats[i] = stats->Clone();
                 else                             total_stats[i]->PlusEquals(*stats);
                 // Add to each bootstrap set that this sentence is a part of
                 if(bootstrap) {
                     BOOST_FOREACH(int j, bootstrap_sets[id]) {
-                        if(bootstrap_stats[i][j].get() == NULL) bootstrap_stats[i][j] = stats;
+                        if(bootstrap_stats[i][j].get() == NULL) bootstrap_stats[i][j] = stats->Clone();
                         else                                    bootstrap_stats[i][j]->PlusEquals(*stats);
+                        PRINT_DEBUG("bootstrap_stats[" << i << "][" << j << "] == " << bootstrap_stats[i][j]->ConvertToString() << endl, 3);
                     }
                 }
             }
@@ -100,8 +108,10 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                 // Add it to the bootstrap matrix and calculate all scores
                 if(bootstrap) {
                     shared_ptr<vector<double> > my_vec(new vector<double>(bootstrap));
-                    for(int j = 0; j < bootstrap; j++)
+                    for(int j = 0; j < bootstrap; j++) {
+                        PRINT_DEBUG(endl << "bootstrap_stats[" << i << "][" << j << "] == " << bootstrap_stats[i][j]->ConvertToString() << " @ " << bootstrap_scores.size() << endl, 3);
                         bootstrap_scores.push_back(bootstrap_stats[i][j]->ConvertToScore());
+                    }
                 }
             }
         } else {
@@ -115,7 +125,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     if(bootstrap) {
         cout << endl << "Bootstrap Resampling Significance:" << endl;
         int bootstrap_len = bootstrap_files.size();
-        for(int i = 0; i < bootstrap_len; i++) {
+        for(int i = 0; i < bootstrap_len-1; i++) {
             cout << bootstrap_files[i] << endl;
             for(int j = i+1; j < bootstrap_len; j++) {
                 cout << " " << bootstrap_files[j] << endl;
@@ -123,6 +133,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                 for(int k = 0; k < eval_count; k++) {
                     int win = 0, tie = 0, loss = 0;
                     for(int l = 0; l < bootstrap; l++, idi++, idj++) {
+                        PRINT_DEBUG("   "<<bootstrap_scores[idi]<<" vs. "<<bootstrap_scores[idj], 2);
                         if(bootstrap_scores[idi] > bootstrap_scores[idj]) win++;
                         else if(bootstrap_scores[idi] < bootstrap_scores[idj]) loss++;
                         else tie++;
