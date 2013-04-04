@@ -47,6 +47,7 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
     while(getline(in, line)) {
         vector<string> columns, words;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
+        if(columns.size() < 3) THROW_ERROR("Bad line in rule table: " << line);
         algorithm::split(words, columns[0], is_any_of(" "));
         ostringstream partial;
         int pos = 0;

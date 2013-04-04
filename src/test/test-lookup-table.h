@@ -143,12 +143,40 @@ public:
         return exp_rule_graph.CheckEqual(*act_rule_graph);
     }
 
+    int TestBadInputHash() {
+        // Load the rules
+        ostringstream rule_oss;
+        rule_oss << "ROOT ( x0:S ) ||| x0" << endl;
+        istringstream rule_iss_hash(rule_oss.str());
+        try {
+            shared_ptr<LookupTableHash> temp(LookupTableHash::ReadFromRuleTable(rule_iss_hash));
+            return 0;
+        } catch(std::runtime_error e) {
+            return 1;
+        }
+    }
+
+    int TestBadInputMarisa() {
+        // Load the rules
+        ostringstream rule_oss;
+        rule_oss << "ROOT ( x0:S ) ||| x0" << endl;
+        istringstream rule_iss_marisa(rule_oss.str());
+        try {
+            shared_ptr<LookupTableMarisa> temp(LookupTableMarisa::ReadFromRuleTable(rule_iss_marisa));
+            return 0;
+        } catch(std::runtime_error e) {
+            return 1;
+        }
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestLookup(lookup_hash)" << endl; if(TestLookup(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLookup(lookup_marisa)" << endl; if(TestLookup(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLookupRules(lookup_hash)" << endl; if(TestLookupRules(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLookupRules(lookup_marisa)" << endl; if(TestLookupRules(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBadInputHash()" << endl; if(TestBadInputHash()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBadInputMarisa()" << endl; if(TestBadInputMarisa()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBuildRuleGraph()" << endl; if(TestBuildRuleGraph()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestLookupTable Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
