@@ -46,6 +46,13 @@ Within this framework, better parse trees will often directly improve your trans
 It can also use packed forests, which encode a large number of trees at decoding time, so using a parser that has the ability to output packed forests is also effective.
 </p>
 
+<ul>
+<li><a href="#english">Parsing English</a></li>
+<li><a href="#japanese">Parsing Japanese</a></li>
+<li><a href="#english">Parsing Chinese</a></li>
+</ul>
+
+<a label="english">
 <h2>Parsing English</h2>
 
 <p>
@@ -175,18 +182,19 @@ When using forests in decoding, we must pass the option "<tt>-in_format egret</t
 When running <tt>mert-travatar.pl</tt>, this can be done using "<tt>-decoder-options '-in_format egret'</tt>".
 </p>
 
+<a label="japanese"/>
 <h2>Parsing Japanese</h2>
 
 <p>
 The following directions are for parsing Japanese.
 In Japanese, dependency parsers are the most widely used method for parsing, so we first create a dependency parse, then use heuristic rules to convert this into the format used by travatar.
-We have found that the <a href="TODO">Eda dependency parser</a> gives good results, so we will use it here.
+We have found that the <a href="http://www.ar.media.kyoto-u.ac.jp/members/flannery/eda/index_en.html">Eda dependency parser</a> gives good results, so we will use it here.
 </p>
 
 <h3>Eda</h3>
 
 <p>
-To perform parsing with <a href="TODO">Eda</a>, you will first have to install both Eda and <a href="http://www.phontron.com/kytea">KyTea</a>, a Japanese tokenizer and POS tagger.
+To perform parsing with <a href="http://www.ar.media.kyoto-u.ac.jp/members/flannery/eda/index_en.html">Eda</a>, you will first have to install both Eda and <a href="http://www.phontron.com/kytea">KyTea</a>, a Japanese tokenizer and POS tagger.
 </p>
 
 <h4>Installation</h4>
@@ -239,6 +247,13 @@ cat input.txt |
 Describing each of these commands briefly, <tt>kytea</tt> performs word segmentation and POS tagging, <tt>treeify.py</tt> converts KyTea's output to a format that eda can read, and <tt>eda</tt> performs dependency parsing.
 <tt>ja-adjust-dep.pl</tt> adjusts some peculiarities of Japanese dependency annotation (most notably making punctuation and auxiliary verbs children instead of heads), and <tt>ja-dep2cfg.pl</tt> converts dependency trees to CFG trees and performs binarization according to some linguistically motivated head rules.
 The output of this sequence of commands should be sufficient for using as input to travatar.
+</p>
+
+<a label="chinese"/>
+<h2>Parsing Chinese</h2>
+
+<p>
+Both the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> and <a href="http://code.google.com/p/egret-parser/">Egret</a> support parsing Chinese, and thus can be used in the same fashion as English.
 </p>
 
 </div>
