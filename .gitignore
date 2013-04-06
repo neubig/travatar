@@ -2,6 +2,7 @@
 *.lo
 *.la
 *.a
+*.tar.gz
 *.swp
 .deps
 .libs
