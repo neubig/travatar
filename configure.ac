@@ -8,6 +8,9 @@ AC_CONFIG_HEADERS([src/include/travatar/config.h])
 AC_CONFIG_FILES([
     Makefile
     src/Makefile
+    src/kenlm/Makefile
+    src/kenlm/lm/Makefile
+    src/kenlm/util/Makefile
     src/include/Makefile
     src/lib/Makefile
     src/bin/Makefile

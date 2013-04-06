@@ -1,6 +1,7 @@
 *.o
 *.lo
 *.la
+*.a
 *.swp
 .deps
 .libs

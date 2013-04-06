@@ -46,14 +46,14 @@ Here is a short list, in approximate order of priority:
 </p>
 
 <ul>
-<li>Forest pruning code so that forests with language model integration can still be output in reasonable space, which will allow for forest-based MERT.</li>
 <li>Support for parallelization in the decoder.</li>
 <li>Utility scripts to make it possible to do preprocessing in parallel (parsing, detokenization).</li>
 <li>Make it possible to read gzipped model files.</li>
 <li>Finish the implementation of online learning algorithms such as MIRA.</li>
 <li>On-disk storage of the rule table and language model.</li>
 <li>More efficient storage of the rule table in memory.</li>
-<li>Support for minimum Bayes risk (MBR) decoding.</li>
+<li>Support for minimum Bayes risk (MBR) decoding or rescoring.</li>
+<li>Adding the ability to use target-side syntax.</li>
 <li>Smoothing of rule table probabilities.</li>
 <li>Better rule table filtering code <tt>filter-rt.pl</tt> (currently this does not filter <i>all</i> the rules that could be filtered).</li>
 <li>Speed improvements for the rule scoring code <tt>score-t2s.pl</tt>.</li>

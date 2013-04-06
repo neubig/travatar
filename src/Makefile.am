@@ -1,1 +1,1 @@
-SUBDIRS = include lib bin test
+SUBDIRS = kenlm include lib bin test
