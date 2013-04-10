@@ -1,1 +1,1 @@
-SUBDIRS = kenlm include lib bin test
+SUBDIRS = tercpp kenlm include lib bin test

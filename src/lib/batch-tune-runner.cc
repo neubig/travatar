@@ -8,6 +8,7 @@
 #include <travatar/batch-tune-runner.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
+#include <travatar/eval-measure-ter.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
@@ -111,6 +112,8 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
         eval_.reset(new EvalMeasureBleu);
     } else if(config.GetString("eval") == "ribes") {
         eval_.reset(new EvalMeasureRibes);
+    } else if(config.GetString("eval") == "ter") {
+        eval_.reset(new EvalMeasureTer(true));
     } else {
         THROW_ERROR("Bad eval measure: " << config.GetString("eval"));
     }

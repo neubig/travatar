@@ -7,6 +7,7 @@
 #include <travatar/dict.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
+#include <travatar/eval-measure-ter.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -40,6 +41,8 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
             eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureBleu(4,1,EvalMeasureBleu::SENTENCE)));
         else if(eval == "ribes")
             eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureRibes));
+        else if(eval == "ter")
+            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureTer));
         else
             THROW_ERROR("Unknown evaluation measure: " << config.GetString("eval"));
     }
