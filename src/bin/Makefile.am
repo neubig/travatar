@@ -1,5 +1,5 @@
 AM_CPPFLAGS = -I$(srcdir)/../include
-LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../tercpp/libter.a -lboost_thread -lboost_regex -lz -lmarisa -lrt
+LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../tercpp/libter.a ../marisa/libmarisa.la -lboost_thread -lboost_regex -lz -lrt
 
 bin_PROGRAMS = travatar forest-extractor batch-tune tree-converter mt-evaluator
 
