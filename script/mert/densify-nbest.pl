@@ -22,8 +22,10 @@ while(<FILE0>) {
 while(<FILE0>) {
     chomp;
     last if not $_;
-    s/=.*//g;
-    $poss{$_} = scalar(keys %poss);
+    for(split(/ /)) {
+        s/=.*//g;
+        $poss{$_} = scalar(keys %poss);
+    }
 }
 close FILE0;
 
