@@ -49,7 +49,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
 ($MERT_SOLVER eq "moses") or ($MERT_SOLVER eq "batch-tune") or die "Bad MERT solver: $MERT_SOLVER";
 ($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
-($EVAL eq "bleu") or (($EVAL eq "ribes") and ($MERT_SOLVER eq "batch-tune")) or die "Bad evaluation measure $EVAL";
+($EVAL =~ /^(bleu|ribes|interp)/) or die "Bad evaluation measure $EVAL";
 ($DECODER_OPTIONS =~ /in_format/) and die "Travatar's in_format should not be specified through -decoder-options, but through the -in-format option of mert-travatar.pl";
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 
@@ -102,10 +102,10 @@ foreach $iter (1 .. $MAX_ITERS) {
     } elsif($MERT_SOLVER eq "batch-tune") {
         if($CAND_TYPE eq "nbest") {
             my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval $EVAL -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -nbest $nbests -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -forest $forests -eval $EVAL -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         }
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
