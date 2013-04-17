@@ -1,0 +1,108 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>travatar - Evaluation</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+</ul>
+
+<p>Translating</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+<li><a href="evaluation.html">Evaluation</a></li>
+</ul>
+
+<p>Other</p>
+
+<ul>
+<li><a href="links.html">Links/ Acknowledgements</a></li>
+</ul>
+
+
+</div>
+<div id="main">
+
+<h1>MT Evaluation with Travatar</h1>
+
+<p>
+Travatar contains a tool for evaluating translations according to various automatic evaluation metrics.
+We do this by passing the reference (<tt>ref.txt</tt>) and system outputs (<tt>sys1.txt</tt> <tt>sys2.txt</tt> or more) to the <tt>mt-evaluator</tt> program.
+</p>
+
+<pre>
+travatar/src/bin/mt-evaluator -ref ref.txt sys1.txt sys2.txt
+</pre>
+
+<p>
+This will print scores for BLEU and RIBES. Normal scores for systems should be a BLEU of around 10-40, and RIBES of around 50-90, with systems on the low end of the range generally being bad and high end of the range being good.
+</p>
+
+<h2>Supported Evaluation Measures</h2>
+
+<p>
+The evaluation supports several evaluation measures, each of which can optionally be parameterized using a string following a colon:
+</p>
+
+<ul>
+<li><b>BLEU</b> (indicator string: <tt>bleu:order=4,smooth=0,scope=corpus</tt>)</li>
+<li><b>RIBES</b> (indicator string: <tt>ribes:alpha=0.25,beta=0.1</tt>)</li>
+<li><b>TER</b> (indicator string: <tt>ter</tt>)</li>
+</ul>
+
+<p>
+It is possible to indicate one or more evaluation measures during evaluation using the <tt>-eval</tt> option.
+For example, if you want to evaluate BLEU of order 5 and TER, you can call the following command:
+</p>
+
+<pre>
+travatar/src/bin/mt-evaluator -eval "bleu:order=5 ribes" -ref ref.txt sys1.txt sys2.txt
+</pre>
+
+<p>
+It is also possible (mainly for tuning) to linearly interpolate two or more evaluation measures using the "interp" pseudo-measure:
+</p>
+
+<ul>
+<li><b>Interpolated</b> (indicator string: <tt>interp:0.4|bleu:order=5|0.6|ribes</tt>)</li>
+</ul>
+
+<h2>Significance Testing</h2>
+
+<p>
+It is also possible to perform significance testing for differences between the systems using bootstrap resampling.
+You can do this by adding <tt>-bootstrap XXX</tt>, where XXX is the number of random samples you will use.
+10000 is usually a reasonable number of samples:
+</p>
+
+<pre>
+travatar/src/bin/mt-evaluator -bootstrap 10000 -ref ref.txt sys1.txt sys2.txt
+</pre>
+
+<p>
+After the normal evaluation output, you will also get a significance report for each system pair and evaluation measure.
+The first column is the fraction of the time that the first system achieves a higher value than the second system, the center value indicates ties, and the final value indicates that the first system gets a lower value.
+</p>
+
+
+</div>
+</div>
+
+</body>
+</html>

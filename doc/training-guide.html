@@ -22,10 +22,11 @@
 <li><a href="training-options.html">Training Options</a></li>
 </ul>
 
-<p>Decoding</p>
+<p>Translating</p>
 
 <ul>
 <li><a href="decoding-options.html">Decoding Options</a></li>
+<li><a href="evaluation.html">Evaluation</a></li>
 </ul>
 
 <p>Other</p>
@@ -336,7 +337,7 @@ travatar/src/bin/travatar -config_file test/filtered-test.ini &lt; data/kyoto-te
 
 <p>
 Finally, we can measure the accuracy of our translations using an automatic evaluation metric.
-We do this by passing the reference and system output to the <tt>mt-evaluator</tt> program included with travatar (when comparing multiple systems, you can also add the <tt>-bootstrap 10000</tt> option to measure statistical significance).
+We do this by passing the reference and system output to the <tt>mt-evaluator</tt> program included with travatar (<a href="evaluate.html">other options</a>).
 </p>
 
 <pre>
