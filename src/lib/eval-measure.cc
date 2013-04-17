@@ -4,6 +4,9 @@
 #include <lm/model.hh>
 #include <travatar/hyper-graph.h>
 #include <travatar/eval-measure.h>
+#include <travatar/eval-measure-bleu.h>
+#include <travatar/eval-measure-ribes.h>
+#include <travatar/eval-measure-ter.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/weights.h>
@@ -85,4 +88,16 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     }
     // Return the sentence
     return ret;
+}
+
+EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & eval) {
+    if(eval == "bleu") 
+        return new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS);
+    else if(eval == "ribes")
+        return new EvalMeasureRibes;
+    else if(eval == "ter")
+        return new EvalMeasureTer;
+    else
+        THROW_ERROR("Unknown evaluation measure: " << eval);
+    return NULL;
 }

@@ -33,19 +33,9 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     // Load the evaluation measure
     vector<shared_ptr<EvalMeasure> > eval_measures;
     vector<string> eval_ids;
-    algorithm::split(eval_ids, config.GetString("eval"), is_any_of(","));
-    BOOST_FOREACH(const string & eval, eval_ids) {
-        if(eval == "bleu") 
-            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS)));
-        else if(eval == "bleup1") 
-            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureBleu(4,1,EvalMeasureBleu::SENTENCE)));
-        else if(eval == "ribes")
-            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureRibes));
-        else if(eval == "ter")
-            eval_measures.push_back(shared_ptr<EvalMeasure>(new EvalMeasureTer));
-        else
-            THROW_ERROR("Unknown evaluation measure: " << config.GetString("eval"));
-    }
+    algorithm::split(eval_ids, config.GetString("eval"), is_any_of(" "));
+    BOOST_FOREACH(const string & eval, eval_ids)
+        eval_measures.push_back(shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(eval)));
     int eval_count = eval_measures.size();
 
     // If we are doing bootstrap resampling to calculate statistical significance, create random sets

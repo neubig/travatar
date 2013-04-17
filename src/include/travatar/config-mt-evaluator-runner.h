@@ -27,7 +27,7 @@ public:
 );
 
         AddConfigEntry("ref", "", "A reference file");
-        AddConfigEntry("eval", "bleu,ribes", "Comma separated evaluation types (bleu/bleup1/ribes/ter)");
+        AddConfigEntry("eval", "bleu ribes", "Space separated array of evaluation types (bleu/ribes/ter)");
         AddConfigEntry("bootstrap", "0", "The number of bootstrap resampling runs to perform");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
 
