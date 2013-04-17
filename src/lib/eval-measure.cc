@@ -7,6 +7,7 @@
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
+#include <travatar/eval-measure-interp.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/weights.h>
@@ -21,7 +22,7 @@ using namespace boost;
 #define NBEST_COUNT 10
 #define POP_LIMIT 500
 
-// Find the oracle sentence for this evaluatio measure
+// Find the oracle sentence for this evaluation measure
 Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence & ref) {
     Sentence bord_ref;
     // Create the bordered sentence
@@ -104,6 +105,8 @@ EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & str) {
         return new EvalMeasureRibes(config);
     else if(eval == "ter")
         return new EvalMeasureTer(config);
+    else if(eval == "interp")
+        return new EvalMeasureInterp(config);
     else
         THROW_ERROR("Unknown evaluation measure: " << eval);
     return NULL;
