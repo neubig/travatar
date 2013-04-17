@@ -44,6 +44,7 @@ public:
 
     EvalMeasureBleu(int ngram_order = 4, double smooth_val = 0, BleuScope scope = CORPUS) : 
         ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope) { }
+    EvalMeasureBleu(const std::string & config);
 
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(

@@ -32,6 +32,7 @@ class EvalMeasureTer : public EvalMeasure {
 public:
 
     EvalMeasureTer(bool reverse = false) : reverse_ (reverse) { }
+    EvalMeasureTer(const std::string & str) { }
 
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(

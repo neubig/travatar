@@ -11,6 +11,7 @@
 #include <travatar/util.h>
 #include <travatar/weights.h>
 #include <travatar/lm-composer-bu.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace travatar;
@@ -90,14 +91,33 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     return ret;
 }
 
-EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & eval) {
+EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & str) {
+    // Get the eval, config substr
+    string eval, config;
+    size_t eq = str.find(':');
+    if(eq == string::npos) { eval = str; }
+    else { eval = str.substr(0,eq); config = str.substr(eq+1); }
+    // Create the actual measure
     if(eval == "bleu") 
-        return new EvalMeasureBleu(4,0,EvalMeasureBleu::CORPUS);
+        return new EvalMeasureBleu(config);
     else if(eval == "ribes")
-        return new EvalMeasureRibes;
+        return new EvalMeasureRibes(config);
     else if(eval == "ter")
-        return new EvalMeasureTer;
+        return new EvalMeasureTer(config);
     else
         THROW_ERROR("Unknown evaluation measure: " << eval);
     return NULL;
+}
+
+vector<EvalMeasure::StringPair> EvalMeasure::ParseConfig(const string & str) {
+    vector<string> arr1, arr2;
+    boost::split ( arr1, str, boost::is_any_of(","));
+    vector<EvalMeasure::StringPair> ret;
+    BOOST_FOREACH(const std::string & my_str, arr1) {
+        boost::split ( arr2, my_str, boost::is_any_of("="));
+        if(arr2.size() != 2)
+            THROW_ERROR("Bad evaluation measure config:" << str);
+        ret.push_back(make_pair(arr2[0], arr2[1]));
+    }
+    return ret;
 }

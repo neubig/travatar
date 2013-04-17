@@ -1,6 +1,7 @@
 
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/util.h>
+#include <boost/lexical_cast.hpp>
 #include <cmath>
 
 using namespace std;
@@ -107,4 +108,26 @@ std::string EvalStatsBleu::ConvertToString() const {
 
 double EvalStatsBleu::ConvertToScore() const {
     return CalcBleuReport().bleu;
+}
+
+
+EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), smooth_val_(0), scope_(CORPUS) {
+    if(config.length() == 0) return;
+    BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
+        if(strs.first == "order") {
+            ngram_order_ = boost::lexical_cast<int>(strs.second);
+        } else if(strs.first == "smooth") {
+            smooth_val_ = boost::lexical_cast<double>(strs.second);
+        } else if(strs.first == "scope") {
+            if(strs.second == "corpus") {
+                scope_ = CORPUS;
+            } else if(strs.second == "sentence") {
+                scope_ = SENTENCE;
+            } else {
+                THROW_ERROR("Bad BLEU scope: " << config);
+            }
+        } else {
+            THROW_ERROR("Bad configuration string: " << config);
+        }
+    }
 }

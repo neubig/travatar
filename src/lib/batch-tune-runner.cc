@@ -108,15 +108,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     }
 
     // Create the evaluation measure
-    if(config.GetString("eval") == "bleu") {
-        eval_.reset(new EvalMeasureBleu);
-    } else if(config.GetString("eval") == "ribes") {
-        eval_.reset(new EvalMeasureRibes);
-    } else if(config.GetString("eval") == "ter") {
-        eval_.reset(new EvalMeasureTer(true));
-    } else {
-        THROW_ERROR("Bad eval measure: " << config.GetString("eval"));
-    }
+    eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
 
     // Chose the MERT
     shared_ptr<Tune> tgm;

@@ -114,7 +114,12 @@ class EvalMeasure {
 
 public:
 
+    typedef std::pair<std::string, std::string> StringPair;
+
+    // Create with default settings
     EvalMeasure() { }
+    // Create with configuration
+    EvalMeasure(const std::string & config) { }
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr CalculateStats(
@@ -122,6 +127,9 @@ public:
                 const Sentence & sys,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) = 0;
+
+    // Parse a pair of strings
+    static std::vector<StringPair> ParseConfig(const std::string & config);
 
     // Create measure from string
     static EvalMeasure * CreateMeasureFromString(const std::string & eval);

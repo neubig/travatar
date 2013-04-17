@@ -1,6 +1,7 @@
 
 #include <travatar/util.h>
 #include <travatar/eval-measure-ribes.h>
+#include <boost/lexical_cast.hpp>
 #include <tr1/unordered_map>
 
 using namespace std;
@@ -116,4 +117,19 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
     // RIBES = (normalized Kendall's tau) * (unigram_precision ** alpha) * (brevity_penalty ** beta)
     return shared_ptr<EvalStats>(new EvalStatsRibes(nkt * (pow(precision, alpha_)) * (pow(bp, beta_)), 1));
 
+}
+
+
+EvalMeasureRibes::EvalMeasureRibes(const std::string & config)
+                        : RIBES_VERSION_("1.02.3"), alpha_(0.25), beta_(0.1) {
+    if(config.length() == 0) return;
+    BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
+        if(strs.first == "alpha") {
+            alpha_ = boost::lexical_cast<double>(strs.second);
+        } else if(strs.first == "beta") {
+            beta_ = boost::lexical_cast<double>(strs.second);
+        } else {
+            THROW_ERROR("Bad configuration string: " << config);
+        }
+    }
 }

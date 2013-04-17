@@ -29,6 +29,7 @@ public:
     EvalMeasureRibes(double alpha = 0.25, double beta = 0.10) :
         RIBES_VERSION_("1.02.3"), alpha_(alpha), beta_(beta)
          { }
+    EvalMeasureRibes(const std::string & str);
 
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(
