@@ -29,11 +29,92 @@ using namespace std;
 using namespace boost;
 using namespace lm::ngram;
 
+
+void TravatarRunnerTask::Run() {
+    PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
+    // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
+    // Binarizer if necessary
+    if(runner_->HasBinarizer()) {
+        shared_ptr<HyperGraph> bin_graph(runner_->GetBinarizer().TransformGraph(*tree_graph_));
+        tree_graph_.swap(bin_graph);
+    }
+    // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
+    shared_ptr<HyperGraph> rule_graph(runner_->GetTM().TransformGraph(*tree_graph_));
+    rule_graph->ScoreEdges(runner_->GetWeights());
+    rule_graph->ResetViterbiScores();
+
+    // If we have an lm, score with the LM
+    // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
+    if(runner_->HasLM()) {
+        shared_ptr<HyperGraph> lm_graph(runner_->GetLM().TransformGraph(*rule_graph));
+        lm_graph.swap(rule_graph);
+    }
+
+    // Calculate the n-best list
+    NbestList nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
+
+    // Print the best answer. This will generally be the answer with the highest score
+    // but we could also change it with something like MBR
+    int best_answer = 0;
+    ostringstream out;
+    out << Dict::PrintWords(nbest_list[best_answer]->GetWords()) << endl;
+    collector_->Write(sent_, out.str(), "");
+
+    // If we are printing the n-best list, print it
+    if(nbest_collector_ != NULL) {
+        ostringstream nbest_out;
+        BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
+            nbest_out
+                << sent_
+                << " ||| " << Dict::PrintWords(path->GetWords())
+                << " ||| " << path->GetScore()
+                << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
+        }
+        nbest_collector_->Write(sent_, nbest_out.str(), "");
+    }
+    
+    // If we are printing a trace, create it
+    if(trace_collector_ != NULL) {
+        ostringstream trace_out;
+        BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
+            trace_out
+                << sent_
+                << " ||| " << edge->GetHead()->GetSpan()
+                << " ||| " << edge->GetRuleStr() 
+                << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords())
+                << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
+                << endl;
+        }
+        trace_collector_->Write(sent_, trace_out.str(), "");
+    }
+
+    // If we are printing a forest, print it
+    if(forest_collector_ != NULL) {
+        // Trim if needed
+        shared_ptr<HyperGraph> out_for = rule_graph;
+        if(runner_->HasTrimmer())
+            out_for.reset(runner_->GetTrimmer().TransformGraph(*out_for));
+        // Print
+        ostringstream forest_out;
+        JSONTreeIO io;
+        io.WriteTree(*out_for, forest_out);
+        forest_out << endl;
+        trace_collector_->Write(sent_, forest_out.str(), "");
+    }
+
+    // If we are tuning load the next references and check the weights
+    if(runner_->GetDoTuning())
+        runner_->GetWeights().Adjust(runner_->GetEvalMeasure(), refs_, nbest_list);
+}
+
+
 // Run the model
 void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
-    // Set the debugging level
+    // Load all the variables
     GlobalVars::debug = config.GetInt("debug");
+    nbest_count_ = config.GetInt("nbest");
+    threads_ = config.GetInt("threads");
 
     // Create the timer
     Timer timer;
@@ -47,24 +128,24 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Create the appropriate weights
     // If we are using online tuning, choose weights according to the tuning method,
     // otherwise choose plain weights
-    shared_ptr<Weights> weights;
-    bool do_tuning = true;
+    do_tuning_ = true;
     if(config.GetString("tune_update") == "perceptron") {
         WeightsPerceptron * ptr = new WeightsPerceptron(init_weights);
         ptr->SetL1Coeff(config.GetDouble("tune_l1_coeff"));
-        weights.reset(ptr);
+        weights_.reset(ptr);
     } else if(config.GetString("tune_update") == "delayed") {
-        weights.reset(new WeightsDelayedPerceptron(init_weights));
+        weights_.reset(new WeightsDelayedPerceptron(init_weights));
     } else if(config.GetString("tune_update") == "none") {
-        weights.reset(new Weights(init_weights));
-        do_tuning = false;
+        weights_.reset(new Weights(init_weights));
+        do_tuning_ = false;
     } else {
         THROW_ERROR("Invalid value for tune_update: "<<config.GetString("tune_update"));
     }    
     vector<shared_ptr<istream> > tune_ins;
-    shared_ptr<EvalMeasure> tune_eval_measure;
     // If we need to do tuning
-    if(do_tuning) {
+    if(do_tuning_) {
+        if(threads_ > 1)
+            THROW_ERROR("Online tuning and threads cannot be combined at the moment");
         // Check that a place to write the weights has been specified
         string weight_out_file = config.GetString("tune_weight_out");
         if(weight_out_file.length() == 0)
@@ -73,16 +154,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         if(!weight_out)
             THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
         // Set the evaluation measure to be used
-        if(config.GetString("tune_loss") == "bleu") {
-            EvalMeasureBleu * meas = new EvalMeasureBleu;
-            meas->SetSmoothVal(1.0); // Use BLEU+1
-            tune_eval_measure.reset(meas);
-        } else if(config.GetString("tune_loss") == "ribes") {
-            EvalMeasureRibes * meas = new EvalMeasureRibes;
-            tune_eval_measure.reset(meas);
-        } else {
-            THROW_ERROR("Invalid value for tune_loss: "<<config.GetString("tune_loss"));
-        }
+        tune_eval_measure_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("tune_loss")));
         // And open the reference files
         vector<string> ref_files = config.GetStringArray("tune_ref_files");
         if(ref_files.size() == 0)
@@ -100,31 +172,30 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                 WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
                 double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
                 double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
-                weights->SetRange(id, min_score, max_score);
+                weights_->SetRange(id, min_score, max_score);
             }
         }
     }
 
-    // Create the binarizer
-    shared_ptr<GraphTransformer> binarizer;
+    // Create the binarizer_
     if(config.GetString("binarize") == "left") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
+        binarizer_.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
     } else if(config.GetString("binarize") == "right") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
+        binarizer_.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
     } else if(config.GetString("binarize") == "cky") {
-        binarizer.reset(new BinarizerCKY);
+        binarizer_.reset(new BinarizerCKY);
     } else if(config.GetString("binarize") != "none") {
-        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
+        THROW_ERROR("Invalid binarizer_ type " << config.GetString("binarizer_"));
     }
 
     // Get the input format parser
-    TreeIO * tree_io;
+    shared_ptr<TreeIO> tree_io;
     if(config.GetString("in_format") == "penn")
-        tree_io = new PennTreeIO;
+        tree_io = shared_ptr<TreeIO>(new PennTreeIO);
     else if(config.GetString("in_format") == "egret")
-        tree_io = new EgretTreeIO;
+        tree_io = shared_ptr<TreeIO>(new EgretTreeIO);
     else if(config.GetString("in_format") == "moses")
-        tree_io = new MosesXMLTreeIO;
+        tree_io = shared_ptr<TreeIO>(new MosesXMLTreeIO);
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
@@ -134,7 +205,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     if(config.GetString("lm_file") != "") {
         LMComposerBU * bu = 
             new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetLMWeight(weights->GetCurrent(Dict::WID("lm")));
+        bu->SetLMWeight(weights_->GetCurrent(Dict::WID("lm")));
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         lm.reset(bu);
     }
@@ -145,31 +216,33 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
-    shared_ptr<LookupTable> tm;
     if(config.GetString("tm_storage") == "hash")
-        tm.reset(LookupTableHash::ReadFromRuleTable(tm_in));
+        tm_.reset(LookupTableHash::ReadFromRuleTable(tm_in));
     else if(config.GetString("tm_storage") == "marisa")
-        tm.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
-    tm->SetMatchAllUnk(config.GetBool("all_unk"));
+        tm_.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
+    tm_->SetMatchAllUnk(config.GetBool("all_unk"));
     tm_in.close();
 
     // Open the n-best output stream if it exists
-    int nbest_count = config.GetInt("nbest");
     scoped_ptr<ostream> nbest_out;
+    scoped_ptr<OutputCollector> nbest_collector;
     if(config.GetString("nbest_out") != "") {
         nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
         if(!*nbest_out)
             THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
-    } else if (!do_tuning) {
-        nbest_count = 1;
+        nbest_collector.reset(new OutputCollector(nbest_out.get()));
+    } else if (!do_tuning_) {
+        nbest_count_ = 1;
     }
 
     // Open the forest output stream if it exists
     scoped_ptr<ostream> forest_out;
+    scoped_ptr<OutputCollector> forest_collector;
     if(config.GetString("forest_out") != "") {
         forest_out.reset(new ofstream(config.GetString("forest_out").c_str()));
         if(!*forest_out)
             THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
+        forest_collector.reset(new OutputCollector(forest_out.get()));
     } 
 
     // Get the class to trim the forest if necessary
@@ -179,106 +252,50 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Open the trace output stream if it exists
     scoped_ptr<ostream> trace_out;
+    scoped_ptr<OutputCollector> trace_collector;
     if(config.GetString("trace_out") != "") {
         trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
+        trace_collector.reset(new OutputCollector(trace_out.get()));
     }
 
+    // Create the thread pool
+    ThreadPool pool(threads_, threads_*5);
+    OutputCollector collector;
     // Process one at a time
     int sent = 0;
     string line;
     PRINT_DEBUG("Started translating [" << timer << " sec]" << endl, 1);
     while(1) {
+        // Load the tree
         shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
-        PRINT_DEBUG("Printing sentence " << sent << endl 
-                    << Dict::PrintWords(tree_graph->GetWords()) << endl, 1);
-        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
-        // Binarizer if necessary
-        if(binarizer.get() != NULL) {
-            shared_ptr<HyperGraph> bin_graph(binarizer->TransformGraph(*tree_graph));
-            tree_graph.swap(bin_graph);
-        }
-        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph, cerr); cerr << endl; }
-        shared_ptr<HyperGraph> rule_graph(tm->TransformGraph(*tree_graph));
-        rule_graph->ScoreEdges(*weights);
-        rule_graph->ResetViterbiScores();
-
-        // If we have an lm, score with the LM
-        // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
-        if(lm.get() != NULL) {
-            shared_ptr<HyperGraph> lm_graph(lm->TransformGraph(*rule_graph));
-            lm_graph.swap(rule_graph);
-        }
-
-        // Calculate the n-best list
-        NbestList nbest_list = rule_graph->GetNbest(nbest_count, tree_graph->GetWords());
-
-        // Print the best answer. This will generally be the answer with the highest score
-        // but we could also change it with something like MBR
-        int best_answer = 0;
-        cout << Dict::PrintWords(nbest_list[best_answer]->GetWords()) << endl;
-
-        // If we are printing the n-best list, print it
-        if(nbest_out.get() != NULL) {
-            BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
-                *nbest_out
-                    << sent
-                    << " ||| " << Dict::PrintWords(path->GetWords())
-                    << " ||| " << path->GetScore()
-                    << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
-            }
-        }
-        
-        // If we are printing a trace, create it
-        if(trace_out.get() != NULL) {
-            BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
-                *trace_out
-                    << sent
-                    << " ||| " << edge->GetHead()->GetSpan()
-                    << " ||| " << edge->GetRuleStr() 
-                    << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords())
-                    << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
-                    << endl;
-            }
-        }
-
-        // If we are printing a forest, print it
-        if(forest_out.get() != NULL) {
-            // Trim if needed
-            shared_ptr<HyperGraph> out_for = rule_graph;
-            if(trimmer_.get() != NULL)
-                out_for.reset(trimmer_->TransformGraph(*out_for));
-            // Print
-            JSONTreeIO io;
-            io.WriteTree(*out_for, *forest_out);
-            *forest_out << endl;
-        }
 
         // If we are tuning load the next references and check the weights
-        if(do_tuning) {
-            vector<Sentence> refs;
+        vector<Sentence> refs;
+        if(do_tuning_) {
             BOOST_FOREACH(const shared_ptr<istream> & in, tune_ins) {
                 string line;
                 if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
                 refs.push_back(Dict::ParseWords(line));
             }
-            weights->Adjust(*tune_eval_measure, refs, nbest_list);
         }
 
-        sent++;
+        TravatarRunnerTask *task = new TravatarRunnerTask(sent++, tree_graph, this, refs, &collector, nbest_collector.get(), trace_collector.get(), forest_collector.get());
+        pool.Submit(task);
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
+    pool.Stop(true);
     PRINT_DEBUG(endl << "Done translating [" << timer << " sec]" << endl, 1);
     
-    if(do_tuning) {
+    if(do_tuning_) {
         // Load the features from the weight file
         ofstream weight_out(config.GetString("tune_weight_out").c_str());
         cerr << "Writing weight file to "<<config.GetString("tune_weight_out")<<"..." << endl;
         if(!weight_out)
             THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
-        BOOST_FOREACH(const SparseMap::value_type & val, weights->GetFinal())
+        BOOST_FOREACH(const SparseMap::value_type & val, weights_->GetFinal())
             weight_out << Dict::WSym(val.first) << "=" << val.second << endl;
         weight_out.close();
     }

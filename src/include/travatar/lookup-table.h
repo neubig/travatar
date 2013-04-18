@@ -41,12 +41,12 @@ public:
     LookupTable();
     virtual ~LookupTable() { };
 
-    virtual HyperGraph * TransformGraph(const HyperGraph & parse);
+    virtual HyperGraph * TransformGraph(const HyperGraph & parse) const;
 
     // Find all the translation rules rooted at a particular node in a parse graph
     std::vector<boost::shared_ptr<LookupState> > LookupSrc(
             const HyperNode & node, 
-            const std::vector<boost::shared_ptr<LookupState> > & old_states);
+            const std::vector<boost::shared_ptr<LookupState> > & old_states) const;
 
     // Find rules associated with a particular source pattern
     virtual const std::vector<TranslationRule*> * FindRules(const LookupState & state) const = 0;
@@ -54,7 +54,7 @@ public:
     // Get the unknown rule
     const TranslationRule * GetUnknownRule() const;
 
-    virtual LookupState * GetInitialState() = 0;
+    virtual LookupState * GetInitialState() const = 0;
 
     // Match all unknown words or not
     void SetMatchAllUnk(bool match_all_unk) { match_all_unk_ = match_all_unk; }
@@ -67,17 +67,17 @@ protected:
     // If matching a non-terminal (e.g. VP), advance the state and push "node"
     // on to the list of non-terminals. Otherwise, just advance the state
     // Returns NULL if no rules were matched
-    virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state) = 0;
+    virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state) const = 0;
 
     // Match the start of an edge
     // For example S(NP(PRN("he")) x0:VP) will match the opening bracket 
     // of S( or NP( or PRN(
-    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state) = 0;
+    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state) const = 0;
     
     // Match the end of an edge
     // For example S(NP(PRN("he")) x0:VP) will match the closing brackets for
     // of (S...) or (NP...) or (PRN...)
-    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) = 0;
+    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) const = 0;
 
     TranslationRule unk_rule_;
     // Match all nodes with the unknown rule, not just when no other rule is matched

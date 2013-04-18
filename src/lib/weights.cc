@@ -15,5 +15,12 @@ double operator*(Weights & lhs, const SparseMap & rhs) {
     }
     return ret;
 }
+double operator*(const Weights & lhs, const SparseMap & rhs) {
+    double ret = 0;
+    BOOST_FOREACH(const SparsePair & val, rhs) {
+        ret += val.second * lhs.GetCurrent(val.first);
+    }
+    return ret;
+}
 
 };

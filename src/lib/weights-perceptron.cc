@@ -26,6 +26,11 @@ void WeightsPerceptron::Update(
     PRINT_DEBUG(current_ << std::endl, 2);
 }
 
+// Not currently implemented. Will need to add the weights as volataile and locks.
+double WeightsPerceptron::GetCurrent(const SparseMap::key_type & key) const {
+    THROW_ERROR("Constant access to perceptron weights is not currently supported");
+    return 0.0;
+}
 // Get the current values of the weights at this point in learning
 double WeightsPerceptron::GetCurrent(const SparseMap::key_type & key) {
     SparseMap::iterator it = current_.find(key);

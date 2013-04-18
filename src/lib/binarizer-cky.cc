@@ -10,7 +10,7 @@ using namespace std;
 using namespace boost;
 
 typedef BinarizerCKY::SNMap SNMap;
-HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & ret, SNMap & snmap, const GenericString<int> & str, WordId xbar) {
+HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & ret, SNMap & snmap, const GenericString<int> & str, WordId xbar) const {
     SNMap::const_iterator it = snmap.find(str);
     if(it != snmap.end()) return it->second;
     HyperNode * new_node = new HyperNode;
@@ -27,7 +27,7 @@ HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & re
 }
 
 // Binarize the graph to the right
-HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) {
+HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) const {
     // First copy the graph
     HyperGraph * ret = new HyperGraph;
     ret->SetWords(hg.GetWords());

@@ -38,6 +38,7 @@ public:
         AddConfigEntry("nbest", "1", "The length of the n-best list");
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("pop_limit", "2000", "The number of pops necessary");
+        AddConfigEntry("threads", "1", "The number of threads to use in translation");
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
         AddConfigEntry("trace_out", "", "trace output file location");

@@ -20,7 +20,7 @@ public:
     virtual ~UnaryFlattener() { }
 
     // Binarize the graph to the right
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg);
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
 protected:
 

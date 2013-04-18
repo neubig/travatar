@@ -292,7 +292,7 @@ public:
     void DeleteEdges();
 
     // Score each edge in the graph
-    void ScoreEdges(Weights & weights);
+    void ScoreEdges(const Weights & weights);
 
     // Get the n-best paths through the graph
     NbestList GetNbest(int n, const std::vector<WordId> & src_words);

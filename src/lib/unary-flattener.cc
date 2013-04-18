@@ -10,7 +10,7 @@ using namespace std;
 using namespace boost;
 
 // Binarize the graph to the right
-HyperGraph * UnaryFlattener::TransformGraph(const HyperGraph & hg) {
+HyperGraph * UnaryFlattener::TransformGraph(const HyperGraph & hg) const {
     // First copy the graph
     HyperGraph * ret = new HyperGraph(hg);
     BOOST_FOREACH(HyperNode * node, ret->GetNodes()) {

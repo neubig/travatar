@@ -13,7 +13,7 @@ void Trimmer::AddId(std::map<int,int> & id_map, int id) {
         id_map.insert(make_pair(id, id_map.size()));
 }
 
-HyperGraph * Trimmer::TransformGraph(const HyperGraph & hg) {
+HyperGraph * Trimmer::TransformGraph(const HyperGraph & hg) const {
     std::map<int,int> active_nodes, active_edges;
     FindActive(hg, active_nodes, active_edges);
     HyperGraph * ret = new HyperGraph(hg);

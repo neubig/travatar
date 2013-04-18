@@ -12,14 +12,14 @@ using namespace std;
 using namespace boost;
 
 // Match the start of an edge
-LookupState * LookupTableMarisa::MatchStart(const HyperNode & node, const LookupState & state) {
+LookupState * LookupTableMarisa::MatchStart(const HyperNode & node, const LookupState & state) const {
     const std::string & p = ((const LookupStateMarisa &)state).GetString();
     std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
     return MatchState(next, state);
 }
 
 // Match the end of an edge
-LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupState & state) {
+LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupState & state) const {
     std::string next = ((const LookupStateMarisa &)state).GetString() + " )";
     return MatchState(next, state);
 }
@@ -57,7 +57,7 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
 }
 
 // Match a single node
-LookupState * LookupTableMarisa::MatchNode(const HyperNode & node, const LookupState & state) {
+LookupState * LookupTableMarisa::MatchNode(const HyperNode & node, const LookupState & state) const {
     LookupStateMarisa * ret = NULL;
     const LookupStateMarisa & marisa_state = (const LookupStateMarisa &) state;
     if(node.IsTerminal()) {
@@ -73,7 +73,7 @@ LookupState * LookupTableMarisa::MatchNode(const HyperNode & node, const LookupS
     return ret;
 }
 
-LookupStateMarisa * LookupTableMarisa::MatchState(const string & next, const LookupState & state) {
+LookupStateMarisa * LookupTableMarisa::MatchState(const string & next, const LookupState & state) const {
     marisa::Agent agent;
     agent.set_query(next.c_str());
     if(trie_.predictive_search(agent)) {

@@ -23,9 +23,13 @@ public:
     }
 
     // Get the current values of the weights at this point in learning
+    virtual double GetCurrent(const SparseMap::key_type & key) const {
+        SparseMap::const_iterator it = current_.find(key);
+        return (it != current_.end() ? it->second : 0.0);
+    }
     virtual double GetCurrent(const SparseMap::key_type & key) {
         SparseMap::const_iterator it = current_.find(key);
-        return (it != current_.end() ? current_[key] : 0.0);
+        return (it != current_.end() ? it->second : 0.0);
     }
     virtual void SetCurrent(const SparseMap::key_type & key, double val) {
         current_[key] = val;
@@ -37,7 +41,7 @@ public:
     }
 
     // Adjust the weights according to the n-best list
-    virtual void Adjust(EvalMeasure & eval,
+    virtual void Adjust(const EvalMeasure & eval,
                         const std::vector<Sentence> & refs,
                         const NbestList & nbest) {
         // By default, do nothing
@@ -60,6 +64,7 @@ protected:
 };
 
 double operator*(Weights & lhs, const SparseMap & rhs);
+double operator*(const Weights & lhs, const SparseMap & rhs);
 
 }
 

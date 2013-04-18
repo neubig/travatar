@@ -28,7 +28,7 @@ public:
     LookupTableMarisa() { }
     virtual ~LookupTableMarisa();
 
-    virtual LookupState * GetInitialState() {
+    virtual LookupState * GetInitialState() const {
         return new LookupStateMarisa;
     }
 
@@ -40,15 +40,15 @@ public:
 protected:
 
     // Match a single node
-    virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state);
+    virtual LookupState * MatchNode(const HyperNode & node, const LookupState & state) const;
 
     // Match the start of an edge
-    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state);
+    virtual LookupState * MatchStart(const HyperNode & node, const LookupState & state) const;
     
     // Match the end of an edge
-    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state);
+    virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) const;
 
-    LookupStateMarisa * MatchState(const std::string & next, const LookupState & state);
+    LookupStateMarisa * MatchState(const std::string & next, const LookupState & state) const;
 
     // void AddRule(TranslationRule * rule) {
     //     rules_[rule->GetSrcStr()].push_back(rule);

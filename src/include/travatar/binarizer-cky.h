@@ -26,7 +26,7 @@ public:
     virtual ~BinarizerCKY() { }
 
     // Binarize the graph exhaustively using CKY
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg);
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
 protected:
 
@@ -41,7 +41,7 @@ protected:
         HyperGraph & ret,
         SNMap & snmap,
         const GenericString<int> & str,
-        WordId xbar);
+        WordId xbar) const;
 
     // The maximum number of tails that a binarized node can have
     int max_tails_;

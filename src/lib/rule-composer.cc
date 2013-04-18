@@ -8,7 +8,7 @@ using namespace boost;
 using namespace travatar;
 
 // Binarize the graph to the right
-HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) {
+HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
     HyperGraph * ret = new HyperGraph(hg);
     const vector<HyperNode*> & nodes = ret->GetNodes();
     // Create the edges

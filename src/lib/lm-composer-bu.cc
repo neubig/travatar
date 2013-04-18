@@ -37,7 +37,7 @@ const ChartEntry & LMComposerBU::BuildChart(
                     vector<shared_ptr<ChartEntry> > & chart, 
                     vector<ChartState> & states, 
                     int id,
-                    HyperGraph & rule_graph) {
+                    HyperGraph & rule_graph) const {
     // Save the nodes for easy access
     const vector<HyperNode*> & nodes = parse.GetNodes();
     // Don't build already finished charts
@@ -146,7 +146,7 @@ const ChartEntry & LMComposerBU::BuildChart(
 // Intersect this rule_graph with a language model, using cube pruning to control
 // the overall state space.
 using namespace lm::ngram;
-HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) {
+HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     // Get the nodes from the parse
     const vector<HyperNode*> & nodes = parse.GetNodes();
     // Create the chart

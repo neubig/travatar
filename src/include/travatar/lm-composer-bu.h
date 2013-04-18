@@ -28,7 +28,7 @@ public:
 
     // Intersect this graph with a language model, using cube pruning to control
     // the overall state space.
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg);
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
     int GetStackPopLimit() const { return stack_pop_limit_; }
     void SetStackPopLimit(double stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
@@ -41,7 +41,7 @@ protected:
                         std::vector<boost::shared_ptr<ChartEntry> > & chart, 
                         std::vector<lm::ngram::ChartState> & states, 
                         int id,
-                        HyperGraph & graph);
+                        HyperGraph & graph) const;
 
 };
 

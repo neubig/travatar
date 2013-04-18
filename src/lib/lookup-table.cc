@@ -15,7 +15,7 @@ LookupTable::LookupTable() :
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
             const HyperNode & node, 
-            const vector<shared_ptr<LookupState> > & old_states) {
+            const vector<shared_ptr<LookupState> > & old_states) const {
     vector<shared_ptr<LookupState> > ret_states;
     BOOST_FOREACH(const shared_ptr<LookupState> & state, old_states) {
         // Match the current node
@@ -44,7 +44,7 @@ vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
     return ret_states;
 }
 
-HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) {
+HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
     // First, for each non-terminal in the input graph, make a node in the output graph
     // and lookup the rules matching each node
     HyperGraph * ret = new HyperGraph;

@@ -10,7 +10,7 @@ class GraphTransformer {
 public:
     virtual ~GraphTransformer() { }
 
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg) = 0;
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const = 0;
 
 };
 

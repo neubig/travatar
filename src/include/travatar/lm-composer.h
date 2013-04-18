@@ -28,7 +28,7 @@ public:
     }
 
     // Compose the rule graph with a language model
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg) = 0;
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const = 0;
 
     double GetLMWeight() const { return lm_weight_; }
     void SetLMWeight(double lm_weight) { lm_weight_ = lm_weight; }

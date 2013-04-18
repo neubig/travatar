@@ -21,6 +21,7 @@ public:
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key);
+    virtual double GetCurrent(const SparseMap::key_type & key) const;
 
     // Get the final values of the weights
     virtual const SparseMap & GetFinal() {

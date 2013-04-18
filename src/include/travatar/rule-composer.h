@@ -22,7 +22,7 @@ public:
     virtual ~RuleComposer() { }
 
     // Binarize the graph to the right
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg);
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
     // Compose two edges together.
     // child must be an edge rooted at the tail_id'th tail of parent

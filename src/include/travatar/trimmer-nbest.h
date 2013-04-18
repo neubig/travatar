@@ -18,7 +18,7 @@ public:
     // Find which nodes and edges should be active in this hypergraph
     virtual void FindActive(const HyperGraph & hg,
                             std::map<int,int> & active_nodes,
-                            std::map<int,int> & active_edges);
+                            std::map<int,int> & active_edges) const;
 
 protected:
 

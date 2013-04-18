@@ -330,7 +330,7 @@ vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> &
 }
 
 // Score each edge in the graph
-void HyperGraph::ScoreEdges(Weights & weights) {
+void HyperGraph::ScoreEdges(const Weights & weights) {
     BOOST_FOREACH(HyperEdge * edge, edges_)
         edge->SetScore(weights * edge->GetFeatures());
 }
