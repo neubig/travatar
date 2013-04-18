@@ -201,13 +201,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the language model
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
-    shared_ptr<LMComposerBU> lm;
     if(config.GetString("lm_file") != "") {
         LMComposerBU * bu = 
             new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
         bu->SetLMWeight(weights_->GetCurrent(Dict::WID("lm")));
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
-        lm.reset(bu);
+        lm_.reset(bu);
     }
 
     // Load the rule table
