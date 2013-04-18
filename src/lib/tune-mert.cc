@@ -63,9 +63,9 @@ LineSearchResult TuneMert::LineSearch(
             best_span = ScoredSpan(Span(last_bound, boundary.first), curr_stats->Clone());
             best_score = curr_score;
         }
-        // cerr << "bef: " << boundary << " curr_stats=" << *curr_stats << endl;
+        PRINT_DEBUG("bef: " << boundary << " curr_stats=" << *curr_stats << endl, 4);
         curr_stats->PlusEquals(*boundary.second);
-        // cerr << "aft: " << boundary << " curr_stats=" << *curr_stats << endl;
+        PRINT_DEBUG("aft: " << boundary << " curr_stats=" << *curr_stats << endl, 4);
         last_bound = boundary.first;
     }
     // Given the best span, find the middle

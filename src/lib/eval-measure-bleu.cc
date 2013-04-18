@@ -72,9 +72,12 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
         double smooth = (i == 0 ? 0 : smooth_);
-        double prec = (vals_[2*i]+smooth)/(vals_[2*i+1]+smooth);
+        double num = (vals_[2*i]+smooth);
+        double denom = (vals_[2*i+1]+smooth);
+        double prec = (denom ? num/denom : 0);
+        // cerr << "i="<<i<<", num="<<num<<", denom="<<denom<<", prec="<<prec<<endl;
         report.precs.push_back(prec);
-        log_bleu += log(prec);
+        log_bleu += (prec ? log(prec) : -DBL_MAX);
     }
     log_bleu /= ngram_order;
     // vals_[vals__n-1] is the ref length, vals_[1] is the test length

@@ -29,16 +29,26 @@ public:
 
     int TestInterpScore() {
         shared_ptr<EvalMeasure>
-            bleu(EvalMeasure::CreateMeasureFromString("bleu")),
+            bleu(EvalMeasure::CreateMeasureFromString("bleu:smooth=1")),
             ribes(EvalMeasure::CreateMeasureFromString("ribes")),
-            interp(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu|0.6|ribes"));
-        string ref = "taro met hanako", sys = "the taro met the hanako";
-        Sentence ref_sent = Dict::ParseWords(ref), sys_sent = Dict::ParseWords(sys);
-        // System is longer than ref, so there is no brevity penalty
-        double bleu_act = bleu->CalculateStats(ref_sent, sys_sent)->ConvertToScore();
-        double ribes_act = ribes->CalculateStats(ref_sent, sys_sent)->ConvertToScore();
+            interp(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes"));
+        string ref1 = "taro met hanako", sys1 = "the taro met the hanako";
+        Sentence ref1_sent = Dict::ParseWords(ref1), sys1_sent = Dict::ParseWords(sys1);
+        string ref2 = "he was the smallest man", sys2 = "the smallest man he was";
+        Sentence ref2_sent = Dict::ParseWords(ref1), sys2_sent = Dict::ParseWords(sys1);
+        // Eval stats pointer
+        EvalStatsPtr bs1 = bleu->CalculateStats(ref1_sent, sys1_sent),
+                     bs2 = bleu->CalculateStats(ref2_sent, sys2_sent),
+                     rs1 = ribes->CalculateStats(ref1_sent, sys1_sent),
+                     rs2 = ribes->CalculateStats(ref2_sent, sys2_sent),
+                     is1 = interp->CalculateStats(ref1_sent, sys1_sent),
+                     is2 = interp->CalculateStats(ref2_sent, sys2_sent);
+        // Add the scores together
+        double bleu_act = bs1->Plus(*bs2)->ConvertToScore();
+        double ribes_act = rs1->Plus(*rs2)->ConvertToScore();
         double interp_exp = bleu_act*0.4+ribes_act*0.6;
-        double interp_act = interp->CalculateStats(ref_sent, sys_sent)->ConvertToScore();
+        double interp_act = is1->Plus(*is2)->ConvertToScore();
+        // Check that values are almost the same
         return CheckAlmost(interp_exp, interp_act);
     }
 

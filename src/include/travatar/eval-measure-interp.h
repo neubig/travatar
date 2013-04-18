@@ -39,7 +39,42 @@ public:
 
         return num/denom;
     }
-    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsInterp(stats_, coeffs_)); }
+    // Check if the value is zero
+    virtual bool IsZero() {
+        BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
+            if(!ptr->IsZero())
+                return false;
+        return true;
+    }
+    virtual EvalStats & PlusEquals(const EvalStats & rhs) {
+        const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
+        if(stats_.size() != rhsi.stats_.size())
+            THROW_ERROR("Interpreted eval measure sizes don't match");
+        for(int i = 0; i < (int)stats_.size(); i++)
+            stats_[i]->PlusEquals(*rhsi.stats_[i]);
+        return *this;
+    }
+    virtual EvalStats & TimesEquals(EvalStatsDataType mult) {
+        for(int i = 0; i < (int)stats_.size(); i++)
+            stats_[i]->TimesEquals(mult);
+        return *this;
+    }
+    virtual bool Equals(const EvalStats & rhs) const {
+        const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
+        if(stats_.size() != rhsi.stats_.size()) return false;
+        for(int i = 0; i < (int)stats_.size(); i++) {
+            if(!stats_[i]->Equals(*rhsi.stats_[i]) || coeffs_[i] != rhsi.coeffs_[i])
+                return false;
+        }
+        return true;
+    }
+
+    EvalStatsPtr Clone() const { 
+        std::vector<EvalStatsPtr> newstats;
+        BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
+            newstats.push_back(ptr->Clone());
+        return EvalStatsPtr(new EvalStatsInterp(newstats, coeffs_));
+    }
 protected:
     std::vector<EvalStatsPtr> stats_;
     std::vector<double> coeffs_;
