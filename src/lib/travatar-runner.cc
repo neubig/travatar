@@ -20,6 +20,7 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure.h>
 #include <travatar/timer.h>
+#include <travatar/input-file-stream.h>
 #include <travatar/config-travatar-runner.h>
 #include <lm/model.hh>
 #include <fstream>
@@ -211,7 +212,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the rule table
     PRINT_DEBUG(endl << "Loading translation model [" << timer << " sec]" << endl, 1);
-    ifstream tm_in(config.GetString("tm_file").c_str());
+    InputFileStream tm_in(config.GetString("tm_file").c_str());
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
@@ -220,7 +221,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     else if(config.GetString("tm_storage") == "marisa")
         tm_.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
     tm_->SetMatchAllUnk(config.GetBool("all_unk"));
-    tm_in.close();
 
     // Open the n-best output stream if it exists
     scoped_ptr<ostream> nbest_out;

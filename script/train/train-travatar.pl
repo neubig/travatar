@@ -47,7 +47,7 @@ my $NBEST_RULES = "20";
 
 # Model files
 my $TM_FILE = "";
-my $GZIP_TM = "false"; # Whether to gzip the rule table
+my $GZIP_TM = "true"; # Whether to gzip the rule table
 my $LM_FILE = "";
 my $NO_LM = "false";
 my $CONFIG_FILE = "";

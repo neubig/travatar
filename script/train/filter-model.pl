@@ -34,7 +34,7 @@ close FILE0;
 # Do the actual filtering of the rule table
 my $CAT = (($model =~ /\.gz$/)? "zcat" : "cat");
 safesystem("mkdir $ARGV[2]");
-safesystem("$CAT $model | $ARGV[3] > $output") or die;
+safesystem("$CAT $model | $ARGV[3] | gzip > $output.gz") or die;
 
 # Print out the new configuration
 open FILE3, ">:utf8", $ARGV[1] or die "Couldn't open $ARGV[1]\n";
