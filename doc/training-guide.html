@@ -310,6 +310,7 @@ nohup ~/work/travatar/script/mert/mert-travatar.pl -travatar-config train/model/
 
 <p>
 Again, if this finishes very quickly, there is probably an error in <tt>tune.log</tt>.
+Also, if you want to speed up the tuning process you can use multiple processors by adding <tt>-decoder-options "-threads XX"</tt> where XX is the number of processors to use.
 </p>
 
 <h2>Testing</h2>
@@ -328,7 +329,7 @@ travatar/script/train/filter-model.pl tune/travatar.ini test/filtered-test.ini t
 <p>
 Here the final argument in quotes is what command we will use to filter the rule table.
 You should change the <tt>-src</tt> option to whatever file you will be translating.
-Once we are done filtering, we can translate the test set as follows:
+Once we are done filtering, we can translate the test set as follows (again add <tt>-threads XX</tt> to speed things up):
 </p>
 
 <pre>

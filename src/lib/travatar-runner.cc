@@ -99,7 +99,7 @@ void TravatarRunnerTask::Run() {
         JSONTreeIO io;
         io.WriteTree(*out_for, forest_out);
         forest_out << endl;
-        trace_collector_->Write(sent_, forest_out.str(), "");
+        forest_collector_->Write(sent_, forest_out.str(), "");
     }
 
     // If we are tuning load the next references and check the weights
