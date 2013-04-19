@@ -49,7 +49,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
 ($MERT_SOLVER eq "moses") or ($MERT_SOLVER eq "batch-tune") or die "Bad MERT solver: $MERT_SOLVER";
 ($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
-($EVAL =~ /^(bleu|ribes|interp)/) or die "Bad evaluation measure $EVAL";
+($EVAL =~ /^(bleu|ribes|interp|ter)/) or die "Bad evaluation measure $EVAL";
 ($DECODER_OPTIONS =~ /in_format/) and die "Travatar's in_format should not be specified through -decoder-options, but through the -in-format option of mert-travatar.pl";
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 

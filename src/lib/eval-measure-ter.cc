@@ -4,6 +4,7 @@
 #include <tr1/unordered_map>
 #include <tercalc.h>
 #include <terAlignment.h>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace std::tr1;
@@ -24,4 +25,16 @@ shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref, const
   return shared_ptr<EvalStats>(new EvalStatsTer(result.numEdits, ref.size(), reverse_));
   // stats << result.numEdits*100.0 << " " << result.averageWords*100.0 << " " << result.scoreAv()*100.0 << " " ;
 
+}
+
+EvalMeasureTer::EvalMeasureTer(const std::string & config)
+                        : reverse_(false) {
+    if(config.length() == 0) return;
+    BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
+        if(strs.first == "reverse") {
+            reverse_ = boost::lexical_cast<bool>(strs.second);
+        } else {
+            THROW_ERROR("Bad configuration string: " << config);
+        }
+    }
 }
