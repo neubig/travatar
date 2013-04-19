@@ -22,7 +22,7 @@ public:
         double score = vals_[1] ? vals_[0]/vals_[1] : 0;
         return reverse_ ? 1-score : score;
     }
-    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsTer(vals_[0], vals_[1])); }
+    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsTer(vals_[0], vals_[1], reverse_)); }
 protected:
     bool reverse_;
 };
