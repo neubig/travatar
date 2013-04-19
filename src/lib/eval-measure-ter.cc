@@ -32,7 +32,12 @@ EvalMeasureTer::EvalMeasureTer(const std::string & config)
     if(config.length() == 0) return;
     BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
         if(strs.first == "reverse") {
-            reverse_ = boost::lexical_cast<bool>(strs.second);
+            if(strs.second == "true")
+                reverse_ = true;
+            else if(strs.second == "false")
+                reverse_ = false;
+            else
+                THROW_ERROR("Bad reverse value: " << strs.second);
         } else {
             THROW_ERROR("Bad configuration string: " << config);
         }
