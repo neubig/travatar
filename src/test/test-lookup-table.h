@@ -29,14 +29,14 @@ public:
         align1 = Alignment::FromString(align1_str);
         // Load the rules
         ostringstream rule_oss;
-        rule_oss << "ROOT ( x0:S ) ||| x0 ||| Pegf=0.05 ppen=2.718" << endl;
-        rule_oss << "S ( x0:NP x1:VP ) ||| x0 x1 ||| Pegf=0.1 ppen=2.718" << endl;
-        rule_oss << "S ( x0:NP x1:VP ) ||| x1 x0 ||| Pegf=0.2 ppen=2.718" << endl;
-        rule_oss << "S ( NP ( PRP ( \"he\" ) ) x0:VP ) ||| \"il\" x0 ||| Pegf=0.3 ppen=2.718" << endl;
-        rule_oss << "NP ( x0:PRP ) ||| x0 ||| Pegf=0.4 ppen=2.718" << endl;
-        rule_oss << "PRP ( \"he\" ) ||| \"il\" ||| Pegf=0.5 ppen=2.718" << endl;
-        rule_oss << "VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| Pegf=0.6 ppen=2.718" << endl;
-        rule_oss << "VB ( \"go\" ) ||| \"va\" ||| Pegf=0.7 ppen=2.718" << endl;
+        rule_oss << "ROOT ( x0:S ) ||| x0 @ ROOT S ||| Pegf=0.05 ppen=2.718" << endl;
+        rule_oss << "S ( x0:NP x1:VP ) ||| x0 x1 @ S NP VP ||| Pegf=0.1 ppen=2.718" << endl;
+        rule_oss << "S ( x0:NP x1:VP ) ||| x1 x0 @ S NP VP ||| Pegf=0.2 ppen=2.718" << endl;
+        rule_oss << "S ( NP ( PRP ( \"he\" ) ) x0:VP ) ||| \"il\" x0 @ S VP ||| Pegf=0.3 ppen=2.718" << endl;
+        rule_oss << "NP ( x0:PRP ) ||| x0 @ NP PRP ||| Pegf=0.4 ppen=2.718" << endl;
+        rule_oss << "PRP ( \"he\" ) ||| \"il\" @ PRP ||| Pegf=0.5 ppen=2.718" << endl;
+        rule_oss << "VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" @ VP VB ||| Pegf=0.6 ppen=2.718" << endl;
+        rule_oss << "VB ( \"go\" ) ||| \"va\" @ VB ||| Pegf=0.7 ppen=2.718" << endl;
         istringstream rule_iss_hash(rule_oss.str());
         lookup_hash.reset(LookupTableHash::ReadFromRuleTable(rule_iss_hash));
         istringstream rule_iss_marisa(rule_oss.str());
@@ -76,24 +76,31 @@ public:
         // Expected rules
         exp_rules[0] = new TranslationRule("S ( x0:NP x1:VP )");
         exp_rules[0]->AddTrgWord(-1); exp_rules[0]->AddTrgWord(-2);
+        exp_rules[0]->AddTrgSym(Dict::WID("S")); exp_rules[0]->AddTrgSym(Dict::WID("NP")); exp_rules[0]->AddTrgSym(Dict::WID("VP"));
         exp_rules[0]->AddFeature("Pegf", 0.1); exp_rules[0]->AddFeature("ppen", 2.718);
         exp_rules[1] = new TranslationRule("S ( x0:NP x1:VP )");
         exp_rules[1]->AddTrgWord(-2); exp_rules[1]->AddTrgWord(-1);
+        exp_rules[1]->AddTrgSym(Dict::WID("S")); exp_rules[1]->AddTrgSym(Dict::WID("NP")); exp_rules[1]->AddTrgSym(Dict::WID("VP"));
         exp_rules[1]->AddFeature("Pegf", 0.2); exp_rules[1]->AddFeature("ppen", 2.718);
         exp_rules[2] = new TranslationRule("S ( NP ( PRP ( \"he\" ) ) x0:VP )");
         exp_rules[2]->AddTrgWord(Dict::WID("il")); exp_rules[2]->AddTrgWord(-1);
+        exp_rules[2]->AddTrgSym(Dict::WID("S")); exp_rules[2]->AddTrgSym(Dict::WID("VP"));
         exp_rules[2]->AddFeature("Pegf", 0.3); exp_rules[2]->AddFeature("ppen", 2.718);
         exp_rules[3] = new TranslationRule("NP ( x0:PRP )");
         exp_rules[3]->AddTrgWord(-1);
+        exp_rules[3]->AddTrgSym(Dict::WID("NP")); exp_rules[3]->AddTrgSym(Dict::WID("PRP"));
         exp_rules[3]->AddFeature("Pegf", 0.4); exp_rules[3]->AddFeature("ppen", 2.718);
         exp_rules[4] = new TranslationRule("PRP ( \"he\" )");
         exp_rules[4]->AddTrgWord(Dict::WID("il"));
+        exp_rules[4]->AddTrgSym(Dict::WID("PRP"));
         exp_rules[4]->AddFeature("Pegf", 0.5); exp_rules[4]->AddFeature("ppen", 2.718);
         exp_rules[5] = new TranslationRule("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB )");
         exp_rules[5]->AddTrgWord(Dict::WID("ne")); exp_rules[5]->AddTrgWord(-1); exp_rules[5]->AddTrgWord(Dict::WID("pas"));
+        exp_rules[5]->AddTrgSym(Dict::WID("VP")); exp_rules[5]->AddTrgSym(Dict::WID("VB"));
         exp_rules[5]->AddFeature("Pegf", 0.6); exp_rules[5]->AddFeature("ppen", 2.718);
         exp_rules[6] = new TranslationRule("VB ( \"go\" )");
         exp_rules[6]->AddTrgWord(Dict::WID("va"));
+        exp_rules[6]->AddTrgSym(Dict::WID("VB"));
         exp_rules[6]->AddFeature("Pegf", 0.7); exp_rules[6]->AddFeature("ppen", 2.718);
         int ret =  CheckPtrVector(exp_rules, act_rules);
         BOOST_FOREACH(TranslationRule * rule, exp_rules)

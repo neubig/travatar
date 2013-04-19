@@ -82,7 +82,7 @@ void TravatarRunnerTask::Run() {
                 << sent_
                 << " ||| " << edge->GetHead()->GetSpan()
                 << " ||| " << edge->GetRuleStr() 
-                << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords())
+                << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords(), edge->GetTrgSyms())
                 << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                 << endl;
         }

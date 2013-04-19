@@ -56,9 +56,10 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
             partial << str;
             ret->AddToMatches(partial.str());
         }
-        vector<WordId> trg_words = Dict::ParseQuotedWords(columns[1]);
+        Sentence trg_words, trg_syms;
+        Dict::ParseQuotedWords(columns[1], trg_words, trg_syms);
         SparseMap features = Dict::ParseFeatures(columns[2]);
-        ret->AddRule(new TranslationRule(columns[0], trg_words, features));
+        ret->AddRule(new TranslationRule(columns[0], trg_words, trg_syms, features));
     }
     return ret;
 }

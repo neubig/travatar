@@ -13,6 +13,11 @@ void TranslationRule::Print(std::ostream & out) const {
         for(int i = 0; i < (int)trg_words_.size(); i++)
             out << trg_words_[i] << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
     }
+    if(trg_syms_.size()) {
+        out << ", \"trg_syms\": [";
+        for(int i = 0; i < (int)trg_syms_.size(); i++)
+            out << trg_syms_[i] << ((i == (int)trg_syms_.size()-1) ? "]" : ", ");
+    }
     if(features_.size()) {
         int pos = 0;
         out << ", \"features\": {";

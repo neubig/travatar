@@ -85,11 +85,18 @@ std::string Dict::PrintWords(const std::vector<WordId> & ids) {
     return oss.str();
 }
 
-std::string Dict::PrintAnnotatedWords(const std::vector<WordId> & ids) {
+std::string Dict::PrintAnnotatedWords(const std::vector<WordId> & ids, const std::vector<WordId> & syms) {
     std::ostringstream oss;
+    // Print the symbols
     for(int i = 0; i < (int)ids.size(); i++) {
         if(i != 0) oss << ' ';
         oss << WAnnotatedSym(ids[i]);
+    }
+    // Print the symbols if they exists
+    if(syms.size() > 0) {
+        oss << " @";
+        BOOST_FOREACH(WordId id, syms)
+            oss << ' ' << WSym(id);
     }
     return oss.str();
 }
@@ -104,13 +111,19 @@ std::vector<WordId> Dict::ParseWords(const std::string & str) {
     return ret;
 }
 
-std::vector<WordId> Dict::ParseQuotedWords(const std::string & str) {
+void Dict::ParseQuotedWords(const std::string & str, std::vector<WordId> & ids, std::vector<WordId> & syms) {
+    ids.clear(); syms.clear();
     std::istringstream iss(str);
     std::string buff;
-    std::vector<WordId> ret;
+    // Read the words until the end or until '@'
+    while(iss >> buff) {
+        if(buff == "@")
+            break;
+        ids.push_back(QuotedWID(buff));
+    }
+    // Read the remaining as symbols
     while(iss >> buff)
-        ret.push_back(QuotedWID(buff));
-    return ret;
+        syms.push_back(WID(buff));
 }
 
 std::string Dict::EscapeString(const std::string & str) {

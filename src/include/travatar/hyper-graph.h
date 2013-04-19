@@ -28,6 +28,7 @@ protected:
     double score_;
     std::string rule_str_;
     std::vector<WordId> trg_words_;
+    std::vector<WordId> trg_syms_;
     SparseMap features_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
@@ -70,12 +71,15 @@ public:
     void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
     const std::string & GetRuleStr() const { return rule_str_; }
     const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
+    const std::vector<WordId> & GetTrgSyms() const { return trg_syms_; }
     const SparseMap & GetFeatures() const { return features_; }
     std::string & GetRuleStr() { return rule_str_; }
     std::vector<WordId> & GetTrgWords() { return trg_words_; }
+    std::vector<WordId> & GetTrgSyms() { return trg_syms_; }
     SparseMap & GetFeatures() { return features_; }
     void SetRuleStr(const std::string & str) { rule_str_ = str; }
     void SetTrgWords(const std::vector<WordId> & trg) { trg_words_ = trg; }
+    void SetTrgSyms(const std::vector<WordId> & trg) { trg_syms_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }
     void AddTrgWord(int idx) { trg_words_.push_back(idx); }

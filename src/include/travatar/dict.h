@@ -37,7 +37,7 @@ struct Dict {
     static std::string PrintWords(const Sentence & ids);
 
     // Print annotated words
-    static std::string PrintAnnotatedWords(const Sentence & ids);
+    static std::string PrintAnnotatedWords(const Sentence & ids, const Sentence & syms);
 
     // Feature functions
     static std::string PrintFeatures(const SparseMap & feats);
@@ -45,10 +45,10 @@ struct Dict {
     static SparseMap ParseFeatures(const std::string & str);
 
     // Get the word ID
-    static std::vector<WordId> ParseWords(const std::string & str);
+    static Sentence ParseWords(const std::string & str);
     
     // Get the word ID
-    static std::vector<WordId> ParseQuotedWords(const std::string & str);
+    static void ParseQuotedWords(const std::string & str, Sentence & ids, Sentence & syms);
 
     // Escape a string
     static std::string EscapeString(const std::string & str);
