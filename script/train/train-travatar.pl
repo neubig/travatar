@@ -61,8 +61,8 @@ GetOptions(
     "src_words=s" => \$SRC_WORDS, # A file of plain-text sentences from the source
     "src_format=s" => \$SRC_FORMAT, # The source file format (penn/egret)
     "trg_file=s" => \$TRG_FILE, # The target file you want to train on
-    "trg_words=s" => \$TRG_WORDS, # The target file format (word/penn/egret)
-    "trg_format=s" => \$TRG_FORMAT, # A file of plain-text sentences from the target
+    "trg_words=s" => \$TRG_WORDS, # A file of plain-text sentences from the target
+    "trg_format=s" => \$TRG_FORMAT, # The target file format (word/penn/egret)
     "lex_srctrg=s" => \$LEX_SRCTRG, # of the source word given the target P(f|e)
     "lex_trgsrc=s" => \$LEX_TRGSRC, # of the target word given the source P(e|f)
     "align_file=s" => \$ALIGN_FILE, # A file containing alignments
@@ -190,9 +190,10 @@ if(not $TM_FILE) {
     my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
     safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     # Then, score the rules (in parallel?)
+    my $TRG_SYNTAX = (($TRG_FORMAT eq "word") ? "" : "-trg-syntax");
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
+    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $TRG_SYNTAX --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
     my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=0 --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
@@ -216,9 +217,11 @@ if(not $CONFIG_FILE) {
     open TINI, ">:utf8", $TINI_FILE or die "Couldn't open $TINI_FILE\n";
     print TINI "[tm_file]\n$TM_FILE\n\n";
     print TINI "[lm_file]\n$LM_FILE\n\n" if ($NO_LM ne "true");
-    print TINI "[binarize]\n$BINARIZE\n\n"; 
+    print TINI "[binarize]\n$BINARIZE\n\n";
     # Default values for the weights
-    print TINI "[weight_vals]\negfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\nparse=1\n\n";
+    my $weights = "egfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\nparse=1\n";
+    $weights .= "isx=-0.5\n" if ($TRG_FORMAT ne "word"); # Add syntax augmented weights
+    print TINI "[weight_vals]\n$weights\n";
     close TINI;
     print "Finished training! You can find the configuation file in:\n$TINI_FILE\n";
 }

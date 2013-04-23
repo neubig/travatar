@@ -36,9 +36,9 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
     scoped_ptr<TreeIO> trg_io;
     if(config.GetString("output_format") == "penn")
-        src_io.reset(new PennTreeIO);
+        trg_io.reset(new PennTreeIO);
     else if(config.GetString("output_format") == "json")
-        src_io.reset(new JSONTreeIO); 
+        trg_io.reset(new JSONTreeIO); 
     else if(config.GetString("output_format") != "word")
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("output_format"));
 
