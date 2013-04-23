@@ -22,10 +22,11 @@ public:
 "  by Graham Neubig\n"
 "\n"
 "Extracts tree-to-string translation rules from trees or forests.\n"
-"  Usage: forest-extractor [SRG_TREES] [TRG_TEXT] [ALIGN]\n"
+"  Usage: forest-extractor [SRG_TREES] [TRG_FILE] [ALIGN]\n"
 );
 
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
+        AddConfigEntry("output_format", "word", "The format of the output (word/penn/json)");
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
         AddConfigEntry("compose", "4", "How many rules to compose (default 1=no composition)");
         AddConfigEntry("attach", "top", "Where to attach null aligned target words (top/none/exhaustive, default top)");
@@ -35,7 +36,6 @@ public:
         AddConfigEntry("normalize_probs", "false", "Whether or not to normalize counts to probabilities");
         AddConfigEntry("partial_count_thresh", "0.0", "Only print phrases with a partial count greater than this value");
         AddConfigEntry("debug", "0", "How much debug output to produce");
-
 
     }
 	

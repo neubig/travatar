@@ -24,12 +24,25 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
 
-    // Create the tree parser and rule extractor
-    scoped_ptr<TreeIO> tree_io;
+    // Create the tree parsers
+    scoped_ptr<TreeIO> src_io;
     if(config.GetString("input_format") == "penn")
-        tree_io.reset(new PennTreeIO);
+        src_io.reset(new PennTreeIO);
+    else if(config.GetString("input_format") == "egret")
+        src_io.reset(new EgretTreeIO);
+    else if(config.GetString("input_format") == "json")
+        src_io.reset(new JSONTreeIO);
     else
         THROW_ERROR("Invalid TreeIO type: " << config.GetString("input_format"));
+    scoped_ptr<TreeIO> trg_io;
+    if(config.GetString("output_format") == "penn")
+        src_io.reset(new PennTreeIO);
+    else if(config.GetString("output_format") == "json")
+        src_io.reset(new JSONTreeIO); 
+    else if(config.GetString("output_format") != "word")
+        THROW_ERROR("Invalid TreeIO type: " << config.GetString("output_format"));
+
+    // Create the rule extractor
     ForestExtractor extractor;
     extractor.SetMaxAttach(config.GetInt("attach_len"));
     extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
@@ -79,7 +92,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         shared_ptr<HyperGraph> src_graph;
         try {
             istringstream src_iss(src_line);
-            src_graph.reset(tree_io->ReadTree(src_iss));
+            src_graph.reset(src_io->ReadTree(src_iss));
         } catch (std::runtime_error & e) {
             THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
         }
@@ -88,8 +101,18 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         if(binarizer.get() != NULL)
             src_graph.reset(binarizer->TransformGraph(*src_graph));
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
-        // Get target words and alignment
-        Sentence trg_sent = Dict::ParseWords(trg_line);
+        // Get target words or tree
+        Sentence trg_sent;
+        LabeledSpans trg_labs;
+        if(trg_io.get() != NULL) {
+            istringstream trg_iss(trg_line);
+            shared_ptr<HyperGraph> trg_graph(trg_io->ReadTree(trg_iss));
+            trg_sent = trg_graph->GetWords();
+            trg_labs = trg_graph->GetLabeledSpans();    
+        } else {
+            trg_sent = Dict::ParseWords(trg_line);
+        }
+        // Get alignment
         Alignment align = Alignment::FromString(align_line);
         // Do the rule extraction
         scoped_ptr<HyperGraph> rule_graph(
@@ -121,7 +144,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             if(filt == (int)rule_filters.size()) {
                 cout << extractor.RuleToString(*edge, 
                                                src_graph->GetWords(), 
-                                               trg_sent) << endl;
+                                               trg_sent,
+                                               trg_io.get() != NULL ? &trg_labs : NULL) << endl;
             }
         }
         sent++;

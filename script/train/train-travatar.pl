@@ -187,7 +187,7 @@ if(not $TM_FILE) {
     safesystem("mkdir $WORK_DIR/model") or die;
     # First extract the rules
     my $EXTRACT_FILE = "$WORK_DIR/model/extract.gz";
-    my $EXTRACT_OPTIONS = "-normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
+    my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
     safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
