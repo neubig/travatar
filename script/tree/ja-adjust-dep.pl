@@ -21,7 +21,7 @@ sub readtree {
     # Split and remove the leading ID
     my @lines = split(/\n/);
     shift @lines if $lines[0] =~ /^ID/;
-    my @ret = map { my @arr = split(/ /); $arr[0]--; $arr[1]--; 
+    my @ret = map { my @arr = split(/ +/); $arr[0]--; $arr[1] = max($arr[1]-1,-1); 
                     $arr[3] = "$arr[3]-$arr[2]" if $arr[3] =~ /^助詞$/; \@arr } @lines;
     # Find all values that are a head
     my @ishead = map { 0 } @ret;
