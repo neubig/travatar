@@ -3,6 +3,7 @@
 
 #include <set>
 #include <list>
+#include <map>
 #include <travatar/sentence.h>
 
 namespace travatar {
@@ -11,6 +12,9 @@ class HyperGraph;
 class HyperNode;
 class HyperEdge;
 class Alignment;
+
+typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
+typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
 
 // A virtual class to overload that converts a source parse, a target sentence
 // and an alignment into a forest of matched rules
@@ -27,7 +31,8 @@ public:
     std::string RuleToString(
         const HyperEdge & rule,
         const Sentence & src_sent,
-        const Sentence & trg_sent) const;
+        const Sentence & trg_sent,
+        const LabeledSpans * trg_spans = NULL) const;
 
 private:
     // A function to help print rules recursively

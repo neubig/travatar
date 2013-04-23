@@ -119,7 +119,7 @@ const ChartEntry & LMComposerBU::BuildChart(
         HyperNode * next_node;
         if(it == hypo_comb.end()) {
             // Create a new copy of the current node
-            next_node = new HyperNode(nodes[id]->GetSym(), nodes[id]->GetSpan());
+            next_node = new HyperNode(nodes[id]->GetSym(), -1, nodes[id]->GetSpan());
             rule_graph.AddNode(next_node);
             states.push_back(my_state);
             hypo_comb.insert(make_pair(my_state, next_node));
@@ -159,7 +159,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     HyperGraph * ret = new HyperGraph;
     ret->SetWords(parse.GetWords());
     // Add the root node and its corresponding state
-    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), make_pair(0, nodes[0]->GetSpan().second));
+    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), -1, make_pair(0, nodes[0]->GetSpan().second));
     ret->AddNode(root);
     states.resize(1);
     // Build the chart

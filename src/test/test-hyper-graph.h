@@ -31,16 +31,16 @@ public:
         align1 = Alignment::FromString(align1_str);
         // also an example of a forest
         src2_graph.reset(new HyperGraph);
-        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"),    make_pair(0,2)); src2_graph->AddNode(node0);
-        HyperNode* node1 = new HyperNode(Dict::WID("VP"),      make_pair(0,2)); src2_graph->AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("NP"),      make_pair(0,2)); src2_graph->AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("JJ"),      make_pair(0,1)); src2_graph->AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("VP"),      make_pair(0,1)); src2_graph->AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("VPG"),     make_pair(0,1)); src2_graph->AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("running"), make_pair(0,1)); src2_graph->AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("NP"),      make_pair(1,2)); src2_graph->AddNode(node7);
-        HyperNode* node8 = new HyperNode(Dict::WID("NN"),      make_pair(1,2)); src2_graph->AddNode(node8);
-        HyperNode* node9 = new HyperNode(Dict::WID("water"),   make_pair(1,2)); src2_graph->AddNode(node9);
+        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"), -1,    make_pair(0,2)); src2_graph->AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,2)); src2_graph->AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("NP"), -1,      make_pair(0,2)); src2_graph->AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("JJ"), -1,      make_pair(0,1)); src2_graph->AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,1)); src2_graph->AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("VPG"), -1,     make_pair(0,1)); src2_graph->AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("running"), -1, make_pair(0,1)); src2_graph->AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("NP"), -1,      make_pair(1,2)); src2_graph->AddNode(node7);
+        HyperNode* node8 = new HyperNode(Dict::WID("NN"), -1,      make_pair(1,2)); src2_graph->AddNode(node8);
+        HyperNode* node9 = new HyperNode(Dict::WID("water"), -1,   make_pair(1,2)); src2_graph->AddNode(node9);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); src2_graph->AddEdge(edge0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); src2_graph->AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); src2_graph->AddEdge(edge2);
@@ -128,14 +128,14 @@ public:
     int TestInsideOutsideUnbalanced() {
         // Build the initial graph
         HyperGraph hg_act;
-        HyperNode* node0 = new HyperNode(Dict::WID("N0"), make_pair(0,3)); hg_act.AddNode(node0);
-        HyperNode* node1 = new HyperNode(Dict::WID("N1"), make_pair(0,2)); hg_act.AddNode(node1);
-        HyperNode* node2 = new HyperNode(Dict::WID("N2"), make_pair(2,3)); hg_act.AddNode(node2);
-        HyperNode* node3 = new HyperNode(Dict::WID("N3"), make_pair(0,2)); hg_act.AddNode(node3);
-        HyperNode* node4 = new HyperNode(Dict::WID("N4"), make_pair(0,1)); hg_act.AddNode(node4);
-        HyperNode* node5 = new HyperNode(Dict::WID("N5"), make_pair(1,2)); hg_act.AddNode(node5);
-        HyperNode* node6 = new HyperNode(Dict::WID("N6"), make_pair(0,1)); hg_act.AddNode(node6);
-        HyperNode* node7 = new HyperNode(Dict::WID("N7"), make_pair(1,2)); hg_act.AddNode(node7);
+        HyperNode* node0 = new HyperNode(Dict::WID("N0"), -1, make_pair(0,3)); hg_act.AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("N1"), -1, make_pair(0,2)); hg_act.AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("N2"), -1, make_pair(2,3)); hg_act.AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("N3"), -1, make_pair(0,2)); hg_act.AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("N4"), -1, make_pair(0,1)); hg_act.AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("N5"), -1, make_pair(1,2)); hg_act.AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("N6"), -1, make_pair(0,1)); hg_act.AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("N7"), -1, make_pair(1,2)); hg_act.AddNode(node7);
         HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); edge0->AddTail(node2); node0->AddEdge(edge0); hg_act.AddEdge(edge0);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node3); edge1->AddTail(node2); node0->AddEdge(edge1); hg_act.AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node3); edge2->AddTail(node4); edge2->AddTail(node5); node3->AddEdge(edge2); hg_act.AddEdge(edge2);
@@ -423,23 +423,36 @@ public:
         // also an example of a forest
         HyperGraph hga, hgb, hgab_exp;
         { 
-            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), make_pair(0,1)); hga.AddNode(nodeA1);
-            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), make_pair(0,1)); hga.AddNode(nodeA2);
+            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), -1, make_pair(0,1)); hga.AddNode(nodeA1);
+            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), -1, make_pair(0,1)); hga.AddNode(nodeA2);
             HyperEdge* edgeA = new HyperEdge(nodeA1); edgeA->AddTail(nodeA2); nodeA2->AddEdge(edgeA); hga.AddEdge(edgeA);
-            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), make_pair(0,1)); hgb.AddNode(nodeB1);
-            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), make_pair(0,1)); hgb.AddNode(nodeB2);
+            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), -1, make_pair(0,1)); hgb.AddNode(nodeB1);
+            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), -1, make_pair(0,1)); hgb.AddNode(nodeB2);
             HyperEdge* edgeB = new HyperEdge(nodeB1); edgeB->AddTail(nodeB2); nodeB2->AddEdge(edgeB); hgb.AddEdge(edgeB);
             hga.Append(hgb);
         }
         { 
-            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), make_pair(0,1)); hgab_exp.AddNode(nodeA1);
-            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), make_pair(0,1)); hgab_exp.AddNode(nodeA2);
+            HyperNode* nodeA1 = new HyperNode(Dict::WID("A1"), -1, make_pair(0,1)); hgab_exp.AddNode(nodeA1);
+            HyperNode* nodeA2 = new HyperNode(Dict::WID("A2"), -1, make_pair(0,1)); hgab_exp.AddNode(nodeA2);
             HyperEdge* edgeA = new HyperEdge(nodeA1); edgeA->AddTail(nodeA2); nodeA2->AddEdge(edgeA); hgab_exp.AddEdge(edgeA);
-            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), make_pair(0,1)); hgab_exp.AddNode(nodeB1);
-            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), make_pair(0,1)); hgab_exp.AddNode(nodeB2);
+            HyperNode* nodeB1 = new HyperNode(Dict::WID("B1"), -1, make_pair(0,1)); hgab_exp.AddNode(nodeB1);
+            HyperNode* nodeB2 = new HyperNode(Dict::WID("B2"), -1, make_pair(0,1)); hgab_exp.AddNode(nodeB2);
             HyperEdge* edgeB = new HyperEdge(nodeB1); edgeB->AddTail(nodeB2); nodeB2->AddEdge(edgeB); hgab_exp.AddEdge(edgeB);
         }
         return hgab_exp.CheckEqual(hga);
+    }
+
+    // See if labeling spans works
+    int TestGetLabeledSpans() {
+        string src1_tree = "(S (NP (PRP he)) (VP (AUX does) (RB not) (VB go)))";
+        LabeledSpans exp_spans, act_spans = src1_graph->GetLabeledSpans();
+        exp_spans[make_pair(0,4)] = Dict::WID("S");
+        exp_spans[make_pair(0,1)] = Dict::WID("NP");
+        exp_spans[make_pair(1,4)] = Dict::WID("VP");
+        exp_spans[make_pair(1,2)] = Dict::WID("AUX");
+        exp_spans[make_pair(2,3)] = Dict::WID("RB");
+        exp_spans[make_pair(3,4)] = Dict::WID("VB");
+        return CheckMap(exp_spans, act_spans);
     }
 
     bool RunTest() {
@@ -455,6 +468,7 @@ public:
         done++; cout << "TestInsideOutside()" << endl; if(TestInsideOutside()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutsideUnbalanced()" << endl; if(TestInsideOutsideUnbalanced()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAppend()" << endl; if(TestAppend()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestGetLabeledSpans()" << endl; if(TestGetLabeledSpans()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

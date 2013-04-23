@@ -535,3 +535,9 @@ void HyperGraph::AddEdge(HyperEdge * edge) {
 void HyperGraph::AddWord(WordId id) {
     words_.push_back(id);
 }
+
+LabeledSpans HyperGraph::GetLabeledSpans() const {
+    LabeledSpans ret;
+    // TODO
+    return ret;
+}

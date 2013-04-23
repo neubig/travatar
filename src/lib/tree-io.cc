@@ -43,7 +43,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
             string sym = IoUtil::ReadUntil(in, WHITE_SPACE, "()");
             if(!sym.length()) { getline(in, line); THROW_ERROR("Empty symbol at '("<<line<<"'"); }
             // Create a new node
-            HyperNode* node = new HyperNode(Dict::WID(sym), make_pair(pos,-1));
+            HyperNode* node = new HyperNode(Dict::WID(sym), -1, make_pair(pos,-1));
             stack.push_back(node); hg->AddNode(node);
             HyperEdge* edge = new HyperEdge(node);
             node->AddEdge(edge); hg->AddEdge(edge);
@@ -53,7 +53,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
                 string val = IoUtil::ReadUntil(in, ")", WHITE_SPACE_OR_OPENPAREN);
                 WordId wid = Dict::WID(val);
                 hg->GetWords().push_back(wid);
-                HyperNode* child = new HyperNode(wid, make_pair(pos,pos+1));
+                HyperNode* child = new HyperNode(wid, -1, make_pair(pos,pos+1));
                 hg->AddNode(child); edge->AddTail(child);
                 ++pos;
             }
@@ -170,8 +170,9 @@ HyperNode * EgretTreeIO::MakeEgretNode(const string & str_id, SymbolSet<int> & n
         new_node = new HyperNode(Dict::WID(str_id));
     } else {
         new_node = new HyperNode(Dict::WID(node_match[1]), 
+                                 -1,
                                  make_pair(atoi(node_match[2].str().c_str()),
-                                          atoi(node_match[3].str().c_str())+1));
+                                           atoi(node_match[3].str().c_str())+1));
     }
     graph->AddNode(new_node);
     return new_node;

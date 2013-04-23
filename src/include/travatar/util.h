@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <set>
+#include <map>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -304,6 +305,31 @@ int CheckAlmostVector(const std::vector<T> & exp,
 template<class K, class V>
 int CheckMap(const std::tr1::unordered_map<K,V> & exp, const std::tr1::unordered_map<K,V> & act) {
     typedef std::tr1::unordered_map<K,V> MapType;
+    typedef std::pair<K,V> MapPair;
+    int ok = 1;
+    BOOST_FOREACH(MapPair kv, exp) {
+        typename MapType::const_iterator it = act.find(kv.first);
+        if(it == act.end()) {
+            std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << std::endl;
+            ok = 0;
+        } else if(it->second != kv.second) {
+            std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != "<<it->second<<")" << std::endl;
+            ok = 0;
+        }
+    }
+    BOOST_FOREACH(MapPair kv, act) {
+        typename MapType::const_iterator it = exp.find(kv.first);
+        if(it == act.end()) {
+            std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] (NULL != "<<kv.second<<")" << std::endl;
+            ok = 0;
+        }
+    }
+    return ok;
+}
+
+template<class K, class V>
+int CheckMap(const std::map<K,V> & exp, const std::map<K,V> & act) {
+    typedef std::map<K,V> MapType;
     typedef std::pair<K,V> MapPair;
     int ok = 1;
     BOOST_FOREACH(MapPair kv, exp) {

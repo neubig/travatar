@@ -5,6 +5,7 @@
 #include <climits>
 #include <cfloat>
 #include <set>
+#include <map>
 #include <utility>
 #include <travatar/sparse-map.h>
 #include <travatar/nbest-list.h>
@@ -18,6 +19,9 @@ class HyperNode;
 class HyperGraph;
 class TranslationRule;
 class Weights;
+
+typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
+typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -113,6 +117,8 @@ private:
     NodeId id_;
     // The ID of the non-terminal or terminal represented by this node
     WordId sym_;
+    // The ID of the symbol represented on the target side
+    WordId trg_sym_;
     // The span in the source sentence covered
     std::pair<int,int> src_span_;
     // HyperEdges to child nodes
@@ -127,9 +133,10 @@ private:
     double viterbi_score_;
 public:
     HyperNode(WordId sym = -1,
+              WordId trg_sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
-        id_(id), sym_(sym), src_span_(span), has_trg_span_(false),
+        id_(id), sym_(sym), trg_sym_(trg_sym), src_span_(span), has_trg_span_(false),
         frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX) { };
     ~HyperNode() { };
 
@@ -325,6 +332,9 @@ public:
     // Perform the inside-outside algorithm
     std::vector< std::vector<HyperEdge*> > GetReversedEdges();
     void InsideOutsideNormalize();
+
+    // Get labeled spans
+    LabeledSpans GetLabeledSpans() const;
 
     // Accessors
     const HyperNode* GetNode(int i) const { return SafeAccess(nodes_, i); }

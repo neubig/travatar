@@ -31,7 +31,7 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
     BOOST_FOREACH(HyperNode * v, src_parse.GetNodes()) {
         if(v->IsFrontier() == HyperNode::IS_FRONTIER) {
             old_new_ids.insert(make_pair(v->GetId(), ret->NumNodes()));
-            HyperNode* node = new HyperNode(v->GetSym(), v->GetSpan(), ret->NumNodes());
+            HyperNode* node = new HyperNode(v->GetSym(), -1, v->GetSpan(), ret->NumNodes());
             node->SetTrgSpan(v->GetTrgSpan());
             ret->AddNode(node);
         }
@@ -295,7 +295,7 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
 }
 
 // Creating a rule
-string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent) const {
+string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const LabeledSpans * trg_spans) const {
     // Get the target span for the top node
     const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
     if(trg_span.size() == 0)

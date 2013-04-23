@@ -38,8 +38,8 @@ public:
         forest.reset(new HyperGraph);
         {
         // Two nodes
-        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest->AddNode(n0);
-        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest->AddNode(n1);
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); forest->AddNode(n0);
+        HyperNode* n1 = new HyperNode(Dict::WID("B"), -1, make_pair(0,1)); forest->AddNode(n1);
         // And two edges between each node
         SparseMap f01; f01[valid] = 1; f01[slopeid] = -1;
         HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("x0 \"a\""));
@@ -62,10 +62,10 @@ public:
         // forest2b.reset(new HyperGraph);
         // {
         // // Four nodes
-        // HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); forest2->AddNode(n0);
-        // HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); forest2->AddNode(n1);
-        // HyperNode* n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); forest2->AddNode(n2);
-        // HyperNode* n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); forest2->AddNode(n3);
+        // HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); forest2->AddNode(n0);
+        // HyperNode* n1 = new HyperNode(Dict::WID("B"), -1, make_pair(0,1)); forest2->AddNode(n1);
+        // HyperNode* n2 = new HyperNode(Dict::WID("C"), -1, make_pair(0,1)); forest2->AddNode(n2);
+        // HyperNode* n3 = new HyperNode(Dict::WID("D"), -1, make_pair(0,1)); forest2->AddNode(n3);
         // // And edges for each node
         // SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
         // HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("x0 x1"));
@@ -93,14 +93,14 @@ public:
     HyperGraph * CreateForestTwo(bool use_c, bool use_d) {
         HyperGraph * ret = new HyperGraph;
         // Four nodes
-        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); ret->AddNode(n0);
-        HyperNode* n1 = new HyperNode(Dict::WID("B"), make_pair(0,1)); ret->AddNode(n1);
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); ret->AddNode(n0);
+        HyperNode* n1 = new HyperNode(Dict::WID("B"), -1, make_pair(0,1)); ret->AddNode(n1);
         HyperNode *n2 = NULL, *n3 = NULL;
         if(use_c) {
-            n2 = new HyperNode(Dict::WID("C"), make_pair(0,1)); ret->AddNode(n2);
+            n2 = new HyperNode(Dict::WID("C"), -1, make_pair(0,1)); ret->AddNode(n2);
         }
         if(use_d) {
-            n3 = new HyperNode(Dict::WID("D"), make_pair(0,1)); ret->AddNode(n3);
+            n3 = new HyperNode(Dict::WID("D"), -1, make_pair(0,1)); ret->AddNode(n3);
         }
         // And edges for each node
         if(use_c) {
@@ -249,7 +249,7 @@ public:
         shared_ptr<HyperGraph> rule_graph(new HyperGraph);
         Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
         rule_graph->SetWords(exp_sent);
-        HyperNode* n0 = new HyperNode(Dict::WID("A"), make_pair(0,1)); rule_graph->AddNode(n0);
+        HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); rule_graph->AddNode(n0);
         SparseMap f01; f01[valid] = -10; f01[slopeid] = 1;
         HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("\"<unk>\""));
         e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
