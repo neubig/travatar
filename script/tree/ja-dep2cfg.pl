@@ -68,10 +68,27 @@ sub buildcfg {
     return $str;
 }
 
+# If there are crossed dependences
+#  (j < h[i] & h[j] > h[i])
+# Set the head of the second word to the head of the current word
+#  h[j] <- h[i]
+sub make_projective {
+    my $deptree = shift;
+    for my $i (0 .. @$deptree-2) {
+        for my $j ($i+1 .. $deptree->[$i]->[1]-1) {
+            if($deptree->[$i]->[1] < $deptree->[$j]->[1]) {
+                # print STDERR "WARNING, changing head of ".$deptree->[$j]->[2]." from ".$deptree->[ $deptree->[$j]->[1] ]->[2]." to ".$deptree->[ $deptree->[$i]->[1] ]->[2]."\n";
+                $deptree->[$j]->[1] = $deptree->[$i]->[1];
+            }
+        }
+    }
+}
+
 # Converts a dependency tree to a CFG parse
 $/ = "\n\n";
 while(<STDIN>) {
     chomp;
     my @deptree = readtree($_);
+    make_projective(\@deptree);
     print buildcfg(\@deptree, getchildren(\@deptree, -1))."\n";
 }
