@@ -29,6 +29,7 @@ AC_PROG_CC
 
 AC_LANG_CPLUSPLUS
 LDFLAGS="$LDFLAGS -lpthread"
+CPPFLAGS="-DKENLM_MAX_ORDER=6"
 
 # Checks for libraries.
 

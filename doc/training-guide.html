@@ -60,7 +60,7 @@ cd ~/travatar-tutorial
 
 <p>
 In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, a <b>word aligner</b>, and a <b>language model toolkit</b>.
-In this tutorial, in addition to travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment, and <a href="http://hlt.fbk.eu/en/irstlm">IRSTLM</a> for language model estimation.
+In this tutorial, in addition to travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
 First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
 </p>
 
@@ -103,20 +103,6 @@ tar -xzf giza-pp*.tar.gz
 cd giza-pp
 make
 cp GIZA++-v2/GIZA++ GIZA++-v2/*.out mkcls-v2/mkcls .
-cd ~/travatar-tutorial
-</pre>
-
-<p>
-IRSTLM can be compiled as follows (again, change the version number if you are not using 5.80.01. You may also have to install <tt>autoconf</tt> and <tt>automake</tt> first if you don't have them already installed):
-</p>
-
-<pre>
-tar -xzf irstlm-5.80.01.tgz
-cd irstlm-5.80.01
-./regenerate-makefiles.sh
-./configure --prefix=$HOME/travatar-tutorial/usr
-make
-make install
 cd ~/travatar-tutorial
 </pre>
 

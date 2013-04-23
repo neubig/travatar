@@ -3,6 +3,7 @@
 
 #include <string>
 #include <lm/left.hh>
+#include <lm/model.hh>
 #include <travatar/graph-transformer.h>
 
 namespace travatar {

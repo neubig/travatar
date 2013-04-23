@@ -30,3 +30,5 @@ src/bin/batch-tune
 src/bin/mt-evaluator
 src/test/test-travatar
 src/include/travatar/stamp-h1
+src/kenlm/lm/lmplz
+src/kenlm/lm/build_binary
