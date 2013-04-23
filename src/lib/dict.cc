@@ -150,3 +150,5 @@ std::string Dict::EncodeXML(const std::string & data) {
     }
     return buffer;
 }
+
+const std::string Dict::INVALID_SPAN_SYMBOL = "@X@";

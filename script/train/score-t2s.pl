@@ -11,6 +11,7 @@ binmode STDERR, ":utf8";
 my $TOP_N = 10;
 my $SRC_MIN_FREQ = 0;
 my $LEX_PROB_FILE = "";
+my $TRG_SYNTAX = 0;
 my $PREFIX = "egf";
 GetOptions(
     "top-n=i" => \$TOP_N,                 # Only extract the top N patterns
@@ -18,6 +19,7 @@ GetOptions(
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
                                           # calculating model 1
     "prefix=s" => \$PREFIX,               # Prefix for model 1
+    "trg-syntax" => \$TRG_SYNTAX,         # Use target side syntax
 );
 
 if(@ARGV != 0) {
@@ -44,10 +46,15 @@ if($LEX_PROB_FILE) {
 
 sub strip_arr {
     my $str = shift;
+    my $isstring = shift;
     my @ret;
-    for(split(/ /, $str)) {
-        if(/^"(.*)"$/) {
-            push @ret, $1;
+    my @arr = split(/ /, $str);
+    for(@arr) {
+        return @ret if($isstring and ($_ eq "@")); # Skip syntactic labels
+        # Check if there are quotes and remove them
+        # Doing this with substrings is uglier than a regex but faster
+        if((substr($_,0,1) eq "\"") and (substr($_,-1) eq "\"")) {
+            push @ret, substr($_, 1, -1);
         }
     }
     return @ret;
@@ -71,6 +78,8 @@ sub m1prob {
 sub print_counts {
     my $e = shift;
     my $counts = shift;
+    my $ist2s = ($e =~ /^[^ ]+ \( /); # Check if this is a string
+    my @earr = strip_arr($e, !$ist2s);
     my $sum = sum(values %$counts);
     return if $sum < $SRC_MIN_FREQ;
     my @keys = keys %$counts;
@@ -80,11 +89,14 @@ sub print_counts {
     }
     foreach my $f (sort @keys) {
         my $words = 0;
-        my @earr = strip_arr($e);
-        my @farr = strip_arr($f);
+        my @farr = strip_arr($f, $ist2s);
+        # If we are using target side syntax and the rule is bad
+        my $fisxrule;
+        $fisxrule = " isx=1" if($TRG_SYNTAX and ($f =~ / \@ \@X\@ /));
+        # Find the counts/probabilities
         my $lfreq = ($counts->{$f} ? log($counts->{$f}) : 0);
         my $lprob = ($counts->{$f} ? log($counts->{$f}/$sum) : -99);
-        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f", $lfreq, $lprob;
+        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f$fisxrule", $lfreq, $lprob;
         printf " ${PREFIX}l=%f", m1prob(\@earr, \@farr) if $LEX_PROB_FILE;
         print " w=".scalar(@farr) if (@farr);
         print "\n";

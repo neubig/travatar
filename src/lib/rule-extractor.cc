@@ -294,8 +294,14 @@ void RuleExtractor::PrintRuleSurface(const HyperNode & node,
     oss << " )";
 }
 
+// A utility function to get the span labele if it exists, and nothing if not
+inline WordId GetSpanLabel(const LabeledSpans & trg_labs, const pair<int,int> & trg_span) {
+    LabeledSpans::const_iterator it = trg_labs.find(trg_span);
+    return (it != trg_labs.end()) ? it->second : -1;
+}
+
 // Creating a rule
-string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const LabeledSpans * trg_spans) const {
+string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const LabeledSpans * trg_labs) const {
     // Get the target span for the top node
     const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
     if(trg_span.size() == 0)
@@ -307,11 +313,20 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     vector<int> trg_cover(trg_end-trg_begin, -1), src_cover(src_end-src_begin, -1);
     const vector<HyperNode*> & tails = rule.GetTails();
     map<int,int> tail_map;
+    // Tail labels
+    vector<WordId> tail_labs;
+    if(trg_labs) tail_labs.push_back(GetSpanLabel(*trg_labs, make_pair(trg_begin, trg_end)));
+    // Handle all tails
     for(int i = 0; i < (int)tails.size(); i++) {
         tail_map[tails[i]->GetId()] = i;
+        // Get the target and source span
         const std::set<int> & my_trg_span = tails[i]->GetTrgSpan();
+        int my_trg_begin = *my_trg_span.begin(), my_trg_end = *my_trg_span.rbegin()+1;
         const pair<int,int> & my_src_span = tails[i]->GetSpan();
-        for(int j = *my_trg_span.begin(); j <= *my_trg_span.rbegin(); j++) {
+        // Add the target label
+        if(trg_labs) tail_labs.push_back(GetSpanLabel(*trg_labs, make_pair(my_trg_begin, my_trg_end)));
+        // Add the covers
+        for(int j = my_trg_begin; j < my_trg_end; j++) {
             // Rules should never cover the same span
             if(trg_cover[j-trg_begin] != -1) {
                 cerr << "src: " << Dict::PrintWords(src_sent) << endl << "trg: " << Dict::PrintWords(trg_sent) << endl << rule << endl;
@@ -344,6 +359,7 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     if(remaining_fragments.size() > 0)
         THROW_ERROR("Did not use all fragments");
     // Make the actual rule
+    // TODO: If we have target labels, add them
     oss << " |||";
     int last = -1;
     for(int i = 0; i < (int)trg_cover.size(); i++) {
@@ -353,6 +369,11 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
             oss << " x" << trg_cover[i];
             last = trg_cover[i];
         }
+    }
+    if(tail_labs.size() != 0) {
+        oss << " @";
+        BOOST_FOREACH(WordId wid, tail_labs)
+            oss << ' ' << (wid == -1 ? Dict::INVALID_SPAN_SYMBOL : Dict::WSym(wid));
     }
     oss << " ||| " << exp(rule.GetScore());
     return oss.str();

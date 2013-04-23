@@ -468,7 +468,7 @@ public:
         rule_exp.push_back("ROOT ( x0:S ) ||| x0 @ ROOT ROOT ||| 1");
         rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 @ ROOT NP VP ||| 1");
         rule_exp.push_back("NP ( x0:PRP ) ||| x0 @ NP NP ||| 1");
-        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ PRP ||| 1");
+        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ NP ||| 1");
         rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" @ VP VB ||| 1");
         rule_exp.push_back("VB ( \"go\" ) ||| \"va\" @ VB ||| 1");
         rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 @ ROOT NP VP ||| 1");

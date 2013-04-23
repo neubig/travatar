@@ -18,6 +18,8 @@ struct Dict {
         add_ = false;
     }
 
+    static const std::string INVALID_SPAN_SYMBOL;
+
     // Get the word ID
     static WordId WID(const std::string & str);
 
