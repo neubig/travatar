@@ -92,7 +92,7 @@ sub print_counts {
         my @farr = strip_arr($f, $ist2s);
         # If we are using target side syntax and the rule is bad
         my $fisxrule;
-        $fisxrule = " isx=1" if($TRG_SYNTAX and ($f =~ / \@ \@X\@ /));
+        $fisxrule = " isx=1" if($TRG_SYNTAX and ($f =~ / \@ \@X\@/));
         # Find the counts/probabilities
         my $lfreq = ($counts->{$f} ? log($counts->{$f}) : 0);
         my $lprob = ($counts->{$f} ? log($counts->{$f}/$sum) : -99);
