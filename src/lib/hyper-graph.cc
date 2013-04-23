@@ -538,6 +538,11 @@ void HyperGraph::AddWord(WordId id) {
 
 LabeledSpans HyperGraph::GetLabeledSpans() const {
     LabeledSpans ret;
-    // TODO
+    // Do this in reverse so the earlier values over-write the later values.
+    // This will have the effect of having nodes higher-up in the tree being
+    // given precedence, as long as heads always come higher in the graph
+    // than tails.
+    BOOST_REVERSE_FOREACH(const HyperNode * node, nodes_)
+        ret[node->GetSpan()] = node->GetSym();
     return ret;
 }
