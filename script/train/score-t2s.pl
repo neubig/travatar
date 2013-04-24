@@ -12,6 +12,9 @@ my $TOP_N = 10;
 my $SRC_MIN_FREQ = 0;
 my $LEX_PROB_FILE = "";
 my $TRG_SYNTAX = 0;
+my $SRC_LABEL = 0;
+my $TRG_LABEL = 0;
+my $SRC_TRG_LABEL = 0;
 my $PREFIX = "egf";
 GetOptions(
     "top-n=i" => \$TOP_N,                 # Only extract the top N patterns
@@ -20,6 +23,9 @@ GetOptions(
                                           # calculating model 1
     "prefix=s" => \$PREFIX,               # Prefix for model 1
     "trg-syntax" => \$TRG_SYNTAX,         # Use target side syntax
+    "src-label" => \$SRC_LABEL,           # Calculate sparse features for the source labels
+    "trg-label" => \$TRG_LABEL,           # Calculate sparse features for the target labels
+    "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
 );
 
 if(@ARGV != 0) {
@@ -75,6 +81,7 @@ sub m1prob {
     return $ret;
 }
 
+my $SYNTAX_FEATS = ($TRG_SYNTAX or $SRC_LABEL or $TRG_LABEL or $SRC_TRG_LABEL);
 sub print_counts {
     my $e = shift;
     my $counts = shift;
@@ -91,12 +98,21 @@ sub print_counts {
         my $words = 0;
         my @farr = strip_arr($f, $ist2s);
         # If we are using target side syntax and the rule is bad
-        my $fisxrule;
-        $fisxrule = " isx=1" if($TRG_SYNTAX and ($f =~ / \@ \@X\@/));
+        my $extra_feat;
+        if($SYNTAX_FEATS) {
+            $e =~ /^([^ ]+) /;
+            my $src_lab = $1;
+            $f =~ / @ ([^ ]+)/;
+            my $trg_lab = $1;
+            $extra_feat .= " isx=1" if($TRG_SYNTAX and $trg_lab eq "\@X\@");
+            $extra_feat .= " sl_${src_lab}=1" if $SRC_LABEL and $src_lab;
+            $extra_feat .= " tl_${trg_lab}=1" if $TRG_LABEL and $trg_lab;
+            $extra_feat .= " stl_${src_lab}_${trg_lab}=1" if $SRC_TRG_LABEL and $src_lab and $trg_lab;
+        }
         # Find the counts/probabilities
         my $lfreq = ($counts->{$f} ? log($counts->{$f}) : 0);
         my $lprob = ($counts->{$f} ? log($counts->{$f}/$sum) : -99);
-        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f$fisxrule", $lfreq, $lprob;
+        printf "$e ||| $f ||| p=1 lfreq=%f ${PREFIX}p=%f$extra_feat", $lfreq, $lprob;
         printf " ${PREFIX}l=%f", m1prob(\@earr, \@farr) if $LEX_PROB_FILE;
         print " w=".scalar(@farr) if (@farr);
         print "\n";

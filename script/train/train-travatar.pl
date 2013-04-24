@@ -44,6 +44,7 @@ my $ATTACH_LEN = "1";
 my $NONTERM_LEN = "2";
 my $TERM_LEN = "10";
 my $NBEST_RULES = "20";
+my $SCORE_OPTIONS = "";
 
 # Model files
 my $TM_FILE = "";
@@ -76,6 +77,7 @@ GetOptions(
     "nonterm_len=s" => \$NONTERM_LEN, # The maximum number of non-terminals in a rule
     "term_len=s" => \$TERM_LEN, # The maximum number of terminals in a rule
     "nbest_rules=s" => \$NBEST_RULES, # The maximum number of rules for each source
+    "score_options=s" => \$SCORE_OPTIONS, # Any additional options to the score-t2s.pl script (src-trg)
     "tm_file=s" => \$TM_FILE, # An already created TM file
     "lm_file=s" => \$LM_FILE, # An already created LM file
     "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
@@ -190,10 +192,9 @@ if(not $TM_FILE) {
     my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
     safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     # Then, score the rules (in parallel?)
-    my $TRG_SYNTAX = (($TRG_FORMAT eq "word") ? "" : "-trg-syntax");
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $TRG_SYNTAX --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
+    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
     my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=0 --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
