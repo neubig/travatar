@@ -119,6 +119,14 @@ shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, con
 
 }
 
+// Read in the stats
+shared_ptr<EvalStats> EvalMeasureRibes::ReadStats(const std::string & line) {
+    EvalStatsPtr ret(new EvalStatsRibes());
+    ret->ReadStats(line);
+    return ret;
+}
+
+
 
 EvalMeasureRibes::EvalMeasureRibes(const std::string & config)
                         : RIBES_VERSION_("1.02.3"), alpha_(0.25), beta_(0.1) {

@@ -65,6 +65,17 @@ shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngr
     return ret;
 }
 
+// Read in the stats
+shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line) {
+    EvalStatsPtr ret;
+    if(scope_ == SENTENCE)
+        ret.reset(new EvalStatsAverage);
+    else
+        ret.reset(new EvalStatsBleu(std::vector<EvalStatsDataType>(), smooth_val_));
+    ret->ReadStats(line);
+    return ret;
+}
+
 BleuReport EvalStatsBleu::CalcBleuReport() const {
     BleuReport report;
     int ngram_order = (vals_.size()-1)/2;

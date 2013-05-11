@@ -122,7 +122,7 @@ public:
         prob_exp[8] = 0;
         BOOST_FOREACH(const HyperEdge * edge, src2_copy.GetEdges())
             prob_act.push_back(edge->GetScore());
-        return CheckVector(prob_exp, prob_act);
+        return CheckAlmostVector(prob_exp, prob_act);
     }
 
     int TestInsideOutsideUnbalanced() {

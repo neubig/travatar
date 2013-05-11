@@ -13,11 +13,7 @@ class EvalStatsTer : public EvalStatsAverage {
 public:
     EvalStatsTer(double val, double denom = 1.0, bool reverse = false)
         : EvalStatsAverage(val,denom), reverse_(reverse) { }
-    virtual std::string ConvertToString() const {
-        std::ostringstream oss;
-        oss << "TER = " << ConvertToScore();
-        return oss.str();
-    }
+    virtual std::string GetIdString() const { return "TER"; }
     virtual double ConvertToScore() const {
         double score = vals_[1] ? vals_[0]/vals_[1] : 0;
         return reverse_ ? 1-score : score;
@@ -40,6 +36,10 @@ public:
                 const Sentence & sys,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX);
+
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr ReadStats(
+                const std::string & file);
 
 protected:
     
