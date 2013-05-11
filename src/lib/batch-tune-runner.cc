@@ -188,7 +188,27 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
 }
 
 void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, const string & filename) {
-    THROW_ERROR("CalculateSentenceStats not implemented yet");
+    // Open the system file
+    ifstream sys_in(config.GetString("nbest").c_str());
+    if(!sys_in)
+        THROW_ERROR(config.GetString("nbest") << " could not be opened for reading");
+    // Open the output file
+    ofstream stat_out(filename.c_str());
+    if(!stat_out)
+        THROW_ERROR(filename << " could not be opened for reading");
+    // Process the file one by one
+    string line;
+    regex threebars(" \\|\\|\\| ");
+    while(getline(sys_in, line)) {
+        vector<string> columns;
+        algorithm::split_regex(columns, line, threebars);
+        if(columns.size() != 4)
+            THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
+        int id = atoi(columns[0].c_str());
+        Sentence hyp = Dict::ParseWords(columns[1]);
+        EvalStatsPtr stats = eval_->CalculateStats(refs_[id], hyp, id);
+        stat_out << stats->WriteStats() << endl;
+    }
 }
 
 // Run the model

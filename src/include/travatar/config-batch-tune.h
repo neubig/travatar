@@ -34,6 +34,8 @@ public:
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
         AddConfigEntry("restarts", "20", "The number of random tuning restarts");
+        AddConfigEntry("stat_in", "", "Files containing pre-computed statistics for each n-best list");
+        AddConfigEntry("stat_out", "", "Set this option to pre-compute statistics for an n-best list");
         AddConfigEntry("weight_in", "", "File of initial weights");
         AddConfigEntry("weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
 
