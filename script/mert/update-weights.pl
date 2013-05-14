@@ -29,7 +29,7 @@ if($LOG) {
     while(<FILE1>) {
         chomp;
         if(/Best point: (.*)  =>/) {
-            @weights = split(/ /, $1);
+            @weights = split(/ +/, $1);
             last;
         }
     }
@@ -51,7 +51,7 @@ if($LOG) {
     open FILE1, "<:utf8", $WEIGHTS or die "Couldn't open $WEIGHTS\n";
     while(<FILE1>) {
         chomp;
-        for(split(/ /)) { my ($k,$v) = split(/=/); $wmap{$k} = $v; }
+        for(split(/ +/)) { my ($k,$v) = split(/=/); $wmap{$k} = $v; }
     }
     close FILE1;
 } else {

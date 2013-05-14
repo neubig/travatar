@@ -60,7 +60,7 @@ close ALIGN;
 open FGIVENE, ">:utf8", $ARGV[3] or die "Couldn't open $ARGV[3]\n";
 open EGIVENF, ">:utf8", $ARGV[4] or die "Couldn't open $ARGV[4]\n";
 while(my($k,$v) = each(%fec)) {
-    my ($f, $e) = split(/ /, $k);
+    my ($f, $e) = split(/ +/, $k);
     print FGIVENE "$f $e ".($v/$ec{$e})."\n" if $f ne "NULL";
     print EGIVENF "$e $f ".($v/$fc{$f})."\n" if $e ne "NULL";
 }
