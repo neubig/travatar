@@ -27,6 +27,14 @@ shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref, const
 
 }
 
+// Read in the stats
+shared_ptr<EvalStats> EvalMeasureTer::ReadStats(const std::string & line) {
+    EvalStatsPtr ret(new EvalStatsTer(0, 0, reverse_));
+    ret->ReadStats(line);
+    return ret;
+}
+
+
 EvalMeasureTer::EvalMeasureTer(const std::string & config)
                         : reverse_(false) {
     if(config.length() == 0) return;

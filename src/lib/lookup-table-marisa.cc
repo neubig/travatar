@@ -33,7 +33,7 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
     while(getline(in, line)) {
         vector<string> columns;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
-        if(columns.size() < 3) THROW_ERROR("Bad line in rule table: " << line);
+        if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
         vector<WordId> trg_words, trg_syms;
         Dict::ParseQuotedWords(columns[1], trg_words, trg_syms);
         SparseMap features = Dict::ParseFeatures(columns[2]);

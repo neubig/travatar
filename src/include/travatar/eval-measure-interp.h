@@ -17,8 +17,10 @@ namespace travatar {
 // The interpolated stats
 class EvalStatsInterp : public EvalStats {
 public:
-    EvalStatsInterp(const std::vector<EvalStatsPtr> & stats, const std::vector<double> & coeffs) :
+    EvalStatsInterp(const std::vector<EvalStatsPtr> & stats = std::vector<EvalStatsPtr>(),
+                    const std::vector<double> & coeffs = std::vector<double>()) :
         stats_(stats), coeffs_(coeffs) { }
+    virtual ~EvalStatsInterp() { }
 
     virtual std::string ConvertToString() const {
         std::ostringstream oss;
@@ -30,6 +32,7 @@ public:
         oss << ")/Z";
         return oss.str();
     }
+    virtual std::string GetIdString() const { return "INTERP"; }
     virtual double ConvertToScore() const {
         double num = 0, denom = 0;
         for(int i = 0; i < (int)stats_.size(); i++) {
@@ -75,6 +78,9 @@ public:
             newstats.push_back(ptr->Clone());
         return EvalStatsPtr(new EvalStatsInterp(newstats, coeffs_));
     }
+
+    virtual std::string WriteStats();
+
 protected:
     std::vector<EvalStatsPtr> stats_;
     std::vector<double> coeffs_;
@@ -89,6 +95,7 @@ public:
     EvalMeasureInterp(const std::vector<boost::shared_ptr<EvalMeasure> > & measures, const std::vector<double> & coeffs) 
         : measures_(measures), coeffs_(coeffs) { }
     EvalMeasureInterp(const std::string & str);
+    virtual ~EvalMeasureInterp() { }
 
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(
@@ -97,8 +104,9 @@ public:
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX);
 
-    // int GetNgramOrder() const { return ngram_order_; }
-    // void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr ReadStats(
+                const std::string & file);
 
 protected:
     std::vector<boost::shared_ptr<EvalMeasure> > measures_;

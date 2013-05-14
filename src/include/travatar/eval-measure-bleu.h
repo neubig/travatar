@@ -17,10 +17,11 @@ typedef struct {
 
 class EvalStatsBleu : public EvalStats {
 public:
-    EvalStatsBleu(const std::vector<EvalStatsDataType> vals, double smooth = 0)
+    EvalStatsBleu(const std::vector<EvalStatsDataType> vals = std::vector<EvalStatsDataType>(), double smooth = 0)
                             : smooth_(smooth) {
         vals_ = vals;
     }
+    virtual std::string GetIdString() const { return "BLEU"; }
     virtual double ConvertToScore() const;
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_)); }
@@ -53,12 +54,16 @@ public:
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX);
 
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr ReadStats(
+                const std::string & file);
+
     // Calculate the stats with cached n-grams
     boost::shared_ptr<EvalStats> CalculateStats(
                         const NgramStats & ref_ngrams,
                         int ref_len,
                         const NgramStats & sys_ngrams,
-                        int sys_len);
+                        int sys_len); 
 
     // Calculate the n-gram statistics necessary for BLEU in advance
     NgramStats * ExtractNgrams(const Sentence & sentence) const;

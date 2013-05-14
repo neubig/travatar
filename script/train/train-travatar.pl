@@ -286,8 +286,8 @@ sub create_snt {
         last if not defined($s);
         chomp $s; chomp $t;
         print OUT "1\n".
-                  join(" ", map { $src_vcb->{$_} ? $src_vcb->{$_} : 1 } split(/ /, $s))."\n".
-                  join(" ", map { $trg_vcb->{$_} ? $trg_vcb->{$_} : 1 } split(/ /, $t))."\n";
+                  join(" ", map { $src_vcb->{$_} ? $src_vcb->{$_} : 1 } split(/ +/, $s))."\n".
+                  join(" ", map { $trg_vcb->{$_} ? $trg_vcb->{$_} : 1 } split(/ +/, $t))."\n";
     }
     close SRC; close TRG; close OUT;
 }

@@ -28,6 +28,8 @@ public:
     // Clone is a utility function that basically calls the constructor of
     // child classes, as this functionality is not included in C++
     virtual EvalStatsPtr Clone() const = 0;
+    // Get the ID of this stats
+    virtual std::string GetIdString() const = 0;
     // Check if the value is zero
     virtual bool IsZero() {
         BOOST_FOREACH(const EvalStatsDataType & val, vals_)
@@ -38,7 +40,7 @@ public:
     // Utility functions
     virtual std::string ConvertToString() const {
         std::ostringstream oss;
-        oss << ConvertToScore();
+        oss << GetIdString() << " = " << ConvertToScore();
         return oss.str();
     }
     virtual EvalStats & PlusEquals(const EvalStats & rhs) {
@@ -76,6 +78,21 @@ public:
         return true;
     }
     const std::vector<EvalStatsDataType> & GetVals() const { return vals_; }
+    virtual void ReadStats(const std::string & str) {
+        vals_.resize(0);
+        EvalStatsDataType val;
+        std::istringstream iss(str);
+        while(iss >> val)
+            vals_.push_back(val);
+    }
+    virtual std::string WriteStats() {
+        std::ostringstream oss;
+        for(int i = 0; i < (int)vals_.size(); i++) {
+            if(i) oss << ' ';
+            oss << vals_[i];
+        }
+        return oss.str();
+    }
 protected:
     std::vector<EvalStatsDataType> vals_;
 };
@@ -94,13 +111,14 @@ inline std::ostream &operator<<( std::ostream &out, const EvalStats &L ) {
 // Simple sentence-averaged stats
 class EvalStatsAverage : public EvalStats {
 public:
-    EvalStatsAverage(double val, double denom = 1.0) {
+    EvalStatsAverage(double val = 0.0, double denom = 1.0) {
         vals_.resize(2);
         vals_[0] = val;
         vals_[1] = denom;
     }
     double ConvertToScore() const { return vals_[1] ? vals_[0]/vals_[1] : 0; }
     EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsAverage(vals_[0], vals_[1])); }
+    virtual std::string GetIdString() const { return "AVG"; }
     // Getters
     double GetVal() const { return vals_[0]; }
     int GetDenom() const { return vals_[1]; }
@@ -120,6 +138,7 @@ public:
     EvalMeasure() { }
     // Create with configuration
     EvalMeasure(const std::string & config) { }
+    virtual ~EvalMeasure() { }
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr CalculateStats(
@@ -127,6 +146,10 @@ public:
                 const Sentence & sys,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) = 0;
+
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr ReadStats(
+                const std::string & file) = 0;
 
     // Parse a pair of strings
     static std::vector<StringPair> ParseConfig(const std::string & config);

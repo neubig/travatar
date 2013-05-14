@@ -22,7 +22,7 @@ while(<FILE0>) {
 while(<FILE0>) {
     chomp;
     last if not $_;
-    for(split(/ /)) {
+    for(split(/ +/)) {
         s/=.*//g;
         $poss{$_} = scalar(keys %poss);
     }
@@ -34,7 +34,7 @@ while(<STDIN>) {
     my @col = split(/ \|\|\| /);
     @col >= 3 or die "Bad line $_";
     my @arr = map { 0 } keys %poss;
-    for(split(/ /, $col[3])) {
+    for(split(/ +/, $col[3])) {
         my ($k, $v) = split(/=/);
         die "bad line k==$k, v==$v" if not exists $poss{$k};
         $arr[$poss{$k}] = $v;

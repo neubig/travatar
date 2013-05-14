@@ -35,7 +35,7 @@ if($SRC) {
             if(/^sentence /) {
                 $_ = <FILE0>;
                 chomp;
-                for(split(/ /)) { $src{$_}++; }
+                for(split(/ +/)) { $src{$_}++; }
             }
         }
     }

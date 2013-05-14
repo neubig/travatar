@@ -20,7 +20,7 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm) {
+void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
     string line;
     regex threebars(" \\|\\|\\| ");
     while(getline(sys_in, line)) {
@@ -34,7 +34,14 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm) {
         SparseMap feat = Dict::ParseFeatures(columns[3]);
         // Calculate the score
         const Sentence & ref = SafeAccess(refs_,id);
-        shared_ptr<EvalStats> stats = eval_->CalculateStats(ref, hyp, id);
+        shared_ptr<EvalStats> stats;
+        if(stat_in) {
+            if(!getline(*stat_in, line))
+                THROW_ERROR("Lines in statistic file and system input don't match");
+            stats = eval_->ReadStats(line);
+        } else {
+            stats = eval_->CalculateStats(ref, hyp, id);
+        }
         // Add the example
         while((int)tgm.NumExamples() <= id) {
             if(id % 100 == 0)
@@ -70,11 +77,57 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
     }
 }
 
-// Run the model
-void BatchTuneRunner::Run(const ConfigBatchTune & config) {
+// Perform tuning
+void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
+    // Chose the tuning method
+    shared_ptr<Tune> tgm;
+    if(config.GetString("algorithm") == "mert") {
+        tgm.reset(new TuneMert);
+    } else if(config.GetString("algorithm") == "greedy-mert") {
+        tgm.reset(new TuneGreedyMert);
+        ((TuneGreedyMert&)*tgm).SetThreads(config.GetInt("threads"));
+    }
 
-    // Set the debugging level
-    GlobalVars::debug = config.GetInt("debug");
+    // Open the n-best list if it exists
+    bool use_nbest = config.GetString("nbest") != "";
+    bool use_forest = config.GetString("forest") != "";
+    if(!(use_nbest ^ use_forest))
+        THROW_ERROR("Must specify either -nbest or -forest and not both");
+
+    // Open the system files
+    string sys_file = use_nbest ? config.GetString("nbest") : config.GetString("forest");
+    vector<string> sys_files;
+    boost::split(sys_files,sys_file,boost::is_any_of(","));
+
+    // Check if we have stats to read in
+    string stat_file = config.GetString("stat_in");
+    vector<string> stat_files;
+    if(stat_file.length()) {
+        if(use_forest)
+            THROW_ERROR("Pre-computed statistics files can only be used for n-best tuning");
+        boost::split(stat_files,stat_file,boost::is_any_of(","));
+        if(stat_files.size() != sys_files.size())
+            THROW_ERROR("Number of system outputs and evaluation statistics don't match!");
+    }
+
+    // Convert the n-best lists or forests into example pairs for tuning
+    PRINT_DEBUG("Loading system output..." << endl, 1);
+    for(int i = 0; i < (int)sys_files.size(); i++) {
+        // Open the system file
+        ifstream sys_in(sys_files[i].c_str());
+        if(!sys_in)
+            THROW_ERROR(sys_files[i] << " could not be opened for reading");
+        // Open the stats file
+        shared_ptr<ifstream> stat_in;
+        if(stat_files.size() > 0) {
+            stat_in.reset(new ifstream(stat_files[i].c_str()));
+            if(!*stat_in)
+                THROW_ERROR(stat_files[i] << " could not be opened for reading");
+        }
+        // Actually load the files
+        if(use_nbest) LoadNbests(sys_in, *tgm, stat_in.get());
+        else          LoadForests(sys_in, *tgm);
+    }
 
     // Load the features from the weight file
     SparseMap weights;
@@ -85,53 +138,6 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
             THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
         weights = Dict::ParseFeatures(weight_in);
         weight_in.close();
-    }
-
-    // Open the references
-    ifstream ref_in(config.GetMainArg(0).c_str());
-    if(!ref_in)
-        THROW_ERROR(config.GetMainArg(0) << " could not be opened for reading");
-
-    // Open the n-best list if it exists
-    bool use_nbest = config.GetString("nbest") != "";
-    bool use_forest = config.GetString("forest") != "";
-    if(!(use_nbest ^ use_forest))
-        THROW_ERROR("Must specify either -nbest or -forest and not both");
-
-    // Load the references
-    PRINT_DEBUG("Loading references..." << endl, 1);
-    string line;
-    while(getline(ref_in, line)) {
-        Sentence ref = Dict::ParseWords(line);
-        refs_.push_back(ref);
-        ref_len_ += ref.size();
-    }
-
-    // Create the evaluation measure
-    eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
-
-    // Chose the MERT
-    shared_ptr<Tune> tgm;
-    if(config.GetString("algorithm") == "mert") {
-        tgm.reset(new TuneMert);
-    } else if(config.GetString("algorithm") == "greedy-mert") {
-        tgm.reset(new TuneGreedyMert);
-        ((TuneGreedyMert&)*tgm).SetThreads(config.GetInt("threads"));
-    }
-
-    // Convert the n-best lists or forests into example pairs for tuning
-    PRINT_DEBUG("Loading system output..." << endl, 1);
-    string sys_file = use_nbest ? config.GetString("nbest") : config.GetString("forest");
-    vector<string> sys_files;
-    boost::split(sys_files,sys_file,boost::is_any_of(","));
-    BOOST_FOREACH(const string & my_sys, sys_files) {
-        ifstream sys_in(my_sys.c_str());
-        if(!sys_in)
-            THROW_ERROR(sys_file << " could not be opened for reading");
-        if(use_nbest)
-            LoadNbests(sys_in, *tgm);
-        else
-            LoadForests(sys_in, *tgm);
     }
 
     // Set the weight ranges
@@ -179,4 +185,61 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     // Print result
     PRINT_DEBUG("Best: " << Dict::PrintFeatures(best_weights) << " => " << best_score << endl, 0);
     cout << Dict::PrintFeatures(best_weights) << endl;
+}
+
+void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, const string & filename) {
+    // Open the system file
+    ifstream sys_in(config.GetString("nbest").c_str());
+    if(!sys_in)
+        THROW_ERROR(config.GetString("nbest") << " could not be opened for reading");
+    // Open the output file
+    ofstream stat_out(filename.c_str());
+    if(!stat_out)
+        THROW_ERROR(filename << " could not be opened for reading");
+    // Process the file one by one
+    string line;
+    regex threebars(" \\|\\|\\| ");
+    while(getline(sys_in, line)) {
+        vector<string> columns;
+        algorithm::split_regex(columns, line, threebars);
+        if(columns.size() != 4)
+            THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
+        int id = atoi(columns[0].c_str());
+        Sentence hyp = Dict::ParseWords(columns[1]);
+        EvalStatsPtr stats = eval_->CalculateStats(refs_[id], hyp, id);
+        stat_out << stats->WriteStats() << endl;
+    }
+}
+
+// Run the model
+void BatchTuneRunner::Run(const ConfigBatchTune & config) {
+
+    // Set the debugging level
+    GlobalVars::debug = config.GetInt("debug");
+
+    // Open the references
+    ifstream ref_in(config.GetMainArg(0).c_str());
+    if(!ref_in)
+        THROW_ERROR(config.GetMainArg(0) << " could not be opened for reading");
+
+    // Load the references
+    PRINT_DEBUG("Loading references..." << endl, 1);
+    string line;
+    while(getline(ref_in, line)) {
+        Sentence ref = Dict::ParseWords(line);
+        refs_.push_back(ref);
+        ref_len_ += ref.size();
+    }
+
+    // Create the evaluation measure
+    eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
+    
+    // Figure out whether we are tuning or calculating sentence statistics
+    string stat_out_filename = config.GetString("stat_out");
+    if(stat_out_filename.length()) {
+        CalculateSentenceStats(config, stat_out_filename);
+    } else {
+        DoTuning(config);
+    }
+    
 }

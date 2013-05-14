@@ -48,7 +48,7 @@ while(1) {
     $ss[$id] = $pid;
     my $has = $buffer{$pid};
     $buffer{$pid} = {} if not $has;
-    for(split(/ /, $arr[2])) {
+    for(split(/ +/, $arr[2])) {
         my @kv = split(/=/);
         @kv == 2 or die "bad line $next\n";
         $buffer{$pid}->{$kv[0]} = $kv[1] if (($id == 1) or ($kv[0] ne "w"));

@@ -11,14 +11,9 @@ namespace travatar {
 
 class EvalStatsRibes : public EvalStatsAverage {
 public:
-    EvalStatsRibes(double val, double denom = 1.0)
-        : EvalStatsAverage(val,denom) { }
-    virtual std::string ConvertToString() const {
-        std::ostringstream oss;
-        oss << "RIBES = " << ConvertToScore();
-        return oss.str();
-    }
+    EvalStatsRibes(double val = 0.0, double denom = 1.0) : EvalStatsAverage(val,denom) { }
     EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsRibes(vals_[0], vals_[1])); }
+    virtual std::string GetIdString() const { return "RIBES"; }
 };
 
 class EvalMeasureRibes : public EvalMeasure {
@@ -38,8 +33,9 @@ public:
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX);
 
-    // int GetNgramOrder() const { return ngram_order_; }
-    // void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr ReadStats(
+                const std::string & file);
 
 protected:
     std::string RIBES_VERSION_;
