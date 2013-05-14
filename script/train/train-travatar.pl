@@ -258,7 +258,7 @@ sub create_vcb {
     my %vals;
     while(<WORDS>) {
         chomp;
-        for(split(/ +/)) { $vals{$_}++; }
+        for(to_words($_)) { $vals{$_}++; }
     }
     close WORDS;
     delete $vals{""};
@@ -286,8 +286,8 @@ sub create_snt {
         last if not defined($s);
         chomp $s; chomp $t;
         print OUT "1\n".
-                  join(" ", map { $src_vcb->{$_} ? $src_vcb->{$_} : 1 } split(/ +/, $s))."\n".
-                  join(" ", map { $trg_vcb->{$_} ? $trg_vcb->{$_} : 1 } split(/ +/, $t))."\n";
+                  join(" ", map { $src_vcb->{$_} ? $src_vcb->{$_} : 1 } to_words($s))."\n".
+                  join(" ", map { $trg_vcb->{$_} ? $trg_vcb->{$_} : 1 } to_words($t))."\n";
     }
     close SRC; close TRG; close OUT;
 }
@@ -309,4 +309,12 @@ sub run_two {
         safesystem("$CMD1") or die;
         safesystem("$CMD2") or die;
     }
+}
+
+sub to_words {
+    my $str = shift;
+    $str =~ s/^ +//g;
+    $str =~ s/ +$//g;
+    return split(/ +/, $str);
+}
 }
