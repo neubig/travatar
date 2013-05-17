@@ -317,4 +317,4 @@ sub to_words {
     $str =~ s/ +$//g;
     return split(/ +/, $str);
 }
-}
+

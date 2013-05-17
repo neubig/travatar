@@ -71,7 +71,7 @@ If you can run the following commands and get the help message, everythin should
 </p>
 
 <pre>
-cd ~/travatar/tutorial
+cd ~/travatar-tutorial
 travatar/src/bin/travatar --help
 </pre>
 
@@ -87,7 +87,7 @@ unzip stanford-parser*.zip
 
 <pre>
 tar -xzf kytea-0.4.3.tar.gz
-cd kytea-0.4.3.tar.gz
+cd kytea-0.4.3
 ./configure --prefix=$HOME/travatar-tutorial/usr
 make
 make install
@@ -228,7 +228,10 @@ Then run a series of three commands that add start and finish tokens to the trai
 </p>
 
 <pre>
-irstlm-5.80.01/scripts/add-start-end.sh &lt; data/kyoto-train.tok.ja &gt; lm/kyoto-train.startend.ja
+travatar/script/tree/lowercase.pl &lt; data/kyoto-train.tok.ja &gt; data/kyoto-train.toklow.ja
+</pre>
+<pre>
+irstlm-5.80.01/scripts/add-start-end.sh &lt; data/kyoto-train.toklow.ja &gt; lm/kyoto-train.startend.ja
 </pre>
 
 <p>
@@ -246,6 +249,14 @@ Finally, we compile the model to ARPA format, which travatar can read:
 
 <pre>
 irstlm-5.80.01/src/compile-lm --text yes lm/kyoto-train.ja.lm.gz lm/kyoto-train.ja.arpa
+</pre>
+
+<p>
+Binarizing the language model.
+</p>
+
+<pre>
+travatar/src/kenlm/lm/build_binary -i lm/kyoto-train.ja.arpa lm/kyoto-train.ja.blm
 </pre>
 
 <h2>Training the Translation Model</h2>
