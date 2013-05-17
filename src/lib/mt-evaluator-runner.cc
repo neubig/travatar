@@ -126,7 +126,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                 for(int k = 0; k < eval_count; k++) {
                     int win = 0, tie = 0, loss = 0;
                     for(int l = 0; l < bootstrap; l++, idi++, idj++) {
-                        PRINT_DEBUG("   "<<bootstrap_scores[idi]<<" vs. "<<bootstrap_scores[idj], 2);
+                        PRINT_DEBUG("   "<<bootstrap_scores[idi]<<" vs. "<<bootstrap_scores[idj] << endl, 2);
                         if(bootstrap_scores[idi] > bootstrap_scores[idj]) win++;
                         else if(bootstrap_scores[idi] < bootstrap_scores[idj]) loss++;
                         else tie++;
