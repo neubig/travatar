@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([travatar], [0.0.1], [neubig@gmail.com])
+AC_INIT([travatar], [0.1.0], [neubig@gmail.com])
 AC_CONFIG_SRCDIR(src/lib/travatar.cc)
 AC_CONFIG_HEADERS([src/include/travatar/config.h])
 AC_CONFIG_FILES([

@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>travatar - Parsing for Travatar</title>
+    <title>Travatar - Parsing for Travatar</title>
     <link href="main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
@@ -119,7 +119,7 @@ bash make-linux.sh
 <h4>Parsing 1-best Trees</h4>
 
 <p>
-For travatar training (currently) only 1-best trees are supported for rule learning, so we will first describe how to create 1-best trees.
+For Travatar training (currently) only 1-best trees are supported for rule learning, so we will first describe how to create 1-best trees.
 But first, before parsing, you must tokenize the text, which can be done with the Stanford parser.
 Given the tokenized file <tt>tokenized.txt</tt>, we then run Egret as follows, where <tt>$EGRET_DIR</tt> is the directory to which you downloaded Egret.
 </p>
@@ -131,7 +131,7 @@ $EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egre
 <p>
 Unfortunately, for some sentences, Egret's parsing fails and generates an empty tree "(())", maybe one in every 10000 or so sentences.
 This means that we will not be able to extract rules from, or translate any failed sentences.
-If we already have parse trees from the Stanford parser, which is less accurate but more robust, we can use the script <tt>replace-failed-parse.pl</tt> included with travatar to replace only failed parses.
+If we already have parse trees from the Stanford parser, which is less accurate but more robust, we can use the script <tt>replace-failed-parse.pl</tt> included with Travatar to replace only failed parses.
 </p>
 
 <pre>
@@ -170,7 +170,7 @@ This is generally a good setting, but you can increase or reduce this number if 
 
 <p>
 Again, as some parses may fail, you can replace them with parses from the Stanford parser.
-In order to do so, we first convert the Stanford trees to forests with the <tt>tree-converter</tt> tool provided with travatar, and then use the <tt>replace-failed-parse.pl</tt> script as we did before.
+In order to do so, we first convert the Stanford trees to forests with the <tt>tree-converter</tt> tool provided with Travatar, and then use the <tt>replace-failed-parse.pl</tt> script as we did before.
 </p>
 
 <pre>
@@ -179,7 +179,7 @@ $TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret stanford-forest.
 </pre>
 
 <p>
-When using forests in decoding, we must pass the option "<tt>-in_format egret</tt>" to travatar.
+When using forests in decoding, we must pass the option "<tt>-in_format egret</tt>" to Travatar.
 When running <tt>mert-travatar.pl</tt>, this can be done using "<tt>-decoder-options '-in_format egret'</tt>".
 </p>
 
@@ -188,7 +188,7 @@ When running <tt>mert-travatar.pl</tt>, this can be done using "<tt>-decoder-opt
 
 <p>
 The following directions are for parsing Japanese.
-In Japanese, dependency parsers are the most widely used method for parsing, so we first create a dependency parse, then use heuristic rules to convert this into the format used by travatar.
+In Japanese, dependency parsers are the most widely used method for parsing, so we first create a dependency parse, then use heuristic rules to convert this into the format used by Travatar.
 We have found that the <a href="http://www.ar.media.kyoto-u.ac.jp/members/flannery/eda/index_en.html">Eda dependency parser</a> gives good results, so we will use it here.
 </p>
 
@@ -230,7 +230,7 @@ And we will assume that <tt>$EDA_DIR</tt> is set to the directory that Eda is in
 <h4>Parsing</h4>
 
 <p>
-Parsing Japanese with Eda and turning it into a format usable by travatar is a string of several commands, but can be done in a single step.
+Parsing Japanese with Eda and turning it into a format usable by Travatar is a string of several commands, but can be done in a single step.
 </p>
 
 <pre>
@@ -247,7 +247,7 @@ cat input.txt |
 <p>
 Describing each of these commands briefly, <tt>kytea</tt> performs word segmentation and POS tagging, <tt>treeify.py</tt> converts KyTea's output to a format that eda can read, and <tt>eda</tt> performs dependency parsing.
 <tt>ja-adjust-dep.pl</tt> adjusts some peculiarities of Japanese dependency annotation (most notably making punctuation and auxiliary verbs children instead of heads), and <tt>ja-dep2cfg.pl</tt> converts dependency trees to CFG trees and performs binarization according to some linguistically motivated head rules.
-The output of this sequence of commands should be sufficient for using as input to travatar.
+The output of this sequence of commands should be sufficient for using as input to Travatar.
 </p>
 
 <a name="chinese"/>

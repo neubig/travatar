@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>travatar - Training</title>
+    <title>Travatar - Training</title>
     <link href="main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
@@ -39,10 +39,10 @@
 </div>
 <div id="main">
 
-<h1>Training travatar</h1>
+<h1>Training Travatar</h1>
 
 <p>
-This guide will take you through the steps required to create a translation model for travatar.
+This guide will take you through the steps required to create a translation model for Travatar.
 In particular, we will use English-Japanese translation as an example, but this should work for other languages as well.
 If you have any trouble with this tutorial, feel free to ask questions, as mentioned on the <a href="index.html#development">front page</a>.
 </p>
@@ -60,12 +60,12 @@ cd ~/travatar-tutorial
 
 <p>
 In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, a <b>word aligner</b>, and a <b>language model toolkit</b>.
-In this tutorial, in addition to travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
+In this tutorial, in addition to Travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
 First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
 </p>
 
 <p>
-First, you must get the latest version of travatar.
+First, you must get the latest version of Travatar.
 Follow the directions on the <a href="index.html#download">download</a> page and place the compiled program in the <tt>travatar</tt> directory below <tt>travatar-tutorial</tt>.
 If you can run the following commands and get the help message, everythin should be working properly.
 </p>
@@ -122,7 +122,7 @@ tar -xzf kftt-data-1.0.tar.gz
 <h2>Data Preparation</h2>
 
 <p>
-The next step is preparing the data in a format so that travatar's training and translation can work.
+The next step is preparing the data in a format so that Travatar's training and translation can work.
 This will consist of parsing the input, and tokenizing the output.
 First, let's make a directory for the data we will use.
 </p>
@@ -166,7 +166,7 @@ Again, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 
 <p>
 When very long sentences exist in the training data, they can cause parsing and alignment to take a very long time, or even worse, fail.
-To get rid of these sentences from the training data, we use a script included with travatar to clean the corpus.
+To get rid of these sentences from the training data, we use a script included with Travatar to clean the corpus.
 (By changing the <tt>-max_len</tt> setting, you can change the maximum length of the data used.)
 </p>
 
@@ -208,14 +208,14 @@ And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 There are a couple things that should be noted about parsing.
 The first is that it takes a long time to parse many sentences, which can be solved to some extent by using multiple cores or multiple machines.
 The second is that while the Stanford parser is robust and easy to use, there are other parsers that can achieve better accuracy than the Stanford parser.
-These are highly recommended if you want to improve travatar's translation accuracy, as changing parsers can result in a very significant gain of up to several BLEU points.
+These are highly recommended if you want to improve Travatar's translation accuracy, as changing parsers can result in a very significant gain of up to several BLEU points.
 Both of these issues are discussed in more detail on the <a href="parsing.html">parsing page</a>.
 </p>
 
 <h2>Training the Language Model</h2>
 
 <p>
-As with most statistical translation systems, travatar can use a language model (LM) to improve the fluency of its output.
+As with most statistical translation systems, Travatar can use a language model (LM) to improve the fluency of its output.
 In order to train the LM, we first make a language model directory:
 </p>
 
@@ -244,7 +244,7 @@ IRSTLM=$HOME/travatar-tutorial/usr/ irstlm-5.80.01/scripts/build-lm.sh -i lm/kyo
 
 <p>
 Here, <tt>IRSTLM</tt> indicates the install path we used when we installed IRSTLM, <tt>-i</tt> indicates our training data  <tt>./tmp</tt> is a directory for temporary files,  <tt>-s</tt> is our smoothing method, <tt>-n</tt> is the order of the language model, and <tt>-o</tt> is our output model.
-Finally, we compile the model to ARPA format, which travatar can read:
+Finally, we compile the model to ARPA format,
 </p>
 
 <pre>
@@ -252,7 +252,7 @@ irstlm-5.80.01/src/compile-lm --text yes lm/kyoto-train.ja.lm.gz lm/kyoto-train.
 </pre>
 
 <p>
-Binarizing the language model.
+and binarize it for faster loading:
 </p>
 
 <pre>
@@ -275,13 +275,13 @@ travatar/script/tree/lowercase.pl &lt; data/kyoto-head.tok.ja &gt; data/kyoto-he
 And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 Once this data is prepared, we run the following training script.
 Note that this takes our parsed English, tokenized Japanese, and language model as input.
-We specify the directories for GIZA++ and travatar, and also our working directory, where the model will be stored.
+We specify the directories for GIZA++ and Travatar, and also our working directory, where the model will be stored.
 This will take a little while, so we will run it in the background using <tt>nohup</tt> at the beginning and <tt>&amp;</tt> at the end.
 In addition, if you have a computer with multiple cores, you can specify the number of cores you would like to use with <tt>-threads</tt> (for example, with 2 threads below).
 </p>
 
 <pre>
-nohup travatar/script/train/train-travatar.pl -work_dir $HOME/travatar-tutorial/train -lm_file $HOME/travatar-tutorial/lm/kyoto-train.ja.arpa -src_file data/kyoto-head.parselow.en -trg_file data/kyoto-head.toklow.ja -travatar_dir travatar -bin_dir giza-pp -threads 2 &amp;&gt; train.log &amp;
+nohup travatar/script/train/train-travatar.pl -work_dir $HOME/travatar-tutorial/train -lm_file $HOME/travatar-tutorial/lm/kyoto-train.ja.blm -src_file data/kyoto-head.parselow.en -trg_file data/kyoto-head.toklow.ja -travatar_dir travatar -bin_dir giza-pp -threads 2 &amp;&gt; train.log &amp;
 </pre>
 
 <p>
@@ -314,7 +314,7 @@ Also, if you want to speed up the tuning process you can use multiple processors
 
 <p>
 When tuning finishes, there will be an appropriately tuned model in <tt>tune/travatar.ini</tt>.
-We can now use this model to translate the test text using the travatar decoder.
+We can now use this model to translate the test text using the Travatar decoder.
 Before training, we will want to filter the model file to remove rules that are not needed for translation and reduce the memory footprint:
 </p>
 
@@ -335,7 +335,7 @@ travatar/src/bin/travatar -config_file test/filtered-test.ini &lt; data/kyoto-te
 
 <p>
 Finally, we can measure the accuracy of our translations using an automatic evaluation metric.
-We do this by passing the reference and system output to the <tt>mt-evaluator</tt> program included with travatar (<a href="evaluate.html">other options</a>).
+We do this by passing the reference and system output to the <tt>mt-evaluator</tt> program included with Travatar (<a href="evaluate.html">other options</a>).
 </p>
 
 <pre>

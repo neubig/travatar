@@ -1,10 +1,10 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>travatar - A Tree-to-String Translation Toolkit</title>
+    <title>Travatar - A Tree-to-String Translation Toolkit</title>
     <link href="main.css" rel="stylesheet" type="text/css">
-    <meta name="description" content="travatar is a tree-to-string machine translation system including a decoder based on tree transducers and training pipeline."/>
-    <meta name="keywords" content="travatar, tree-to-string translation, machine translation system, open source"/>
+    <meta name="description" content="Travatar is a tree-to-string machine translation system including a decoder based on tree transducers and training pipeline."/>
+    <meta name="keywords" content="Travatar, tree-to-string translation, machine translation system, open source"/>
 </head>
 <body>
 
@@ -41,18 +41,18 @@
 </div>
 <div id="main">
 
-<h1>travatar</h1>
+<h1>Travatar</h1>
 
 <p>
-This is the home of travatar, a tree-to-string statistical machine translation system.
-In other words, when performing translation, you first <a href="parsing.html">parse</a> the input using a syntactic parser, then travatar will perform translation for you.
+This is the home of Travatar, a tree-to-string statistical machine translation system.
+In other words, when performing translation, you first <a href="parsing.html">parse</a> the input using a syntactic parser, then Travatar will perform translation for you.
 This is particularly effective for language pairs that require a large amount of reordering, such as English-Japanese.
 </p>
 
 <ul>
 <li><a href="#download">Download/Install</a></li>
 <li><a href="#documentation">Documentation</a></li>
-<li><a href="#development">Development</a></li>
+<li><a href="#development">Development/Support</a></li>
 </ul>
 
 <a name="download">
@@ -62,27 +62,20 @@ This is particularly effective for language pairs that require a large amount of
 
 <p>
 <b>Latest Version:</b>
-<p>Currently, travatar is only available in NAIST. If you are in NAIST, run the following command to grab travatar:</p>
-<pre>
-git clone ~neubig/work/travatar
-</pre>
-<!-- <a href="download/travatar-0.1.0.tar.gz">travatar 0.1.0</a> -->
+<a href="download/travatar-0.1.0.tar.gz">Travatar 0.1.0</a>
 
-<!-- <p>
-<b>Bleeding-Edge Code:</b> <a href="http://www.github.com/neubig/travatar" target="_blank">@github</a><br/> -->
+<b>Bleeding-Edge Code:</b> <a href="http://www.github.com/neubig/travatar" target="_blank">@github</a><br/>
 
-<!--
 <p>
-The code of travatar is distributed according to the <a href="http://www.gnu.org/copyleft/lesser.html" target="_blank">LGPL</a>, and can be distributed freely (for research, commercial, or other purposes).
+The code of Travatar is distributed according to the <a href="http://www.gnu.org/copyleft/lesser.html" target="_blank">LGPL</a>, and can be distributed freely according to the license.
 </p>
--->
 
 
 <h3>Install</h3>
 
 <p>
 Travatar is mainly developed on linux, but should also work on Mac OSX, and Windows (via cygwin).
-In order to install travatar, you must have <a href="http://www.boost.org/">Boost</a> and <tt>autotools</tt> installed.
+In order to install Travatar, you must have <a href="http://www.boost.org/">Boost</a> and <tt>autotools</tt> installed.
 The easiest way to install Boost/autotools on (Ubuntu/Debian) Linux is:
 </p>
 
@@ -91,7 +84,7 @@ sudo apt-get install libboost-all-dev autoconf automake autotools-dev
 </pre>
 
 <p>
-Once they are installed, you can compile travatar by the following commands:
+Once they are installed, you can compile Travatar by the following commands:
 </p>
 
 <pre>
@@ -103,25 +96,47 @@ src/bin/travatar --help
 </pre>
 
 <p>
-If the final command prints the travatar help, everything is working properly.
+If the final command prints the Travatar help, everything is working properly.
 </p>
 
 <a name="documentation">
 <h2>Program Documentation</h2>
 
+<h3>Overview</h3>
+
+<p>
+The following paper gives an overview of the motivation behind Travatar, and it would be great if you could cite it if you use Travatar in your work:
+</p>
+
+<p>
+<a href="http://www.phontron.com/paper/neubig13acl-travatar.pdf">Travatar: A Forest-to-String Machine Translation Engine based on Tree Transducers</a><br/>
+Graham Neubig. In Proceedings of the ACL Demonstration Track. 2013.
+</p>
+
+<pre>
+@inproceedings{neubig13travatar,
+  title = {Travatar: A Forest-to-String Machine Translation Engine based on Tree Transducers},
+  author = {Graham Neubig},
+  booktitle = {Proceedings of the ACL Demonstration Track},
+  address = {Sofia, Bulgaria},
+  month = {August},
+  year = {2013}
+}
+</pre>
+
 <h3>Training</h3>
 
 <p>
-In order to run travatar, you will have to train a model.
-Please take a look at the <a href="training-guide.html">step-by-step guide</a> to creating a model for travatar.
+In order to run Travatar, you will have to train a model.
+Please take a look at the <a href="training-guide.html">step-by-step guide</a> to creating a model for Travatar.
 There are also a number of <a href="training-options.html">training options</a> that will affect how training works.
 </p>
 
 <h3>Translating</h3>
 
 <p>
-In order to translate with travatar, you use the model defined in the previous step.
-In the most simple of situations, you must simply run the following command, substituting travatar.ini with the appropriate configuration file:
+In order to translate with Travatar, you use the model defined in the previous step.
+In the most simple of situations, you must simply run the following command, substituting <tt>travatar.ini</tt> with the appropriate configuration file:
 </p>
 
 <pre>
@@ -133,15 +148,15 @@ Here, <tt>input-parsed.txt</tt> is a file containing one syntactic <a href="pars
 </p>
 
 <a name="development">
-<h2>Development</h2>
+<h2>Development/Support</h2>
 
 <h3>Contributors</h3>
 
 <ul>
-<li><a href="http://www.phontron.com">Graham Neubig</a> (project leader, all coding)</li>
+<li><a href="http://www.phontron.com">Graham Neubig</a></li>
 </ul>
 
-<p>If you have any questions about travatar, please send them to the travatar-users mailing list, which you can join by sending mail to <tt>travatar-users+subscribe</tt> with the domain <tt>googlegroups.com</tt>. (If you don't get a reply, you can also send questions to <tt>neubig</tt> at <tt>gmail.com</tt>.)</p> 
+<p>If you have any questions about Travatar, please send them to the travatar-users mailing list, which you can join by sending mail to <tt>travatar-users+subscribe</tt> with the domain <tt>googlegroups.com</tt>. (If you don't get a reply, you can also send questions to <tt>neubig</tt> at <tt>gmail.com</tt>.)</p> 
 
 </div>
 </div>
