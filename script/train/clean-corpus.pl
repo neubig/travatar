@@ -32,8 +32,8 @@ while(1) {
     last if((not defined $f) and (not defined $e));
     die "Uneven number of lines" if((not defined $f) or (not defined $e));
     chomp $f; chomp $e;
-    my @fa = split(/ /, $f);
-    my @ea = split(/ /, $e);
+    my @fa = split(/ +/, $f);
+    my @ea = split(/ +/, $e);
     if((@fa >= $MIN_LEN) and (@fa <= $MAX_LEN) and (@ea >= $MIN_LEN) and (@ea <= $MAX_LEN)) {
         print FILE2 "$f\n";
         print FILE3 "$e\n";

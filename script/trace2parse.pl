@@ -19,7 +19,7 @@ sub make_child {
     chomp;
     my ($sent, $span, $src, $trg, $feat) = split(/ \|\|\| /);
     return "" if not $src;
-    my @arr = split(/ /, $src);
+    my @arr = split(/ +/, $src);
     if($arr[0] ne $id) { "Die: $id doesn't match\n$_"; }
     my $ret;
     for(my $pos = 0; $pos < @arr; $pos++) {

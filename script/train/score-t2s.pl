@@ -54,7 +54,7 @@ sub strip_arr {
     my $str = shift;
     my $isstring = shift;
     my @ret;
-    my @arr = split(/ /, $str);
+    my @arr = split(/ +/, $str);
     for(@arr) {
         return @ret if($isstring and ($_ eq "@")); # Skip syntactic labels
         # Check if there are quotes and remove them
