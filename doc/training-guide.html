@@ -136,11 +136,11 @@ mkdir data
 <p>
 The first thing we need to do is tokenize our data (in other words, divide it into words).
 For English, or other languages, there is a tokenizer included in the Stanford parser toolkit.
-Let's run it on the English training data as follows:
+Let's run it on the English training data as follows (we need the 'sed' command because the tokenizer sometimes fails to replace brackets in special cases):
 </p>
 
 <pre>
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en &gt; data/kyoto-train.tok.en
+java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-train.tok.en
 </pre>
 
 <p>
