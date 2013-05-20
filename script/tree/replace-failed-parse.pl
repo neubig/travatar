@@ -11,9 +11,11 @@ binmode STDERR, ":utf8";
 
 my $FORMAT = "penn";
 my $NOBUF = "";
+my $FILLROOT = "ROOT";
 GetOptions(
     "format=s" => \$FORMAT,
     "nobuf!" => \$NOBUF,
+    "fillroot=s" => \$FILLROOT,
 );
 
 if(@ARGV != 2) {
@@ -31,6 +33,10 @@ if($FORMAT eq "penn") {
     my ($s0, $s1);
     while(defined($s0 = <FILE0>) and defined($s1 = <FILE1>)) {
         chomp $s0; chomp $s1;
+        if($FILLROOT) {
+            $s0 =~ s/^\( /($FILLROOT /g;
+            $s1 =~ s/^\( /($FILLROOT /g;
+        }
         # If s1 is failed, print $s0
         if(($s1 eq "") or ($s1 =~ /^\(\(\)\)$/)) {
             print "$s0\n";
