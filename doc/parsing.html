@@ -86,7 +86,7 @@ You will have to replace <tt>stanford-parser.jar</tt> with the full path to <tt>
 </p>
 
 <pre>
-java -cp stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines input.txt &gt; tokenized.txt
+java -cp stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines input.txt | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; tokenized.txt
 </pre>
 
 <h4>Parsing</h4>
@@ -97,7 +97,7 @@ Again, you will need to specify the full path to both parser jar files.
 </p>
 
 <pre>
-java -mx2000m -cp stanford-parser.jar:stanford-parser-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz tokenized.txt stanford-parsed.txt
+java -mx2000m -cp stanford-parser.jar:stanford-parser-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz tokenized.txt &gt; stanford-parsed.txt
 </pre>
 
 <h3>Egret</h3>
