@@ -116,11 +116,9 @@ if(-e "$PREF/orig") {
 ###### Tokenization and Lowercasing #######
 # JA
 run_parallel("$PREF/orig", "$PREF/tok", "ja", "$KYTEA -notags -wsconst D INFILE > OUTFILE");
-run_parallel("$PREF/tok", "$PREF/low", "ja", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 
 # EN
 run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" > OUTFILE");
-run_parallel("$PREF/tok", "$PREF/low", "en", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
@@ -134,6 +132,8 @@ if($CLEAN_LEN == 0) {
     safesystem("cat ".join(" ", map { "$PREF/clean/ja.$_" } @suffixes)." > $PREF/clean/ja");
     safesystem("cat ".join(" ", map { "$PREF/clean/en.$_" } @suffixes)." > $PREF/clean/en");
 }
+run_parallel("$PREF/clean", "$PREF/low", "ja", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
+run_parallel("$PREF/clean", "$PREF/low", "en", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 
 ###### 1-best Parsing ######
 # EN Parsing with Stanford Parser
@@ -186,7 +186,7 @@ run_parallel("$PREF/for", "$PREF/forlow", "en", "$TRAVATAR_DIR/script/tree/lower
 if($ALIGN) {
 
     # Align using GIZA++
-    safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step align -work_dir $PREF/train -no_lm true -src_words $PREF/low/ja -src_file $PREF/treelow/ja -trg_file $PREF/low/en -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train";
+    safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step lex -work_dir $PREF/train -no_lm true -src_words $PREF/low/ja -src_file $PREF/treelow/ja -trg_file $PREF/low/en -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train";
     safesystem("mkdir $PREF/giza") if not -e "$PREF/giza";
     safesystem("cp $PREF/train/align/align.txt $PREF/giza/jaen") if not -e "$PREF/jaen";
     safesystem("cat $PREF/train/align/align.txt | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/giza/enja") if not -e "$PREF/enja";

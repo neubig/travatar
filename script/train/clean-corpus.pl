@@ -38,10 +38,10 @@ while(1) {
     chomp $f; chomp $e;
     my @fa = split(/ +/, $f);
     my @ea = split(/ +/, $e);
+    $id++;
     if((@fa >= $MIN_LEN) and (@fa <= $MAX_LEN) and (@ea >= $MIN_LEN) and (@ea <= $MAX_LEN)) {
         print FILE2 "$f\n";
         print FILE3 "$e\n";
         print FILEIDS "$id\n" if($IDS);
     }
-    $id++;
 }

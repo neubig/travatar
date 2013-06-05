@@ -18,7 +18,7 @@ my $BIN_DIR = "";
 my $THREADS = "1";
 
 # Use this option do only part of the training (e.g., only alignment)
-my $LAST_STEP = ""; # options: (align)
+my $LAST_STEP = ""; # options: (align,lex)
 
 # Input/output options
 my $SRC_FILE = "";
@@ -186,6 +186,7 @@ if(not ($LEX_SRCTRG and $LEX_TRGSRC)) {
     # Run the program
     safesystem("$TRAVATAR_DIR/script/train/align2lex.pl $SRC_WORDS $TRG_WORDS $ALIGN_FILE $WRITE_SRCTRG $WRITE_TRGSRC") or die;
 }
+exit(0) if $LAST_STEP eq "lex";
 
 # ****** 4: Create the model file *******
 print STDERR "(4) Creating model @ ".`date`;
