@@ -11,9 +11,11 @@ binmode STDERR, ":utf8";
 
 my $MAX_LEN = 60;
 my $MIN_LEN = 1;
+my $IDS;
 GetOptions(
     "max_len=s" => \$MAX_LEN,
     "min_len=s" => \$MIN_LEN,
+    "ids=s" => \$IDS,
 );
 
 if(@ARGV != 4) {
@@ -25,8 +27,10 @@ open FILE0, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
 open FILE1, "<:utf8", $ARGV[1] or die "Couldn't open $ARGV[1]\n";
 open FILE2, ">:utf8", $ARGV[2] or die "Couldn't open $ARGV[2]\n";
 open FILE3, ">:utf8", $ARGV[3] or die "Couldn't open $ARGV[3]\n";
+open FILEIDS, ">:utf8", $IDS or die "Couldn't open $IDS\n" if $IDS;
 
 my ($f, $e);
+my $id = 0;
 while(1) {
     $f = <FILE0>; $e = <FILE1>;
     last if((not defined $f) and (not defined $e));
@@ -37,5 +41,7 @@ while(1) {
     if((@fa >= $MIN_LEN) and (@fa <= $MAX_LEN) and (@ea >= $MIN_LEN) and (@ea <= $MAX_LEN)) {
         print FILE2 "$f\n";
         print FILE3 "$e\n";
+        print FILEIDS "$id\n" if($IDS);
     }
+    $id++;
 }
