@@ -15,5 +15,6 @@ if(@ARGV != 0) {
 }
 
 while(<STDIN>) {
-    print lc($_);
+    $_ =~ tr/A-ZＡ-Ｚ/a-zａ-ｚ/;
+    print $_;
 }

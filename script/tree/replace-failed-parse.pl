@@ -11,9 +11,11 @@ binmode STDERR, ":utf8";
 
 my $FORMAT = "penn";
 my $NOBUF = "";
+my $ROOT = "ROOT";
 GetOptions(
     "format=s" => \$FORMAT,
     "nobuf!" => \$NOBUF,
+    "root=s" => \$ROOT,
 );
 
 if(@ARGV != 2) {
@@ -35,6 +37,7 @@ if($FORMAT eq "penn") {
         if(($s1 eq "") or ($s1 =~ /^\(\(\)\)$/)) {
             print "$s0\n";
         } else {
+            $s1 =~ s/^\( /($ROOT /g;
             print "$s1\n";
         }
     }
