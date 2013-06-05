@@ -17,6 +17,9 @@ my $BIN_DIR = "";
 # Parallelization options
 my $THREADS = "1";
 
+# Use this option do only part of the training (e.g., only alignment)
+my $LAST_STEP = ""; # options: (align,lex)
+
 # Input/output options
 my $SRC_FILE = "";
 my $SRC_WORDS = "";
@@ -58,6 +61,7 @@ GetOptions(
     "travatar_dir=s" => \$TRAVATAR_DIR, # The directory of travatar
     "bin_dir=s" => \$BIN_DIR, # A directory for external bin files (mainly GIZA)
     "threads=s" => \$THREADS, # The number of threads to use
+    "last_step=s" => \$LAST_STEP, # The last step to perform
     "src_file=s" => \$SRC_FILE, # The source file you want to train on
     "src_words=s" => \$SRC_WORDS, # A file of plain-text sentences from the source
     "src_format=s" => \$SRC_FORMAT, # The source file format (penn/egret)
@@ -138,8 +142,8 @@ if(not $ALIGN_FILE) {
         ((not -x $GIZA) or (not -x $SNT2COOC)) and
             die "Could not execute GIZA ($GIZA) or snt2cooc ($SNT2COOC)";
         # Make the classes with mkcls
-        my $SRC_CLASSES = "$WORK_DIR/align/src.cls";
-        my $TRG_CLASSES = "$WORK_DIR/align/trg.cls";
+        my $SRC_CLASSES = "$WORK_DIR/align/src.vcb.classes";
+        my $TRG_CLASSES = "$WORK_DIR/align/trg.vcb.classes";
         my $SRC_MKCLS = "$MKCLS -c50 -n2 -p$SRC_WORDS -V$SRC_CLASSES opt";
         my $TRG_MKCLS = "$MKCLS -c50 -n2 -p$TRG_WORDS -V$TRG_CLASSES opt";
         run_two($SRC_MKCLS, $TRG_MKCLS);
@@ -166,6 +170,7 @@ if(not $ALIGN_FILE) {
         die "Unknown alignment type $ALIGN";
     }
 }
+exit(0) if $LAST_STEP eq "align";
 
 # ****** 3: Create Lexical Translation Probabilities *******
 print STDERR "(3) Creating lexical translation probabilities @ ".`date`;
@@ -181,6 +186,7 @@ if(not ($LEX_SRCTRG and $LEX_TRGSRC)) {
     # Run the program
     safesystem("$TRAVATAR_DIR/script/train/align2lex.pl $SRC_WORDS $TRG_WORDS $ALIGN_FILE $WRITE_SRCTRG $WRITE_TRGSRC") or die;
 }
+exit(0) if $LAST_STEP eq "lex";
 
 # ****** 4: Create the model file *******
 print STDERR "(4) Creating model @ ".`date`;

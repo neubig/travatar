@@ -41,6 +41,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
         } else if(next_char == '(') {
             // Read the symbol
             string sym = IoUtil::ReadUntil(in, WHITE_SPACE, "()");
+            TODO: Make this die properly
             if(!sym.length()) { getline(in, line); THROW_ERROR("Empty symbol at '("<<line<<"'"); }
             // Create a new node
             HyperNode* node = new HyperNode(Dict::WID(sym), -1, make_pair(pos,-1));
