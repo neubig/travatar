@@ -173,7 +173,7 @@ foreach my $i ("", map{".$_"} @suffixes) {
 run_parallel("$PREF/tree", "$PREF/treelow", "en", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 
 # JA Parsing with Eda
-run_parallel("$PREF/clean", "$PREF/edain", "ja", "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace | $KYTEA -in tok -out eda > OUTFILE", 1);
+run_parallel("$PREF/clean", "$PREF/edain", "ja", "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
 run_parallel("$PREF/edain", "$PREF/eda", "ja", "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
 run_parallel("$PREF/eda", "$PREF/tree", "ja", "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
 run_parallel("$PREF/tree", "$PREF/treelow", "ja", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");

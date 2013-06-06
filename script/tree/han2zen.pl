@@ -11,9 +11,11 @@ binmode STDERR, ":utf8";
 
 my $NOHYPHEN = 0;
 my $NOSPACE = 0;
+my $REMTAB = 0;
 GetOptions(
     "nohyphen" => \$NOHYPHEN,
     "nospace" => \$NOSPACE,
+    "remtab" => \$REMTAB,
 );
 
 if(@ARGV != 0) {
@@ -25,6 +27,7 @@ while(<STDIN>) {
     tr/a-zA-Z0-9()[]{}<>.,_%｢｣､"?･+:｡!&*/ａ-ｚＡ-Ｚ０-９（）［］｛｝＜＞．，＿％「」、”？・＋：。！＆＊/;
     s/-/－/g if not $NOHYPHEN;
     s/ /　/g if not $NOSPACE;
+    s/\t/ /g if $REMTAB;
     s/\//／/g;
     print $_;
 }
