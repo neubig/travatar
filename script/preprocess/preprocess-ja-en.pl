@@ -114,8 +114,8 @@ if(-e "$PREF/orig") {
     wait_done("$PREF/orig.DONE");
 } else {
     -e "$PREF/orig" or mkdir "$PREF/orig";
-    -e "$PREF/orig/ja" or safesystem("ln -s $ARGV[0] $PREF/orig/ja");
-    -e "$PREF/orig/en" or safesystem("ln -s $ARGV[1] $PREF/orig/en");
+    -e "$PREF/orig/ja" or safesystem("ln -s ".abs_path($ARGV[0])." $PREF/orig/ja");
+    -e "$PREF/orig/en" or safesystem("ln -s ".abs_path($ARGV[1])." $PREF/orig/en");
     my $JALEN = file_len($ARGV[0]);
     my $ENLEN = file_len($ARGV[1]);
     die "ja and en lengths don't match ($JALEN != $ENLEN)" if ($JALEN != $ENLEN);
@@ -135,10 +135,10 @@ foreach my $f (`ls $PREF/orig`) {
 
 ###### Tokenization and Lowercasing #######
 # JA
-run_parallel("$PREF/orig", "$PREF/tok", "ja", "$KYTEA -notags -wsconst D INFILE > OUTFILE");
+run_parallel("$PREF/orig", "$PREF/tok", "ja", "$KYTEA -notags -wsconst D INFILE | sed \"s/[\\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE");
 
 # EN
-run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" > OUTFILE");
+run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE");
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
