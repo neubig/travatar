@@ -35,6 +35,7 @@ if($FORMAT eq "penn") {
         chomp $s0; chomp $s1;
         # If s1 is failed, print $s0
         if(($s1 eq "") or ($s1 =~ /^\(\(\)\)$/)) {
+            $s0 =~ s/^\( /($ROOT /g;
             print "$s0\n";
         } else {
             $s1 =~ s/^\( /($ROOT /g;
