@@ -96,7 +96,6 @@ my ($JAORIG, $ENORIG, $PREF) = @ARGV;
 -e "$PREF" or mkdir "$PREF";
 
 ###### Split the input files #######
-my @suffixes = (0 .. $THREADS-1);
 if(-e "$PREF/orig") {
     wait_done("$PREF/orig.DONE");
 } else {
@@ -111,6 +110,13 @@ if(-e "$PREF/orig") {
     safesystem("split -l $len -a $suflen -d $JAORIG $PREF/orig/ja.") or die;
     safesystem("split -l $len -a $suflen -d $ENORIG $PREF/orig/en.") or die;
     safesystem("touch $PREF/orig.DONE") or die;
+}
+my @suffixes;
+foreach my $f (`ls $PREF/orig`) {
+    chomp $f;
+    if($f =~ /ja\.(.*)/) {
+        push @suffixes, $1;
+    }
 }
 
 ###### Tokenization and Lowercasing #######
