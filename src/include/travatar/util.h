@@ -230,7 +230,7 @@ int CheckEqual(const T & exp, const T & act) {
 template<class T>
 int CheckVector(const std::vector<T> & exp, const std::vector<T> & act) {
     int ok = 1;
-    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+    for(int i = 0; i < (int)std::max(exp.size(), act.size()); i++) {
         if(i >= (int)exp.size() || 
            i >= (int)act.size() || 
            exp[i] != act[i]) {
@@ -251,7 +251,7 @@ int CheckVector(const std::vector<T> & exp, const std::vector<T> & act) {
 template<class T>
 int CheckPtrVector(const std::vector<T*> & exp, const std::vector<T*> & act) {
     int ok = 1;
-    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+    for(int i = 0; i < (int)std::max(exp.size(), act.size()); i++) {
         if(i >= (int)exp.size() || 
            i >= (int)act.size() || 
            (exp[i]==NULL) != (act[i]==NULL) ||
@@ -284,7 +284,7 @@ template<class T>
 int CheckAlmostVector(const std::vector<T> & exp,
                       const std::vector<T> & act) {
     int ok = 1;
-    for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+    for(int i = 0; i < (int)std::max(exp.size(), act.size()); i++) {
         if(i >= (int)exp.size() || 
            i >= (int)act.size() || 
            abs(exp[i] - act[i]) > 0.01) {
