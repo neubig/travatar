@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-###########################
+##############################################################################
 # ja-en preprocessing script
 #  by Graham Neubig
 #
@@ -24,6 +24,20 @@
 # by deleting any files that have failed or were still in progress (including
 # both the file itself and the file with the ".DONE" prefix and re-running the
 # same command.
+#
+# Before running the script you should install:
+#  Stanford Parser: http://nlp.stanford.edu/software/lex-parser.shtml
+#  Egret:  http://code.google.com/p/egret-parser/
+#  KyTea:  http://www.phontron.com/kytea/
+#  Eda:    http://plata.ar.media.kyoto-u.ac.jp/tool/EDA/home_en.html
+#  GIZA++: http://code.google.com/p/giza-pp/
+#  Nile:   http://code.google.com/p/nile/
+#
+# If you install KyTea using "make install" and install all other tools to
+# ~/usr/local and remove version numbers from the director names, and move
+# the Stanford Parser model file from stanford-parser-models-VERSION.jar to
+# stanford-parser-models.jar, this script can be run without any extra path
+# settings. Otherwise, you will need to specify the paths using the command line
 
 use Env;
 
