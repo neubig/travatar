@@ -43,7 +43,7 @@ use Env;
 
 ############### Settings ##################
 my $THREADS = 1;
-my $CLEAN_LEN = 60;
+my $CLEAN_LEN = 0;
 
 # Directories and settings
 my $PROGRAM_DIR = $ENV{"HOME"}."/usr/local";

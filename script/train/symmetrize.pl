@@ -23,7 +23,7 @@ $FINAL = ($FINAL eq "true");
 $AND = ($AND eq "true");
 
 if(@ARGV != 2) {
-    print STDERR "Usage: $0 [--sym=grow] [--diag=true/false] [--final=true/false] [--and=true/false] FE EF\n";
+    print STDERR "Usage: $0 [--sym=grow/intersect/union] [--diag=true/false] [--final=true/false] [--and=true/false] FE EF\n";
     exit 1;
 }
 
@@ -130,6 +130,28 @@ sub grow {
     return map { "". ($_->[0]-1) ."-". ($_->[1]-1) } @sym;
 }
 
+# TODO: ther must be a better way to do this
+sub threshold {
+    (@_ == 3) or die "threshold accepts two alignment arrays and a threshold";
+    my ($ain, $bin, $thresh) = @_;
+    my %cnt;
+    foreach my $i (0 .. @$ain-1) {
+        $cnt{"".$ain->[$i]."-$i"}++ if $ain->[$i];
+    }
+    foreach my $i (0 .. @$bin-1) {
+        $cnt{"$i-".$bin->[$i]}++ if $bin->[$i];
+    }
+    my @sym;
+    while(my ($k, $v) = each(%cnt)) {
+        if($v >= $thresh) {
+            my @arr = split(/-/, $k);
+            push @sym, \@arr;
+        }
+    }
+    @sym = sort { my $val = ($a->[1] <=> $b->[1]); $val = ($a->[0] <=> $b->[0]) if not $val; $val } @sym;
+    return map { "". ($_->[0]-1) ."-". ($_->[1]-1) } @sym;
+}
+
 sub align_arr {
     my $str = shift;
     my $id = 0;
@@ -158,6 +180,10 @@ while(1) {
     my @alarr;
     if($SYM eq "grow") {
         @alarr = grow(\@fea, \@efa);
+    } elsif($SYM eq "intersect") {
+        @alarr = threshold(\@fea, \@efa, 2);
+    } elsif($SYM eq "union") {
+        @alarr = threshold(\@fea, \@efa, 1);
     } else {
         die "Bad symmetrization type $SYM\n";
     }
