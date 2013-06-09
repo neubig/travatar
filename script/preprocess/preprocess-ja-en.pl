@@ -56,6 +56,9 @@ my $EDA_DIR;
 my $EDA_VOCAB;
 my $EDA_WEIGHT;
 my $GIZA_DIR;
+my $NILE_DIR;
+my $NILE_MODEL;
+my $NILE_BEAM = 64;
 my $KYTEA = "kytea";
 my $FOREST;
 my $ALIGN;
@@ -81,6 +84,9 @@ GetOptions(
     "eda-vocab=s" => \$EDA_VOCAB,
     "eda-weight=s" => \$EDA_WEIGHT,
     "giza-dir=s" => \$GIZA_DIR,
+    "nile-dir=s" => \$NILE_DIR,
+    "nile-model=s" => \$NILE_MODEL,
+    "nile-beam=i" => \$NILE_BEAM,
     "egret-forest-opt=s" => \$EGRET_FOREST_OPT,
     "travatar-dir=s" => \$TRAVATAR_DIR,
     "forest" => \$FOREST,
@@ -93,6 +99,7 @@ $EGRET_DIR = "$PROGRAM_DIR/Egret" if not $EGRET_DIR;
 $EDA_VOCAB = "$EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat" if not $EDA_VOCAB;
 $EDA_WEIGHT = "$EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat" if not $EDA_WEIGHT;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
+$NILE_DIR = "$PROGRAM_DIR/nile" if not $NILE_DIR;
 
 if(not $TRAVATAR_DIR) {
     $TRAVATAR_DIR = abs_path($0);
@@ -109,6 +116,13 @@ if(@ARGV != 3) {
 my ($JAORIG, $ENORIG, $PREF) = @ARGV;
 -e "$PREF" or mkdir "$PREF";
 
+###### Get and check the lengths #######
+my $JALEN = file_len($ARGV[0]);
+my $ENLEN = file_len($ARGV[1]);
+die "ja and en lengths don't match ($JALEN != $ENLEN)" if ($JALEN != $ENLEN);
+my $len = int($JALEN/$THREADS+1);
+my $suflen = int(log($THREADS)/log(10)+1);
+
 ###### Split the input files #######
 if(-e "$PREF/orig") {
     wait_done("$PREF/orig.DONE");
@@ -116,11 +130,6 @@ if(-e "$PREF/orig") {
     -e "$PREF/orig" or mkdir "$PREF/orig";
     -e "$PREF/orig/ja" or safesystem("ln -s ".abs_path($ARGV[0])." $PREF/orig/ja");
     -e "$PREF/orig/en" or safesystem("ln -s ".abs_path($ARGV[1])." $PREF/orig/en");
-    my $JALEN = file_len($ARGV[0]);
-    my $ENLEN = file_len($ARGV[1]);
-    die "ja and en lengths don't match ($JALEN != $ENLEN)" if ($JALEN != $ENLEN);
-    my $len = int($JALEN/$THREADS+1);
-    my $suflen = int(log($THREADS)/log(10)+1);
     safesystem("split -l $len -a $suflen -d $JAORIG $PREF/orig/ja.") or die;
     safesystem("split -l $len -a $suflen -d $ENORIG $PREF/orig/en.") or die;
     safesystem("touch $PREF/orig.DONE") or die;
@@ -142,7 +151,7 @@ run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanf
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
-    safesystem("ln -s $PREF/tok $PREF/clean");
+    safesystem("ln -s $PREF/tok $PREF/clean") if not -e "$PREF/clean";
 } elsif (not -e "$PREF/clean/ja") {
     -e "$PREF/clean" or mkdir "$PREF/clean";
     foreach my $i (@suffixes) {
@@ -208,10 +217,41 @@ if($ALIGN) {
     # Align using GIZA++
     safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step lex -work_dir $PREF/train -no_lm true -src_words $PREF/low/ja -src_file $PREF/treelow/ja -trg_file $PREF/low/en -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train";
     safesystem("mkdir $PREF/giza") if not -e "$PREF/giza";
-    safesystem("cp $PREF/train/align/align.txt $PREF/giza/jaen") if not -e "$PREF/jaen";
-    safesystem("cat $PREF/train/align/align.txt | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/giza/enja") if not -e "$PREF/enja";
+    safesystem("cp $PREF/train/align/align.txt $PREF/giza/jaen") if not -e "$PREF/giza/jaen";
+    safesystem("cat $PREF/giza/jaen | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/giza/enja") if not -e "$PREF/giza/enja";
 
-    # TODO: Align using Nile
+    # Run nile if a model is specified
+    if($NILE_MODEL) {
+        # Check file
+        die "Could not find nile at $NILE_DIR/nile.py" if not -e "$NILE_DIR/nile.py";
+        die "Could not find nile model $NILE_MODEL" if not -e "$NILE_MODEL";
+        # Make nile vocabulary files
+        run_parallel("$PREF/low", "$PREF/vcb", "ja", "$NILE_DIR/prepare-vocab.py < INFILE > OUTFILE", 1);
+        run_parallel("$PREF/low", "$PREF/vcb", "en", "$NILE_DIR/prepare-vocab.py < INFILE > OUTFILE", 1);
+        # Binarize the English trees
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", "en", "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
+        # Create and split GIZA++ union alignments
+        (safesystem("mkdir $PREF/gizau") or die) if not -e "$PREF/gizau";
+        (safesystem("$TRAVATAR_DIR/script/train/symmetrize.pl -sym union $PREF/train/align/src-trg.giza.A3.final $PREF/train/align/trg-src.giza.A3.final > $PREF/gizau/jaen") or die) if not -e "$PREF/gizau/jaen";
+        # Split alignments
+        if((not -e "$PREF/gizau/jaen.$suffixes[0]") or (not -e "$PREF/giza/jaen.$suffixes[0]")) {
+            my @clean_lens = map { file_len("$PREF/clean/ja.$_") } @suffixes;
+            split_lens("$PREF/giza/jaen", \@suffixes, \@clean_lens);
+            split_lens("$PREF/gizau/jaen", \@suffixes, \@clean_lens);
+        }
+        # Use Nile to create alignments for each segment
+        (safesystem("mkdir $PREF/nile") or die) if not -e "$PREF/nile";
+        foreach my $s (@suffixes) {
+            if(not -e "$PREF/nile/jaen.$s") {
+                safesystem("touch $PREF/nile/jaen.$s");
+                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/low/ja.$s --e $PREF/low/en.$s --etrees $PREF/treelowbin/en.$s --ftrees $PREF/treelow/ja.$s --evcb $PREF/vcb/en.$s --fvcb $PREF/vcb/ja.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/giza/jaen.$s --a2 $PREF/gizau/jaen.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/jaen.$s --k $NILE_BEAM") or die;
+                safesystem("touch $PREF/nile/jaen.$s.DONE");
+            }
+        }
+        wait_done(map { "$PREF/nile/jaen.$_.DONE" } @suffixes);
+        safesystem("cat $PREF/nile/jaen.* > $PREF/nile/jaen") if not -e "$PREF/nile/jaen";
+        safesystem("cat $PREF/nile/jaen | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/enja") if not -e "$PREF/nile/enja";
+    }
 
 } # End if ($ALIGN)
 
@@ -267,6 +307,22 @@ sub wait_done {
             sleep 1;
         }
     }
+}
+
+sub split_lens {
+    my ($file, $suffs, $lens) = @_;
+    open FILE0, "<:utf8", $file or die "Couldn't open $file\n";
+    foreach my $i (0 .. @$suffs-1) {
+        open FILE1, ">:utf8", "$file.$suffs->[$i]" or die "Couldn't open $file.$suffs->[$i]\n";
+        my $len = $lens->[$i];
+        my $line;
+        for(1 .. $len) {
+            my $line = <FILE0> or die "Ran out of lines to read in split";
+            print FILE1 $line;
+        }
+        close FILE1; 
+    }
+    close FILE0;
 }
 
 # Get a file's length in lines
