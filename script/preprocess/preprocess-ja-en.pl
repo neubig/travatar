@@ -58,6 +58,7 @@ my $EDA_WEIGHT;
 my $GIZA_DIR;
 my $NILE_DIR;
 my $NILE_MODEL;
+my $NILE_SEGMENTS = 1000;
 my $NILE_BEAM = 64;
 my $KYTEA = "kytea";
 my $FOREST;
@@ -174,8 +175,10 @@ run_parallel("$PREF/clean", "$PREF/egret", "en", "$EGRET_DIR/egret -lapcfg -i=IN
 # EN Combine Stanford and Egret (for now this is not parallel)
 -e "$PREF/tree" or mkdir "$PREF/tree";
 foreach my $i ("", map{".$_"} @suffixes) {
-    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/en$i $PREF/egret/en$i > $PREF/tree/en$i") if not -e "$PREF/tree/en$i";
-    die "Combining trees failed on en$i" if(file_len("$PREF/stanford/en$i") != file_len("$PREF/tree/en$i"));
+    if(not -e "$PREF/tree/en$i") {
+        safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/en$i $PREF/egret/en$i > $PREF/tree/en$i") ;
+        die "Combining trees failed on en$i" if(file_len("$PREF/stanford/en$i") != file_len("$PREF/tree/en$i"));
+    }
 }
 
 # EN Lowercase the trees
@@ -225,26 +228,38 @@ if($ALIGN) {
         # Check file
         die "Could not find nile at $NILE_DIR/nile.py" if not -e "$NILE_DIR/nile.py";
         die "Could not find nile model $NILE_MODEL" if not -e "$NILE_MODEL";
-        # Make nile vocabulary files
-        run_parallel("$PREF/low", "$PREF/vcb", "ja", "$NILE_DIR/prepare-vocab.py < INFILE > OUTFILE", 1);
-        run_parallel("$PREF/low", "$PREF/vcb", "en", "$NILE_DIR/prepare-vocab.py < INFILE > OUTFILE", 1);
+        # Get the splits
+        my $CLEANLEN = file_len("$PREF/clean/en");
+        my $nilelen = int($CLEANLEN/$NILE_SEGMENTS+1);
+        my $nilesuflen = int(log($NILE_SEGMENTS)/log(10)+1);
+        my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS);
         # Binarize the English trees
         run_parallel("$PREF/treelow", "$PREF/treelowbin", "en", "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
         # Create and split GIZA++ union alignments
         (safesystem("mkdir $PREF/gizau") or die) if not -e "$PREF/gizau";
         (safesystem("$TRAVATAR_DIR/script/train/symmetrize.pl -sym union $PREF/train/align/src-trg.giza.A3.final $PREF/train/align/trg-src.giza.A3.final > $PREF/gizau/jaen") or die) if not -e "$PREF/gizau/jaen";
-        # Split alignments
-        if((not -e "$PREF/gizau/jaen.$suffixes[0]") or (not -e "$PREF/giza/jaen.$suffixes[0]")) {
-            my @clean_lens = map { file_len("$PREF/clean/ja.$_") } @suffixes;
-            split_lens("$PREF/giza/jaen", \@suffixes, \@clean_lens);
-            split_lens("$PREF/gizau/jaen", \@suffixes, \@clean_lens);
+        # Creating splits
+        (safesystem("mkdir $PREF/nilein") or die) if not -e "$PREF/nilein";
+        if(not -e "$PREF/nilein/low-en.$nilesuffixes[0]") {
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/en $PREF/nilein/low-en.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/ja $PREF/nilein/low-ja.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/jaen $PREF/nilein/giza.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/gizau/jaen $PREF/nilein/gizau.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelow/ja $PREF/nilein/tree-ja.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/en $PREF/nilein/tree-en.") or die;
+            foreach my $f (@nilesuffixes) {
+                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-en.$f > $PREF/nilein/vcb-en.$f");
+                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-ja.$f > $PREF/nilein/vcb-ja.$f");
+            }
+            safesystem("touch $PREF/nilein/prep.DONE") or die;
         }
+        wait_done("$PREF/nilein/prep.DONE");
         # Use Nile to create alignments for each segment
         (safesystem("mkdir $PREF/nile") or die) if not -e "$PREF/nile";
-        foreach my $s (@suffixes) {
+        foreach my $s (@nilesuffixes) {
             if(not -e "$PREF/nile/jaen.$s") {
                 safesystem("touch $PREF/nile/jaen.$s");
-                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/low/ja.$s --e $PREF/low/en.$s --etrees $PREF/treelowbin/en.$s --ftrees $PREF/treelow/ja.$s --evcb $PREF/vcb/en.$s --fvcb $PREF/vcb/ja.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/giza/jaen.$s --a2 $PREF/gizau/jaen.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/jaen.$s --k $NILE_BEAM") or die;
+                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-ja.$s --e $PREF/nilein/low-en.$s --etrees $PREF/nilein/tree-en.$s --ftrees $PREF/nilein/tree-ja.$s --evcb $PREF/nilein/vcb-en.$s --fvcb $PREF/nilein/vcb-ja.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/gizau.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/jaen.$s --k $NILE_BEAM") or die;
                 safesystem("touch $PREF/nile/jaen.$s.DONE");
             }
         }
