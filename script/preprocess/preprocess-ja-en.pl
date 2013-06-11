@@ -144,7 +144,7 @@ foreach my $f (`ls $PREF/orig`) {
 
 ###### Tokenization and Lowercasing #######
 # JA
-run_parallel("$PREF/orig", "$PREF/tok", "ja", "$KYTEA -notags -wsconst D INFILE | sed \"s/[\\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE");
+run_parallel("$PREF/orig", "$PREF/tok", "ja", "$KYTEA -notags -wsconst D INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE");
 
 # EN
 run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE");
