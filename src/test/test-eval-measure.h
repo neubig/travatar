@@ -17,6 +17,7 @@ public:
         eval_measure_bleup1_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1")),
         eval_measure_ribes_(EvalMeasure::CreateMeasureFromString("ribes")),
         eval_measure_ter_(EvalMeasure::CreateMeasureFromString("ter")),
+        eval_measure_wer_(EvalMeasure::CreateMeasureFromString("wer")),
         eval_measure_interp_(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes")),
         ref1_sent_(Dict::ParseWords("taro met hanako")),
         sys1_sent_(Dict::ParseWords("the taro met the hanako"))
@@ -63,6 +64,12 @@ public:
         return CheckAlmost(bleu_exp, bleu_act);
     }
 
+    int TestWerScore() {
+        double wer_exp = 2.0/3.0;
+        double wer_act = eval_measure_wer_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
+        return CheckAlmost(wer_exp, wer_act);
+    }
+
     int TestInterpScore() {
         string ref2 = "he was the smallest man", sys2 = "the smallest man he was";
         Sentence ref2_sent = Dict::ParseWords(ref2), sys2_sent = Dict::ParseWords(sys2);
@@ -89,12 +96,13 @@ public:
         done++; cout << "TestTerIO()" << endl; if(TestTerIO()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInterpIO()" << endl; if(TestInterpIO()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBleuScore()" << endl; if(TestBleuScore()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWerScore()" << endl; if(TestWerScore()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInterpScore()" << endl; if(TestInterpScore()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestEvalMeasure Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 protected:
-    shared_ptr<EvalMeasure> eval_measure_bleup1_, eval_measure_ribes_, eval_measure_ter_, eval_measure_interp_;
+    shared_ptr<EvalMeasure> eval_measure_bleup1_, eval_measure_ribes_, eval_measure_ter_, eval_measure_wer_, eval_measure_interp_;
     Sentence ref1_sent_, sys1_sent_;
 
 };

@@ -7,6 +7,7 @@
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
+#include <travatar/eval-measure-wer.h>
 #include <travatar/eval-measure-interp.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
@@ -105,6 +106,8 @@ EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & str) {
         return new EvalMeasureRibes(config);
     else if(eval == "ter")
         return new EvalMeasureTer(config);
+    else if(eval == "wer")
+        return new EvalMeasureWer(config);
     else if(eval == "interp")
         return new EvalMeasureInterp(config);
     else

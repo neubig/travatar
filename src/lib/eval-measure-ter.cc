@@ -20,10 +20,7 @@ shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref, const
   delete evaluation;
 
   ostringstream stats;
-  // multiplication by 100 in order to keep the average precision
-  // in the TER calculation.
   return shared_ptr<EvalStats>(new EvalStatsTer(result.numEdits, ref.size(), reverse_));
-  // stats << result.numEdits*100.0 << " " << result.averageWords*100.0 << " " << result.scoreAv()*100.0 << " " ;
 
 }
 
