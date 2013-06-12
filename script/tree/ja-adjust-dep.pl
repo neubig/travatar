@@ -22,13 +22,15 @@ sub readtree {
     my @lines = split(/\n/);
     shift @lines if $lines[0] =~ /^ID/;
     my @ret = map { my @arr = split(/ +/); $arr[0]--; $arr[1] = max($arr[1]-1,-1); 
-                    $arr[3] = "$arr[3]-$arr[2]" if $arr[3] =~ /^助詞$/; \@arr } @lines;
+                    $arr[3] = "$arr[3]-$arr[2]" if (($arr[3] =~ /^助詞$/) or 
+                                                    (($arr[3] =~ /^助動詞$/) and ($arr[2] =~ /^で$/)) or
+                                                    (($arr[3] =~ /^形容詞$/) and ($arr[2] =~ /^な$/))); \@arr } @lines;
     # Find all values that are a head
     my @ishead = map { 0 } @ret;
     for(@ret) { $ishead[$_->[1]]++ if $_->[1] >= 0; }
     # Relabel sa-hen nouns
     foreach my $i ( 1 .. $#ret ) {
-        $ret[$i-1]->[3] = "動詞" if not (($ret[$i]->[2] !~ /^(する|し|さ|せ)$/) or ($ret[$i-1]->[3] !~ /^名詞$/));
+        $ret[$i-1]->[3] = "動詞" if not (($ret[$i]->[2] !~ /^(する|す|し|さ|せ)$/) or ($ret[$i-1]->[3] !~ /^名詞$/));
     }
     # Find chunks. These include:
     #  - a verb (including sa-hen) followed by auxiliaries, word endings, or other verbs
@@ -40,13 +42,14 @@ sub readtree {
         my $connect = 0;
         $connect = 1 if(
             ($ishead[$i] == 1) and
-            ((($head_type[-1] =~ /^(動詞|形容詞|助動詞)$/) and 
-               (($ret[$i]->[3] =~ /^(語尾|助動詞)$/) or
-                ($ret[$i]->[3] =~ /^助詞-(て|つつ|ば)$/) or
-                (($ret[$i]->[3] =~ /^(動詞|助詞-も|助詞-は)$/) and ($head_type[-1] eq "助動詞")) or
+            ((($head_type[-1] =~ /^(動詞|形容詞|助動詞)/) and 
+               (($ret[$i]->[3] =~ /^(語尾|助動詞)/) or
+                ($ret[$i]->[3] =~ /^助詞-(て|つつ|ば)/) or
+                (($ret[$i]->[3] =~ /^(動詞|助詞-も|助詞-は|形容詞-な)/) and ($head_type[-1] eq "助動詞-で")) or
                 (($ret[$i]->[3] =~ /^動詞$/) and ($head_type[-1] eq "動詞")))) or
              (($head_type[-1] =~ /^助詞-(で|に|と)/) and ($ret[$i]->[3] =~ /^助詞-(は|も)/))));
              # (($head_type[-1] =~ /^名詞$/) and ($ret[$i]->[3] =~ /^接尾辞$/))));
+        # print "$ret[$i]->[3] $head_type[-1] $connect\n";
         if($connect) {
             push @chunks, $chunks[-1];
         } else {
