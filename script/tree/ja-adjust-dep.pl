@@ -26,23 +26,47 @@ sub readtree {
     # Find all values that are a head
     my @ishead = map { 0 } @ret;
     for(@ret) { $ishead[$_->[1]]++ if $_->[1] >= 0; }
-    # For verb phrases that look like
-    #   A -> B -> C
-    # reverse them so that they look like
-    #   A <- B <- C
-    # as long as there are no incoming dependencies
+    # Relabel sa-hen nouns
+    foreach my $i ( 1 .. $#ret ) {
+        $ret[$i-1]->[3] = "動詞" if not (($ret[$i]->[2] !~ /^(する|し|さ|せ)$/) or ($ret[$i-1]->[3] !~ /^名詞$/));
+    }
+    # Find chunks. These include:
+    #  - a verb (including sa-hen) followed by auxiliaries, word endings, or other verbs
+    #  - an adjective followed by word endings
+    #  - strings of particles
+    my @chunks = ( 0 );
+    my @head_type; push @head_type, $ret[0]->[3] if @ret;
+    for(my $i = 1; $i < @ret; $i++) {
+        my $connect = 0;
+        $connect = 1 if(
+            ($ishead[$i] == 1) and
+            ((($head_type[-1] =~ /^(動詞|形容詞|助動詞)$/) and 
+               (($ret[$i]->[3] =~ /^(語尾|助動詞)$/) or
+                ($ret[$i]->[3] =~ /^助詞-(て|つつ|ば)$/) or
+                (($ret[$i]->[3] =~ /^(動詞|助詞-も|助詞-は)$/) and ($head_type[-1] eq "助動詞")) or
+                (($ret[$i]->[3] =~ /^動詞$/) and ($head_type[-1] eq "動詞")))) or
+             (($head_type[-1] =~ /^助詞-(で|に|と)/) and ($ret[$i]->[3] =~ /^助詞-(は|も)/))));
+             # (($head_type[-1] =~ /^名詞$/) and ($ret[$i]->[3] =~ /^接尾辞$/))));
+        if($connect) {
+            push @chunks, $chunks[-1];
+        } else {
+            push @chunks, $chunks[-1]+1;
+            push @head_type, $ret[$i]->[3];
+        }
+    }
+    my $last_verb = undef;
+    # Reverse phrases in the same chunk
     for(my $i = $#ret; $i > 0; $i--) {
-        next if ($ishead[$i] != 1);
-        $ret[$i-1]->[3] = "動詞" if not (($ret[$i]->[2] !~ /^(する|し|さ|せ)$/) or ($ret[$i-1]->[3] !~ /^名詞$/)); # Sahen nouns
-        next if
-                ( 
-                (($ret[$i]->[3] !~ /^(動詞|助動詞|語尾)$/) or ($ret[$i-1]->[3] !~ /^(動詞|助動詞|語尾)$/)) and # Verb phrases
-                (($ret[$i]->[2] !~ /^[はも]$/) or ($ret[$i-1]->[3] !~ /^助詞$/)) # "は" or "も" preceded by a different particle
-                )
-                or
-                ($ret[$i-1]->[1] != $i);
-        $ret[$i-1]->[1] = $ret[$i]->[1];
-        $ret[$i]->[1] = $i-1;
+        if($chunks[$i-1] == $chunks[$i]) {
+            $ret[$i-1]->[1] = $ret[$i]->[1];
+            $ret[$i]->[1] = $i-1;
+            if($ret[$i-1]->[3] eq "動詞") {
+                $ret[$last_verb]->[1] = $i-1 if(defined $last_verb);
+                $last_verb = $i-1;
+            }
+        } else {
+            $last_verb = undef;
+        }
     }
     # For common punctuation, propagate them up to the first head on the left
     for(my $i = $#ret; $i > 0; $i--) {
