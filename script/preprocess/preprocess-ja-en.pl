@@ -153,7 +153,7 @@ run_parallel("$PREF/orig", "$PREF/tok", "en", "java -cp $STANFORD_JARS edu.stanf
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
-    safesystem("ln -s $PREF/tok $PREF/clean") if not -e "$PREF/clean";
+    safesystem("ln -s ".abs_path("$PREF/tok")." $PREF/clean") if not -e "$PREF/clean";
 } elsif (not -e "$PREF/clean/ja") {
     -e "$PREF/clean" or mkdir "$PREF/clean";
     foreach my $i (@suffixes) {
