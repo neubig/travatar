@@ -41,10 +41,10 @@ if($LEX_PROB_FILE) {
         chomp;
         my @arr = split(/[\t ]/);
         if(@arr != 3) {
-            print STDERR "Bad line $_\n";
-            exit 1;
+            print STDERR "WARNING: Bad line in lexical probability file $_\n";
+        } else {
+            $lex{"$arr[0]\t$arr[1]"} = $arr[2];
         }
-        $lex{"$arr[0]\t$arr[1]"} = $arr[2];
     }
     close FILE;
     print STDERR "Done loading lexical probabilities\n";
