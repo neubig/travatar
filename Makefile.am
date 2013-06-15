@@ -1,2 +1,3 @@
+AM_CPPFLAGS = -g -O3 -Wall -DKENLM_MAX_ORDER=6
 SUBDIRS = src
 EXTRA_DIST = doc
