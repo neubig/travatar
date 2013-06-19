@@ -1,3 +1,3 @@
-AM_CPPFLAGS = -g -O3 -Wall -DKENLM_MAX_ORDER=6
+include $(top_srcdir)/common.am
 SUBDIRS = src
 EXTRA_DIST = doc
