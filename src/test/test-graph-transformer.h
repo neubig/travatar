@@ -8,6 +8,7 @@
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
 #include <travatar/unary-flattener.h>
+#include <travatar/word-splitter.h>
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
@@ -194,7 +195,17 @@ public:
         tree_io_.WriteTree(*act_graph, oss);
         string exp_str = "(A s)", act_str = oss.str();
         return CheckEqual(exp_str, act_str);
+    }
 
+    int TestWordSplit() {
+        WordSplitter splitter;
+        istringstream iss("(A x-y)");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A (A x) (A -) (A y))", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
     }
 
     bool RunTest() {
@@ -202,6 +213,7 @@ public:
         done++; cout << "TestLMIntersection()" << endl; if(TestLMIntersection()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestUnaryFlatten()" << endl; if(TestUnaryFlatten()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestUnaryFlatten2()" << endl; if(TestUnaryFlatten2()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWordSplit()" << endl; if(TestWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
