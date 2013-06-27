@@ -1,3 +1,4 @@
+include $(top_srcdir)/common.am
 AM_CXXFLAGS = -Wall -Weffc++ -Wextra
 #AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
 

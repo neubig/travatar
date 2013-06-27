@@ -1,4 +1,5 @@
-AM_CPPFLAGS = -I$(srcdir)/../include
+include $(top_srcdir)/common.am
+AM_CPPFLAGS += -I$(srcdir)/../include
 LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../tercpp/libter.a ../marisa/libmarisa.la -lboost_thread -lboost_regex -lboost_iostreams -lz -lrt
 
 bin_PROGRAMS = travatar forest-extractor batch-tune tree-converter mt-evaluator
