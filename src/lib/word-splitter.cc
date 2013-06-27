@@ -37,7 +37,10 @@ HyperGraph * WordSplitter::TransformGraph(const HyperGraph & hg) const {
     BOOST_FOREACH(WordId wid, hg.GetWords()) {
         string old_word = Dict::WSym(wid);
         vector<string> new_words;
-        new_words = RegexSplit(old_word);
+        if(ignore_.find(wid) != ignore_.end())
+            new_words.push_back(old_word);
+        else
+            new_words = RegexSplit(old_word);
         BOOST_FOREACH(const std::string & word, new_words) {
             ids[i].push_back(j++);
             new_wids.push_back(Dict::WID(word));

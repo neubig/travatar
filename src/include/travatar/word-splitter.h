@@ -4,9 +4,11 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/generic-string.h>
 #include <travatar/sentence.h>
+#include <travatar/dict.h>
 #include <boost/unordered_map.hpp>
 #include <boost/regex.hpp>
 #include <string>
+#include <set>
 
 namespace travatar {
 
@@ -17,7 +19,12 @@ class WordSplitter : public GraphTransformer {
 
 public:
 
-    WordSplitter(const std::string & profile = "-") : profile_(profile) { }
+    WordSplitter(const std::string & profile = "-") : profile_(profile) {
+        ignore_.insert(Dict::WID("-LRB-"));
+        ignore_.insert(Dict::WID("-RRB-"));
+        ignore_.insert(Dict::WID("-lrb-"));
+        ignore_.insert(Dict::WID("-rrb-"));
+    }
     virtual ~WordSplitter() { }
 
     // Split words
@@ -31,6 +38,7 @@ public:
 
 protected:
     boost::regex profile_;
+    std::set<WordId> ignore_;
 
 };
 
