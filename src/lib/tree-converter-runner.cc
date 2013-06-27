@@ -7,6 +7,7 @@
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <travatar/unary-flattener.h>
+#include <travatar/word-splitter.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
@@ -41,6 +42,12 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_out.reset(new MosesXMLTreeIO);
     else if(!word_out)
         THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
+
+    // Create the splitter
+    scoped_ptr<GraphTransformer> splitter;
+    if(config.GetString("split").size() != 0) {
+        splitter.reset(new WordSplitter(config.GetString("split")));
+    }
 
     // Create the binarizer
     scoped_ptr<GraphTransformer> binarizer;
@@ -87,6 +94,9 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
             THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
         }
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
+        // Splitter if necessary
+        if(splitter.get() != NULL)
+            src_graph.reset(splitter->TransformGraph(*src_graph));
         // Binarizer if necessary
         if(binarizer.get() != NULL)
             src_graph.reset(binarizer->TransformGraph(*src_graph));
