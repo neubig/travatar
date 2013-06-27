@@ -157,6 +157,7 @@ public:
     // Information
     int NumEdges() const { return edges_.size(); }
     bool IsTerminal() const { return edges_.size() == 0; }
+    bool IsPreTerminal() const { return edges_.size() == 1 && edges_[0]->GetTails().size() == 1 && edges_[0]->GetTail(0)->IsTerminal(); }
 
     // Adders
     void AddEdge(HyperEdge* edge) { edges_.push_back(edge); }
@@ -168,6 +169,8 @@ public:
     // Getters/Setters
     void SetSym(WordId sym) { sym_ = sym; }
     WordId GetSym() const { return sym_; }
+    void SetTrgSym(WordId sym) { trg_sym_ = sym; }
+    WordId GetTrgSym() const { return trg_sym_; }
     void SetId(NodeId id) { id_ = id; }
     NodeId GetId() const { return id_; }
     const std::pair<int,int> & GetSpan() const { return src_span_; }

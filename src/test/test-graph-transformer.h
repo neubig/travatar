@@ -207,6 +207,26 @@ public:
         string exp_str = "(A (A x) (A -) (A y))", act_str = oss.str();
         return CheckEqual(exp_str, act_str);
     }
+    int TestWordSplitConnected() {
+        WordSplitter splitter;
+        istringstream iss("(A x--y)");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A (A x) (A -) (A -) (A y))", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
+    int TestWordSplitInitFinal() {
+        WordSplitter splitter;
+        istringstream iss("(A -x-)");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A (A -) (A x) (A -))", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
@@ -214,12 +234,15 @@ public:
         done++; cout << "TestUnaryFlatten()" << endl; if(TestUnaryFlatten()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestUnaryFlatten2()" << endl; if(TestUnaryFlatten2()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWordSplit()" << endl; if(TestWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWordSplitConnected()" << endl; if(TestWordSplitConnected()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWordSplitInitFinal()" << endl; if(TestWordSplitInitFinal()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
 private:
     PennTreeIO tree_io_;
+    JSONTreeIO json_tree_io_;
     std::vector<WordId> src_;
     boost::scoped_ptr<HyperGraph> rule_graph_, unary_graph_;
     boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
