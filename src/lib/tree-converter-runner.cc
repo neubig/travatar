@@ -27,6 +27,10 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     scoped_ptr<TreeIO> tree_in, tree_out;
     if(config.GetString("input_format") == "penn")
         tree_in.reset(new PennTreeIO);
+    else if(config.GetString("input_format") == "egret")
+        tree_in.reset(new EgretTreeIO);
+    else if(config.GetString("input_format") == "json")
+        tree_in.reset(new JSONTreeIO);
     else
         THROW_ERROR("Invalid -input_format type: " << config.GetString("input_format"));
     // Create the tree output
@@ -78,21 +82,13 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
 
     // Get the lines
     string src_line;
-    int has_src;
     int sent = 0;
     cerr << "Transforming trees (.=10,000, !=100,000 sentences)" << endl;
+    try {
     while(true) {
-        // Load one line from each file and check that they all exist
-        has_src = getline(*src_in, src_line) ? 1 : 0;
-        if(!has_src) break;
         // Parse into the appropriate data structures
-        shared_ptr<HyperGraph> src_graph;
-        try {
-            istringstream src_iss(src_line);
-            src_graph.reset(tree_in->ReadTree(src_iss));
-        } catch (std::runtime_error & e) {
-            THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
-        }
+        shared_ptr<HyperGraph> src_graph(tree_in->ReadTree(*src_in));
+        if(src_graph.get() == NULL) break;
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
         // Splitter if necessary
         if(splitter.get() != NULL)
@@ -118,6 +114,9 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         if(sent % 10000 == 0) {
             cerr << (sent % 100000 == 0 ? '!' : '.'); cerr.flush();
         }
+    }
+    } catch (std::runtime_error & e) {
+        THROW_ERROR("Error reading tree on line " << sent+1 << endl << src_line << endl << e.what());
     }
     cerr << endl;
 }

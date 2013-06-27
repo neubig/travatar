@@ -189,14 +189,14 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     if(!getline(in,line)) return NULL;
     if(line.substr(0,8) != "sentence") THROW_ERROR("Missing sentence line: " << endl);
     // Create the sentence and root node
-    if(!getline(in,line)) THROW_ERROR("partial egret output");
+    if(!getline(in,line)) THROW_ERROR("Egret file ended prematurely");
     ret->SetWords(Dict::ParseWords(line));
     // Get the lines one by one
     HyperNode * head = NULL;
     while(getline(in, line)) {
         // If we've finished, swap the root to the first position and return
         if(line == "") {
-            if(head == NULL) THROW_ERROR("partial egret output");
+            if(head == NULL) THROW_ERROR("Egret file had premature blank line");
             int head_pos = head->GetId();
             vector<HyperNode*> & nodes = ret->GetNodes();
             nodes[head_pos] = nodes[0]; nodes[head_pos]->SetId(head_pos);

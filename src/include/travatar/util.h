@@ -18,8 +18,8 @@
 
 #define THROW_ERROR(msg) do {                   \
     std::ostringstream oss;                     \
-    oss << msg;                                 \
-    throw std::runtime_error(oss.str()); }       \
+    oss << "ERROR: " << msg;                    \
+    throw std::runtime_error(oss.str()); }      \
   while (0);
 
 namespace std {

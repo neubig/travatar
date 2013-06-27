@@ -52,6 +52,7 @@ my $STANFORD_DIR;
 my $STANFORD_JARS;
 my $EGRET_DIR;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
+my $SPLIT_WORDS_EN;
 my $EDA_DIR;
 my $EDA_VOCAB;
 my $EDA_WEIGHT;
@@ -90,6 +91,7 @@ GetOptions(
     "nile-beam=i" => \$NILE_BEAM,
     "nile-segments=i" => \$NILE_SEGMENTS,
     "egret-forest-opt=s" => \$EGRET_FOREST_OPT,
+    "split-words-en=s" => \$SPLIT_WORDS_EN,
     "travatar-dir=s" => \$TRAVATAR_DIR,
     "forest" => \$FOREST,
     "align" => \$ALIGN,
@@ -163,8 +165,6 @@ if($CLEAN_LEN == 0) {
     safesystem("cat ".join(" ", map { "$PREF/clean/ja.$_" } @suffixes)." > $PREF/clean/ja");
     safesystem("cat ".join(" ", map { "$PREF/clean/en.$_" } @suffixes)." > $PREF/clean/en");
 }
-run_parallel("$PREF/clean", "$PREF/low", "ja", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
-run_parallel("$PREF/clean", "$PREF/low", "en", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 
 ###### 1-best Parsing ######
 # EN Parsing with Stanford Parser
@@ -177,7 +177,9 @@ run_parallel("$PREF/clean", "$PREF/egret", "en", "$EGRET_DIR/egret -lapcfg -i=IN
 -e "$PREF/tree" or mkdir "$PREF/tree";
 foreach my $i ("", map{".$_"} @suffixes) {
     if(not -e "$PREF/tree/en$i") {
-        safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/en$i $PREF/egret/en$i > $PREF/tree/en$i") ;
+        my $SPLIT_CMD;
+        $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$SPLIT_WORDS_EN\"" if $SPLIT_WORDS_EN;
+        safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/en$i $PREF/egret/en$i $SPLIT_CMD > $PREF/tree/en$i") ;
         die "Combining trees failed on en$i" if(file_len("$PREF/stanford/en$i") != file_len("$PREF/tree/en$i"));
     }
 }
@@ -190,6 +192,11 @@ run_parallel("$PREF/clean", "$PREF/edain", "ja", "cat INFILE | $TRAVATAR_DIR/scr
 run_parallel("$PREF/edain", "$PREF/eda", "ja", "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
 run_parallel("$PREF/eda", "$PREF/tree", "ja", "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
 run_parallel("$PREF/tree", "$PREF/treelow", "ja", "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
+
+###### Lowercase the data ######
+
+run_parallel("$PREF/treelow", "$PREF/low", "en", "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
+run_parallel("$PREF/treelow", "$PREF/low", "ja", "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
 
 ###### Forest Parsing ######
 
@@ -204,7 +211,9 @@ run_parallel("$PREF/clean", "$PREF/egretfor", "en", "$EGRET_DIR/egret -lapcfg -i
 # EN Combine Stanford and Egret (for now this is not parallel)
 -e "$PREF/for" or mkdir "$PREF/for";
 foreach my $i ("", map{".$_"} @suffixes) {
-    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/stanfordfor/en$i $PREF/egretfor/en$i > $PREF/for/en$i") if not -e "$PREF/for/en$i";
+    my $SPLIT_CMD;
+    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$SPLIT_WORDS_EN\" -input_format egret -output_format egret" if $SPLIT_WORDS_EN;
+    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/stanfordfor/en$i $PREF/egretfor/en$i $SPLIT_CMD > $PREF/for/en$i") if not -e "$PREF/for/en$i";
     die "Combining forests failed on en$i" if(file_len("$PREF/for/en$i") == 0);
 }
 
@@ -230,7 +239,7 @@ if($ALIGN) {
         die "Could not find nile at $NILE_DIR/nile.py" if not -e "$NILE_DIR/nile.py";
         die "Could not find nile model $NILE_MODEL" if not -e "$NILE_MODEL";
         # Get the splits
-        my $CLEANLEN = file_len("$PREF/clean/en");
+        my $CLEANLEN = file_len("$PREF/low/en");
         my $nilelen = int($CLEANLEN/$NILE_SEGMENTS+1);
         my $nilesuflen = int(log($NILE_SEGMENTS)/log(10)+1);
         my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS);
