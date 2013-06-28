@@ -198,13 +198,13 @@ public:
     }
 
     int TestWordSplit() {
-        WordSplitter splitter;
-        istringstream iss("(A x-y)");
+        WordSplitter splitter("(\\-+|\\\\/)");
+        istringstream iss("(A x\\/y)");
         boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
         boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
         ostringstream oss;
         tree_io_.WriteTree(*act_graph, oss);
-        string exp_str = "(A (A x) (A -) (A y))", act_str = oss.str();
+        string exp_str = "(A (A x) (A \\/) (A y))", act_str = oss.str();
         return CheckEqual(exp_str, act_str);
     }
     int TestWordSplitConnected() {
