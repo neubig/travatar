@@ -191,22 +191,17 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // Create the sentence and root node
     if(!getline(in,line)) THROW_ERROR("Egret file ended prematurely");
     ret->SetWords(Dict::ParseWords(line));
-    // Get the lines one by one
-    HyperNode * head = NULL;
-    while(getline(in, line)) {
-        // If we've finished, swap the root to the first position and return
-        if(line == "") {
-            if(head == NULL) THROW_ERROR("Egret file had premature blank line");
-            int head_pos = head->GetId();
-            vector<HyperNode*> & nodes = ret->GetNodes();
-            nodes[head_pos] = nodes[0]; nodes[head_pos]->SetId(head_pos);
-            nodes[0] = head; head->SetId(0);
-            return ret;
-        }
+    // Get the lines one by one and reverse
+    vector<string> lines;
+    while(getline(in, line) && line != "")
+        lines.push_back(line);
+    if(lines.size() == 0) THROW_ERROR("Egret file had premature blank line");
+    // For each line
+    BOOST_REVERSE_FOREACH(const std::string & line, lines) {
         istringstream iss(line);
         // Get the head
         iss >> buff;
-        head = MakeEgretNode(buff, node_map, ret);
+        HyperNode * head = MakeEgretNode(buff, node_map, ret);
         HyperEdge * edge = new HyperEdge(head); ret->AddEdge(edge); head->AddEdge(edge);
         // The next string should always be "=>"
         iss >> buff;
@@ -224,7 +219,7 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
         iss >> score;
         edge->SetScore(score); edge->AddFeature(Dict::WID("parse"), score);
     }
-    return NULL;
+    return ret;
 }
 
 inline void PrintNodeEgret(const HyperNode * node, ostream & out) {
