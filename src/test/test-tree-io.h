@@ -152,6 +152,16 @@ public:
         return egret_exp.CheckEqual(*hg_act);
     }
 
+    int TestWriteEgret() {
+        // Use this tree
+        stringstream strm;
+        EgretTreeIO io;
+        io.WriteTree(graph_exp, strm);
+        boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));
+        // Check that both values are equal
+        return graph_exp.CheckEqual(*hg_act);
+    }
+
     int TestReadJSON() {
         // Use this tree
         istringstream instr(graph_str);
@@ -208,13 +218,14 @@ public:
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWritePenn()" << endl; if(TestWritePenn()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWriteMosesXML()" << endl; if(TestWriteMosesXML()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadEgret()" << endl; if(TestReadEgret()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWritePenn()" << endl; if(TestWritePenn()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteEgret()" << endl; if(TestWriteEgret()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteMosesXML()" << endl; if(TestWriteMosesXML()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTreeIO Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
