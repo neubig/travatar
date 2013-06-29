@@ -227,6 +227,16 @@ public:
         string exp_str = "(A (A -) (A x) (A -))", act_str = oss.str();
         return CheckEqual(exp_str, act_str);
     }
+    int TestWordSplitSingle() {
+        WordSplitter splitter("(a|b)");
+        istringstream iss("(A a)");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(A a)", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
@@ -236,6 +246,7 @@ public:
         done++; cout << "TestWordSplit()" << endl; if(TestWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWordSplitConnected()" << endl; if(TestWordSplitConnected()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWordSplitInitFinal()" << endl; if(TestWordSplitInitFinal()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWordSplitSingle()" << endl; if(TestWordSplitSingle()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
