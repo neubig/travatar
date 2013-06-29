@@ -18,8 +18,9 @@ vector<string> WordSplitter::RegexSplit(const std::string & str,
     for(; i != j; ++i) {
         if(i->position() != pos)
             ret.push_back(str.substr(pos, i->position()-pos));
-        ret.push_back(pad+i->str()+pad);
-        pos = i->position() + i->size();
+        string str = i->str();
+        ret.push_back(pad+str+pad);
+        pos = i->position() + str.length();
     }
     if(pos != (int)str.size())
         ret.push_back(str.substr(pos));
