@@ -13,6 +13,9 @@ typedef std::pair<double,double> Span;
 typedef std::pair<Span, EvalStatsPtr> ScoredSpan;
 typedef std::vector<ScoredSpan> ConvexHull;
 
+// A pair of features and scores
+typedef std::pair<SparseMap, EvalStatsPtr> ExamplePair;
+
 class TuningExample {
 
 public:
@@ -26,10 +29,15 @@ public:
     // Add weights for this example
     virtual void CountWeights(SparseMap & weights) = 0;
 
-    // Calculate the convex hull for this example given the current weights and gradients
+    // Calculate the convex hull for this example given the current weights
+    // and gradients
     virtual ConvexHull CalculateConvexHull(
                                 const SparseMap & weights,
                                 const SparseMap & gradient) const = 0;
+
+    // Calculate the n-best list giving the current weights
+    virtual const std::vector<ExamplePair> & 
+                       CalculateNbest(const SparseMap & weights) = 0;
 
 };
 

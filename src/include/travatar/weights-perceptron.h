@@ -11,7 +11,7 @@ class WeightsPerceptron : public WeightsPairwise {
 
 public:
     WeightsPerceptron() : WeightsPairwise(), curr_iter_(0), l1_coeff_(0) { }
-    WeightsPerceptron(const SparseMap & current) : WeightsPairwise(current), curr_iter_(0), l1_coeff_(1e-5) { }
+    WeightsPerceptron(const SparseMap & current) : WeightsPairwise(current), curr_iter_(0), l1_coeff_(0) { }
 
     // The pairwise weight update rule
     virtual void Update(

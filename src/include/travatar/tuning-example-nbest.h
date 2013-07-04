@@ -15,8 +15,7 @@ public:
 
     virtual ~TuningExampleNbest() { }
 
-    // A pair of features and scores
-    typedef std::pair<SparseMap,boost::shared_ptr<EvalStats> > ExamplePair;
+
 
     // Calculate the gain that could be achieved by each feature
     // for this particular n-best list
@@ -34,6 +33,13 @@ public:
     void AddHypothesis(const SparseMap & feats, boost::shared_ptr<EvalStats> score) {
         nbest_.push_back(std::make_pair(feats,score));
     }
+
+    // Calculate the n-best list giving the current weights
+    virtual const std::vector<ExamplePair> & 
+                       CalculateNbest(const SparseMap & weights) {
+        return nbest_;
+    }
+    
 
 protected:
 
