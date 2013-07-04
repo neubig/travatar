@@ -52,7 +52,17 @@ public:
     // Add a forest hypothesis
     void AddHypothesis(const boost::shared_ptr<HyperGraph> & forest);
 
+
+    // Calculate the n-best list giving the current weights
+    virtual const std::vector<ExamplePair> & 
+                       CalculateNbest(const SparseMap & weights) {
+        THROW_ERROR("Cannot yet calculate n-best from forests for tuning");
+        return last_nbest_;
+    }
+
 protected:
+    
+    std::vector<ExamplePair> last_nbest_;
 
     // Recursively calculate the MERT hull
     const MertHull & CalculateMertHull(
