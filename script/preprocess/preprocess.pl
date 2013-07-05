@@ -171,7 +171,7 @@ foreach my $f (`ls $PREF/orig`) {
 sub tokenize_cmd {
     if($_[0] eq "en") { return "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
     elsif($_[0] eq "ja") { return "$KYTEA -notags -wsconst D INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
-    elsif($_[0] eq "zh") { return "$STANFORD_SEG_DIR/segment.sh ctb INFILE UTF-8 0 > OUTFILE"; }
+    elsif($_[0] eq "zh") { return "$STANFORD_SEG_DIR/segment.sh ctb INFILE UTF-8 0 | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
     else { die "Cannot tokenize $_[0]"; }
 }
 run_parallel("$PREF/orig", "$PREF/tok", $SRC, tokenize_cmd($SRC));
@@ -204,7 +204,7 @@ sub run_tree_parsing {
         } else {
 
             # ZH Convert to GB encoding, same as the penn treebank
-            run_parallel("$PREF/clean", "$PREF/cleangb", $lang, "iconv -f UTF-8 -t GB18030 < INFILE > OUTFILE");
+            run_parallel("$PREF/clean", "$PREF/cleangb", $lang, "iconv -sc -f UTF-8 -t GB18030 < INFILE | sed \"s/^[ \t]*\$/FAILED/g\" > OUTFILE");
 
             # ZH Parsing with Stanford Parser
             run_parallel("$PREF/cleangb", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tLPP \"edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams\" -chineseFactored -encoding GB18030 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz INFILE 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
