@@ -73,7 +73,7 @@ sub readtree {
     }
     # For common punctuation, propagate them up to the first head on the left
     for(my $i = $#ret; $i > 0; $i--) {
-        next if $ret[$i]->[2] !~ /^[、,。\.：:]$/;
+        next if $ret[$i]->[2] !~ /^[、,。\.：:．，]$/;
         my @children = getchildren(\@ret, $i);
         next if not @children;
         $ret[$children[-1]]->[1] = $ret[$i]->[1];
