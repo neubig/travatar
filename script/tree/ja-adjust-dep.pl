@@ -16,13 +16,24 @@ sub getchildren {
     return @children;
 }
 
+my %particles = (
+    # Case particles
+    "が"=>1,"の"=>1,"を"=>1,"に"=>1,"へ"=>1,"と"=>1,"から"=>1,"より"=>1,"で"=>1,
+    # Parallel particles
+    "と"=>1,"や"=>1,"か"=>1,
+    # Adverbial particles
+    "ばかり"=>1,"まで"=>1,"だけ"=>1,"ほど"=>1,"くらい"=>1,"ぐらい"=>1,"など"=>1,
+    # Particles that are actually part of conjugation often
+    "て"=>1,"つつ"=>1,"ば"=>1,
+);
+
 sub readtree {
     $_ = shift;
     # Split and remove the leading ID
     my @lines = split(/\n/);
     shift @lines if $lines[0] =~ /^ID/;
     my @ret = map { my @arr = split(/ +/); $arr[0]--; $arr[1] = max($arr[1]-1,-1); 
-                    $arr[3] = "$arr[3]-$arr[2]" if (($arr[3] =~ /^助詞$/) or 
+                    $arr[3] = "$arr[3]$arr[2]" if ((($arr[3] =~ /^助詞$/) and $particles{$arr[2]})   or 
                                                     (($arr[3] =~ /^助動詞$/) and ($arr[2] =~ /^で$/)) or
                                                     (($arr[3] =~ /^形容詞$/) and ($arr[2] =~ /^な$/))); \@arr } @lines;
     # Find all values that are a head
@@ -44,10 +55,10 @@ sub readtree {
             ($ishead[$i] == 1) and
             ((($head_type[-1] =~ /^(動詞|形容詞|助動詞)/) and 
                (($ret[$i]->[3] =~ /^(語尾|助動詞)/) or
-                ($ret[$i]->[3] =~ /^助詞-(て|つつ|ば)/) or
-                (($ret[$i]->[3] =~ /^(動詞|助詞-も|助詞-は|形容詞-な)/) and ($head_type[-1] eq "助動詞-で")) or
+                ($ret[$i]->[3] =~ /^助詞(て|つつ|ば)/) or
+                (($ret[$i]->[3] =~ /^(動詞|助詞も|助詞は|形容詞な)/) and ($head_type[-1] eq "助動詞で")) or
                 (($ret[$i]->[3] =~ /^動詞$/) and ($head_type[-1] eq "動詞")))) or
-             (($head_type[-1] =~ /^助詞-(で|に|と)/) and ($ret[$i]->[3] =~ /^助詞-(は|も)/))));
+             (($head_type[-1] =~ /^助詞(で|に|と)/) and ($ret[$i]->[3] =~ /^助詞(は|も)/))));
              # (($head_type[-1] =~ /^名詞$/) and ($ret[$i]->[3] =~ /^接尾辞$/))));
         # print "$ret[$i]->[3] $head_type[-1] $connect\n";
         if($connect) {
