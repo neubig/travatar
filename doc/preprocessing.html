@@ -1,0 +1,118 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Travatar - Preprocessing for Travatar</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="preprocessing.html">Preprocessing</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+</ul>
+
+<p>Translating</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+<li><a href="evaluation.html">Evaluation</a></li>
+</ul>
+
+<p>Other</p>
+
+<ul>
+<li><a href="links.html">Links/ Acknowledgements</a></li>
+</ul>
+
+
+</div>
+<div id="main">
+
+<h1>Preprocessing for Travatar</h1>
+
+<p>
+As Travatar requires parsing, the preprocessing is a bit heavier than that necessary for other translation toolkits.
+There is some information on the <a href="parsing.html">Parsing</a> page about how to do this for each language.
+However, there are a lot of fine details and it is easy to mess things up, so we provide a default preprocessing script that supports English (en), Japanese (ja), and Chinese (zh).
+To use it follow the directions below:
+</p>
+
+<h2>Installing Programs</h2>
+
+<p>
+The first thing that you will need to do is install programs other than Travatar that are needed to parse your particular language pair.
+The best place to install these programs is in <tt>$HOME/usr/local</tt>.
+If you install them in a different place you can specify them using <tt>-program-dir /path/to/tools</tt> when you run the preprocessing script.
+</p>
+
+<ul>
+<li><a href="http://code.google.com/p/giza-pp">GIZA++ Aligner</a> (all): Unzip, enter the <tt>giza-pp</tt> directory, <tt>make</tt>, and then run the following command:
+<pre>
+cp GIZA++-v2/{GIZA++,plain2snt.out,snt2cooc.out,snt2plain.out,trainGIZA++.sh} mkcls-v2/mkcls .
+</pre>
+</li>
+
+<li><a href="http://nlp.stanford.edu/software/lex-parser.shtml">Stanford Parser</a> (en, zh): Unzip, then run the following commands to normalize version numbers:
+<pre>
+ln -s `pwd`/stanford-parser-* stanford-parser
+cd stanford-parser
+ln -s `pwd`/stanford-parser-*-models.jar stanford-parser-models.jar
+</pre>
+</li>
+
+<li><a href="http://github.com/neubig/egret">Egret Parser</a> (en, zh): Unzip, run <tt>bash make-linux.sh</tt>.</li>
+
+<li><a href="http://phontron.com/kytea">KyTea Morphological Analyzer</a> (ja): Unzip, enter the directory, <tt>./configure</tt>, <tt>make</tt> and <tt>sudo make install</tt>.
+</li>
+
+<li><a href="http://plata.ar.media.kyoto-u.ac.jp/tool/EDA">Eda Parser</a> (ja): Unzip, enter the directory, <tt>make</tt>.</li>
+</ul>
+
+<h2>Running Preprocessing</h2>
+
+<p>
+If you have all of the tools installed in the <tt>$HOME/usr/local</tt> directory, running the preprocessing script is quite simple.
+For example, considering translation between Japanese and English, we could run the following command to tokenize, clean, parse, and align our training data:
+</p>
+
+<pre>
+$TRAVATAR_DIR/script/preprocess/preprocess.pl
+   -src ja -trg en -threads 4 -clean 60 -align train.ja train.en preproc-train
+</pre>
+
+<p>
+where <tt>train.ja</tt> is the source file, <tt>train.en</tt> is the target file, and <tt>preproc-train</tt> is the output directory.
+<tt>-threads</tt> indicates the number of threads you want to use (if you use more, preprocessing will finish more quickly), <tt>-clean 60</tt> indicates you want to remove all sentences of more than 60 words, and <tt>-align</tt> indicates that you want to run GIZA++ to generate alignments.
+When preprocessing finishes, you will have a number of directories under <tt>preproc-train</tt> containing the corpus in various forms.
+</p>
+
+<p>
+When preprocessing your testing data, you might want to use a command like this:
+</p>
+
+<pre>
+$TRAVATAR_DIR/script/preprocess/preprocess.pl
+   -src ja -trg en -threads 4 -forest-trg test.ja test.en preproc-test
+</pre>
+
+<p>
+In this case we should not filter the data and don't need to align, but we may want to generate forests for the languages that support them (e.g. en, zh).
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
