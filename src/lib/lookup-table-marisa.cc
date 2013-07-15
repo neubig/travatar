@@ -25,34 +25,39 @@ LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupSt
 }
 
 LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
-    // First read into a map
-    typedef tr1::unordered_map< std::string, vector<TranslationRule*> > RuleMap;
-    RuleMap rule_map;
+    // First read in the rule table
     string line;
     LookupTableMarisa * ret = new LookupTableMarisa;
+    regex threebars(" \\|\\|\\| ");
+    // Rule table
+    typedef vector<TranslationRule*> RuleVec;
+    vector<RuleVec> rules;
+    marisa::Keyset keyset;
     while(getline(in, line)) {
         vector<string> columns;
-        algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
+        algorithm::split_regex(columns, line, threebars);
         if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
         vector<WordId> trg_words, trg_syms;
         Dict::ParseQuotedWords(columns[1], trg_words, trg_syms);
         SparseMap features = Dict::ParseFeatures(columns[2]);
-        rule_map[columns[0]].push_back(new TranslationRule(columns[0], trg_words, trg_syms, features));
+        TranslationRule* rule = new TranslationRule(columns[0], trg_words, trg_syms, features);
+        if(rules.size() == 0 || columns[0] != rules[rules.size()-1][0]->GetSrcStr()) {
+            keyset.push_back(rule->GetSrcStr().c_str());
+            rules.push_back(vector<TranslationRule*>());
+        }
+        rules[rules.size()-1].push_back(rule);
     }
-    // Next, convert this map into a vector and index
-    marisa::Keyset keyset;
-    BOOST_FOREACH(RuleMap::value_type & rule_val, rule_map)
-        keyset.push_back(rule_val.first.c_str());
     // Build the trie
     ret->GetTrie().build(keyset);
     // Insert the rule arrays into the appropriate position based on the tree ID
-    vector<vector<TranslationRule*> > & rules = ret->GetRules();
-    rules.resize(keyset.size());
-    marisa::Agent agent;
-    agent.set_query("");
-    while(ret->GetTrie().predictive_search(agent)) {
-        string key(agent.key().ptr(), agent.key().length());
-        rules[agent.key().id()] = rule_map[key];
+    vector<RuleVec> & main_rules = ret->GetRules();
+    main_rules.resize(keyset.size());
+    BOOST_FOREACH(const RuleVec & my_rules, rules) {
+        marisa::Agent agent;
+        agent.set_query(my_rules[0]->GetSrcStr().c_str());
+        if(!ret->GetTrie().lookup(agent))
+            THROW_ERROR("Internal error when building rule table @ " << my_rules[0]->GetSrcStr());
+        main_rules[agent.key().id()] = my_rules;
     }
     return ret;
 }
