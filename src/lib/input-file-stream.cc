@@ -1,6 +1,6 @@
 // $Id$
 
-// This ile is originally from travatar with the following copyright info:
+// This file is originally from moses with the following copyright info:
 /***********************************************************************
 travatar - factored phrase-based language decoder
 Copyright (C) 2006 University of Edinburgh
@@ -20,6 +20,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ***********************************************************************/
 
+#include <travatar/util.h>
 #include <travatar/input-file-stream.h>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -40,8 +41,12 @@ inline bool FileExists(const std::string& filePath)
 
 InputFileStream::InputFileStream(std::string filePath)
   : std::istream(NULL), m_streambuf(NULL) {
-    if(!FileExists(filePath) && FileExists(filePath+".gz"))
-        filePath += ".gz";
+    if(!FileExists(filePath)) {
+        if(FileExists(filePath+".gz"))
+            filePath += ".gz";
+        else
+            THROW_ERROR("Could not find translation model: " << filePath);
+    }
     if(filePath.size() > 3 &&
        filePath.substr(filePath.size() - 3, 3) == ".gz") {
       filtering_streambuf<input> * in = new filtering_streambuf<input>;
