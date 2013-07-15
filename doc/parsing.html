@@ -46,12 +46,14 @@
 Travatar is a tree-to-string translation system, which means that it requires source language parse trees to perform translation.
 Within this framework, better parse trees will often directly improve your translation accuracy, so it is worth investing a little bit of time to created good trees.
 It can also use packed forests, which encode a large number of trees at decoding time, so using a parser that has the ability to output packed forests is also effective.
+This page describes how to perform the parsing step on your own, which is useful if you want to adjust various parameters of the parser, but there is also a <a href="preprocessing.html">preprocessing script</a> that makes it a bit easier to get going quickly.
 </p>
 
 <ul>
 <li><a href="#english">Parsing English</a></li>
 <li><a href="#japanese">Parsing Japanese</a></li>
 <li><a href="#chinese">Parsing Chinese</a></li>
+<li><a href="#defr">Parsing German/French</a></li>
 </ul>
 
 <a name="english">
@@ -256,6 +258,13 @@ The output of this sequence of commands should be sufficient for using as input 
 
 <p>
 Both the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> and <a href="http://code.google.com/p/egret-parser/">Egret</a> support parsing Chinese, and thus can be used in the same fashion as English.
+</p>
+
+<a name="defr"/>
+<h2>Parsing German/French</h2>
+
+<p>
+The <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> supports German and French, so it can be used to generate trees.
 </p>
 
 </div>

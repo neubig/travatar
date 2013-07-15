@@ -45,7 +45,7 @@
 <p>
 As Travatar requires parsing, the preprocessing is a bit heavier than that necessary for other translation toolkits.
 There is some information on the <a href="parsing.html">Parsing</a> page about how to do this for each language.
-However, there are a lot of fine details and it is easy to mess things up, so we provide a default preprocessing script that supports English (en), Japanese (ja), and Chinese (zh).
+However, there are a lot of fine details and it is easy to mess things up, so we provide a default preprocessing script that supports English (en), Japanese (ja), Chinese (zh), German (de), and French (fr).
 To use it follow the directions below:
 </p>
 
@@ -64,7 +64,7 @@ cp GIZA++-v2/{GIZA++,plain2snt.out,snt2cooc.out,snt2plain.out,trainGIZA++.sh} mk
 </pre>
 </li>
 
-<li><a href="http://nlp.stanford.edu/software/lex-parser.shtml">Stanford Parser</a> (en, zh): Unzip, then run the following commands to normalize version numbers:
+<li><a href="http://nlp.stanford.edu/software/lex-parser.shtml">Stanford Parser</a> (en, zh, de, fr): Unzip, then run the following commands to normalize version numbers:
 <pre>
 ln -s `pwd`/stanford-parser-* stanford-parser
 cd stanford-parser
