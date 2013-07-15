@@ -61,6 +61,7 @@ my $PROGRAM_DIR = $ENV{"HOME"}."/usr/local";
 my $TRAVATAR_DIR;
 my $STANFORD_DIR;
 my $STANFORD_SEG_DIR;
+my $STANFORD_POS_DIR;
 my $STANFORD_JARS;
 my $EGRET_DIR;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
@@ -118,6 +119,7 @@ GetOptions(
 );
 $STANFORD_DIR = "$PROGRAM_DIR/stanford-parser" if not $STANFORD_DIR;
 $STANFORD_SEG_DIR = "$PROGRAM_DIR/stanford-segmenter" if not $STANFORD_SEG_DIR;
+$STANFORD_POS_DIR = "$PROGRAM_DIR/stanford-postagger" if not $STANFORD_POS_DIR;
 $STANFORD_JARS = "$STANFORD_DIR/stanford-parser.jar:$STANFORD_DIR/stanford-parser-models.jar" if not $STANFORD_JARS;
 $EDA_DIR = "$PROGRAM_DIR/eda" if not $EDA_DIR;
 $EGRET_DIR = "$PROGRAM_DIR/Egret" if not $EGRET_DIR;
@@ -133,7 +135,7 @@ if(not $TRAVATAR_DIR) {
 
 # Sanity check of input
 if(@ARGV != 3) {
-    print STDERR "Usage: $0 INPUT_$SRC INPUT_$TRG OUTPUT_DIR\n";
+    print STDERR "Usage: $0 INPUT_SRC INPUT_TRG OUTPUT_DIR\n";
     exit 1;
 }
 (-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
@@ -170,6 +172,7 @@ foreach my $f (`ls $PREF/orig`) {
 ###### Tokenization and Lowercasing #######
 sub tokenize_cmd {
     if($_[0] eq "en") { return "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
+    elsif($_[0] eq "fr") { return "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -options asciiQuotes -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
     elsif($_[0] eq "ja") { return "$KYTEA -notags -wsconst D INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
     elsif($_[0] eq "zh") { return "$STANFORD_SEG_DIR/segment.sh ctb INFILE UTF-8 0 | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
     else { die "Cannot tokenize $_[0]"; }
@@ -200,7 +203,7 @@ sub run_tree_parsing {
             run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz INFILE 2> OUTFILE.log > OUTFILE");
     
             # EN Parsing with Egret
-        run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/eng_grammar 2> OUTFILE.log > OUTFILE");
+            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/eng_grammar 2> OUTFILE.log > OUTFILE");
         } else {
 
             # ZH Convert to GB encoding, same as the penn treebank
@@ -209,8 +212,8 @@ sub run_tree_parsing {
             # ZH Parsing with Stanford Parser
             run_parallel("$PREF/cleangb", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tLPP \"edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams\" -chineseFactored -encoding GB18030 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz INFILE 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
     
-            # EN Parsing with Egret
-        run_parallel("$PREF/cleangb", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/chn_grammar 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
+            # ZH Parsing with Egret
+            run_parallel("$PREF/cleangb", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/chn_grammar 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
         }
     
         # Combine Stanford and Egret (for now this is not parallel)
@@ -228,6 +231,10 @@ sub run_tree_parsing {
         run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
         run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
         run_parallel("$PREF/eda", "$PREF/tree", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
+    } elsif($lang =~ /^(fr)$/) {
+        my $SPLIT_CMD = "";
+        $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
+        run_parallel("$PREF/clean", "$PREF/tree", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/frenchFactored.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
     } else { die "Cannot parse $lang"; }
 
     # Lowercase and print
