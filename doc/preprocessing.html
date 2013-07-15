@@ -84,32 +84,62 @@ ln -s `pwd`/stanford-parser-*-models.jar stanford-parser-models.jar
 
 <p>
 If you have all of the tools installed in the <tt>$HOME/usr/local</tt> directory, running the preprocessing script is quite simple.
-For example, considering translation between Japanese and English, we could run the following command to tokenize, clean, parse, and align our training data:
+For example, considering translation between English and Japanese, we could run the following command to tokenize, clean, parse, and align our training data:
 </p>
 
 <pre>
 $TRAVATAR_DIR/script/preprocess/preprocess.pl
-   -src ja -trg en -threads 4 -clean 60 -align train.ja train.en preproc-train
+   -src en -trg ja -threads 4 -clean 60 -align train.en train.ja preproc-train
 </pre>
 
 <p>
-where <tt>train.ja</tt> is the source file, <tt>train.en</tt> is the target file, and <tt>preproc-train</tt> is the output directory.
+where <tt>train.en</tt> is the source file, <tt>train.ja</tt> is the target file, and <tt>preproc-train</tt> is the output directory.
 <tt>-threads</tt> indicates the number of threads you want to use (if you use more, preprocessing will finish more quickly), <tt>-clean 60</tt> indicates you want to remove all sentences of more than 60 words, and <tt>-align</tt> indicates that you want to run GIZA++ to generate alignments.
 When preprocessing finishes, you will have a number of directories under <tt>preproc-train</tt> containing the corpus in various forms.
 </p>
 
 <p>
-When preprocessing your testing data, you might want to use a command like this:
+When preprocessing your development and testing data, you might want to use a command like this:
 </p>
 
 <pre>
 $TRAVATAR_DIR/script/preprocess/preprocess.pl
-   -src ja -trg en -threads 4 -forest-trg test.ja test.en preproc-test
+   -src en -trg ja -threads 4 -forest-src dev.en dev.ja preproc-dev
+$TRAVATAR_DIR/script/preprocess/preprocess.pl
+   -src en -trg ja -threads 4 -forest-src test.en test.ja preproc-test
 </pre>
 
 <p>
 In this case we should not filter the data and don't need to align, but we may want to generate forests for the languages that support them (e.g. en, zh).
 </p>
+
+<h2>Training/Tuning/Testing</h2>
+
+<p>
+Once we have run the preprocessing script, it is pretty easy to run training, tuning, and testing.
+For example, to build an English-Japanese system we first run training (assuming we've already built a language model <tt>ja.blm</tt> as mentioned on the <a href="training-guide.html">training guide</a> page):
+</p>
+<pre>
+nohup travatar/script/train/train-travatar.pl -work_dir train -lm_file ja.blm -src_file preproc-train/treelow/en -trg_file preproc-train/low/ja -align-file preproc-train/giza/enja -travatar_dir travatar -threads 2 &amp;&gt; train.log &amp;
+</pre>
+<p>
+Next, we perform tuning, using the forests (hence <tt>-in-format egret</tt>) we created for the dev set:
+</p>
+<pre>
+nohup ~/work/travatar/script/mert/mert-travatar.pl -in-format egret -travatar-config train/model/travatar.ini -src preproc-dev/forlow/en -ref preproc-dev/low/ja -travatar-dir travatar -working-dir tune &amp;&gt; tune.log &amp;
+</pre>
+<p>
+Finally, we decode using the tuned model:
+</p>
+<pre>
+travatar/src/bin/travatar -config_file tune/travatar.ini -in_format egret &lt; preproc-test/forlow/en &gt; output.ja
+</pre>
+<p>
+and measure the accuracy:
+</p>
+<pre>
+travatar/src/bin/mt-evaluator -ref preproc-test/low/ja output.ja
+</pre>
 
 </div>
 </div>
