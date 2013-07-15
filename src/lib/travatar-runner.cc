@@ -58,7 +58,9 @@ void TravatarRunnerTask::Run() {
     // but we could also change it with something like MBR
     int best_answer = 0;
     ostringstream out;
-    out << Dict::PrintWords(nbest_list[best_answer]->GetWords()) << endl;
+    if(nbest_list.size() > best_answer)
+        out << Dict::PrintWords(nbest_list[best_answer]->GetWords());
+    out << endl;
     collector_->Write(sent_, out.str(), "");
 
     // If we are printing the n-best list, print it
@@ -75,9 +77,9 @@ void TravatarRunnerTask::Run() {
     }
     
     // If we are printing a trace, create it
-    if(trace_collector_ != NULL) {
+    if(trace_collector_ != NULL && nbest_list.size() > 0) {
         ostringstream trace_out;
-        BOOST_FOREACH(const HyperEdge * edge, nbest_list[0]->GetEdges()) {
+        BOOST_FOREACH(const HyperEdge * edge, nbest_list[best_answer]->GetEdges()) {
             trace_out
                 << sent_
                 << " ||| " << edge->GetHead()->GetSpan()

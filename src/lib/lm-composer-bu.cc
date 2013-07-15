@@ -159,8 +159,10 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     HyperGraph * ret = new HyperGraph;
     ret->SetWords(parse.GetWords());
     // Add the root node and its corresponding state
-    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), -1, make_pair(0, nodes[0]->GetSpan().second));
+    int len = (nodes.size() > 0) ? nodes[0]->GetSpan().second : 0;
+    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), -1, make_pair(0,len));
     ret->AddNode(root);
+    if(parse.NumNodes() == 0) return ret;
     states.resize(1);
     // Build the chart
     BuildChart(parse, chart, states, 0, *ret);

@@ -195,7 +195,7 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     vector<string> lines;
     while(getline(in, line) && line != "")
         lines.push_back(line);
-    if(lines.size() == 0) THROW_ERROR("Egret file had premature blank line");
+    if(lines.size() == 0) { getline(in,line); }
     // For each line
     BOOST_REVERSE_FOREACH(const std::string & line, lines) {
         istringstream iss(line);
