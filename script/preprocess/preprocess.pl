@@ -55,6 +55,7 @@
 # settings. Otherwise, you will need to specify the paths using the command line
 
 use Env;
+print STDERR "PREPROC ARGS:\n@ARGV\n";
 
 ############### Settings ##################
 my $THREADS = 1;
@@ -76,8 +77,9 @@ my $EDA_VOCAB;
 my $EDA_WEIGHT;
 my $GIZA_DIR;
 my $NILE_DIR;
+my $NILE_GIZATYPE = "intersect";
 my $NILE_MODEL;
-my $NILE_SEGMENTS = 1000;
+my $NILE_SEGMENTS = 200;
 my $NILE_BEAM = 64;
 my $KYTEA = "kytea";
 my $FOREST_SRC;
@@ -159,10 +161,11 @@ if(-e "$PREF/orig") {
     wait_done("$PREF/orig.DONE");
 } else {
     -e "$PREF/orig" or mkdir "$PREF/orig";
-    -e "$PREF/orig/$SRC" or safesystem("ln -s ".abs_path($ARGV[0])." $PREF/orig/$SRC");
-    -e "$PREF/orig/$TRG" or safesystem("ln -s ".abs_path($ARGV[1])." $PREF/orig/$TRG");
-    safesystem("split -l $len -a $suflen -d $SRCORIG $PREF/orig/$SRC.") or die;
-    safesystem("split -l $len -a $suflen -d $TRGORIG $PREF/orig/$TRG.") or die;
+    # Copy the original, but remove carriage returns unicode newlines
+    -e "$PREF/orig/$SRC" or safesystem("cat $ARGV[0] | sed 's/\\r\\|\\xE2\\x80\\xA8//g' > $PREF/orig/$SRC");
+    -e "$PREF/orig/$TRG" or safesystem("cat $ARGV[1] | sed 's/\\r\\|\\xE2\\x80\\xA8//g' > $PREF/orig/$TRG");
+    safesystem("split -l $len -a $suflen -d $PREF/orig/$SRC $PREF/orig/$SRC.") or die;
+    safesystem("split -l $len -a $suflen -d $PREF/orig/$TRG $PREF/orig/$TRG.") or die;
     safesystem("touch $PREF/orig.DONE") or die;
 }
 my @suffixes;
@@ -307,22 +310,24 @@ if($ALIGN) {
         my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS-1);
         # Binarize the English trees
         run_parallel("$PREF/treelow", "$PREF/treelowbin", $TRG, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", $SRC, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
         # Create and split GIZA++ union alignments
-        (safesystem("mkdir $PREF/gizau") or die) if not -e "$PREF/gizau";
-        (safesystem("$TRAVATAR_DIR/script/train/symmetrize.pl -sym union $PREF/train/align/src-trg.giza.A3.final $PREF/train/align/trg-src.giza.A3.final > $PREF/gizau/$SRC$TRG") or die) if not -e "$PREF/gizau/$SRC$TRG";
-        (safesystem("cat $PREF/gizau/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/gizau/$TRG$SRC") or die) if not -e "$PREF/gizau/$TRG$SRC";
+        my $GIZAOUTDIR = ($NILE_GIZATYPE eq "union") ? "gizau" : "gizai";
+        (safesystem("mkdir $PREF/$GIZAOUTDIR") or die) if not -e "$PREF/$GIZAOUTDIR";
+        (safesystem("$TRAVATAR_DIR/script/train/symmetrize.pl -sym $NILE_GIZATYPE $PREF/train/align/src-trg.giza.A3.final $PREF/train/align/trg-src.giza.A3.final > $PREF/$GIZAOUTDIR/$SRC$TRG") or die) if not -e "$PREF/$GIZAOUTDIR/$SRC$TRG";
+        (safesystem("cat $PREF/$GIZAOUTDIR/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/$GIZAOUTDIR/$TRG$SRC") or die) if not -e "$PREF/$GIZAOUTDIR/$TRG$SRC";
         # Creating splits
         (safesystem("mkdir $PREF/nilein") or die) if not -e "$PREF/nilein";
         if(not -e "$PREF/nilein/low-$TRG.$nilesuffixes[0]") {
             safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$TRG $PREF/nilein/low-$TRG.") or die;
             safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$SRC $PREF/nilein/low-$SRC.") or die;
-            # # Forward order
-            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$SRC$TRG $PREF/nilein/giza.") or die;
-            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/gizau/$SRC$TRG $PREF/nilein/gizau.") or die;
-            # Reverse order
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$TRG$SRC $PREF/nilein/giza.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/gizau/$TRG$SRC $PREF/nilein/gizau.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelow/$SRC $PREF/nilein/tree-$SRC.") or die;
+            # Forward order
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$SRC$TRG $PREF/nilein/giza.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$SRC$TRG $PREF/nilein/$GIZAOUTDIR.") or die;
+            # # Reverse order
+            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$TRG$SRC $PREF/nilein/giza.") or die;
+            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$TRG$SRC $PREF/nilein/$GIZAOUTDIR.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$SRC $PREF/nilein/tree-$SRC.") or die;
             safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$TRG $PREF/nilein/tree-$TRG.") or die;
             foreach my $f (@nilesuffixes) {
                 safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$TRG.$f > $PREF/nilein/vcb-$TRG.$f");
@@ -334,22 +339,22 @@ if($ALIGN) {
         # Use Nile to create alignments for each segment
         (safesystem("mkdir $PREF/nile") or die) if not -e "$PREF/nile";
         foreach my $s (@nilesuffixes) {
-            # # Do nile in forward order
-            # if(not -e "$PREF/nile/$SRC$TRG.$s") {
-            #     safesystem("touch $PREF/nile/$SRC$TRG.$s");
-            #     safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$SRC.$s --e $PREF/nilein/low-$TRG.$s --etrees $PREF/nilein/tree-$TRG.$s --ftrees $PREF/nilein/tree-$SRC.$s --evcb $PREF/nilein/vcb-$TRG.$s --fvcb $PREF/nilein/vcb-$SRC.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/gizau.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/$SRC$TRG.$s --k $NILE_BEAM") or die;
-            #     safesystem("touch $PREF/nile/$SRC$TRG.$s.DONE");
-            # }
-            # Do nile in reverse order
-            if(not -e "$PREF/nile/$TRG$SRC.$s") {
-                safesystem("touch $PREF/nile/$TRG$SRC.$s");
-                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$TRG.$s --e $PREF/nilein/low-$SRC.$s --etrees $PREF/nilein/tree-$SRC.$s --ftrees $PREF/nilein/tree-$TRG.$s --evcb $PREF/nilein/vcb-$SRC.$s --fvcb $PREF/nilein/vcb-$TRG.$s --pef $PREF/train/lex/src_given_trg.lex --pfe $PREF/train/lex/trg_given_src.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/gizau.$s --align --langpair ${SRC}_${TRG} --weights $NILE_MODEL --out $PREF/nile/$TRG$SRC.$s --k $NILE_BEAM") or die;
-                safesystem("touch $PREF/nile/$TRG$SRC.$s.DONE");
+            # Do nile in forward order
+            if(not -e "$PREF/nile/$SRC$TRG.$s") {
+                safesystem("touch $PREF/nile/$SRC$TRG.$s");
+                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$SRC.$s --e $PREF/nilein/low-$TRG.$s --etrees $PREF/nilein/tree-$TRG.$s --ftrees $PREF/nilein/tree-$SRC.$s --evcb $PREF/nilein/vcb-$TRG.$s --fvcb $PREF/nilein/vcb-$SRC.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/$GIZAOUTDIR.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/$SRC$TRG.$s --k $NILE_BEAM") or die;
+                safesystem("touch $PREF/nile/$SRC$TRG.$s.DONE");
             }
+            # # Do nile in reverse order
+            # if(not -e "$PREF/nile/$TRG$SRC.$s") {
+            #     safesystem("touch $PREF/nile/$TRG$SRC.$s");
+            #     safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$TRG.$s --e $PREF/nilein/low-$SRC.$s --etrees $PREF/nilein/tree-$SRC.$s --ftrees $PREF/nilein/tree-$TRG.$s --evcb $PREF/nilein/vcb-$SRC.$s --fvcb $PREF/nilein/vcb-$TRG.$s --pef $PREF/train/lex/src_given_trg.lex --pfe $PREF/train/lex/trg_given_src.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/$GIZAOUTDIR.$s --align --langpair ${SRC}_${TRG} --weights $NILE_MODEL --out $PREF/nile/$TRG$SRC.$s --k $NILE_BEAM") or die;
+            #     safesystem("touch $PREF/nile/$TRG$SRC.$s.DONE");
+            # }
         }
-        wait_done(map { "$PREF/nile/$TRG$SRC.$_.DONE" } @nilesuffixes);
-        safesystem("cat $PREF/nile/$TRG$SRC.* > $PREF/nile/$TRG$SRC") if not -e "$PREF/nile/$TRG$SRC";
-        safesystem("cat $PREF/nile/$TRG$SRC | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/$SRC$TRG") if not -e "$PREF/nile/$SRC$TRG";
+        wait_done(map { "$PREF/nile/$SRC$TRG.$_.DONE" } @nilesuffixes);
+        safesystem("cat $PREF/nile/$SRC$TRG.* > $PREF/nile/$SRC$TRG") if not -e "$PREF/nile/$SRC$TRG";
+        safesystem("cat $PREF/nile/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/$TRG$SRC") if not -e "$PREF/nile/$TRG$SRC";
     }
 
 } # End if ($ALIGN)

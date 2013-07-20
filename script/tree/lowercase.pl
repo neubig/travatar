@@ -14,6 +14,7 @@ if(@ARGV != 0) {
     exit 1;
 }
 
+$| = 1;
 while(<STDIN>) {
     $_ =~ tr/A-ZＡ-Ｚ/a-zａ-ｚ/;
     print $_;
