@@ -18,6 +18,9 @@ class RuleComposer : public GraphTransformer {
 
 public:
 
+    // An edge, annotated with the size of the original edges composed
+    typedef std::pair<int, HyperEdge*>  SizedEdge;
+
     RuleComposer(int order) : order_(order) { }
     virtual ~RuleComposer() { }
 
@@ -31,6 +34,12 @@ public:
                                    int tail_id);
 
 protected:
+
+    // Compose two edges together
+    void BuildComposedEdges(int id,
+                            const std::vector<std::vector<HyperEdge*> > & min_edges,
+                            std::vector<std::vector<SizedEdge> > & composed_edges,
+                            HyperGraph * ret) const;
 
     // The order of composition to perform
     int order_;

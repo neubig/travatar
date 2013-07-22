@@ -516,11 +516,11 @@ public:
         const vector<HyperEdge*> & edges = exp_graph->GetEdges();
 
         // Make composed rules
-        HyperEdge * e02 = RuleComposer::ComposeEdge(*edges[0], *edges[1], 0); exp_graph->AddEdge(e02); exp_graph->GetNode(0)->AddEdge(e02);
-        HyperEdge * e12 = RuleComposer::ComposeEdge(*edges[1], *edges[2], 0); exp_graph->AddEdge(e12); exp_graph->GetNode(1)->AddEdge(e12);
-        HyperEdge * e14 = RuleComposer::ComposeEdge(*edges[1], *edges[4], 1); exp_graph->AddEdge(e14); exp_graph->GetNode(1)->AddEdge(e14);
         HyperEdge * e23 = RuleComposer::ComposeEdge(*edges[2], *edges[3], 0); exp_graph->AddEdge(e23); exp_graph->GetNode(2)->AddEdge(e23);
+        HyperEdge * e12 = RuleComposer::ComposeEdge(*edges[1], *edges[2], 0); exp_graph->AddEdge(e12); exp_graph->GetNode(1)->AddEdge(e12);
         HyperEdge * e45 = RuleComposer::ComposeEdge(*edges[4], *edges[5], 0); exp_graph->AddEdge(e45); exp_graph->GetNode(4)->AddEdge(e45);
+        HyperEdge * e14 = RuleComposer::ComposeEdge(*edges[1], *edges[4], 1); exp_graph->AddEdge(e14); exp_graph->GetNode(1)->AddEdge(e14);
+        HyperEdge * e02 = RuleComposer::ComposeEdge(*edges[0], *edges[1], 0); exp_graph->AddEdge(e02); exp_graph->GetNode(0)->AddEdge(e02);
 
         return exp_graph->CheckEqual(*act_graph);
     }

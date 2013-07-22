@@ -7,46 +7,55 @@ using namespace std;
 using namespace boost;
 using namespace travatar;
 
-// Binarize the graph to the right
-HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
-    HyperGraph * ret = new HyperGraph(hg);
-    const vector<HyperNode*> & nodes = ret->GetNodes();
-    // Create the edges
-    vector<vector<HyperEdge*> > last_edges, min_edges;
-    // Create sets to remove duplicates
-    BOOST_FOREACH(HyperNode * node, nodes)
-        last_edges.push_back(node->GetEdges());
-    min_edges = last_edges;
-    // Check for duplicates
-    set< set<int> > dup_check;
-    // For order two and up, compose each higher order with the order 1
-    for(int comp_ord = 2; comp_ord <= order_; comp_ord++) {
-        vector<vector<HyperEdge*> > next_edges(nodes.size());
-        for(int nid = 0; nid < (int)nodes.size(); nid++) {
-            BOOST_FOREACH(HyperEdge* par_edge, last_edges[nid]) {
-                const vector<HyperNode*> & par_tails = par_edge->GetTails();
-                for(int tid = 0; tid < (int)par_tails.size(); tid++) {
-                    BOOST_FOREACH(HyperEdge * child_edge, min_edges[par_tails[tid]->GetId()]) {
-                        HyperEdge * comp = RuleComposer::ComposeEdge(*par_edge, *child_edge, tid);
-                        // Create a set to check for duplicates
-                        set<int> frag_ids;
-                        BOOST_FOREACH(const HyperEdge* frag, comp->GetFragmentEdges())
-                            frag_ids.insert(frag->GetId());
-                        // add if not duplicated
-                        if(dup_check.find(frag_ids) == dup_check.end()) {
-                            dup_check.insert(frag_ids);
-                            next_edges[nid].push_back(comp);
-                            ret->AddEdge(comp);
-                            ret->GetNode(nid)->AddEdge(comp);
-                        } else {
-                            delete comp;
-                        }
-                    }
+// Build composed edges
+void RuleComposer::BuildComposedEdges(int id,
+                        const vector<vector<HyperEdge*> > & min_edges,
+                        vector<vector<RuleComposer::SizedEdge> > & composed_edges,
+                        HyperGraph * ret) const {
+    if(composed_edges[id].size() != 0) return;
+    // For each edge coming from this node
+    BOOST_FOREACH(HyperEdge* min_edge, min_edges[id]) {
+        int start = composed_edges[id].size();
+        composed_edges[id].push_back(make_pair(1, min_edge));
+        // Compose all edges from all tails
+        for(int tail_id = 0; tail_id < min_edge->NumTails(); tail_id++) {
+            int tail_left = min_edge->NumTails() - tail_id;
+            HyperNode* tail = min_edge->GetTail(tail_id);
+            BuildComposedEdges(tail->GetId(), min_edges, composed_edges, ret);
+            int end = composed_edges[id].size();
+            for(int i = start; i < end; i++) {
+                const SizedEdge above = composed_edges[id][i];
+                BOOST_FOREACH(const SizedEdge & below, composed_edges[tail->GetId()]) {
+                    // If we have reached a point where composing would exceed the limit, break
+                    int sum = above.first+below.first;
+                    if(sum > order_) break;
+                    // Compose and add the edge
+                    HyperEdge * comp = RuleComposer::ComposeEdge(
+                                        *above.second, *below.second,
+                                        above.second->NumTails()-tail_left);
+                    ret->AddEdge(comp);
+                    ret->GetNode(id)->AddEdge(comp);
+                    composed_edges[id].push_back(make_pair(sum, comp));
                 }
             }
         }
-        last_edges = next_edges;
+        
     }
+    // Finally, sort the edges by size
+    sort(composed_edges[id].begin(), composed_edges[id].end());
+}
+
+// Binarize the graph to the right
+HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
+    HyperGraph * ret = new HyperGraph(hg);
+    if(order_ == 1) return ret;
+    // Create the edges
+    vector<vector<HyperEdge*> > min_edges;
+    vector<vector<SizedEdge> > composed_edges(ret->NumNodes());
+    // Create sets to remove duplicates
+    BOOST_FOREACH(HyperNode * node, ret->GetNodes())
+        min_edges.push_back(node->GetEdges());
+    BuildComposedEdges(0, min_edges, composed_edges, ret);
     return ret;
 }
 
