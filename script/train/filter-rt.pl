@@ -52,7 +52,7 @@ my $line;
 while($line = <STDIN>) {
     chomp $line;
     my @cols = split(/ \|\|\| /, $line);
-    die "bad line $line" if @cols != 3;
+    die "Wrong number of columns in $line" if @cols < 3;
     my ($term, $nonterm, $bad);
     for(split(/ /, $cols[0])) {
         if(/^"(.*)"$/) {
