@@ -48,6 +48,7 @@ my $NONTERM_LEN = "2";
 my $TERM_LEN = "10";
 my $NBEST_RULES = "20";
 my $SCORE_OPTIONS = "";
+my $SMOOTH = "none";
 
 # Model files
 my $TM_FILE = "";
@@ -76,6 +77,7 @@ GetOptions(
     "normalize=s" => \$NORMALIZE, # Normalize rule counts to probabilities
     "binarize=s" => \$BINARIZE, # Binarize trees in a certain direction
     "compose=s" => \$COMPOSE, # The number of rules to compose
+    "smooth=s" => \$SMOOTH, # The type of smoothing to use on the rule table
     "attach=s" => \$ATTACH, # Where to attach nulls
     "attach_len=s" => \$ATTACH_LEN, # The number of nulls to attach
     "nonterm_len=s" => \$NONTERM_LEN, # The maximum number of non-terminals in a rule
@@ -200,7 +202,7 @@ if(not $TM_FILE) {
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
+    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
     my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
@@ -212,7 +214,7 @@ if(not $TM_FILE) {
         $TM_FILE = "$WORK_DIR/model/rule-table";
     }
     # Finally, combine the table
-    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd > $TM_FILE") or die;
+    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --fof-file=$WORK_DIR/model/fof.txt --smooth=$SMOOTH --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd > $TM_FILE") or die;
 }
 
 # ******* 5: Create a configuration file ********

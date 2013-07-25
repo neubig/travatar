@@ -5,7 +5,8 @@ use utf8;
 use Getopt::Long;
 use List::Util qw(sum min max shuffle);
 
-my $SMOOTH = "none";
+my $SMOOTH = "none"; # The type of smoothing to use
+my $KN_SIZE = 3;
 my $FOF_FILE;
 my $TOP_N;
 GetOptions(
@@ -17,6 +18,25 @@ GetOptions(
 if(@ARGV != 2) {
     print STDERR "Usage: $0 PT1 PT2\n";
     exit 1;
+}
+
+# Load the FOF file if it's specified
+my @fof;
+if($FOF_FILE) {
+    open FILE0, "<:utf8", $FOF_FILE or die "Couldn't open $FOF_FILE\n";
+    @fof = map { chomp; $_ } <FILE0>;
+    close FILE0;
+}
+
+# Calculate the Kneser-Ney discounts if necessary
+my @kndisc;
+if($SMOOTH eq "kn") {
+    die "Must have FOF file of size at least $KN_SIZE" if (@fof <= $KN_SIZE+1);
+    my $Y = $fof[1]/($fof[1]+2*$fof[2]);
+    foreach my $i (1 .. $KN_SIZE) {
+        $kndisc[$i] = max(0, $i-($i+1)*$Y*$fof[$i+1]/$fof[$i]);
+    }
+    print STDERR "Using Kneser-Ney Discounting: @kndisc[1 .. $KN_SIZE]\n";
 }
 
 *FILE0 = open_or_zcat($ARGV[0]) or die;
@@ -67,9 +87,24 @@ while(1) {
     my @cnt0 = split(/ /, $arr0[3]);
     my @cnt1 = split(/ /, $arr1[3]);
     ((@cnt0 == 2) and (@cnt1 == 2) and ($cnt0[0] == $cnt1[0])) or die "Bad counts $s0";
+    # Perform modified Kneser-Ney smoothing, linearly scaling discounts between
+    my $cnt = $cnt0[0];
+    if(@kndisc) {
+        my $down = int($cnt);
+        my $up = $down+1;
+        my $upfrac = $cnt-$down;
+        my $downfrac = 1-$upfrac;
+        my $disc = (($down >= $#kndisc) ? $kndisc[-1] : ($kndisc[$down]*$downfrac+$kndisc[$up]*$upfrac));
+        $cnt -= $disc;
+        $feat{"lfreq"} = $cnt ? log($cnt) : -99;
+        $feat{"pfge"} = $cnt ? log($cnt/$cnt1[1]) : -99;
+        $feat{"pegf"} = $cnt ? log($cnt/$cnt0[1]) : -99;
+    } elsif($SMOOTH ne "none") {
+        die "Unknown smoothing type: $SMOOTH\n";
+    }
     # Make the string
     my $str = "$arr0[0] ||| $arr0[1] ||| ".join(" ", map { "$_=$feat{$_}" } keys %feat)." ||| $cnt0[0] $cnt0[1] $cnt1[1]\n";
-    push @queue, [$cnt0[0], $order++, $str];
+    push @queue, [$cnt, $order++, $str];
 }
 print_queue(@queue);
 

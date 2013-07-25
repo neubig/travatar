@@ -26,7 +26,7 @@ GetOptions(
     "src-label" => \$SRC_LABEL,           # Calculate sparse features for the source labels
     "trg-label" => \$TRG_LABEL,           # Calculate sparse features for the target labels
     "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
-    "fof-file" => \$FOF_FILE,             # Save frequencies of frequencies to a file
+    "fof-file=s" => \$FOF_FILE,           # Save frequencies of frequencies to a file
 );
 
 if(@ARGV != 0) {
