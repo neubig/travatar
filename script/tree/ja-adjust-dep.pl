@@ -17,6 +17,8 @@ sub getchildren {
 }
 
 my %particles = (
+    # Topic particles
+    "は"=>1, "も"=>1,
     # Case particles
     "が"=>1,"の"=>1,"を"=>1,"に"=>1,"へ"=>1,"と"=>1,"から"=>1,"より"=>1,"で"=>1,
     # Parallel particles
