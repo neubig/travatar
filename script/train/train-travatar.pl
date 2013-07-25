@@ -200,8 +200,8 @@ if(not $TM_FILE) {
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --top-n=$NBEST_RULES --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
-    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --top-n=0 --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
+    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --lex-prob-file=$LEX_TRGSRC | gzip > $RT_SRCTRG";
+    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
     my $zip_cmd;
@@ -212,7 +212,7 @@ if(not $TM_FILE) {
         $TM_FILE = "$WORK_DIR/model/rule-table";
     }
     # Finally, combine the table
-    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl $RT_TRGSRC $RT_SRCTRG $zip_cmd > $TM_FILE") or die;
+    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd > $TM_FILE") or die;
 }
 
 # ******* 5: Create a configuration file ********
