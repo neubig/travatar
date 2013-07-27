@@ -70,6 +70,7 @@ my $STANFORD_POS_DIR;
 my $STANFORD_JARS;
 my $EGRET_DIR;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
+my $JA_EGRET; # Whether to use egret for Japanese parsing
 my $SPLIT_WORDS_SRC;
 my $SPLIT_WORDS_TRG;
 my $EDA_DIR;
@@ -100,27 +101,28 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 GetOptions(
-    "program-dir=s" => \$PROGRAM_DIR,
-    "threads=s" => \$THREADS,
+    "align" => \$ALIGN,
     "clean-len=i" => \$CLEAN_LEN,
-    "kytea=s" => \$KYTEA,
-    "stanford-jars=s" => \$STANFORD_JARS,
     "eda-dir=s" => \$EDA_DIR,
     "eda-vocab=s" => \$EDA_VOCAB,
     "eda-weight=s" => \$EDA_WEIGHT,
-    "giza-dir=s" => \$GIZA_DIR,
-    "nile-dir=s" => \$NILE_DIR,
-    "nile-model=s" => \$NILE_MODEL,
-    "nile-beam=i" => \$NILE_BEAM,
-    "nile-segments=i" => \$NILE_SEGMENTS,
     "egret-forest-opt=s" => \$EGRET_FOREST_OPT,
-    "split-words-src=s" => \$SPLIT_WORDS_SRC,
-    "split-words-trg=s" => \$SPLIT_WORDS_TRG,
-    "travatar-dir=s" => \$TRAVATAR_DIR,
     "forest-src" => \$FOREST_SRC,
     "forest-trg" => \$FOREST_TRG,
-    "align" => \$ALIGN,
+    "giza-dir=s" => \$GIZA_DIR,
+    "ja-egret" => \$JA_EGRET,
+    "kytea=s" => \$KYTEA,
+    "nile-beam=i" => \$NILE_BEAM,
+    "nile-dir=s" => \$NILE_DIR,
+    "nile-model=s" => \$NILE_MODEL,
+    "nile-segments=i" => \$NILE_SEGMENTS,
+    "program-dir=s" => \$PROGRAM_DIR,
+    "split-words-src=s" => \$SPLIT_WORDS_SRC,
+    "split-words-trg=s" => \$SPLIT_WORDS_TRG,
     "src=s" => \$SRC,
+    "stanford-jars=s" => \$STANFORD_JARS,
+    "threads=s" => \$THREADS,
+    "travatar-dir=s" => \$TRAVATAR_DIR,
     "trg=s" => \$TRG,
 );
 $STANFORD_DIR = "$PROGRAM_DIR/stanford-parser" if not $STANFORD_DIR;
@@ -237,7 +239,22 @@ sub run_tree_parsing {
         # JA Parsing with Eda
         run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
         run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
-        run_parallel("$PREF/eda", "$PREF/tree", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
+        if($JA_EGRET) {
+            run_parallel("$PREF/eda", "$PREF/edacfg", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
+            run_parallel("$PREF/clean", "$PREF/egret", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -data=$EGRET_DIR/jpn_grammar 2> OUTFILE.log > OUTFILE");
+            # Combine Eda and Egret (for now this is not parallel)
+            -e "$PREF/tree" or mkdir "$PREF/tree";
+            foreach my $i ("", map{".$_"} @suffixes) {
+                if(not -e "$PREF/tree/$lang$i") {
+                    my $SPLIT_CMD = "";
+                    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
+                    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/edacfg/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
+                    die "Combining trees failed on $lang$i" if(file_len("$PREF/edacfg/$lang$i") != file_len("$PREF/tree/$lang$i"));
+                }
+            }
+        } else {
+            run_parallel("$PREF/eda", "$PREF/tree", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
+        }
     } elsif($lang =~ /^(fr|de)$/) {
         my $model;
         if($lang eq "fr") { $model = "frenchFactored"; }
@@ -259,16 +276,21 @@ run_tree_parsing($TRG, $SPLIT_WORDS_TRG);
 sub run_forest_parsing {
     my $lang = shift;
     my $split_words = shift;
-    if($lang =~ /^(en|zh)$/) {
+    if($lang =~ /^(en|zh|ja)$/) {
         # Convert Tree to Forest
         run_parallel("$PREF/tree", "$PREF/treefor", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret < INFILE 2> OUTFILE.log > OUTFILE", 1);
         
         if($lang eq "en") {
             # EN Parse with Egret
             run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/eng_grammar 2> OUTFILE.log | sed \"s/\\^g//g\" > OUTFILE", 1);
-        } else {
+        } elsif($lang eq "zh") {
             # ZH Parse with Egret
             run_parallel("$PREF/cleangb", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/chn_grammar 2> OUTFILE.log  | iconv -f GB18030 -t UTF-8 | sed \"s/\\^g//g\" > OUTFILE", 1);
+        } elsif($lang eq "ja") {
+            # JA Parse with Egret
+            run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/jpn_grammar 2> OUTFILE.log > OUTFILE", 1);
+        } else {
+            die "Forest parsing is not supported for $LANG";
         }
         
         # ZH Combine Stanford and Egret (for now this is not parallel)
