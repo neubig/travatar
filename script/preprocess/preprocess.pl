@@ -82,6 +82,7 @@ my $NILE_GIZATYPE = "intersect";
 my $NILE_MODEL;
 my $NILE_SEGMENTS = 200;
 my $NILE_BEAM = 64;
+my $NILE_ORDER = "srctrg";
 my $KYTEA = "kytea";
 my $FOREST_SRC;
 my $FOREST_TRG;
@@ -115,7 +116,9 @@ GetOptions(
     "nile-beam=i" => \$NILE_BEAM,
     "nile-dir=s" => \$NILE_DIR,
     "nile-model=s" => \$NILE_MODEL,
+    "nile-gizatype=s" => \$NILE_GIZATYPE,
     "nile-segments=i" => \$NILE_SEGMENTS,
+    "nile-order=s" => \$NILE_ORDER,
     "program-dir=s" => \$PROGRAM_DIR,
     "split-words-src=s" => \$SPLIT_WORDS_SRC,
     "split-words-trg=s" => \$SPLIT_WORDS_TRG,
@@ -325,14 +328,23 @@ if($ALIGN) {
         # Check file
         die "Could not find nile at $NILE_DIR/nile.py" if not -e "$NILE_DIR/nile.py";
         die "Could not find nile model $NILE_MODEL" if not -e "$NILE_MODEL";
+        # Find the actual directions to use for nile
+        my ($NSRC, $NTRG, $NTGS, $NSGT);
+        if($NILE_ORDER eq "srctrg") {
+            $NSRC = $SRC; $NTRG = $TRG; $NTGS = "trg_given_src"; $NSGT = "src_given_trg";
+        } elsif($NILE_ORDER eq "trgsrc") {
+            $NSRC = $TRG; $NTRG = $SRC; $NTGS = "src_given_trg"; $NSGT = "trg_given_src";
+        } else {
+            die "Invalid nile order $NILE_ORDER";
+        }
         # Get the splits
-        my $CLEANLEN = file_len("$PREF/low/$TRG");
+        my $CLEANLEN = file_len("$PREF/low/$NTRG");
         my $nilelen = int($CLEANLEN/$NILE_SEGMENTS+1);
         my $nilesuflen = int(log($NILE_SEGMENTS)/log(10)+1);
         my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS-1);
-        # Binarize the English trees
-        run_parallel("$PREF/treelow", "$PREF/treelowbin", $TRG, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
-        run_parallel("$PREF/treelow", "$PREF/treelowbin", $SRC, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
+        # Binarize the trees on both sides
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NTRG, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NSRC, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
         # Create and split GIZA++ union alignments
         my $GIZAOUTDIR = ($NILE_GIZATYPE eq "union") ? "gizau" : "gizai";
         (safesystem("mkdir $PREF/$GIZAOUTDIR") or die) if not -e "$PREF/$GIZAOUTDIR";
@@ -340,20 +352,18 @@ if($ALIGN) {
         (safesystem("cat $PREF/$GIZAOUTDIR/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/$GIZAOUTDIR/$TRG$SRC") or die) if not -e "$PREF/$GIZAOUTDIR/$TRG$SRC";
         # Creating splits
         (safesystem("mkdir $PREF/nilein") or die) if not -e "$PREF/nilein";
-        if(not -e "$PREF/nilein/low-$TRG.$nilesuffixes[0]") {
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$TRG $PREF/nilein/low-$TRG.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$SRC $PREF/nilein/low-$SRC.") or die;
+        if(not -e "$PREF/nilein/low-$NTRG.$nilesuffixes[0]") {
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$NTRG $PREF/nilein/low-$NTRG.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$NSRC $PREF/nilein/low-$NSRC.") or die;
             # Forward order
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$SRC$TRG $PREF/nilein/giza.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$SRC$TRG $PREF/nilein/$GIZAOUTDIR.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$NSRC$NTRG $PREF/nilein/giza.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$NSRC$NTRG $PREF/nilein/$GIZAOUTDIR.") or die;
             # # Reverse order
-            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$TRG$SRC $PREF/nilein/giza.") or die;
-            # safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$TRG$SRC $PREF/nilein/$GIZAOUTDIR.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$SRC $PREF/nilein/tree-$SRC.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$TRG $PREF/nilein/tree-$TRG.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$NSRC $PREF/nilein/tree-$NSRC.") or die;
+            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$NTRG $PREF/nilein/tree-$NTRG.") or die;
             foreach my $f (@nilesuffixes) {
-                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$TRG.$f > $PREF/nilein/vcb-$TRG.$f");
-                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$SRC.$f > $PREF/nilein/vcb-$SRC.$f");
+                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$NTRG.$f > $PREF/nilein/vcb-$NTRG.$f");
+                safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$NSRC.$f > $PREF/nilein/vcb-$NSRC.$f");
             }
             safesystem("touch $PREF/nilein/prep.DONE") or die;
         }
@@ -361,22 +371,16 @@ if($ALIGN) {
         # Use Nile to create alignments for each segment
         (safesystem("mkdir $PREF/nile") or die) if not -e "$PREF/nile";
         foreach my $s (@nilesuffixes) {
-            # Do nile in forward order
-            if(not -e "$PREF/nile/$SRC$TRG.$s") {
-                safesystem("touch $PREF/nile/$SRC$TRG.$s");
-                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$SRC.$s --e $PREF/nilein/low-$TRG.$s --etrees $PREF/nilein/tree-$TRG.$s --ftrees $PREF/nilein/tree-$SRC.$s --evcb $PREF/nilein/vcb-$TRG.$s --fvcb $PREF/nilein/vcb-$SRC.$s --pef $PREF/train/lex/trg_given_src.lex --pfe $PREF/train/lex/src_given_trg.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/$GIZAOUTDIR.$s --align --langpair ja_en --weights $NILE_MODEL --out $PREF/nile/$SRC$TRG.$s --k $NILE_BEAM") or die;
-                safesystem("touch $PREF/nile/$SRC$TRG.$s.DONE");
+            # Do nile using trees on the target side
+            if(not -e "$PREF/nile/$NSRC$NTRG.$s") {
+                safesystem("touch $PREF/nile/$NSRC$NTRG.$s");
+                safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$NSRC.$s --e $PREF/nilein/low-$NTRG.$s --etrees $PREF/nilein/tree-$NTRG.$s --ftrees $PREF/nilein/tree-$NSRC.$s --evcb $PREF/nilein/vcb-$NTRG.$s --fvcb $PREF/nilein/vcb-$NSRC.$s --pef $PREF/train/lex/$NTGS.lex --pfe $PREF/train/lex/$NSGT.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/$GIZAOUTDIR.$s --align --langpair ${NSRC}_${NTRG} --weights $NILE_MODEL --out $PREF/nile/$NSRC$NTRG.$s --k $NILE_BEAM") or die;
+                safesystem("touch $PREF/nile/$NSRC$NTRG.$s.DONE");
             }
-            # # Do nile in reverse order
-            # if(not -e "$PREF/nile/$TRG$SRC.$s") {
-            #     safesystem("touch $PREF/nile/$TRG$SRC.$s");
-            #     safesystem("mpiexec -n $THREADS python $NILE_DIR/nile.py --f $PREF/nilein/low-$TRG.$s --e $PREF/nilein/low-$SRC.$s --etrees $PREF/nilein/tree-$SRC.$s --ftrees $PREF/nilein/tree-$TRG.$s --evcb $PREF/nilein/vcb-$SRC.$s --fvcb $PREF/nilein/vcb-$TRG.$s --pef $PREF/train/lex/src_given_trg.lex --pfe $PREF/train/lex/trg_given_src.lex --a1 $PREF/nilein/giza.$s --a2 $PREF/nilein/$GIZAOUTDIR.$s --align --langpair ${SRC}_${TRG} --weights $NILE_MODEL --out $PREF/nile/$TRG$SRC.$s --k $NILE_BEAM") or die;
-            #     safesystem("touch $PREF/nile/$TRG$SRC.$s.DONE");
-            # }
         }
-        wait_done(map { "$PREF/nile/$SRC$TRG.$_.DONE" } @nilesuffixes);
-        safesystem("cat $PREF/nile/$SRC$TRG.* > $PREF/nile/$SRC$TRG") if not -e "$PREF/nile/$SRC$TRG";
-        safesystem("cat $PREF/nile/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/$TRG$SRC") if not -e "$PREF/nile/$TRG$SRC";
+        wait_done(map { "$PREF/nile/$NSRC$NTRG.$_.DONE" } @nilesuffixes);
+        safesystem("cat $PREF/nile/$NSRC$NTRG.* > $PREF/nile/$NSRC$NTRG") if not -e "$PREF/nile/$NSRC$NTRG";
+        safesystem("cat $PREF/nile/$NSRC$NTRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/$NTRG$NSRC") if not -e "$PREF/nile/$NTRG$NSRC";
     }
 
 } # End if ($ALIGN)
