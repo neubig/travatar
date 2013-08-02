@@ -237,9 +237,11 @@ public:
         // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
         // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
         // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
+        // In the case of ties, we prefer nodes with lower indexes on the
+        // left side, so our value is "d a"
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
         exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
-        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(0.0))));
+        exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
         exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
         return CheckVector(exp_hull, act_hull);
     }
