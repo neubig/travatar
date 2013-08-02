@@ -12,6 +12,7 @@ my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAV
 
 my $MERT_SOLVER = "batch-tune"; # Can be set to "moses" to use Moses's MERT solver
 my $EVAL = "bleu"; # The evaluation measure to use
+my $TUNE_OPTIONS = ""; # Other options to pass to batch-tune
 my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
@@ -29,6 +30,7 @@ GetOptions(
     "moses-dir=s" => \$MOSES_DIR,
     "travatar=s" => \$TRAVATAR,
     "decoder-options=s" => \$DECODER_OPTIONS,
+    "tune-options=s" => \$TUNE_OPTIONS,
     "max-iters=i" => \$MAX_ITERS,
     "cand-type=s" => \$CAND_TYPE,
     "nbest=i" => \$NBEST,
@@ -106,10 +108,10 @@ foreach $iter (1 .. $MAX_ITERS) {
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $WORKING_DIR/run$iter.nbest -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
             my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
             my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $nbests -stat_in $stats -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune $TUNE_OPTIONS -threads $THREADS -nbest $nbests -stat_in $stats -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune $TUNE_OPTIONS -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         }
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
