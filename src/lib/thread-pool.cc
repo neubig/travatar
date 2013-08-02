@@ -7,7 +7,8 @@ using namespace std;
 using namespace boost;
 
 ThreadPool::ThreadPool(int num_threads, int queue_limit) :
-        stopped_(false), stopping_(false), queue_limit_(queue_limit) {
+        stopped_(false), stopping_(false), delete_tasks_(true),
+        queue_limit_(queue_limit) {
     for(int i = 0; i < num_threads; i++)
         threads_.create_thread(bind(&ThreadPool::Run, this));
 }
@@ -26,7 +27,8 @@ void ThreadPool::Run() {
         }
         if(task) {
             task->Run();
-            delete task;
+            if(delete_tasks_)
+                delete task;
         }
         thread_available_.notify_all();
     }

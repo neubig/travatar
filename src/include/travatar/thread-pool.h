@@ -33,6 +33,9 @@ public:
     // Wait until all of the running threads have stopped
     void Wait();
 
+    // Set whether to delete tasks after they finish executing
+    void SetDeleteTasks(bool delete_tasks) { delete_tasks_ = delete_tasks; }
+
 protected:
     // The function executed by each thread, which will wait for a task, then
     // execute it when it is ready
@@ -45,6 +48,7 @@ protected:
     boost::condition_variable thread_available_;
     bool stopped_;
     bool stopping_;
+    bool delete_tasks_;
     int queue_limit_;
 
 };

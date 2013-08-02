@@ -21,6 +21,18 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
+
+BatchTuneRunnerTask::BatchTuneRunnerTask(
+        int task_id, const std::string & task_name,
+        Tune & tgm, const SparseMap & weights) :
+    task_id_(task_id), task_name_(task_name), tgm_(&tgm),
+    weights_(weights), score_(-DBL_MAX) { }
+
+void BatchTuneRunnerTask::Run() {
+    score_ = tgm_->RunTuning(weights_);
+    PRINT_DEBUG(task_name_<<": " << Dict::PrintFeatures(weights_) << " => " << score_ << endl, 1);
+}
+
 void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
     string line;
     regex threebars(" \\|\\|\\| ");
@@ -80,13 +92,17 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
 
 // Perform tuning
 void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
+    
+    // Save number of threads
+    int threads = config.GetInt("threads");
+    
     // Chose the tuning method
     shared_ptr<Tune> tgm;
     if(config.GetString("algorithm") == "mert") {
         tgm.reset(new TuneMert);
     } else if(config.GetString("algorithm") == "greedy-mert") {
         tgm.reset(new TuneGreedyMert);
-        ((TuneGreedyMert&)*tgm).SetThreads(config.GetInt("threads"));
+        ((TuneGreedyMert&)*tgm).SetThreads(threads);
     }
     // } else if(config.GetString("algorithm") == "online") {
     //     tgm.reset(new TuneOnline);
@@ -161,29 +177,37 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
 
     // Set other tuning options
     tgm->SetGainThreshold(config.GetDouble("threshold"));
-    
-    // Perform MERT with initial values
-    PRINT_DEBUG("Tuning..." << endl, 1); 
-    SparseMap best_weights = weights;
-    double best_score = tgm->RunTuning(best_weights);
-    PRINT_DEBUG("Init: " << Dict::PrintFeatures(best_weights) << " => " << best_score << endl, 1);
 
-    // Perform MERT with random restarts
-    for(int i = 1; i < config.GetInt("restarts"); i++) {
-        // Print out the current values
-        PRINT_DEBUG("Current score: " << best_score << endl, 2);
-        PRINT_DEBUG("Current feats: " << Dict::PrintFeatures(best_weights) << endl, 2);
+    // Build the thread pool
+    ThreadPool pool(threads, threads*5);
+    pool.SetDeleteTasks(false);
+    
+    // Set up tasks for each amount of weights
+    int runs = config.GetInt("restarts")+1;
+    vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
+    tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tgm, weights));
+    pool.Submit(tasks[0].get());
+    for(int i = 1; i < runs; i++) {
         // Randomize the weights
         SparseMap rand_weights = weights;
-        BOOST_FOREACH(SparseMap::value_type & rand_weights, weights)
-            rand_weights.second = rand()/(double)RAND_MAX;
-        double rand_score = tgm->RunTuning(rand_weights);
+        BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
+            rw.second = rand()/(double)RAND_MAX;
+        ostringstream oss; oss << "Rand " << i;
+        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, weights));
+        pool.Submit(tasks[i].get());
+    }
+    pool.Stop(true);
+
+    // Find the best result
+    SparseMap best_weights = tasks[0]->GetWeights();
+    double best_score = tasks[0]->GetScore();
+    for(int i = 1; i < runs; i++) {
         // If the new value is better than the current best, update
-        if(rand_score > best_score) {
-            best_score = rand_score;
-            best_weights = rand_weights;
+        if(tasks[i]->GetScore() > best_score) {
+            best_score = tasks[i]->GetScore();
+            best_weights = tasks[i]->GetWeights();
         }
-        PRINT_DEBUG("Rand "<<i<<": " << Dict::PrintFeatures(rand_weights) << " => " << rand_score << endl, 1);
+
     }
 
     // Print result

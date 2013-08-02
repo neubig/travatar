@@ -58,7 +58,7 @@ void TravatarRunnerTask::Run() {
     // but we could also change it with something like MBR
     int best_answer = 0;
     ostringstream out;
-    if(nbest_list.size() > best_answer)
+    if((int)nbest_list.size() > best_answer)
         out << Dict::PrintWords(nbest_list[best_answer]->GetWords());
     out << endl;
     collector_->Write(sent_, out.str(), "");

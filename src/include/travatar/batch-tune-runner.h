@@ -5,6 +5,8 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <travatar/sentence.h>
+#include <travatar/thread-pool.h>
+#include <travatar/sparse-map.h>
 
 namespace travatar {
 
@@ -12,6 +14,27 @@ class ConfigBatchTune;
 class TuningExample;
 class EvalMeasure;
 class Tune;
+
+class BatchTuneRunnerTask : public Task {
+
+public:
+    BatchTuneRunnerTask(
+        int task_id, const std::string & task_name,
+        Tune & tgm, const SparseMap & weights);
+
+    const SparseMap & GetWeights() { return weights_; }
+    double GetScore() { return score_; }
+
+    void Run();
+
+private:
+    int task_id_;
+    std::string task_name_;
+    Tune * tgm_;
+    SparseMap weights_;
+    double score_;
+
+};
 
 class BatchTuneRunner {
 public:
