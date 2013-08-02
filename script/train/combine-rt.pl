@@ -48,7 +48,7 @@ sub add_feat {
     for(split(/ +/, $str)) {
         my @kv = split(/=/);
         @kv == 2 or die "Bad feature vector $str\n";
-        $hash->{$kv[0]} = $kv[1];
+        $hash->{$kv[0]} = $kv[1] if not defined $hash->{$kv[0]};
     }
 }
 
