@@ -39,6 +39,10 @@ public:
     virtual const std::vector<ExamplePair> & 
                        CalculateNbest(const SparseMap & weights) = 0;
 
+    // Find the best hypothesis from an example pair.
+    virtual const ExamplePair & CalculateModelHypothesis(
+                                    const SparseMap & weights) const = 0;
+
 };
 
 }

@@ -10,7 +10,7 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
 #include <travatar/tune-greedy-mert.h>
-// #include <travatar/tune-online.h>
+#include <travatar/tune-online.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
 #include <travatar/hyper-graph.h>
@@ -103,10 +103,9 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     } else if(config.GetString("algorithm") == "greedy-mert") {
         tgm.reset(new TuneGreedyMert);
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
+    } else if(config.GetString("algorithm") == "online") {
+        tgm.reset(new TuneOnline);
     }
-    // } else if(config.GetString("algorithm") == "online") {
-    //     tgm.reset(new TuneOnline);
-    // }
 
     // Open the n-best list if it exists
     bool use_nbest = config.GetString("nbest") != "";

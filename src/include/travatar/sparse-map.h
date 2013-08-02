@@ -14,6 +14,7 @@ bool operator==(const SparseMap & lhs, const SparseMap & rhs);
 bool operator!=(const SparseMap & lhs, const SparseMap & rhs);
 std::ostream & operator<<(std::ostream & out, const SparseMap & rhs);
 SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs);
+SparseMap & operator-=(SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs);
 double operator*(const SparseMap & lhs, const SparseMap & rhs);

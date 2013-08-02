@@ -93,3 +93,19 @@ ConvexHull TuningExampleNbest::CalculateConvexHull(
     }
     return hull;
 }
+
+
+// Calculate the n-best list giving the current weights
+const ExamplePair & 
+        TuningExampleNbest::CalculateModelHypothesis(const SparseMap & weights) const {
+    double best_score = -DBL_MAX;
+    const ExamplePair * best_pair = NULL;
+    BOOST_FOREACH(const ExamplePair & exp_pair, nbest_) {
+        double score = exp_pair.first * weights;
+        if(best_score < score) {
+            best_score = score;
+            best_pair = &exp_pair;
+        }
+    }
+    return *best_pair;
+}

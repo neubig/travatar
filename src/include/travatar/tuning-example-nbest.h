@@ -15,8 +15,6 @@ public:
 
     virtual ~TuningExampleNbest() { }
 
-
-
     // Calculate the gain that could be achieved by each feature
     // for this particular n-best list
     virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
@@ -39,6 +37,10 @@ public:
                        CalculateNbest(const SparseMap & weights) {
         return nbest_;
     }
+
+    // Calculate the n-best list giving the current weights
+    virtual const ExamplePair & 
+                       CalculateModelHypothesis(const SparseMap & weights) const;
     
 
 protected:

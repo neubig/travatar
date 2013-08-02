@@ -44,6 +44,15 @@ SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs) {
     return lhs;
 }
 
+SparseMap & operator-=(SparseMap & lhs, const SparseMap & rhs) {
+    BOOST_FOREACH(const SparsePair & val, rhs)
+        if(val.second != 0) {
+            lhs[val.first] -= val.second;
+            if(lhs[val.first] == 0) lhs.erase(val.first);
+        }
+    return lhs;
+}
+
 SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs) {
     SparseMap ret;
     BOOST_FOREACH(const SparsePair & val, rhs)

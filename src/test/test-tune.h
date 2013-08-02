@@ -34,6 +34,14 @@ public:
         examp_set.push_back(examps1); examp_set.push_back(examps2);
         weights[valid] = 1;
         gradient[slopeid] = 1;
+
+        // Create the examples
+        SparseMap x1; x1[Dict::WID("a")] = 1; x1[Dict::WID("b")] = 1;
+        examp_nbest.AddHypothesis(x1, EvalStatsPtr(new EvalStatsAverage(1.0, 1)));
+        SparseMap x2; x2[Dict::WID("a")] = 1; x2[Dict::WID("c")] = 1;
+        examp_nbest.AddHypothesis(x2, EvalStatsPtr(new EvalStatsAverage(0.5, 1)));
+        SparseMap x3; x3[Dict::WID("a")] = 1; x3[Dict::WID("d")] = 1;
+        examp_nbest.AddHypothesis(x3, EvalStatsPtr(new EvalStatsAverage(0.0, 1)));
                 
         forest.reset(new HyperGraph);
         {
@@ -136,20 +144,26 @@ public:
         TuneGreedyMert mert;
         // Create the weights
         SparseMap weights; weights[Dict::WID("c")] = 1;
-        // Create the examples
-        TuningExampleNbest examps;
-        SparseMap x1; x1[Dict::WID("a")] = 1; x1[Dict::WID("b")] = 1;
-        examps.AddHypothesis(x1, EvalStatsPtr(new EvalStatsAverage(1.0, 1)));
-        SparseMap x2; x2[Dict::WID("a")] = 1; x2[Dict::WID("c")] = 1;
-        examps.AddHypothesis(x2, EvalStatsPtr(new EvalStatsAverage(0.5, 1)));
-        SparseMap x3; x3[Dict::WID("a")] = 1; x3[Dict::WID("d")] = 1;
-        examps.AddHypothesis(x3, EvalStatsPtr(new EvalStatsAverage(0.0, 1)));
         // Find the expected and actual potential gain
-        SparseMap gain_act = examps.CalculatePotentialGain(weights);
+        SparseMap gain_act = examp_nbest.CalculatePotentialGain(weights);
         // Both b and c are different between x1 and x2, and should be active
         SparseMap gain_exp;
         gain_exp[Dict::WID("b")] = 0.5; gain_exp[Dict::WID("c")] = 0.5;
         return CheckMap(gain_exp, gain_act);
+    }
+
+    int TestCalculateModelHypothesis() {
+        TuneGreedyMert mert;
+        // Create the weights
+        vector<SparseMap> weights(3);
+        weights[0][Dict::WID("a")] = 1; weights[0][Dict::WID("b")] = 1;
+        weights[1][Dict::WID("a")] = 1; weights[1][Dict::WID("c")] = 1;
+        weights[2][Dict::WID("a")] = 1; weights[2][Dict::WID("d")] = 1;
+        // Calculate the n-bests
+        int ok = 1;
+        for(int i = 0; i < 3; i++)
+            ok = ok && CheckEqual(weights[i], examp_nbest.CalculateModelHypothesis(weights[i]).first);
+        return ok;
     }
 
     int TestCalculateConvexHull() {
@@ -194,10 +208,10 @@ public:
         tef.AddHypothesis(forest);
         ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
         // The hypotheses are
-        // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2)
-        // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
+        // "c a" --> w=2, s=-2 (BLEU=2/2, 2/2) crosses "b c" at -1
+        // "d a" --> w=2, s=0  (BLEU=1/2, 1/2) dominated by "b c"
         // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
-        // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
+        // "b d" --> w=4, s=2  (BLEU=0/2, 1/2) crosses "b c" at 0
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0, 1))));
         exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4), 1))));
         exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(0.0, 1))));
@@ -271,6 +285,7 @@ public:
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCalculateModelHypothesis()" << endl; if(TestCalculateModelHypothesis()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateConvexHull()" << endl; if(TestCalculateConvexHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLineSearch()" << endl; if(TestLineSearch()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLatticeHull()" << endl; if(TestLatticeHull()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -285,6 +300,7 @@ public:
     vector<shared_ptr<TuningExample> > examp_set;
     shared_ptr<HyperGraph> forest, forest2, forest2c, forest2d;
     SparseMap weights, gradient;
+    TuningExampleNbest examp_nbest;
 
 };
 

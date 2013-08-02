@@ -23,14 +23,14 @@ class TuneOnline : public Tune {
 
 public:
 
-    TuneOnline() { }
+    TuneOnline() : shuffle_(true), iters_(20) { }
 
     // Tune new weights using an online learning algorithm
     virtual double RunTuning(SparseMap & weights);
 
-
 protected:
-
+    bool shuffle_;
+    int iters_;
 };
 
 }
