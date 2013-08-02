@@ -55,6 +55,7 @@
 # settings. Otherwise, you will need to specify the paths using the command line
 
 use Env;
+use IO::File;
 print STDERR "PREPROC ARGS:\n@ARGV\n";
 
 ############### Settings ##################
@@ -73,6 +74,11 @@ my $EGRET_FOREST_OPT = "-nbest4threshold=100";
 my $JA_EGRET; # Whether to use egret for Japanese parsing
 my $SPLIT_WORDS_SRC;
 my $SPLIT_WORDS_TRG;
+# How to split words, choose "interleave" for efficiency
+# when using a corpus that may consist of different blocks
+# with widely different sentence lengths (such as when you
+# concatenate a corpus and a dictionary)
+my $SPLIT_TYPE = "consecutive";
 my $EDA_DIR;
 my $EDA_VOCAB;
 my $EDA_WEIGHT;
@@ -122,6 +128,7 @@ GetOptions(
     "program-dir=s" => \$PROGRAM_DIR,
     "split-words-src=s" => \$SPLIT_WORDS_SRC,
     "split-words-trg=s" => \$SPLIT_WORDS_TRG,
+    "split-type=s" => \$SPLIT_TYPE,
     "src=s" => \$SRC,
     "stanford-jars=s" => \$STANFORD_JARS,
     "threads=s" => \$THREADS,
@@ -160,6 +167,7 @@ my $TRGLEN = file_len($ARGV[1]);
 die "$SRC and $TRG lengths don't match ($SRCLEN != $TRGLEN)" if ($SRCLEN != $TRGLEN);
 my $len = int($SRCLEN/$THREADS+1);
 my $suflen = int(log($THREADS)/log(10)+1);
+my @suffixes = map { sprintf("%0${suflen}d", $_) } (0 .. $THREADS-1);
 
 ###### Split the input files #######
 if(-e "$PREF/orig") {
@@ -167,18 +175,11 @@ if(-e "$PREF/orig") {
 } else {
     -e "$PREF/orig" or mkdir "$PREF/orig";
     # Copy the original, but remove carriage returns unicode newlines
-    -e "$PREF/orig/$SRC" or safesystem("cat $ARGV[0] | sed 's/\\r\\|\\xE2\\x80\\xA8//g' > $PREF/orig/$SRC");
-    -e "$PREF/orig/$TRG" or safesystem("cat $ARGV[1] | sed 's/\\r\\|\\xE2\\x80\\xA8//g' > $PREF/orig/$TRG");
-    safesystem("split -l $len -a $suflen -d $PREF/orig/$SRC $PREF/orig/$SRC.") or die;
-    safesystem("split -l $len -a $suflen -d $PREF/orig/$TRG $PREF/orig/$TRG.") or die;
+    -e "$PREF/orig/$SRC" or safesystem("sed 's/\\r\\|\\xE2\\x80\\xA8//g' < $ARGV[0] > $PREF/orig/$SRC");
+    -e "$PREF/orig/$TRG" or safesystem("sed 's/\\r\\|\\xE2\\x80\\xA8//g' < $ARGV[1] > $PREF/orig/$TRG");
+    split_file($len, $suflen, \@suffixes, "$PREF/orig/$SRC", "$PREF/orig/$SRC.");
+    split_file($len, $suflen, \@suffixes, "$PREF/orig/$TRG", "$PREF/orig/$TRG.");
     safesystem("touch $PREF/orig.DONE") or die;
-}
-my @suffixes;
-foreach my $f (`ls $PREF/orig`) {
-    chomp $f;
-    if($f =~ /$SRC\.(.*)/) {
-        push @suffixes, $1;
-    }
 }
 
 ###### Tokenization and Lowercasing #######
@@ -201,8 +202,8 @@ if($CLEAN_LEN == 0) {
         safesystem("bash -c '$TRAVATAR_DIR/script/train/clean-corpus.pl -max_len $CLEAN_LEN $PREF/tok/$SRC.$i $PREF/tok/$TRG.$i $PREF/clean/$SRC.$i $PREF/clean/$TRG.$i; touch $PREF/clean/$SRC.$i.DONE' &")  if not -e "$PREF/clean/$SRC.$i";
     }
     wait_done(map { "$PREF/clean/$SRC.$_.DONE" } @suffixes);
-    safesystem("cat ".join(" ", map { "$PREF/clean/$SRC.$_" } @suffixes)." > $PREF/clean/$SRC");
-    safesystem("cat ".join(" ", map { "$PREF/clean/$TRG.$_" } @suffixes)." > $PREF/clean/$TRG");
+    cat_files("$PREF/clean/$SRC", map { "$PREF/clean/$SRC.$_" } @suffixes);
+    cat_files("$PREF/clean/$TRG", map { "$PREF/clean/$TRG.$_" } @suffixes);
 }
 
 ###### 1-best Parsing ######
@@ -353,14 +354,12 @@ if($ALIGN) {
         # Creating splits
         (safesystem("mkdir $PREF/nilein") or die) if not -e "$PREF/nilein";
         if(not -e "$PREF/nilein/low-$NTRG.$nilesuffixes[0]") {
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$NTRG $PREF/nilein/low-$NTRG.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/low/$NSRC $PREF/nilein/low-$NSRC.") or die;
-            # Forward order
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/giza/$NSRC$NTRG $PREF/nilein/giza.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/$GIZAOUTDIR/$NSRC$NTRG $PREF/nilein/$GIZAOUTDIR.") or die;
-            # # Reverse order
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$NSRC $PREF/nilein/tree-$NSRC.") or die;
-            safesystem("split -l $nilelen -a $nilesuflen -d $PREF/treelowbin/$NTRG $PREF/nilein/tree-$NTRG.") or die;
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/low/$NTRG", "$PREF/nilein/low-$NTRG.");
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/low/$NSRC", "$PREF/nilein/low-$NSRC.");
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/giza/$NSRC$NTRG",        "$PREF/nilein/giza.");
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/$GIZAOUTDIR/$NSRC$NTRG", "$PREF/nilein/$GIZAOUTDIR.");
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/treelowbin/$NTRG", "$PREF/nilein/tree-$NTRG.");
+            split_file($nilelen, $nilesuflen, \@nilesuffixes, "$PREF/treelowbin/$NSRC", "$PREF/nilein/tree-$NSRC.");
             foreach my $f (@nilesuffixes) {
                 safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$NTRG.$f > $PREF/nilein/vcb-$NTRG.$f");
                 safesystem("$NILE_DIR/prepare-vocab.py < $PREF/nilein/low-$NSRC.$f > $PREF/nilein/vcb-$NSRC.$f");
@@ -379,7 +378,7 @@ if($ALIGN) {
             }
         }
         wait_done(map { "$PREF/nile/$NSRC$NTRG.$_.DONE" } @nilesuffixes);
-        safesystem("cat $PREF/nile/$NSRC$NTRG.* > $PREF/nile/$NSRC$NTRG") if not -e "$PREF/nile/$NSRC$NTRG";
+        cat_files("$PREF/nile/$NSRC$NTRG", map { "$PREF/nile/$NSRC$NTRG.$_" } @nilesuffixes) if not -e "$PREF/nile/$NSRC$NTRG";
         safesystem("cat $PREF/nile/$NSRC$NTRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/nile/$NTRG$NSRC") if not -e "$PREF/nile/$NTRG$NSRC";
     }
 
@@ -421,7 +420,7 @@ sub run_parallel {
         safesystem("bash -c '$my_cmd; touch $out_dir/$f.DONE' &") if not -e "$out_dir/$f";
     }
     wait_done(map { "$out_dir/$_.DONE" } @files);
-    safesystem("cat ".join(" ", map { "$out_dir/$_" } @files)." > $out_dir/$prefix");
+    cat_files("$out_dir/$prefix", map { "$out_dir/$_" } @files); 
     my $old_lines = file_len("$in_dir/$prefix");
     my $new_lines = file_len("$out_dir/$prefix");
     die "ERROR: while creating $out_dir/$prefix in parallel\nFile sizes don't match: $in_dir/$prefix=$old_lines, $out_dir/$prefix=$new_lines" if (not $nocheck) and ($old_lines != $new_lines);
@@ -436,6 +435,47 @@ sub wait_done {
         while(not -e $f) {
             sleep 1;
         }
+    }
+}
+
+# Split files 
+sub split_file {
+    my ($len, $suflen, $sufs, $infile, $outpref) = @_;
+    if($SPLIT_TYPE eq "consecutive") {
+        safesystem("split -l $len -a $suflen -d $infile $outpref") or die;
+    } elsif($SPLIT_TYPE eq "interleave") {
+        my $filecnt = @$sufs;
+        safesystem("awk '{print >(sprintf(\"$outpref%0${suflen}d\", (NR-1)%$filecnt))}' $infile");
+    } else {
+        die "Bad split type: $SPLIT_TYPE";
+    }
+}
+
+# Split files 
+sub cat_files {
+    my ($out, @in) = @_;
+    if($SPLIT_TYPE eq "consecutive") {
+        safesystem("cat @in > $out") or die;
+    } elsif($SPLIT_TYPE eq "interleave") {
+        # Read from each file one line at a time
+        my @fh = map { 
+            my $fh = IO::File->new("< $_") or die "Couldn't input from $_";
+            binmode $fh, ":utf8";
+            $fh
+        } @in;
+        open FILE0, ">:utf8", $out or die "Couldn't open $out";
+        my $done = @fh;
+        while($done == @fh) {
+            $done = 0;
+            foreach my $fhin (@fh) {
+                last if not defined ($_ = <$fhin>);
+                print FILE0;
+                $done++;
+            }
+        }
+        close FILE0;
+    } else {
+        die "Bad split type: $SPLIT_TYPE";
     }
 }
 

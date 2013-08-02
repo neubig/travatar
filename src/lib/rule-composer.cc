@@ -12,7 +12,7 @@ void RuleComposer::BuildComposedEdges(int id,
                         const vector<vector<HyperEdge*> > & min_edges,
                         vector<vector<RuleComposer::SizedEdge> > & composed_edges,
                         HyperGraph * ret) const {
-    if(composed_edges[id].size() != 0) return;
+    if(SafeAccess(composed_edges,id).size() != 0) return;
     // For each edge coming from this node
     BOOST_FOREACH(HyperEdge* min_edge, min_edges[id]) {
         int start = composed_edges[id].size();
@@ -55,7 +55,8 @@ HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
     // Create sets to remove duplicates
     BOOST_FOREACH(HyperNode * node, ret->GetNodes())
         min_edges.push_back(node->GetEdges());
-    BuildComposedEdges(0, min_edges, composed_edges, ret);
+    if(min_edges.size() > 0)
+        BuildComposedEdges(0, min_edges, composed_edges, ret);
     return ret;
 }
 
