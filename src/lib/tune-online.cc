@@ -24,8 +24,7 @@ double TuneOnline::RunTuning(SparseMap & weights) {
     vector<int> order(examps_.size());
     for(int i = 0; i < (int)order.size(); i++) order[i] = i;
 
-    // First, get the stats. Because this takes some time, update every
-    // major iteration.
+    // First, get the stats
     vector<EvalStatsPtr> all_stats;
     EvalStatsPtr total_stats;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
@@ -36,7 +35,7 @@ double TuneOnline::RunTuning(SparseMap & weights) {
         else total_stats->PlusEquals(*expair.second);
     }
 
-    // TODO: For 20 iterations
+    // Do iterations of online learning
     for(int iter = 0; iter < iters_; iter++) {
 
         // Shuffle the indexes
@@ -46,7 +45,7 @@ double TuneOnline::RunTuning(SparseMap & weights) {
         BOOST_FOREACH(int idx, order) {
             TuningExample & examp = *examps_[idx];
             // Remove the stats for the current example
-            total_stats->PlusEquals(all_stats[idx]->TimesEquals(-1));
+            total_stats->PlusEquals(*all_stats[idx]->Times(-1));
 
             // Get the n-best list and update
             vector<ExamplePair> nbest = examp.CalculateNbest(weights);
@@ -79,7 +78,15 @@ double TuneOnline::RunTuning(SparseMap & weights) {
             total_stats->PlusEquals(*expair.second);
             
         }
-        PRINT_DEBUG("Score after learning iter " << iter+1 << ": " << total_stats->ConvertToString(), 1);
+        PRINT_DEBUG("Approx score after learning iter " << iter+1 << ": " << total_stats->ConvertToString() << endl, 1);
+    }
+
+    // Finally, update the stats with the actual weights
+    total_stats.reset((EvalStats*)NULL);
+    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
+        const ExamplePair & expair = examp->CalculateModelHypothesis(weights);
+        if(total_stats.get()==NULL) total_stats=expair.second->Clone();
+        else total_stats->PlusEquals(*expair.second);
     }
 
     return total_stats->ConvertToScore();
