@@ -54,18 +54,19 @@ while($line = <STDIN>) {
     my @cols = split(/ \|\|\| /, $line);
     die "Wrong number of columns in $line" if @cols < 3;
     my ($term, $nonterm, $bad);
-    for(split(/ /, $cols[0])) {
-        if(/^"(.*)"$/) {
-            $term++;
-            if($SRC and (not exists $src{$1})) {
-                $bad = 1;
-                last;
-            }
-        } elsif(/^x\d*:/) {
-            $nonterm++;
+    while($cols[0] =~ / "([^ ]+)" /g) {
+        $term++;
+        if($SRC and (not exists $src{$1})) {
+            $bad = 1;
+            last;
         }
     }
     $bad = 1 if ($LEN and $term > $LEN);
-    $bad = 1 if ($NTLEN and $nonterm > $NTLEN);
+    if(!$bad and $NTLEN) {
+        while($cols[0] =~ / x[0-9]+:/g) {
+            $nonterm++;
+        }
+        $bad = 1 if $nonterm > $NTLEN;
+    }
     if(!$bad) { print "$line\n"; }
 }
