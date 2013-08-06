@@ -10,7 +10,7 @@ using namespace travatar;
 using namespace boost;
 
 // Calculate Levenshtein Distance
-int EvalMeasureWer::EditDistance(const Sentence & ref, const Sentence & sys) {
+int EvalMeasureWer::EditDistance(const Sentence & ref, const Sentence & sys) const {
     int rs = ref.size()+1, ss = sys.size()+1;
     vector<int> dists(rs*ss);
     for(int i = 0; i < rs; i++)
@@ -28,7 +28,7 @@ int EvalMeasureWer::EditDistance(const Sentence & ref, const Sentence & sys) {
 }
 
 // Measure the score of the sys output according to the ref
-shared_ptr<EvalStats> EvalMeasureWer::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+shared_ptr<EvalStats> EvalMeasureWer::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
     return shared_ptr<EvalStats>(new EvalStatsWer(EditDistance(ref,sys), ref.size(), reverse_));
 

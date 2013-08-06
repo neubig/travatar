@@ -10,7 +10,7 @@ using namespace travatar;
 using namespace boost;
 
 // Measure the score of the sys output according to the ref
-shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
     // check reference length, raise RuntimeError if no words are found.
     if(ref.size() == 0)

@@ -23,7 +23,7 @@ class TuneOnline : public Tune {
 
 public:
 
-    TuneOnline() : shuffle_(true), iters_(20) { }
+    TuneOnline() : shuffle_(true), iters_(20), update_("perceptron") { }
 
     // Tune new weights using an online learning algorithm
     virtual double RunTuning(SparseMap & weights);
@@ -31,6 +31,8 @@ public:
 protected:
     bool shuffle_;
     int iters_;
+    std::string update_;
+
 };
 
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <travatar/sparse-map.h>
 #include <travatar/eval-measure.h>
+#include <travatar/weights.h>
 #include <boost/shared_ptr.hpp>
 
 namespace travatar {
@@ -37,11 +38,11 @@ public:
 
     // Calculate the n-best list giving the current weights
     virtual const std::vector<ExamplePair> & 
-                       CalculateNbest(const SparseMap & weights) = 0;
+                       CalculateNbest(const Weights & weights) = 0;
 
     // Find the best hypothesis from an example pair.
     virtual const ExamplePair & CalculateModelHypothesis(
-                                    const SparseMap & weights) const = 0;
+                                    const Weights & weights) const = 0;
 
 };
 

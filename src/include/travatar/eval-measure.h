@@ -143,9 +143,16 @@ public:
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr CalculateStats(
                 const Sentence & ref,
+                const Sentence & sys) const = 0;
+
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr CalculateCachedStats(
+                const Sentence & ref,
                 const Sentence & sys,
                 int ref_cache_id = INT_MAX,
-                int sys_cache_id = INT_MAX) = 0;
+                int sys_cache_id = INT_MAX) {
+        return CalculateStats(ref,sys);
+    }
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr ReadStats(

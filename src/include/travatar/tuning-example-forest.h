@@ -55,14 +55,14 @@ public:
 
     // Calculate the n-best list giving the current weights
     virtual const std::vector<ExamplePair> & 
-                       CalculateNbest(const SparseMap & weights) {
+                       CalculateNbest(const Weights & weights) {
         THROW_ERROR("Cannot yet calculate n-best from forests for tuning");
         return last_nbest_;
     }
 
     // Calculate the n-best list giving the current weights
     virtual const ExamplePair & 
-                       CalculateModelHypothesis(const SparseMap & weights) const {
+                       CalculateModelHypothesis(const Weights & weights) const {
         THROW_ERROR("Cannot yet calculate model hypothesis from forests for tuning");
         return last_nbest_[0];
     }

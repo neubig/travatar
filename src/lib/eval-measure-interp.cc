@@ -11,13 +11,13 @@ using namespace travatar;
 using namespace boost;
 
 // Measure the score of the sys output according to the ref
-EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
     // Calculate all the stats independently and add them
     typedef shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
-        stats.push_back(meas->CalculateStats(ref,sys,ref_cache_id,sys_cache_id));
+        stats.push_back(meas->CalculateStats(ref,sys));
     return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
 
 }

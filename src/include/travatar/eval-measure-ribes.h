@@ -29,9 +29,7 @@ public:
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(
                 const Sentence & ref,
-                const Sentence & sys,
-                int ref_cache_id = INT_MAX,
-                int sys_cache_id = INT_MAX);
+                const Sentence & sys) const;
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr ReadStats(

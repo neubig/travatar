@@ -107,7 +107,7 @@ void TravatarRunnerTask::Run() {
 
     // If we are tuning load the next references and check the weights
     if(runner_->GetDoTuning())
-        runner_->GetWeights().Adjust(runner_->GetEvalMeasure(), refs_, nbest_list);
+        runner_->GetWeights().Adjust(tree_graph_->GetWords(), refs_, runner_->GetEvalMeasure(), nbest_list);
 }
 
 

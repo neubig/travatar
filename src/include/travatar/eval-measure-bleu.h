@@ -53,6 +53,11 @@ public:
                 const Sentence & sys,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX);
+    
+    // Calculate the stats for a single sentence
+    virtual boost::shared_ptr<EvalStats> CalculateStats(
+                const Sentence & ref,
+                const Sentence & sys) const;
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr ReadStats(
@@ -63,7 +68,7 @@ public:
                         const NgramStats & ref_ngrams,
                         int ref_len,
                         const NgramStats & sys_ngrams,
-                        int sys_len); 
+                        int sys_len) const; 
 
     // Calculate the n-gram statistics necessary for BLEU in advance
     NgramStats * ExtractNgrams(const Sentence & sentence) const;

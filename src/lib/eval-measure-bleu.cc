@@ -35,13 +35,18 @@ shared_ptr<EvalMeasureBleu::NgramStats> EvalMeasureBleu::GetCachedStats(const Se
     }
 }
 
+shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys) const {
+    shared_ptr<NgramStats> ref_s(ExtractNgrams(ref)), sys_s(ExtractNgrams(sys));
+    return CalculateStats(*ref_s, ref.size(), *sys_s, sys.size());
+}
+
 // Measure the score of the sys output according to the ref
 shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
     return CalculateStats(*GetCachedStats(ref, ref_cache_id), ref.size(), *GetCachedStats(sys, sys_cache_id), sys.size());
 }
 
 shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngrams, int ref_len,
-                                                      const NgramStats & sys_ngrams, int sys_len) {
+                                                      const NgramStats & sys_ngrams, int sys_len) const {
     int vals_n = 2*ngram_order_+1;
     vector<EvalStatsDataType> vals(vals_n);
 

@@ -267,6 +267,12 @@ public:
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
     void SetWords(const std::vector<WordId> & words) { words_ = words; }
+    SparseMap GetFeatures() {
+        SparseMap ret;
+        BOOST_FOREACH(const HyperEdge* edge, edges_)
+            ret += edge->GetFeatures();
+        return ret;
+    }
 
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }

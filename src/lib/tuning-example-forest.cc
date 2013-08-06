@@ -45,7 +45,7 @@ void TuningExampleForest::CalculateOracle() {
     try {
         Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
         PRINT_DEBUG("Oracle sentence:" << endl << Dict::PrintWords(oracle_sent) << endl, 1);
-        oracle_score_ = measure_->CalculateStats(ref_, oracle_sent, id_)->ConvertToScore();
+        oracle_score_ = measure_->CalculateCachedStats(ref_, oracle_sent, id_)->ConvertToScore();
         PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
         oracle_score_ *= mult_;
         oracle_score_ = 1;
@@ -70,7 +70,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
-    curr_score_ = measure_->CalculateStats(ref_, sent, id_)->ConvertToScore() * mult_;
+    curr_score_ = measure_->CalculateCachedStats(ref_, sent, id_)->ConvertToScore() * mult_;
     // Find the potential gain
     oracle_score_ = max(oracle_score_, curr_score_);
     double gain = oracle_score_ - curr_score_;
@@ -124,7 +124,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
     Sentence sent = nbest_list[0]->GetWords();
-    EvalStatsPtr curr_stats = measure_->CalculateStats(ref_, sent, id_);
+    EvalStatsPtr curr_stats = measure_->CalculateCachedStats(ref_, sent, id_);
     curr_stats->TimesEquals(mult_);
     // If we are not active, return the simple convex hull
     if(!active) {
@@ -141,7 +141,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
             const MertLine & line = *top_hull.GetLines()[i];
             Sentence sent;
             line.ConstructTranslation(forest_->GetWords(), &sent);
-            EvalStatsPtr stats = measure_->CalculateStats(ref_, sent, id_);
+            EvalStatsPtr stats = measure_->CalculateCachedStats(ref_, sent, id_);
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
             // If the score is exactly the same as last, just update the right side
             // if(ret.size()) 

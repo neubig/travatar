@@ -33,9 +33,7 @@ public:
     // Calculate the stats for a single sentence
     virtual boost::shared_ptr<EvalStats> CalculateStats(
                 const Sentence & ref,
-                const Sentence & sys,
-                int ref_cache_id = INT_MAX,
-                int sys_cache_id = INT_MAX);
+                const Sentence & sys) const;
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr ReadStats(
@@ -43,7 +41,7 @@ public:
 
 protected:
 
-    int EditDistance(const Sentence & ref, const Sentence & sys);
+    int EditDistance(const Sentence & ref, const Sentence & sys) const;
     
     // WER is better when it is lower, so for tuning we want to be able to
     // subtract WER from 1 to get a value that is better when it is higher

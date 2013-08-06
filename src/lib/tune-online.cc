@@ -6,6 +6,8 @@
 #include <travatar/tune-online.h>
 #include <travatar/util.h>
 #include <travatar/dict.h>
+#include <travatar/weights.h>
+#include <travatar/weights-perceptron.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
@@ -17,8 +19,18 @@ using namespace boost;
 using namespace travatar;
 
 // Tune new weights using online learning
-double TuneOnline::RunTuning(SparseMap & weights) {
-    PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintFeatures(weights) << endl, 2);
+double TuneOnline::RunTuning(SparseMap & kv) {
+    PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintFeatures(kv) << endl, 2);
+
+    // Create a weight adjuster
+    shared_ptr<Weights> weights;
+    if(update_ == "perceptron") {
+        weights = shared_ptr<Weights>(new WeightsPerceptron);
+    // } else(update_ == "avgperceptron") {
+    //     weights = shared_ptr<Weights>(new WeightsAveragePerceptron);
+    } else {
+        THROW_ERROR("Unknown update type: " << update_);
+    }
 
     // To do in random order
     vector<int> order(examps_.size());
@@ -29,7 +41,7 @@ double TuneOnline::RunTuning(SparseMap & weights) {
     EvalStatsPtr total_stats;
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
         // Get the best hypothesis according to model score
-        const ExamplePair & expair = examp->CalculateModelHypothesis(weights);
+        const ExamplePair & expair = examp->CalculateModelHypothesis(*weights);
         all_stats.push_back(expair.second);
         if(total_stats.get()==NULL) total_stats=expair.second->Clone();
         else total_stats->PlusEquals(*expair.second);
@@ -48,32 +60,37 @@ double TuneOnline::RunTuning(SparseMap & weights) {
             total_stats->PlusEquals(*all_stats[idx]->Times(-1));
 
             // Get the n-best list and update
-            vector<ExamplePair> nbest = examp.CalculateNbest(weights);
+            vector<ExamplePair> nbest = examp.CalculateNbest(*weights);
             
             // Calculate the scores
             vector<pair<double, double> > scores(nbest.size());
+            vector<SparseMap*> feats(nbest.size());
             for(int i = 0; i < (int)nbest.size(); i++) {
                 total_stats->PlusEquals(*nbest[i].second);
-                scores[i].first  = nbest[i].first * weights;
+                scores[i].first  = (*weights) * nbest[i].first;
                 scores[i].second = total_stats->ConvertToScore();
+                feats[i] = &nbest[i].first;
                 total_stats->PlusEquals(*nbest[i].second->Times(-1));
             }
+
+            // Actually adjust the weights
+            weights->Adjust(scores, feats);
             
-            // TODO: Integrate this with Weights
-            int oracle_id = 0, model_id = 0;
-            for(int i = 1; i < (int)nbest.size(); i++) {
-                if(scores[i].first > scores[model_id].first)
-                    model_id = i;
-                if(scores[i].second > scores[oracle_id].second)
-                    oracle_id = i;
-            }
-            if(model_id != oracle_id) {
-                weights += nbest[oracle_id].first;
-                weights -= nbest[model_id].first;
-            }
+            // // TODO: Integrate this with Weights
+            // int oracle_id = 0, model_id = 0;
+            // for(int i = 1; i < (int)nbest.size(); i++) {
+            //     if(scores[i].first > scores[model_id].first)
+            //         model_id = i;
+            //     if(scores[i].second > scores[oracle_id].second)
+            //         oracle_id = i;
+            // }
+            // if(model_id != oracle_id) {
+            //     weights += nbest[oracle_id].first;
+            //     weights -= nbest[model_id].first;
+            // }
 
             // Re-add the stats for the current example
-            const ExamplePair & expair = examp.CalculateModelHypothesis(weights);
+            const ExamplePair & expair = examp.CalculateModelHypothesis(*weights);
             all_stats[idx] = expair.second;
             total_stats->PlusEquals(*expair.second);
             
@@ -82,9 +99,10 @@ double TuneOnline::RunTuning(SparseMap & weights) {
     }
 
     // Finally, update the stats with the actual weights
+    kv = weights->GetFinal();
     total_stats.reset((EvalStats*)NULL);
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
-        const ExamplePair & expair = examp->CalculateModelHypothesis(weights);
+        const ExamplePair & expair = examp->CalculateModelHypothesis(kv);
         if(total_stats.get()==NULL) total_stats=expair.second->Clone();
         else total_stats->PlusEquals(*expair.second);
     }

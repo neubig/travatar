@@ -13,7 +13,7 @@ using namespace boost;
 using namespace TERCpp;
 
 // Measure the score of the sys output according to the ref
-shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
   terCalc * evaluation = new terCalc;
   terAlignment result = evaluation->TER ( ref, sys );

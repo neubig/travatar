@@ -34,13 +34,13 @@ public:
 
     // Calculate the n-best list giving the current weights
     virtual const std::vector<ExamplePair> & 
-                       CalculateNbest(const SparseMap & weights) {
+                       CalculateNbest(const Weights & weights) {
         return nbest_;
     }
 
     // Calculate the n-best list giving the current weights
     virtual const ExamplePair & 
-                       CalculateModelHypothesis(const SparseMap & weights) const;
+                       CalculateModelHypothesis(const Weights & weights) const;
     
 
 protected:

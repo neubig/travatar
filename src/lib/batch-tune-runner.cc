@@ -53,7 +53,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
                 THROW_ERROR("Lines in statistic file and system input don't match");
             stats = eval_->ReadStats(line);
         } else {
-            stats = eval_->CalculateStats(ref, hyp, id);
+            stats = eval_->CalculateCachedStats(ref, hyp, id);
         }
         // Add the example
         while((int)tgm.NumExamples() <= id) {
@@ -104,7 +104,8 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         tgm.reset(new TuneGreedyMert);
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
     } else if(config.GetString("algorithm") == "online") {
-        tgm.reset(new TuneOnline);
+        TuneOnline * online = new TuneOnline;
+        tgm.reset(online);
     }
 
     // Open the n-best list if it exists
@@ -233,7 +234,7 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         int id = atoi(columns[0].c_str());
         Sentence hyp = Dict::ParseWords(columns[1]);
-        EvalStatsPtr stats = eval_->CalculateStats(refs_[id], hyp, id);
+        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyp, id);
         stat_out << stats->WriteStats() << endl;
     }
 }
