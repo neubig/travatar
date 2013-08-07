@@ -102,7 +102,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     kv = weights->GetFinal();
     total_stats.reset((EvalStats*)NULL);
     BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
-        const ExamplePair & expair = examp->CalculateModelHypothesis(kv);
+        const ExamplePair & expair = examp->CalculateModelHypothesis(*weights);
         if(total_stats.get()==NULL) total_stats=expair.second->Clone();
         else total_stats->PlusEquals(*expair.second);
     }

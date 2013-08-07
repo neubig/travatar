@@ -161,8 +161,10 @@ public:
         weights[2][Dict::WID("a")] = 1; weights[2][Dict::WID("d")] = 1;
         // Calculate the n-bests
         int ok = 1;
-        for(int i = 0; i < 3; i++)
-            ok = ok && CheckEqual(weights[i], examp_nbest.CalculateModelHypothesis(weights[i]).first);
+        for(int i = 0; i < 3; i++) {
+            Weights my_weights(weights[i]);
+            ok = ok && CheckEqual(weights[i], examp_nbest.CalculateModelHypothesis(my_weights).first);
+        }
         return ok;
     }
 

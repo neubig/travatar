@@ -105,6 +105,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
     } else if(config.GetString("algorithm") == "online") {
         TuneOnline * online = new TuneOnline;
+        online->SetUpdate(config.GetString("update"));
         tgm.reset(online);
     }
 

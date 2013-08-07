@@ -42,7 +42,7 @@ public:
 
     // Find the best hypothesis from an example pair.
     virtual const ExamplePair & CalculateModelHypothesis(
-                                    const Weights & weights) const = 0;
+                                    Weights & weights) const = 0;
 
 };
 

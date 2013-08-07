@@ -15,9 +15,25 @@ public:
 
     // The pairwise weight update rule
     virtual void Update(
-        const SparseMap & oracle, double oracle_score, double oracle_loss,
-        const SparseMap & system, double system_score, double system_loss
+        const SparseMap & oracle, double oracle_model, double oracle_eval,
+        const SparseMap & system, double system_model, double system_eval
     );
+
+    // Adjust the weights according to the n-best list
+    // Scores are current model scores and evaluation scores
+    virtual void Adjust(
+            const std::vector<std::pair<double,double> > & scores,
+            const std::vector<SparseMap*> & features) {
+        int oracle = 0, system = 0;
+        for(int i = 1; i < (int)scores.size(); i++) {
+            if(scores[i].first > scores[system].first)
+                system = i;
+            if(scores[i].second > scores[oracle].second)
+                oracle = i;
+        }
+        Update(*features[oracle], scores[oracle].first, scores[oracle].second,
+               *features[system], scores[system].first, scores[system].second);
+    }
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key);

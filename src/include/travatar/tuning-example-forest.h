@@ -62,7 +62,7 @@ public:
 
     // Calculate the n-best list giving the current weights
     virtual const ExamplePair & 
-                       CalculateModelHypothesis(const Weights & weights) const {
+                       CalculateModelHypothesis(Weights & weights) const {
         THROW_ERROR("Cannot yet calculate model hypothesis from forests for tuning");
         return last_nbest_[0];
     }

@@ -28,6 +28,8 @@ public:
     // Tune new weights using an online learning algorithm
     virtual double RunTuning(SparseMap & weights);
 
+    void SetUpdate(const std::string & update) { update_ = update; }
+
 protected:
     bool shuffle_;
     int iters_;

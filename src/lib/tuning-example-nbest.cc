@@ -97,7 +97,7 @@ ConvexHull TuningExampleNbest::CalculateConvexHull(
 
 // Calculate the n-best list giving the current weights
 const ExamplePair & 
-        TuningExampleNbest::CalculateModelHypothesis(const Weights & weights) const {
+        TuningExampleNbest::CalculateModelHypothesis(Weights & weights) const {
     double best_score = -DBL_MAX;
     const ExamplePair * best_pair = NULL;
     BOOST_FOREACH(const ExamplePair & exp_pair, nbest_) {

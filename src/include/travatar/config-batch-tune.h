@@ -33,6 +33,7 @@ public:
         AddConfigEntry("threshold", "1e-6", "Terminate when gains are less than this");
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
+        AddConfigEntry("update", "perceptron", "Which online update to use");
         AddConfigEntry("restarts", "20", "The number of random tuning restarts");
         AddConfigEntry("stat_in", "", "Files containing pre-computed statistics for each n-best list");
         AddConfigEntry("stat_out", "", "Set this option to pre-compute statistics for an n-best list");
