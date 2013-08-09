@@ -8,6 +8,7 @@
 #include <travatar/dict.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
+#include <travatar/weights-average-perceptron.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
@@ -26,8 +27,8 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     shared_ptr<Weights> weights;
     if(update_ == "perceptron") {
         weights = shared_ptr<Weights>(new WeightsPerceptron);
-    // } else(update_ == "avgperceptron") {
-    //     weights = shared_ptr<Weights>(new WeightsAveragePerceptron);
+    } else if(update_ == "avgperceptron") {
+        weights = shared_ptr<Weights>(new WeightsAveragePerceptron);
     } else {
         THROW_ERROR("Unknown update type: " << update_);
     }
