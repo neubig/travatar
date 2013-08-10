@@ -97,8 +97,8 @@ while(1) {
         my $disc = (($down >= $#kndisc) ? $kndisc[-1] : ($kndisc[$down]*$downfrac+$kndisc[$up]*$upfrac));
         $cnt -= $disc;
         $feat{"lfreq"} = $cnt ? log($cnt) : -99;
-        $feat{"pfge"} = $cnt ? log($cnt/$cnt1[1]) : -99;
-        $feat{"pegf"} = $cnt ? log($cnt/$cnt0[1]) : -99;
+        $feat{"fgep"} = $cnt ? log($cnt/$cnt1[1]) : -99;
+        $feat{"egfp"} = $cnt ? log($cnt/$cnt0[1]) : -99;
     } elsif($SMOOTH ne "none") {
         die "Unknown smoothing type: $SMOOTH\n";
     }
