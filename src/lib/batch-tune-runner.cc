@@ -106,6 +106,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     } else if(config.GetString("algorithm") == "online") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
+        online->SetLearningRate(config.GetDouble("rate"));
         tgm.reset(online);
     }
 

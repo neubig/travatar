@@ -17,7 +17,7 @@ void WeightsPerceptron::Update(
         SparseMap change = (oracle - system);
         BOOST_FOREACH(SparseMap::value_type change_val, change) {
             // Update the value
-            double new_val = GetCurrent(change_val.first) + change_val.second;
+            double new_val = GetCurrent(change_val.first) + change_val.second * rate_;
             // And ensure we are in the correct range
             current_[change_val.first] = InRange(new_val, GetRange(change_val.first));
         }

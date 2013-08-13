@@ -107,5 +107,6 @@ const ExamplePair &
             best_pair = &exp_pair;
         }
     }
+    if(best_pair == NULL) THROW_ERROR("Could not find best hypothesis in n-best");
     return *best_pair;
 }

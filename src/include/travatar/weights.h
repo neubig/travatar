@@ -32,6 +32,9 @@ public:
         SparseMap::const_iterator it = current_.find(key);
         return (it != current_.end() ? it->second : 0.0);
     }
+    virtual const SparseMap & GetCurrent() const {
+        return current_;
+    }
     virtual void SetCurrent(const SparseMap::key_type & key, double val) {
         current_[key] = val;
     }

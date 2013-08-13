@@ -1,5 +1,6 @@
 #include <travatar/weights-average-perceptron.h>
 #include <travatar/util.h>
+#include <travatar/dict.h>
 
 using namespace std;
 using namespace travatar;
@@ -16,6 +17,9 @@ void WeightsAveragePerceptron::Update(
     if(system_eval < oracle_eval) {
         if(l1_coeff_ != 0) THROW_ERROR("Non-zero regularization in averaged perceptron not accounted for yet");
         SparseMap change = (oracle - system);
+        PRINT_DEBUG("ORACLE: " << Dict::PrintFeatures(oracle) << endl << 
+                    "SYSTEM: " << Dict::PrintFeatures(system) << endl << 
+                    "CHANGE: " << Dict::PrintFeatures(change) << endl, 4);
         BOOST_FOREACH(SparseMap::value_type change_val, change) {
             // Save the old value and get the new value in the range
             int prev_iter = last_update_[change_val.first];
