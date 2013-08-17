@@ -107,6 +107,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
         online->SetLearningRate(config.GetDouble("rate"));
+        online->SetMarginScale(config.GetDouble("margin-scale"));
         tgm.reset(online);
     }
 

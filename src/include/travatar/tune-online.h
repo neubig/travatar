@@ -23,19 +23,21 @@ class TuneOnline : public Tune {
 
 public:
 
-    TuneOnline() : shuffle_(true), iters_(100), update_("perceptron"), rate_(1) { }
+    TuneOnline() : shuffle_(true), iters_(100), update_("perceptron"), rate_(1), margin_scale_(0) { }
 
     // Tune new weights using an online learning algorithm
     virtual double RunTuning(SparseMap & weights);
 
     void SetUpdate(const std::string & update) { update_ = update; }
     void SetLearningRate(double rate) { rate_ = rate; }
+    void SetMarginScale(double margin) { margin_scale_ = margin; }
 
 protected:
     bool shuffle_;
     int iters_;
     std::string update_;
     double rate_;
+    double margin_scale_;
 
 };
 

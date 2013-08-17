@@ -35,6 +35,7 @@ public:
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
         AddConfigEntry("update", "perceptron", "Which online update to use");
         AddConfigEntry("rate", "1", "The learning rate");
+        AddConfigEntry("margin-scale", "0", "The size of the margin");
         AddConfigEntry("restarts", "20", "The number of random tuning restarts");
         AddConfigEntry("stat_in", "", "Files containing pre-computed statistics for each n-best list");
         AddConfigEntry("stat_out", "", "Set this option to pre-compute statistics for an n-best list");

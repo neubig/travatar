@@ -10,8 +10,8 @@ namespace travatar {
 class WeightsPerceptron : public WeightsPairwise {
 
 public:
-    WeightsPerceptron() : WeightsPairwise(), curr_iter_(0), l1_coeff_(0), rate_(1) { }
-    WeightsPerceptron(const SparseMap & current) : WeightsPairwise(current), curr_iter_(0), l1_coeff_(0), rate_(1) { }
+    WeightsPerceptron() : WeightsPairwise(), curr_iter_(0), l1_coeff_(0), rate_(1), margin_scale_(0) { }
+    WeightsPerceptron(const SparseMap & current) : WeightsPairwise(current), curr_iter_(0), l1_coeff_(0), rate_(1), margin_scale_(0) { }
 
     // The pairwise weight update rule
     virtual void Update(
@@ -25,9 +25,13 @@ public:
             const std::vector<std::pair<double,double> > & scores,
             const std::vector<SparseMap*> & features) {
         int oracle = 0, system = 0;
-        for(int i = 1; i < (int)scores.size(); i++) {
-            if(scores[i].first > scores[system].first)
+        double best_score = -DBL_MAX;
+        for(int i = 0; i < (int)scores.size(); i++) {
+            double margin_score = scores[i].first - scores[i].second * margin_scale_;
+            if(margin_score > best_score) {
                 system = i;
+                best_score = margin_score;
+            }
             if(scores[i].second > scores[oracle].second)
                 oracle = i;
         }
@@ -46,12 +50,9 @@ public:
         return current_;
     }
 
-    void SetL1Coeff(double l1_coeff) {
-        l1_coeff_ = l1_coeff;
-    }
-    void SetLearningRate(double rate) {
-        rate_ = rate;
-    }
+    void SetL1Coeff(double l1_coeff) { l1_coeff_ = l1_coeff; }
+    void SetLearningRate(double rate) { rate_ = rate; }
+    void SetMarginScale(double margin) { margin_scale_ = margin; }
 
 protected:
 
@@ -59,6 +60,7 @@ protected:
     int curr_iter_;
     double l1_coeff_;
     double rate_;
+    double margin_scale_;
 
 };
 

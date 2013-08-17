@@ -29,14 +29,17 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     if(update_ == "perceptron") {
         WeightsPerceptron * ptr = new WeightsPerceptron;
         ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
         weights = shared_ptr<Weights>(ptr);
     } else if(update_ == "avgperceptron") {
         WeightsAveragePerceptron * ptr = new WeightsAveragePerceptron;
         ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
         weights = shared_ptr<Weights>(ptr);
     } else if(update_ == "adagrad") {
         WeightsAdagrad * ptr = new WeightsAdagrad;
         ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
         weights = shared_ptr<Weights>(ptr);
     } else {
         THROW_ERROR("Unknown update type: " << update_);
