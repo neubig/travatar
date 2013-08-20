@@ -1,6 +1,5 @@
 include $(top_srcdir)/common.am
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
+AM_CXXFLAGS += -Wall -Weffc++ -Wextra
 
 lib_LTLIBRARIES = libmarisa.la
 

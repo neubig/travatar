@@ -1,7 +1,7 @@
 include $(top_srcdir)/common.am
 TRAVATARH = test-travatar.h test-base.h
 
-AM_CPPFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/../marisa -DPKGDATADIR='"$(pkgdatadir)"'
+AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/../marisa -DPKGDATADIR='"$(pkgdatadir)"'
 
 noinst_PROGRAMS = test-travatar
 

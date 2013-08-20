@@ -8,6 +8,7 @@
 #include <travatar/dict.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
+#include <travatar/weights-adagrad.h>
 #include <travatar/weights-average-perceptron.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
@@ -26,9 +27,20 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     // Create a weight adjuster
     shared_ptr<Weights> weights;
     if(update_ == "perceptron") {
-        weights = shared_ptr<Weights>(new WeightsPerceptron);
+        WeightsPerceptron * ptr = new WeightsPerceptron;
+        ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
+        weights = shared_ptr<Weights>(ptr);
     } else if(update_ == "avgperceptron") {
-        weights = shared_ptr<Weights>(new WeightsAveragePerceptron);
+        WeightsAveragePerceptron * ptr = new WeightsAveragePerceptron;
+        ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
+        weights = shared_ptr<Weights>(ptr);
+    } else if(update_ == "adagrad") {
+        WeightsAdagrad * ptr = new WeightsAdagrad;
+        ptr->SetLearningRate(rate_);
+        ptr->SetMarginScale(margin_scale_);
+        weights = shared_ptr<Weights>(ptr);
     } else {
         THROW_ERROR("Unknown update type: " << update_);
     }
@@ -66,37 +78,29 @@ double TuneOnline::RunTuning(SparseMap & kv) {
             // Calculate the scores
             vector<pair<double, double> > scores(nbest.size());
             vector<SparseMap*> feats(nbest.size());
+            PRINT_DEBUG("CURRENT: " << Dict::PrintFeatures(weights->GetCurrent()) << endl, 3);
             for(int i = 0; i < (int)nbest.size(); i++) {
                 total_stats->PlusEquals(*nbest[i].second);
                 scores[i].first  = (*weights) * nbest[i].first;
                 scores[i].second = total_stats->ConvertToScore();
+                PRINT_DEBUG("SCORE " << idx << "/" << i << ":\t" << scores[i].second << endl, 4);
                 feats[i] = &nbest[i].first;
                 total_stats->PlusEquals(*nbest[i].second->Times(-1));
             }
 
             // Actually adjust the weights
             weights->Adjust(scores, feats);
-            
-            // // TODO: Integrate this with Weights
-            // int oracle_id = 0, model_id = 0;
-            // for(int i = 1; i < (int)nbest.size(); i++) {
-            //     if(scores[i].first > scores[model_id].first)
-            //         model_id = i;
-            //     if(scores[i].second > scores[oracle_id].second)
-            //         oracle_id = i;
-            // }
-            // if(model_id != oracle_id) {
-            //     weights += nbest[oracle_id].first;
-            //     weights -= nbest[model_id].first;
-            // }
+            PRINT_DEBUG("AFTER:   " << Dict::PrintFeatures(weights->GetCurrent()) << endl, 3);
 
             // Re-add the stats for the current example
             const ExamplePair & expair = examp.CalculateModelHypothesis(*weights);
+            // cerr << idx << endl;
+            if(&expair == NULL || expair.second.get() == NULL) THROW_ERROR("Null example pair @ " << idx << endl);
             all_stats[idx] = expair.second;
             total_stats->PlusEquals(*expair.second);
             
         }
-        PRINT_DEBUG("Approx score after learning iter " << iter+1 << ": " << total_stats->ConvertToString() << endl, 1);
+        PRINT_DEBUG("Iter " << iter+1 << ": " << total_stats->ConvertToString() << endl, 1);
     }
 
     // Finally, update the stats with the actual weights
