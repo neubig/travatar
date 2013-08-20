@@ -78,7 +78,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
         const Sentence & ref = SafeAccess(refs_,id);
         // Add the example
         if((int)tgm.NumExamples() <= id) {
-            double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0);
+            double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());
             tgm.AddExample(
                 shared_ptr<TuningExample>(
                     new TuningExampleForest(
