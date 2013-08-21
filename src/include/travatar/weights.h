@@ -25,12 +25,14 @@ public:
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key) const {
-        SparseMap::const_iterator it = current_.find(key);
-        return (it != current_.end() ? it->second : 0.0);
+        const SparseMap & current = GetCurrent();
+        SparseMap::const_iterator it = current.find(key);
+        return (it != current.end() ? it->second : 0.0);
     }
     virtual double GetCurrent(const SparseMap::key_type & key) {
-        SparseMap::const_iterator it = current_.find(key);
-        return (it != current_.end() ? it->second : 0.0);
+        const SparseMap & current = GetCurrent();
+        SparseMap::const_iterator it = current.find(key);
+        return (it != current.end() ? it->second : 0.0);
     }
     virtual const SparseMap & GetCurrent() const {
         return current_;
@@ -42,7 +44,7 @@ public:
 
     // Get the final values of the weights
     virtual const SparseMap & GetFinal() {
-        return current_;
+        return GetCurrent();
     }
 
     // Whether to adjust weights or not. If this is false, Adjust will throw
@@ -58,6 +60,14 @@ public:
             const std::vector<std::pair<double,double> > & scores,
             const std::vector<SparseMap*> & features) {
         THROW_ERROR("Standard weights cannot be adjusted");
+    }
+
+    // The pairwise weight update rule
+    virtual void Update (
+        const SparseMap & oracle, double oracle_score, double oracle_eval,
+        const SparseMap & system, double system_score, double system_eval
+    ) {
+        THROW_ERROR("Standard weights cannot be updated");
     }
 
     // Adjust based on a single one-best list

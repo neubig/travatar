@@ -10,6 +10,7 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-adagrad.h>
 #include <travatar/weights-average-perceptron.h>
+#include <travatar/weights-online-pro.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
@@ -43,6 +44,15 @@ double TuneOnline::RunTuning(SparseMap & kv) {
         weights = shared_ptr<Weights>(ptr);
     } else {
         THROW_ERROR("Unknown update type: " << update_);
+    }
+
+    if(algorithm_ == "pro") {
+        shared_ptr<Weights> old_weights = weights;
+        WeightsOnlinePro * wop = new WeightsOnlinePro(weights);
+        wop->SetAlphaScale(examps_.size());
+        weights.reset(wop);
+    } else if(algorithm_ != "pairwise") {
+        THROW_ERROR("Unknown update algorithm for online learning");
     }
 
     // To do in random order
