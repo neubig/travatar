@@ -24,6 +24,7 @@ public:
             const std::vector<SparseMap*> & features);
 
     virtual const SparseMap & GetCurrent() const { return weights_->GetCurrent(); }
+    virtual const SparseMap & GetFinal() const { return weights_->GetFinal(); }
     virtual void SetCurrent(const SparseMap & weights) { weights_->SetCurrent(weights); }
 
 protected:
