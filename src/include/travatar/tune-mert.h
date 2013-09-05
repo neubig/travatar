@@ -62,6 +62,7 @@ public:
     // void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
 protected:
+    
 
 };
 

@@ -184,6 +184,9 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     // Set other tuning options
     tgm->SetGainThreshold(config.GetDouble("threshold"));
 
+    // If there is any shared initialization to be done, do it here
+    tgm->Init();
+
     // Build the thread pool
     ThreadPool pool(threads, threads*5);
     pool.SetDeleteTasks(false);
@@ -204,16 +207,21 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     }
     pool.Stop(true);
 
-    // Find the best result
-    SparseMap best_weights = tasks[0]->GetWeights();
-    double best_score = tasks[0]->GetScore();
-    for(int i = 1; i < runs; i++) {
-        // If the new value is better than the current best, update
-        if(tasks[i]->GetScore() > best_score) {
-            best_score = tasks[i]->GetScore();
-            best_weights = tasks[i]->GetWeights();
+    if(run_selection_ == "best") {
+        // Find the best result
+        SparseMap best_weights = tasks[0]->GetWeights();
+        double best_score = tasks[0]->GetScore();
+        for(int i = 1; i < runs; i++) {
+            // If the new value is better than the current best, update
+            if(tasks[i]->GetScore() > best_score) {
+                best_score = tasks[i]->GetScore();
+                best_weights = tasks[i]->GetWeights();
+            }
         }
-
+    } else if(run_selection_ == "mert") {
+        // Do gradient steps over the runs using MERT
+        TuneMert tm; 
+        
     }
 
     // Print result

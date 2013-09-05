@@ -83,12 +83,23 @@ LineSearchResult TuneMert::LineSearch(
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
+void TuneMert::Init() {
+    // If we have no gradients, find them from the examples
+    if(gradients_.size() == 0) {
+        SparseMap potential;
+        BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
+            examp->CountWeights(potential);
+        BOOST_FOREACH(SparseMap::value_type val, potential) {
+            SparseMap gradient;
+            gradient[val.first] = 1;
+            gradients_.push_back(gradient);
+        }
+    }
+}
+
 // Tune new weights using greedy mert until the threshold is exceeded
 double TuneMert::RunTuning(SparseMap & weights) {
-    // Find all included weights
-    SparseMap potential;
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
-        examp->CountWeights(potential);
+    // Continue
     double best_score = 0;
     PRINT_DEBUG("Starting MERT Run: " << Dict::PrintFeatures(weights) << endl, 2);
     while(true) {
@@ -96,8 +107,7 @@ double TuneMert::RunTuning(SparseMap & weights) {
         LineSearchResult best_result;
         SparseMap best_gradient;
         // Perform line search over one gradient
-        BOOST_FOREACH(SparseMap::value_type val, potential) {
-            SparseMap gradient; gradient[val.first] = 1;
+        BOOST_FOREACH(const SparseMap & gradient, gradients_) {
             LineSearchResult result = TuneMert::LineSearch(weights, gradient, examps_);
             // Redo the gain in comparison to the currently saved best score.
             // Given that ties might exist, it is safer to take the gain this way in case
@@ -116,7 +126,8 @@ double TuneMert::RunTuning(SparseMap & weights) {
     }
 
     // Normalize so that weights add to 1
-    NormalizeL1(weights);
+    if(normalize_)
+        NormalizeL1(weights);
 
     return best_score;
 }
