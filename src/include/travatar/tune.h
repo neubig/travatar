@@ -31,6 +31,9 @@ public:
     // Tune weights
     virtual double RunTuning(SparseMap & weights) = 0;
 
+    // Initialize any parameters
+    virtual void Init() { }
+
     // Find gradient range
     std::pair<double,double> FindGradientRange(
                                 const SparseMap & weights,

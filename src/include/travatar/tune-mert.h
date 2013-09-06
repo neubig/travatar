@@ -59,9 +59,14 @@ public:
     // Tune new weights using MERT
     virtual double RunTuning(SparseMap & weights);
 
+    // Initialize
+    virtual void Init();
+
     // void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
 protected:
+    std::vector<SparseMap> gradients_;
+    
 
 };
 

@@ -184,6 +184,9 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     // Set other tuning options
     tgm->SetGainThreshold(config.GetDouble("threshold"));
 
+    // If there is any shared initialization to be done, do it here
+    tgm->Init();
+
     // Build the thread pool
     ThreadPool pool(threads, threads*5);
     pool.SetDeleteTasks(false);
@@ -197,9 +200,9 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         // Randomize the weights
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
-            rw.second = rand()/(double)RAND_MAX;
+            rw.second *= rand()/(double)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
-        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, weights));
+        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, rand_weights));
         pool.Submit(tasks[i].get());
     }
     pool.Stop(true);
@@ -213,7 +216,6 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
             best_score = tasks[i]->GetScore();
             best_weights = tasks[i]->GetWeights();
         }
-
     }
 
     // Print result
