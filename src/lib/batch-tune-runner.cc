@@ -200,28 +200,22 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         // Randomize the weights
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
-            rw.second = rand()/(double)RAND_MAX;
+            rw.second *= rand()/(double)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
-        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, weights));
+        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, rand_weights));
         pool.Submit(tasks[i].get());
     }
     pool.Stop(true);
 
-    if(run_selection_ == "best") {
-        // Find the best result
-        SparseMap best_weights = tasks[0]->GetWeights();
-        double best_score = tasks[0]->GetScore();
-        for(int i = 1; i < runs; i++) {
-            // If the new value is better than the current best, update
-            if(tasks[i]->GetScore() > best_score) {
-                best_score = tasks[i]->GetScore();
-                best_weights = tasks[i]->GetWeights();
-            }
+    // Find the best result
+    SparseMap best_weights = tasks[0]->GetWeights();
+    double best_score = tasks[0]->GetScore();
+    for(int i = 1; i < runs; i++) {
+        // If the new value is better than the current best, update
+        if(tasks[i]->GetScore() > best_score) {
+            best_score = tasks[i]->GetScore();
+            best_weights = tasks[i]->GetWeights();
         }
-    } else if(run_selection_ == "mert") {
-        // Do gradient steps over the runs using MERT
-        TuneMert tm; 
-        
     }
 
     // Print result

@@ -126,8 +126,7 @@ double TuneMert::RunTuning(SparseMap & weights) {
     }
 
     // Normalize so that weights add to 1
-    if(normalize_)
-        NormalizeL1(weights);
+    NormalizeL1(weights);
 
     return best_score;
 }
