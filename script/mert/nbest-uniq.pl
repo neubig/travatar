@@ -31,6 +31,7 @@ while(<STDIN>) {
             while(my $val = <$_>) {
                 chomp $val;
                 my @arr = split(/ \|\|\| /, $val);
+                $arr[3] = join(" ", sort(split(/ /, $arr[3])));
                 my $id = "$arr[0] ||| $arr[1] ||| $arr[3]";
                 if($arr[0] != $last) {
                     $next{$id}++;
@@ -42,6 +43,7 @@ while(<STDIN>) {
         }
         for(@save) {
             my @arr = split(/ \|\|\| /);
+            $arr[3] = join(" ", sort(split(/ /, $arr[3])));
             my $id = "$arr[0] ||| $arr[1] ||| $arr[3]";
             print "$_\n" if not $curr{$id}++;
         }
