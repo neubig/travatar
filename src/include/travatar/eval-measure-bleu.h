@@ -26,6 +26,8 @@ public:
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_)); }
     BleuReport CalcBleuReport() const;
+    double GetAvgLogPrecision() const;
+    double GetLengthRatio() const;
 private:
     double smooth_;
 };
