@@ -2,8 +2,8 @@
 #include <travatar/util.h>
 #include <travatar/eval-measure-ter.h>
 #include <tr1/unordered_map>
-#include <tercalc.h>
-#include <terAlignment.h>
+#include <tercpp/tercalc.h>
+#include <tercpp/terAlignment.h>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
