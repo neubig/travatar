@@ -46,7 +46,7 @@ void TuneXeval::CalcAvgGradient(
         // Calculate the actual gradient
         const vector<ExamplePair> & nbest = examps_[i]->CalculateNbest(weights);
         for(int kprime = 0; kprime < K; kprime++)
-            d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime]; 
+            d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime];
     }
 }
 
@@ -185,7 +185,11 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     else
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");
 
-    return stats->ConvertToScore();
+    // If there is a multiplier to the gradient (i.e. -1)
+    if(mult_ != 1.0)
+        d_xeval_dw = d_xeval_dw * mult_;
+
+    return stats->ConvertToScore() * mult_;
 }
 
 // Tune new weights using the expected BLEU algorithm
@@ -219,6 +223,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         }
     // Optimize using LBFGS. Iterations are done within the library
     } else if (optimizer_ == "lbfgs") {
+        mult_ = -1;
         liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, 0.0, 1);
         vector<double> weights(dense2sparse_.size(),0.0);
         last_score = lbfgs(weights.size(), &(*weights.begin()));
@@ -228,5 +233,5 @@ double TuneXeval::RunTuning(SparseMap & kv) {
                 kv[dense2sparse_[i]] = weights[i];
     }
 
-    return last_score;
+    return last_score * mult_;
 }
