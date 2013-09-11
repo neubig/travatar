@@ -10,6 +10,7 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
 #include <travatar/tune-greedy-mert.h>
+#include <travatar/tune-xeval.h>
 #include <travatar/tune-online.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
@@ -93,8 +94,9 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
 // Perform tuning
 void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     
-    // Save number of threads
+    // Save number of threads and runs
     int threads = config.GetInt("threads");
+    int runs = config.GetInt("restarts")+1;
     
     // Chose the tuning method
     shared_ptr<Tune> tgm;
@@ -104,6 +106,9 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         tgm.reset(new TuneGreedyMert);
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
         threads = 1; // Threading is done inside greedy mert
+    } else if(config.GetString("algorithm") == "xeval") {
+        tgm.reset(new TuneXeval);
+        runs = 1; // random restarts make no sense for xeval
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
@@ -192,7 +197,6 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     pool.SetDeleteTasks(false);
     
     // Set up tasks for each amount of weights
-    int runs = config.GetInt("restarts")+1;
     vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
     tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tgm, weights));
     pool.Submit(tasks[0].get());

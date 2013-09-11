@@ -3,6 +3,7 @@
 
 #include "test-base.h"
 #include <travatar/tune-mert.h>
+#include <travatar/tune-xeval.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
@@ -284,6 +285,16 @@ public:
         return CheckVector(act_hull,exp_hull);
     }
 
+    int TestTuneXeval() {
+        TuneXeval xeval;
+        xeval.SetIters(100);
+        xeval.SetExamples(examp_set);
+        SparseMap weights;
+        xeval.RunTuning(weights);
+        Dict::PrintFeatures(weights);
+        return 1;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestCalculatePotentialGain()" << endl; if(TestCalculatePotentialGain()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -294,6 +305,7 @@ public:
         done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
         // done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestTuneXeval()" << endl; if(TestTuneXeval()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
