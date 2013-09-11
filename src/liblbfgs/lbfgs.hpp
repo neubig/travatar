@@ -7,6 +7,9 @@
 #define __LIBLBFGS__LBFGS__HPP__ 1
 
 #include <climits>
+#include <cmath>
+#include <cstddef>
+#include <limits>
 #include <vector>
 
 #include <liblbfgs/lbfgs.h>
@@ -23,9 +26,9 @@ namespace liblbfgs
     typedef ptrdiff_t difference_type;
     
     LBFGS(const Function& function,
-	  const size_type max_iterations=0,
-	  const lbfgsfloatval_t l1 = 0.0,
-	  const size_type l1_start = 0)
+          const size_type max_iterations=0,
+          const lbfgsfloatval_t l1 = 0.0,
+          const size_type l1_start = 0)
       : function_(function)
     {
       lbfgs_parameter_init(&param_);
@@ -33,10 +36,10 @@ namespace liblbfgs
       param_.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
       
       if (l1 > 0.0) {
-	param_.orthantwise_c = l1;
-	param_.orthantwise_start = l1_start;
+        param_.orthantwise_c = l1;
+        param_.orthantwise_start = l1_start;
       } else
-	param_.orthantwise_c = 0.0;
+        param_.orthantwise_c = 0.0;
       
       param_.max_iterations = max_iterations;
     }
@@ -61,10 +64,10 @@ namespace liblbfgs
   private:
     
     static lbfgsfloatval_t _evaluate(void *instance,
-				     const lbfgsfloatval_t *x,
-				     lbfgsfloatval_t *g,
-				     const int n,
-				     const lbfgsfloatval_t step)
+                                     const lbfgsfloatval_t *x,
+                                     lbfgsfloatval_t *g,
+                                     const int n,
+                                     const lbfgsfloatval_t step)
     {
       LBFGS<Function>* obj = reinterpret_cast<LBFGS<Function>*>(instance);
       
@@ -72,17 +75,17 @@ namespace liblbfgs
       
       lbfgsfloatval_t result_orthantwise = result;
       if (obj->param_.orthantwise_c > 0.0) {
-	lbfgsfloatval_t l1 = 0.0;
-	for (difference_type i = obj->param_.orthantwise_start; i != n; ++ i)
-	  l1 += std::fabs(x[i]);
-	
-	result_orthantwise += obj->param_.orthantwise_c * l1;
+        lbfgsfloatval_t l1 = 0.0;
+        for (difference_type i = obj->param_.orthantwise_start; i != n; ++ i)
+          l1 += std::fabs(x[i]);
+        
+        result_orthantwise += obj->param_.orthantwise_c * l1;
       }
       
       // keep the optimum.... this is simply a workaround...
       if (result_orthantwise < obj->objective_opt_) {
-	obj->objective_opt_ = result_orthantwise;
-	std::copy(x, x + n, obj->x_opt_.begin());
+        obj->objective_opt_ = result_orthantwise;
+        std::copy(x, x + n, obj->x_opt_.begin());
       }
       
       return result;

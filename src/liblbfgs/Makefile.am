@@ -13,18 +13,3 @@ noinst_HEADERS = \
 
 liblbfgs_la_SOURCES = \
 	lbfgs.c
-
-liblbfgs_la_LDFLAGS = -version-info $(CICADA_LTVERSION)
-
-noinst_DATA = .gitignore
-
-.gitignore: Makefile.am
-	cat $(top_builddir)/.gitignore > .gitignore
-	echo "*.model" >> .gitignore
-	for bin in $(PROGRAMS); do \
-	  echo $$bin >> .gitignore; \
-	done; \
-	for bin in $(SCRIPTS); do \
-	  echo $$bin >> .gitignore; \
-	done
-

@@ -24,14 +24,14 @@ class TuneXeval : public Tune {
 
 public:
 
-    TuneXeval() : iters_(100), iter_(0), optimizer_("sgd") { }
+    TuneXeval() : iters_(100), iter_(0), optimizer_("lbfgs") { }
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
 
     // Calculate the gradient for particular weights
     // The return is the expectation of the evaluation
-    double CalcGradient(const SparseMap & weights, SparseMap & d_xeval_dw);
+    double CalcGradient(const SparseMap & weights, SparseMap & d_xeval_dw) const;
 
     // Calculate the gradient for averaged measures based on expectations, probabilities
     void CalcAvgGradient(
@@ -40,7 +40,7 @@ public:
             const std::vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
-            SparseMap & d_xeval_dw);
+            SparseMap & d_xeval_dw) const;
     
     // Calculate the gradient for BLEU based on expectations, probabilities
     void CalcBleuGradient(
@@ -49,13 +49,22 @@ public:
             const std::vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
-            SparseMap & d_xeval_dw);
+            SparseMap & d_xeval_dw) const;
+
+    // For tuning with LBFGS
+    double operator()(size_t n, const double * x, double * g) const;
+
+    // Initialize
+    virtual void Init();
 
     void SetIters(int iters) { iters_ = iters; }
 
 protected:
-    int iters_, iter_;
+    int iters_;
+    mutable int iter_;
     std::string optimizer_;
+    std::vector<int> dense2sparse_;
+    SparseIntMap sparse2dense_;
     
 
 };

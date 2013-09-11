@@ -1,5 +1,6 @@
 #include <cfloat>
 #include <map>
+#include <liblbfgs/lbfgs.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <travatar/tune-xeval.h>
@@ -24,7 +25,7 @@ void TuneXeval::CalcAvgGradient(
             const vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
-            SparseMap & d_xeval_dw) {
+            SparseMap & d_xeval_dw) const {
     EvalStatsAverage * stats_avg = (EvalStatsAverage*)stats.get();
     int N = p_i_k.size();
     // Calculate the stats for each example
@@ -55,7 +56,7 @@ void TuneXeval::CalcBleuGradient(
             const vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
-            SparseMap & d_xeval_dw) {
+            SparseMap & d_xeval_dw) const {
     // Overall stats
     EvalStatsBleu * stats_bleu = (EvalStatsBleu*)stats.get();
     int N = p_i_k.size();
@@ -106,7 +107,36 @@ void TuneXeval::CalcBleuGradient(
     }
 }
 
-double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) {
+void TuneXeval::Init() {
+    // If we have no sparse-to-dense map
+    if(sparse2dense_.size() == 0) {
+        SparseMap potential;
+        BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
+            examp->CountWeights(potential);
+        BOOST_FOREACH(SparseMap::value_type val, potential) {
+            sparse2dense_[val.first] = dense2sparse_.size();
+            dense2sparse_.push_back(val.first);
+        }
+    }
+}
+
+double TuneXeval::operator()(size_t n, const double * x, double * g) const {
+    SparseMap kv, d_xeval_dw;
+    for(size_t i = 0; i < n; i++) {
+        kv[dense2sparse_[i]] = x[i];
+        g[i] = 0;
+    }
+    double ret = CalcGradient(kv, d_xeval_dw);
+    BOOST_FOREACH(SparseMap::value_type val, d_xeval_dw) {
+        SparseIntMap::const_iterator it = sparse2dense_.find(val.first);
+        if(it == sparse2dense_.end())
+            THROW_ERROR("Could not find feature in sparse-to-dense mapping");
+        g[it->second] = val.second;
+    }
+    return ret;
+}
+
+double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) const {
 
     iter_++;
 
@@ -189,8 +219,13 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         }
     // Optimize using LBFGS. Iterations are done within the library
     } else if (optimizer_ == "lbfgs") {
-        // TODO: implement this
-        THROW_ERROR("LBFGS not implemented yet");
+        liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, 0.0, 1);
+        vector<double> weights(dense2sparse_.size(),0.0);
+        last_score = lbfgs(weights.size(), &(*weights.begin()));
+        kv = SparseMap();
+        for(int i = 0; i < (int)dense2sparse_.size(); i++)
+            if(weights[i])
+                kv[dense2sparse_[i]] = weights[i];
     }
 
     return last_score;
