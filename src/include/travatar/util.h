@@ -407,6 +407,22 @@ inline double AddLogProbs(const std::vector<double> & probs) {
     return log(norm)+myMax;
 }
 
+inline std::vector<double> Softmax(const std::vector<double> & probs) {
+    if(probs.size() == 0)
+        THROW_ERROR("Cannot add probabilities of size zero");
+    double myMax = probs[0], norm = 0;
+    for(unsigned i = 1; i < probs.size(); i++)
+        myMax = std::max(myMax, probs[i]);
+    std::vector<double> ret(probs.size());
+    for(unsigned i = 0; i < probs.size(); i++) {
+        ret[i] = exp(probs[i]-myMax);
+        norm += ret[i];
+    }
+    for(int i = 0; i < (int)ret.size(); i++)
+        ret[i] /= norm;
+    return ret;
+}
+
 }  // end namespace
 
 #endif

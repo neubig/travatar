@@ -105,8 +105,10 @@ foreach $iter (1 .. $MAX_ITERS) {
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -log $prev.mert.log $prev.ini > $next.ini") or die "couldn't make init opt";
     } elsif($MERT_SOLVER eq "batch-tune") {
         if($CAND_TYPE eq "nbest") {
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $WORKING_DIR/run$iter.nbest -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
-            my $nbests = join(",", map { "$WORKING_DIR/run$_.nbest" } (1 .. $iter));
+            my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
+            safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $WORKING_DIR/run$iter.uniq -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
+            $nbests = join(",", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter));
             my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune $TUNE_OPTIONS -threads $THREADS -nbest $nbests -stat_in $stats -eval \"$EVAL\" -weight_in $prev.weights $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif($CAND_TYPE eq "forest") {

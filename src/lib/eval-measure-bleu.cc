@@ -81,10 +81,31 @@ shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line) {
     return ret;
 }
 
+double EvalStatsBleu::GetAvgLogPrecision() const {
+    int ngram_order = (vals_.size()-1)/2;
+    double log_prec = 0.0;
+    // Calculate the precision for each order
+    for (int i=0; i < ngram_order; i++) {
+        double smooth = (i == 0 ? 0 : smooth_);
+        double num = (vals_[2*i]+smooth);
+        double denom = (vals_[2*i+1]+smooth);
+        double prec = (denom ? num/denom : 0);
+        log_prec += (prec ? log(prec) : -DBL_MAX);
+    }
+    log_prec /= ngram_order;
+    return log_prec;
+}
+
+double EvalStatsBleu::GetLengthRatio() const {
+    double ref_len = vals_[vals_.size()-1];
+    double sys_len = vals_[1];
+    return sys_len/ref_len;
+}
+
 BleuReport EvalStatsBleu::CalcBleuReport() const {
     BleuReport report;
-    int ngram_order = (vals_.size()-1)/2;
     double log_bleu = 0.0;
+    int ngram_order = (vals_.size()-1)/2;
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
         double smooth = (i == 0 ? 0 : smooth_);

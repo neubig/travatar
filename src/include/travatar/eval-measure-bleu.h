@@ -26,6 +26,12 @@ public:
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_)); }
     BleuReport CalcBleuReport() const;
+    double GetAvgLogPrecision() const;
+    double GetLengthRatio() const;
+    int GetNgramOrder() const { return (vals_.size()-1)/2; }
+    double GetMatch(int n) const { return vals_[2*n]+smooth_; }
+    double GetCount(int n) const { return vals_[2*n+1]+smooth_; }
+    double GetRefLen() const { return vals_[vals_.size() - 1]; }
 private:
     double smooth_;
 };
