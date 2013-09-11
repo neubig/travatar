@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <travatar/lookup-table.h>
-#include <marisa.h>
+#include <marisa/marisa.h>
 
 namespace travatar {
 

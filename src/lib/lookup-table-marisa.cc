@@ -2,7 +2,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <sstream>
-#include <marisa.h>
+#include <marisa/marisa.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>

@@ -67,7 +67,7 @@ void TuneXeval::CalcBleuGradient(
     double eomR = exp(omR), e10komR = std::min(DBL_MAX,exp(10000*omR));
     double B = (eomR-1)/(e10komR+1) + 1;
     // This is used in the calculation of dB/log(p_{i,k})
-    double d_B_logpik_Rpart = (eomR/(e10komR+1)-10000*e10komR*(eomR-1)/(e10komR+1)/(e10komR+1)) * -R;
+    double d_B_logpik_Rpart = (eomR/(e10komR+1)-e10komR/(e10komR+1)/(e10komR+1)*10000*(eomR-1)) * -R;
     PRINT_DEBUG("P=" << P << ", B=" << B << ", R=" << R << ", Rpart=" << d_B_logpik_Rpart << ", e10komR="<<e10komR<<", eomR=" << eomR << endl, 2);
 
     // Calculate the stats for each example
