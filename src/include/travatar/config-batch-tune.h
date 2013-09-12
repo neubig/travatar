@@ -28,17 +28,19 @@ public:
 
         AddConfigEntry("nbest", "", "The pointer to a file containing the n-best list of system output");
         AddConfigEntry("forest", "", "The pointer to a file containing translation forests");
-        AddConfigEntry("debug", "0", "What level of debugging output to print");
-        AddConfigEntry("threads", "1", "The number of threads to use");
-        AddConfigEntry("threshold", "1e-6", "Terminate when gains are less than this");
-        AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
-        AddConfigEntry("update", "perceptron", "Which online update to use");
-        AddConfigEntry("rate", "1", "The learning rate");
+        AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
+        AddConfigEntry("l1", "0.0", "Coefficient for L1 regularization");
+        AddConfigEntry("l2", "0.0", "Coefficient for L2 regularization");
         AddConfigEntry("margin-scale", "0", "The size of the margin");
+        AddConfigEntry("rate", "1", "The learning rate");
         AddConfigEntry("restarts", "20", "The number of random tuning restarts");
         AddConfigEntry("stat_in", "", "Files containing pre-computed statistics for each n-best list");
         AddConfigEntry("stat_out", "", "Set this option to pre-compute statistics for an n-best list");
+        AddConfigEntry("threads", "1", "The number of threads to use");
+        AddConfigEntry("threshold", "1e-6", "Terminate when gains are less than this");
+        AddConfigEntry("update", "perceptron", "Which online update to use");
         AddConfigEntry("weight_in", "", "File of initial weights");
         AddConfigEntry("weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
 

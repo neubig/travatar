@@ -24,7 +24,9 @@ class TuneXeval : public Tune {
 
 public:
 
-    TuneXeval() : iters_(100), iter_(0), mult_(1.0), optimizer_("lbfgs") { }
+    TuneXeval() : iters_(100), iter_(0), mult_(1.0),
+                  l1_coeff_(0.0), l2_coeff_(0.0),
+                  optimizer_("lbfgs") { }
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
@@ -58,11 +60,14 @@ public:
     virtual void Init();
 
     void SetIters(int iters) { iters_ = iters; }
+    void SetL1Coefficient(double l1_coeff) { l1_coeff_ = l1_coeff; }
+    void SetL2Coefficient(double l2_coeff) { l2_coeff_ = l2_coeff; }
 
 protected:
     int iters_;
     mutable int iter_;
     double mult_;
+    double l1_coeff_, l2_coeff_;
     std::string optimizer_;
     std::vector<int> dense2sparse_;
     SparseIntMap sparse2dense_;
