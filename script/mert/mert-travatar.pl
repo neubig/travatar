@@ -17,7 +17,7 @@ my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
 my $IN_FORMAT = "penn"; # The format of the input
-my $NBEST = 100;
+my $NBEST = 200;
 my $THREADS = 1; # The number of threads to use
 GetOptions(
     # Necessary
