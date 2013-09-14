@@ -15,6 +15,11 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
     vector<string> ret;
     ret.push_back(str);
 
+    lm::ngram::State null_state(lm_->NullContextState()), out_state;
+    const lm::ngram::Vocabulary &vocab = lm_->GetVocabulary(); 
+    std::cout << str << " " << lm_->Score(null_state, vocab.Index(str), out_state) << '\n';
+
+    
     return ret;
 }
 
