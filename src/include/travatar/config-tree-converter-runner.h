@@ -28,6 +28,8 @@ public:
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json/egret)");
         AddConfigEntry("output_format", "penn", "The format of the output (penn/json/egret/word)");
         AddConfigEntry("split", "", "A regular expression to split words in the tree (e.g. \"-\")");
+        AddConfigEntry("compoundsplit", "none", "A language model file for use in compound splitting");
+        AddConfigEntry("compoundsplit_filler", "", "Optional fillers in regular expression format for compound splitting");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right/cky)");
         AddConfigEntry("flatten", "false", "Whether to flatten unary productions");
         AddConfigEntry("debug", "0", "How much debug output to produce");

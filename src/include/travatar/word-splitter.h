@@ -19,27 +19,24 @@ class WordSplitter : public GraphTransformer {
 
 public:
 
-    WordSplitter(const std::string & profile = "-") : profile_(profile) {
+    WordSplitter() {
         ignore_.insert(Dict::WID("-LRB-"));
         ignore_.insert(Dict::WID("-RRB-"));
         ignore_.insert(Dict::WID("-lrb-"));
         ignore_.insert(Dict::WID("-rrb-"));
     }
+
     virtual ~WordSplitter() { }
 
     // Split words
     virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
-    // Split a string with a regex delimiter, and include the delimiter in the
-    // result. The optional "pad" variable adds a padding to each side of the
-    // delimiter to indicate that it should be re-attached
-    std::vector<std::string> RegexSplit(const std::string & str,
-                                        const std::string & pad = "") const;
+    // Split a string
+    virtual std::vector<std::string> StringSplit(const std::string & str,
+						 const std::string & pad = "") const = 0;
 
 protected:
-    boost::regex profile_;
     std::set<WordId> ignore_;
-
 };
 
 }

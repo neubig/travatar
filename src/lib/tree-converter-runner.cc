@@ -7,7 +7,8 @@
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
 #include <travatar/unary-flattener.h>
-#include <travatar/word-splitter.h>
+#include <travatar/word-splitter-compound.h>
+#include <travatar/word-splitter-regex.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
@@ -50,7 +51,13 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     // Create the splitter
     scoped_ptr<GraphTransformer> splitter;
     if(config.GetString("split").size() != 0) {
-        splitter.reset(new WordSplitter(config.GetString("split")));
+        splitter.reset(new WordSplitterRegex(config.GetString("split")));
+    }
+
+    // Create the compound splitter
+    scoped_ptr<GraphTransformer> compoundsplitter;
+    if(config.GetString("compoundsplit").size() != 0) {
+        compoundsplitter.reset(new WordSplitterCompound(config.GetString("compoundsplit"),config.GetString("compoundsplit_filler")));
     }
 
     // Create the binarizer
@@ -90,9 +97,13 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         shared_ptr<HyperGraph> src_graph(tree_in->ReadTree(*src_in));
         if(src_graph.get() == NULL) break;
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
+
         // Splitter if necessary
         if(splitter.get() != NULL)
             src_graph.reset(splitter->TransformGraph(*src_graph));
+        // Compound Splitter if necessary
+        if(compoundsplitter.get() != NULL)
+            src_graph.reset(compoundsplitter->TransformGraph(*src_graph));
         // Binarizer if necessary
         if(binarizer.get() != NULL)
             src_graph.reset(binarizer->TransformGraph(*src_graph));
