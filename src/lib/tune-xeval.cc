@@ -176,20 +176,34 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
         stats->PlusEquals(*stats_i[i]);
         PRINT_DEBUG("Iter " << iter_ << " "<<i<<": F=" << p_i_k[i][0] << " S=" << stats_i[i]->ConvertToString() << endl, 2);
     }
-    PRINT_DEBUG("Iter " << iter_ << " Xeval: " << stats->ConvertToString() << endl, 1);
     
-    if(first_stats->GetIdString() == "BLEU")
+    if(first_stats->GetIdString() == "BLEU") {
         CalcBleuGradient(p_i_k, stats_i_k, stats_i, stats, *weights, d_xeval_dw);
-    else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES")
+    } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES") {
         CalcAvgGradient(p_i_k, stats_i_k, stats_i, stats, *weights, d_xeval_dw);
-    else
+    } else {
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");
+    }
+
+    double score = stats->ConvertToScore();
+
+    // Perform L2 regularization if necessary
+    if(l2_coeff_ != 0.0) {
+        BOOST_FOREACH(SparseMap::value_type val, weights->GetCurrent()) {
+            if(val.second != 0.0) {
+                score -= l2_coeff_*val.second*val.second;
+                d_xeval_dw[val.first] -= 2 * l2_coeff_ * val.second;
+            }
+        }
+    }
 
     // If there is a multiplier to the gradient (i.e. -1)
     if(mult_ != 1.0)
         d_xeval_dw = d_xeval_dw * mult_;
 
-    return stats->ConvertToScore() * mult_;
+    PRINT_DEBUG("Iter " << iter_ << " Xeval: " << score << " @ " << stats->ConvertToString() << endl, 1);
+
+    return score * mult_;
 }
 
 // Tune new weights using the expected BLEU algorithm
@@ -210,6 +224,8 @@ double TuneXeval::RunTuning(SparseMap & kv) {
 
     // Do iterations of SGD learning
     if(optimizer_ == "sgd") {
+        if(l1_coeff_ != 0.0)
+            THROW_ERROR("L1 regularization and SGD are not compatible yet.");
         double step_size_ = 1.0;
         for(int iter = 0; iter < iters_; iter++) {
             // Calculate the gradient and score
@@ -224,7 +240,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
     // Optimize using LBFGS. Iterations are done within the library
     } else if (optimizer_ == "lbfgs") {
         mult_ = -1;
-        liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, 0.0, 1);
+        liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
         vector<double> weights(dense2sparse_.size(),0.0);
         last_score = lbfgs(weights.size(), &(*weights.begin()));
         kv = SparseMap();

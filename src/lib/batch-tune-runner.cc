@@ -107,7 +107,10 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
         threads = 1; // Threading is done inside greedy mert
     } else if(config.GetString("algorithm") == "xeval") {
-        tgm.reset(new TuneXeval);
+        TuneXeval * tx = new TuneXeval;
+        tx->SetL1Coefficient(config.GetDouble("l1"));
+        tx->SetL2Coefficient(config.GetDouble("l2"));
+        tgm.reset(tx);
         runs = 1; // random restarts make no sense for xeval
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
