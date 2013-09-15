@@ -57,7 +57,10 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     // Create the compound splitter
     scoped_ptr<GraphTransformer> compoundsplitter;
     if(config.GetString("compoundsplit").size() != 0) {
-        compoundsplitter.reset(new WordSplitterCompound(config.GetString("compoundsplit"),config.GetString("compoundsplit_filler")));
+      compoundsplitter.reset(new WordSplitterCompound(config.GetString("compoundsplit"),
+						      config.GetInt("compoundsplit_minchar"),
+						      config.GetDouble("compoundsplit_threshold"),
+						      config.GetString("compoundsplit_filler")));
     }
 
     // Create the binarizer
