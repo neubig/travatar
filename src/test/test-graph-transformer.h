@@ -8,7 +8,8 @@
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
 #include <travatar/unary-flattener.h>
-#include <travatar/word-splitter.h>
+#include <travatar/word-splitter-regex.h>
+#include <travatar/word-splitter-compound.h>
 #include <boost/shared_ptr.hpp>
 
 using namespace boost;
@@ -198,7 +199,7 @@ public:
     }
 
     int TestWordSplit() {
-        WordSplitter splitter("(\\-+|\\\\/)");
+        WordSplitterRegex splitter("(\\-+|\\\\/)");
         istringstream iss("(A x\\/y)");
         boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
         boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
@@ -208,7 +209,7 @@ public:
         return CheckEqual(exp_str, act_str);
     }
     int TestWordSplitConnected() {
-        WordSplitter splitter;
+        WordSplitterRegex splitter;
         istringstream iss("(A x--y)");
         boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
         boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
@@ -218,7 +219,7 @@ public:
         return CheckEqual(exp_str, act_str);
     }
     int TestWordSplitInitFinal() {
-        WordSplitter splitter;
+        WordSplitterRegex splitter;
         istringstream iss("(A -x-)");
         boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
         boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
@@ -228,7 +229,7 @@ public:
         return CheckEqual(exp_str, act_str);
     }
     int TestWordSplitSingle() {
-        WordSplitter splitter("(a|b)");
+        WordSplitterRegex splitter("(a|b)");
         istringstream iss("(A a)");
         boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
         boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
@@ -237,6 +238,91 @@ public:
         string exp_str = "(A a)", act_str = oss.str();
         return CheckEqual(exp_str, act_str);
     }
+    int TestCompoundWordSplit() {
+
+        string file_name = "/tmp/test-compoundsplit.arpa";
+	ofstream arpa_out(file_name.c_str());
+        arpa_out << ""
+"\\data\\\n"
+"ngram 1=7\n"
+"ngram 2=8\n"
+"\n"
+"\\1-grams:\n"
+"-0.6368221	</s>\n"
+"-99	<s>	-0.30103\n"
+"-0.6368221	auto	-0.4771213\n"
+"-0.6368221	fahrer	-0.30103\n"
+"-0.6368221	autobahn	-0.30103\n"
+"-0.8129134	autofahrer	-0.30103\n"
+"-0.8129134	bahn	-0.30103\n"
+"\n"
+"\\2-grams:\n"
+"-0.4372497	<s> auto\n"
+"-0.4855544	<s> bahn\n"
+"-0.1286666	auto fahrer\n"
+"-0.1286666	auto autobahn\n"
+"-0.4372497	fahrer </s>\n"
+"-0.4855544	fahrer autofahrer\n"
+"-0.2108534	autofahrer </s>\n"
+"-0.2108534	bahn auto" 
+"\n"
+"\\end\\\n" << endl;
+        arpa_out.close();
+
+	string filler = "";
+        WordSplitterCompound splitter(file_name,1.0,3,filler);
+        istringstream iss("(s (nn autofahrer) (nn autobahn))");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(s (nn (nn auto) (nn fahrer)) (nn autobahn))", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
+
+    int TestCompoundWordSplitFiller() {
+
+        string file_name = "/tmp/test-compoundsplit2.arpa";
+	ofstream arpa_out(file_name.c_str());
+        arpa_out << ""
+"\\data\\\n"
+"ngram 1=7\n"
+"ngram 2=8\n"
+"\n"
+"\\1-grams:\n"
+"-0.6368221	</s>\n"
+"-99	<s>	-0.30103\n"
+"-0.6368221	jahr	-0.4771213\n"
+"-0.6368221	zeit	-0.30103\n"
+"-0.6368221	promotion	-0.30103\n"
+"-0.8129134	jahreszeit	-0.30103\n"
+"-0.8129134	promotionzeit	-0.30103\n"
+"\n"
+"\\2-grams:\n"
+"-0.4372497	<s> jahr\n"
+"-0.4855544	<s> promotionszeit\n"
+"-0.1286666	jahr zeit\n"
+"-0.1286666	jahr promotion\n"
+"-0.4372497	zeit </s>\n"
+"-0.4855544	zeit jahreszeit\n"
+"-0.2108534	jahreszeit </s>\n"
+"-0.2108534	promotionszeit jahr" 
+"\n"
+"\\end\\\n" << endl;
+        arpa_out.close();
+
+	string filler = "s:es";
+        WordSplitterCompound splitter(file_name,1.0,3,filler);
+        istringstream iss("(s (nn promotionszeit) (nn jahreszeit))");
+        boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
+        boost::scoped_ptr<HyperGraph> act_graph(splitter.TransformGraph(*un_graph));
+        ostringstream oss;
+        tree_io_.WriteTree(*act_graph, oss);
+        string exp_str = "(s (nn (nn promotion) (nn zeit)) (nn (nn jahr) (nn zeit)))", act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
+
+
 
     bool RunTest() {
         int done = 0, succeeded = 0;
@@ -247,6 +333,8 @@ public:
         done++; cout << "TestWordSplitConnected()" << endl; if(TestWordSplitConnected()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWordSplitInitFinal()" << endl; if(TestWordSplitInitFinal()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWordSplitSingle()" << endl; if(TestWordSplitSingle()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCompoundWordSplit()" << endl; if(TestCompoundWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCompoundWordSplitFiller()" << endl; if(TestCompoundWordSplitFiller()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
