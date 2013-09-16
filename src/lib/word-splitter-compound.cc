@@ -18,6 +18,9 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
     lm::ngram::State null_state(lm_->NullContextState()), out_state;
     const lm::ngram::Vocabulary &vocab = lm_->GetVocabulary(); 
     float unigram_score =  lm_->Score(null_state, vocab.Index(str), out_state);
+    if (vocab.Index(str) == 0){
+      unigram_score = -99; // ensure unigram score of unknown word is extremely low
+    }
 
     // Try to split if unigram score is low or if is an OOV word (and if word satisfies length restriction)
     if ((str.length() > 2*min_char_) && ((unigram_score < logprob_threshold_) || (vocab.Index(str) == 0))){
