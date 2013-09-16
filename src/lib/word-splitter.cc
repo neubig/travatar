@@ -9,24 +9,6 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-vector<string> WordSplitter::RegexSplit(const std::string & str,
-                                        const std::string & pad) const {
-    boost::sregex_iterator i(str.begin(), str.end(), profile_);
-    boost::sregex_iterator j;
-    int pos = 0;
-    vector<string> ret;
-    for(; i != j; ++i) {
-        if(i->position() != pos)
-            ret.push_back(str.substr(pos, i->position()-pos));
-        string str = i->str();
-        ret.push_back(pad+str+pad);
-        pos = i->position() + str.length();
-    }
-    if(pos != (int)str.size())
-        ret.push_back(str.substr(pos));
-    return ret;
-}
-
 // Binarize the graph to the right
 HyperGraph * WordSplitter::TransformGraph(const HyperGraph & hg) const {
     // First copy the graph
@@ -41,7 +23,7 @@ HyperGraph * WordSplitter::TransformGraph(const HyperGraph & hg) const {
         if(ignore_.find(wid) != ignore_.end())
             new_words.push_back(old_word);
         else
-            new_words = RegexSplit(old_word);
+            new_words = StringSplit(old_word);
         BOOST_FOREACH(const std::string & word, new_words) {
             ids[i].push_back(j++);
             new_wids.push_back(Dict::WID(word));
