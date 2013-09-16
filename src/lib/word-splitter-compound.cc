@@ -13,6 +13,7 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
 						const std::string & pad) const {
     vector<string> ret;
     ret.push_back(str);
+    bool splitted = false;
 
     lm::ngram::State null_state(lm_->NullContextState()), out_state;
     const lm::ngram::Vocabulary &vocab = lm_->GetVocabulary(); 
@@ -48,7 +49,7 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
 		  ret.clear();
 		  ret.push_back(subword1);
 		  ret.push_back(subword2);
-		  (*stat_).splits += 1;
+		  splitted = true;
 		}
 	      }
 	    }
@@ -57,6 +58,9 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
       }
 
       (*stat_).candidates += 1;
+      if (splitted)
+	(*stat_).splits += 1;
+
     }
 
     (*stat_).words += 1;
