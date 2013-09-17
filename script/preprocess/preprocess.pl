@@ -70,6 +70,8 @@ my $STANFORD_SEG_DIR;
 my $STANFORD_POS_DIR;
 my $STANFORD_JARS;
 my $EGRET_DIR;
+my $EGRET_SRC_MODEL;
+my $EGRET_TRG_MODEL;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
 my $JA_EGRET; # Whether to use egret for Japanese parsing
 my $SPLIT_WORDS_SRC;
@@ -113,7 +115,10 @@ GetOptions(
     "eda-dir=s" => \$EDA_DIR,
     "eda-vocab=s" => \$EDA_VOCAB,
     "eda-weight=s" => \$EDA_WEIGHT,
+    "egret-dir=s" => \$EGRET_DIR,
     "egret-forest-opt=s" => \$EGRET_FOREST_OPT,
+    "egret-src-model=s" => \$EGRET_SRC_MODEL,
+    "egret-trg-model=s" => \$EGRET_TRG_MODEL,
     "forest-src" => \$FOREST_SRC,
     "forest-trg" => \$FOREST_TRG,
     "giza-dir=s" => \$GIZA_DIR,
@@ -210,13 +215,16 @@ if($CLEAN_LEN == 0) {
 sub run_tree_parsing {
     my $lang = shift;
     my $split_words = shift;
+    my $is_src = shift;
+    my $EGRET_MODEL = ($is_src ? $EGRET_SRC_MODEL : $EGRET_TRG_MODEL);
     if($lang =~ /^(en|zh)$/) {
         if($lang eq "en") {
             # EN Parsing with Stanford Parser
             run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz INFILE 2> OUTFILE.log > OUTFILE");
     
             # EN Parsing with Egret
-            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/eng_grammar 2> OUTFILE.log > OUTFILE");
+            $EGRET_MODEL = "$EGRET_DIR/eng_grammar" if not $EGRET_MODEL;
+            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
         } else {
 
             # ZH Convert to GB encoding, same as the penn treebank
@@ -226,7 +234,8 @@ sub run_tree_parsing {
             run_parallel("$PREF/cleangb", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tLPP \"edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams\" -chineseFactored -encoding GB18030 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz INFILE 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
     
             # ZH Parsing with Egret
-            run_parallel("$PREF/cleangb", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_DIR/chn_grammar 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
+            $EGRET_MODEL = "$EGRET_DIR/chn_grammar" if not $EGRET_MODEL;
+            run_parallel("$PREF/cleangb", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
         }
     
         # Combine Stanford and Egret (for now this is not parallel)
@@ -244,8 +253,9 @@ sub run_tree_parsing {
         run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
         run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
         if($JA_EGRET) {
+            $EGRET_MODEL = "$EGRET_DIR/jpn_grammar" if not $EGRET_MODEL;
             run_parallel("$PREF/eda", "$PREF/edacfg", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
-            run_parallel("$PREF/clean", "$PREF/egret", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -data=$EGRET_DIR/jpn_grammar 2> OUTFILE.log > OUTFILE");
+            run_parallel("$PREF/clean", "$PREF/egret", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
             # Combine Eda and Egret (for now this is not parallel)
             -e "$PREF/tree" or mkdir "$PREF/tree";
             foreach my $i ("", map{".$_"} @suffixes) {
@@ -272,8 +282,8 @@ sub run_tree_parsing {
     run_parallel("$PREF/tree", "$PREF/treelow", $lang, "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
     run_parallel("$PREF/treelow", "$PREF/low", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
 }
-run_tree_parsing($SRC, $SPLIT_WORDS_SRC);
-run_tree_parsing($TRG, $SPLIT_WORDS_TRG);
+run_tree_parsing($SRC, $SPLIT_WORDS_SRC, 1);
+run_tree_parsing($TRG, $SPLIT_WORDS_TRG, 0);
 
 ###### Forest Parsing ######
 
