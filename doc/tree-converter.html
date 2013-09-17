@@ -1,0 +1,94 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Travatar - Tree Transformer</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="preprocessing.html">Preprocessing</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+<li><a href="tree-converter.html">Tree Conversion</a></li>
+</ul>
+
+<p>Translating</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+<li><a href="evaluation.html">Evaluation</a></li>
+</ul>
+
+<p>Other</p>
+
+<ul>
+<li><a href="links.html">Links/ Acknowledgements</a></li>
+</ul>
+
+
+</div>
+<div id="main">
+
+<h1>Tree Converter</h1>
+
+<p>
+Travatar comes with a program <tt>tree-converter</tt> with the following options. More information about some of the functionality is included below.
+</p>
+
+<h2>Options</h2>
+
+<pre>
+ -input_format 	The format of the input (penn/json/egret)
+ -output_format 	The format of the output (penn/json/egret/word)
+ -split 	A regular expression to split words in the tree (e.g. "-")
+ -compoundsplit 	The language model file for use in compound splitting
+ -compoundsplit_filler 	Optional fillers for compound splitting, e.g. "e:es" for German
+ -compoundsplit_threshold 	Words with unigram probability mass above this threshold will not be split
+ -compoundsplit_minchar 	Mininimum required characters in subword for compound splitting
+ -binarize 	How to binarize the trees (none/left/right/cky)
+ -flatten 	Whether to flatten unary productions
+ -debug 	How much debug output to produce
+</pre>
+
+<h2>Binarization</h2>
+
+<p>
+Using the <tt>-binarize</tt> option allows the tree to be binarized according to a number of options.
+</p>
+
+<h2>Regex Splitting</h2>
+
+<p>
+The <tt>-split</tt> option allows us to specify an arbitrary regular expression. Given this regular expression, all words matching this expression will be split in half around the expression. This is useful for splitting hyphenated or slashed expressions, which are not split by the Penn treebank, or other parsing standards.
+</p>
+
+<h2>Compound Splitting</h2>
+
+<p>WordSplitterCompound works similarly to Moses compound-splitter.perl, i.e. it compares the unigram probability of the word (e.g. "autobahn") with the mean unigram probability of its subwords (e.g. "auto" and "bahn") and picks the one that is higher. It also considers fillers between words and deletes them if necessary (e.g. "arbeitstier" splits into "arbeit"+ (filler=s) + "tier").</p>
+
+<p>Example use:</p>
+<pre>
+bin/tree-converter -compoundsplit LMFile -compoundsplit_filler "es:s:e" parsed.de &gt; parsed.split.de
+</pre>
+
+<p>The language model (LMfile) provides the unigram statistics and should be trained on text that matches parsed.de tokenization beforehand. Since we use KenLM, bigram or above is assumed, even though the algorithm only looks at unigrams. The fillers are specified in a colon (:) delimited format.</p>
+
+<p>Additional options for this class are compoundsplit_threshold and compoundsplit_minchar, which determine which words are candidates splitting. Usually we don't want to consider a word for splitting if its unigram probability is above some high threshold, or if its subwords are too short. The default values are probably fine. Using "-debug 1" option will generate statistics on the number of words split. </p>
+
+</div>
+</div>
+
+</body>
+</html>
