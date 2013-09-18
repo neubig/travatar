@@ -34,7 +34,7 @@ HyperGraph * WordTreeIO::ReadTree(istream & in) {
 }
 
 void WordTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    out << Dict::PrintWords(tree.GetWords()) << endl;
+    out << Dict::PrintWords(tree.GetWords());
 }
 
 HyperGraph * PennTreeIO::ReadTree(istream & in) {
