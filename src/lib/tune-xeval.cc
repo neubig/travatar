@@ -209,8 +209,8 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
 // Tune new weights using the expected BLEU algorithm
 double TuneXeval::RunTuning(SparseMap & kv) {
 
-    // Always start from zero
-    kv = SparseMap();
+    // Whether to start at the initial point
+    bool use_init = false;
 
     // Sanity checks
     if(examps_.size() < 1)
@@ -240,8 +240,13 @@ double TuneXeval::RunTuning(SparseMap & kv) {
     // Optimize using LBFGS. Iterations are done within the library
     } else if (optimizer_ == "lbfgs") {
         mult_ = -1;
-        liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
+        // Initialize the weights if we are using this setting
         vector<double> weights(dense2sparse_.size(),0.0);
+        if(use_init)
+            for(int i = 0; i < (int)dense2sparse_.size(); i++)
+                weights[i] = kv[dense2sparse_[i]];
+        // Optimize and save
+        liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
         last_score = lbfgs(weights.size(), &(*weights.begin()));
         kv = SparseMap();
         for(int i = 0; i < (int)dense2sparse_.size(); i++)
