@@ -25,7 +25,7 @@ public:
 "  Usage: tree-converter [SRC_TREES]\n"
 );
 
-        AddConfigEntry("input_format", "penn", "The format of the input (penn/json/egret)");
+        AddConfigEntry("input_format", "penn", "The format of the input (penn/json/egret/word)");
         AddConfigEntry("output_format", "penn", "The format of the output (penn/json/egret/word)");
         AddConfigEntry("split", "", "A regular expression to split words in the tree (e.g. \"-\")");
         AddConfigEntry("compoundsplit", "", "The language model file for use in compound splitting");
