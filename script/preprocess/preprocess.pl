@@ -73,7 +73,6 @@ my $EGRET_DIR;
 my $EGRET_SRC_MODEL;
 my $EGRET_TRG_MODEL;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
-my $JA_EGRET; # Whether to use egret for Japanese parsing
 my $SPLIT_WORDS_SRC;
 my $SPLIT_WORDS_TRG;
 # How to split words, choose "interleave" for efficiency
@@ -122,7 +121,6 @@ GetOptions(
     "forest-src" => \$FOREST_SRC,
     "forest-trg" => \$FOREST_TRG,
     "giza-dir=s" => \$GIZA_DIR,
-    "ja-egret" => \$JA_EGRET,
     "kytea=s" => \$KYTEA,
     "nile-beam=i" => \$NILE_BEAM,
     "nile-dir=s" => \$NILE_DIR,
@@ -150,6 +148,7 @@ $EDA_VOCAB = "$EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat" if not $EDA_VOCAB;
 $EDA_WEIGHT = "$EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat" if not $EDA_WEIGHT;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
 $NILE_DIR = "$PROGRAM_DIR/nile" if not $NILE_DIR;
+my %EGRET_DEFAULT_MODEL = ( "en" => "$EGRET_DIR/eng_grammar",  "zh" => "$EGRET_DIR/chn_grammar" );
 
 if(not $TRAVATAR_DIR) {
     $TRAVATAR_DIR = abs_path($0);
@@ -212,6 +211,7 @@ if($CLEAN_LEN == 0) {
 }
 
 ###### 1-best Parsing ######
+# TODO: clean this up
 sub run_tree_parsing {
     my $lang = shift;
     my $split_words = shift;
@@ -252,8 +252,7 @@ sub run_tree_parsing {
         # JA Parsing with Eda
         run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
         run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
-        if($JA_EGRET) {
-            $EGRET_MODEL = "$EGRET_DIR/jpn_grammar" if not $EGRET_MODEL;
+        if($EGRET_MODEL) {
             run_parallel("$PREF/eda", "$PREF/edacfg", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
             run_parallel("$PREF/clean", "$PREF/egret", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
             # Combine Eda and Egret (for now this is not parallel)
@@ -275,7 +274,26 @@ sub run_tree_parsing {
         elsif($lang eq "de") { $model = "germanPCFG"; }
         my $SPLIT_CMD = "";
         $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
-        run_parallel("$PREF/clean", "$PREF/tree", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
+        if($EGRET_MODEL) {
+            # Parsing with Stanford Parser
+            run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
+    
+            # Parsing with Egret
+            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
+
+            # Combine Stanford and Egret (for now this is not parallel)
+            -e "$PREF/tree" or mkdir "$PREF/tree";
+            foreach my $i ("", map{".$_"} @suffixes) {
+                if(not -e "$PREF/tree/$lang$i") {
+                    my $SPLIT_CMD = "";
+                    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
+                    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
+                    die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != file_len("$PREF/tree/$lang$i"));
+                }
+            }
+        } else {
+            run_parallel("$PREF/clean", "$PREF/tree", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
+        }
     } else { die "Cannot parse $lang"; }
 
     # Lowercase and print
@@ -290,38 +308,41 @@ run_tree_parsing($TRG, $SPLIT_WORDS_TRG, 0);
 sub run_forest_parsing {
     my $lang = shift;
     my $split_words = shift;
-    if($lang =~ /^(en|zh|ja)$/) {
-        # Convert Tree to Forest
-        run_parallel("$PREF/tree", "$PREF/treefor", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret < INFILE 2> OUTFILE.log > OUTFILE", 1);
-        
-        if($lang eq "en") {
-            # EN Parse with Egret
-            run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/eng_grammar 2> OUTFILE.log | sed \"s/\\^g//g\" > OUTFILE", 1);
-        } elsif($lang eq "zh") {
-            # ZH Parse with Egret
-            run_parallel("$PREF/cleangb", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/chn_grammar 2> OUTFILE.log  | iconv -f GB18030 -t UTF-8 | sed \"s/\\^g//g\" > OUTFILE", 1);
-        } elsif($lang eq "ja") {
-            # JA Parse with Egret
-            run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -printForest $EGRET_FOREST_OPT -data=$EGRET_DIR/jpn_grammar 2> OUTFILE.log > OUTFILE", 1);
-        } else {
-            die "Forest parsing is not supported for $LANG";
-        }
-        
-        # ZH Combine Stanford and Egret (for now this is not parallel)
-        -e "$PREF/for" or mkdir "$PREF/for";
-        foreach my $i ("", map{".$_"} @suffixes) {
-            my $SPLIT_CMD = "";
-            $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\" -input_format egret -output_format egret" if $split_words;
-            safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/treefor/$lang$i $PREF/egretfor/$lang$i $SPLIT_CMD > $PREF/for/$lang$i") if not -e "$PREF/for/$lang$i";
-            die "Combining forests failed on en$i" if(file_len("$PREF/for/$lang$i") == 0);
-        }
-    } else { die "Cannot forest parse $lang"; }
+    my $is_src = shift;
+
+    # Find the model
+    my $EGRET_MODEL = ($is_src ? $EGRET_SRC_MODEL : $EGRET_TRG_MODEL);
+    $EGRET_MODEL = $EGRET_DEFAULT_MODEL{$lang} if(not $EGRET_MODEL);
+    die "No Egret model specified for $lang" if not $EGRET_MODEL;
+
+    # Convert Tree to Forest
+    run_parallel("$PREF/tree", "$PREF/treefor", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret < INFILE 2> OUTFILE.log > OUTFILE", 1);
+    
+    if($lang eq "zh") {
+        # ZH Parse with Egret
+        run_parallel("$PREF/cleangb", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log  | iconv -f GB18030 -t UTF-8 | sed \"s/\\^g//g\" > OUTFILE", 1);
+    } elsif($lang eq "ja") {
+        # JA Parse with Egret
+        run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE", 1);
+    } else {
+        # Anything else
+        run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log | sed \"s/\\^g//g\" > OUTFILE", 1);
+    }
+    
+    # ZH Combine Stanford and Egret (for now this is not parallel)
+    -e "$PREF/for" or mkdir "$PREF/for";
+    foreach my $i ("", map{".$_"} @suffixes) {
+        my $SPLIT_CMD = "";
+        $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\" -input_format egret -output_format egret" if $split_words;
+        safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/treefor/$lang$i $PREF/egretfor/$lang$i $SPLIT_CMD > $PREF/for/$lang$i") if not -e "$PREF/for/$lang$i";
+        die "Combining forests failed on en$i" if(file_len("$PREF/for/$lang$i") == 0);
+    }
 
     # Combine and lowercase the forest
     run_parallel("$PREF/for", "$PREF/forlow", $lang, "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
 }
-run_forest_parsing($SRC, $SPLIT_WORDS_SRC) if $FOREST_SRC;
-run_forest_parsing($TRG, $SPLIT_WORDS_TRG) if $FOREST_TRG;
+run_forest_parsing($SRC, $SPLIT_WORDS_SRC, 1) if $FOREST_SRC;
+run_forest_parsing($TRG, $SPLIT_WORDS_TRG, 0) if $FOREST_TRG;
 
 ###### Alignment ######
 
