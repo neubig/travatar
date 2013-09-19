@@ -217,11 +217,24 @@ public:
         return CheckEqual(exp_str, act_str);
     }
 
+    int TestReadWord() {
+        string word_str = "hello this is a test";
+        string exp_str = "(X (X hello) (X this) (X is) (X a) (X test))";
+        PennTreeIO penn;
+        WordTreeIO word;
+        istringstream iss(word_str);
+        shared_ptr<HyperGraph> graph(word.ReadTree(iss));
+        ostringstream oss; penn.WriteTree(*graph, oss);
+        string act_str = oss.str();
+        return CheckEqual(exp_str, act_str);
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadEgret()" << endl; if(TestReadEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestReadWord()" << endl; if(TestReadWord()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWritePenn()" << endl; if(TestWritePenn()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteEgret()" << endl; if(TestWriteEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;

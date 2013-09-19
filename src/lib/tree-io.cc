@@ -8,11 +8,34 @@
 #include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
+
 
 using namespace travatar;
 using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
+
+HyperGraph * WordTreeIO::ReadTree(istream & in) {
+    string line;
+    if(!getline(in,line)) return NULL;
+    Sentence words = Dict::ParseWords(line);
+    // Create the hypergraph
+    HyperGraph * hg = new HyperGraph;
+    hg->SetWords(words);
+    HyperNode* root = new HyperNode(Dict::WID("X"), -1, make_pair(0,words.size())); hg->AddNode(root);
+    HyperEdge * edge = new HyperEdge(root); root->AddEdge(edge); hg->AddEdge(edge);
+    for(int i = 0; i < (int)words.size(); i++) {
+        HyperNode* child = new HyperNode(Dict::WID("X"), -1, make_pair(i, i+1)); hg->AddNode(child); edge->AddTail(child);
+        HyperEdge * edge2 = new HyperEdge(child); child->AddEdge(edge2); hg->AddEdge(edge2);
+        HyperNode* child2 = new HyperNode(words[i], -1, make_pair(i, i+1)); hg->AddNode(child2); edge2->AddTail(child2);
+    }
+    return hg; 
+}
+
+void WordTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
+    out << Dict::PrintWords(tree.GetWords());
+}
 
 HyperGraph * PennTreeIO::ReadTree(istream & in) {
     // The new hypergraph and stack to read the nodes

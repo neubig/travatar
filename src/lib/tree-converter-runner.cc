@@ -32,11 +32,12 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_in.reset(new EgretTreeIO);
     else if(config.GetString("input_format") == "json")
         tree_in.reset(new JSONTreeIO);
+    else if(config.GetString("input_format") == "word")
+        tree_in.reset(new WordTreeIO);
     else
         THROW_ERROR("Invalid -input_format type: " << config.GetString("input_format"));
     // Create the tree output
-    bool word_out = config.GetString("output_format") == "word",
-         phrase_out = config.GetString("output_format") == "phrase";
+    bool phrase_out = config.GetString("output_format") == "phrase";
     if(config.GetString("output_format") == "penn")
         tree_out.reset(new PennTreeIO);
     else if(config.GetString("output_format") == "egret")
@@ -45,7 +46,9 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_out.reset(new JSONTreeIO);
     else if(config.GetString("output_format") == "mosesxml")
         tree_out.reset(new MosesXMLTreeIO);
-    else if(!word_out)
+    else if(config.GetString("output_format") == "word")
+        tree_out.reset(new WordTreeIO);
+    else
         THROW_ERROR("Invalid -output_format type: " << config.GetString("output_format"));
 
     // Create the splitter
@@ -117,8 +120,6 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         // Write out the tree
         if(tree_out.get() != NULL) {
             tree_out->WriteTree(*src_graph, cout); cout << endl;
-        } else if (word_out) {
-            cout << Dict::PrintWords(src_graph->GetWords()) << endl;
         } else if (phrase_out) {
             THROW_ERROR("Phrases not implemented yet");
         } else {

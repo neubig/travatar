@@ -30,6 +30,16 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 
+// Read in and write out only the words of trees
+class WordTreeIO : public TreeIO {
+public:
+    virtual ~WordTreeIO() { }
+    virtual HyperGraph * ReadTree(std::istream & in);
+    void WriteNode(const std::vector<WordId> & words,
+                   const HyperNode & node, std::ostream & out);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+};
+
 // Read in and write out JSON format hypergraphs
 class JSONTreeIO : public TreeIO {
 public:
