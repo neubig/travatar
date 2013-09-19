@@ -2,7 +2,7 @@ include $(top_srcdir)/common.am
 AM_CXXFLAGS += -I$(srcdir)/../include
 LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../tercpp/libter.a ../marisa/libmarisa.la ../liblbfgs/liblbfgs.la -lboost_thread -lboost_regex -lboost_iostreams -lz -lrt
 
-bin_PROGRAMS = travatar forest-extractor batch-tune tree-converter mt-evaluator
+bin_PROGRAMS = travatar forest-extractor batch-tune tree-converter mt-evaluator rescorer
 
 travatar_SOURCES = travatar.cc
 travatar_LDADD = $(LDADD)
@@ -18,3 +18,6 @@ mt_evaluator_LDADD = $(LDADD)
 
 batch_tune_SOURCES = batch-tune.cc
 batch_tune_LDADD = $(LDADD)
+
+rescorer_SOURCES = rescorer.cc
+rescorer_LDADD = $(LDADD)
