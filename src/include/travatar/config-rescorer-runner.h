@@ -26,6 +26,7 @@ public:
 );
 
         AddConfigEntry("nbest", "", "File containing the n-best list (blank for stdin)");
+        AddConfigEntry("nbest_out", "", "File to output the rescored n-best list to");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
         AddConfigEntry("weight_in", "", "File of initial weights");
 

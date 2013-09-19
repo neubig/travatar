@@ -31,6 +31,14 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
 void RescorerRunner::Print(const RescorerNbest & nbest) {
     if(nbest.size() == 0) THROW_ERROR("Can not print an empty nbest");
     cout << Dict::PrintWords(nbest[0].sent) << endl;
+    if(nbest_out_.get() != NULL) {
+        BOOST_FOREACH(const RescorerNbestElement & elem, nbest) {
+            *nbest_out_ << sent_ << " ||| "
+                        << Dict::PrintWords(elem.sent) << " ||| "
+                        << elem.score << " ||| "
+                        << Dict::PrintFeatures(elem.feat) << endl;
+        } 
+    }
 }
 
 // Run the model
@@ -59,6 +67,12 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
         if(!(*nbest_in)) THROW_ERROR("Could not find nbest file: " << config.GetString("nbest"));
     }
 
+    // Open the nbest output file if necessary
+    if(config.GetString("nbest_out").size() != 0) {
+        nbest_out_.reset(new ofstream(config.GetString("nbest_out").c_str()));
+        if(!(*nbest_out_)) THROW_ERROR("Could not open nbest out: " << config.GetString("nbest_out"));
+    }
+
     // Load n-best lists
     regex threebars(" \\|\\|\\| ");
     RescorerNbest nbest;
@@ -75,6 +89,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
             Rescore(nbest);
             Print(nbest);
             nbest.clear();
+            sent_++;
         }
         last_id = id;
         nbest.push_back(RescorerNbestElement(Dict::ParseWords(columns[1]), 

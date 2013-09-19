@@ -30,7 +30,7 @@ class RescorerRunner {
 public:
 
 
-    RescorerRunner() : rescore_weights_(false) { }
+    RescorerRunner() : rescore_weights_(false), sent_(0) { }
     ~RescorerRunner() { }
     
     // Read in the entire n-best one by one and rescore
@@ -45,6 +45,9 @@ public:
 protected:
     SparseMap weights_;
     bool rescore_weights_;
+    boost::shared_ptr<std::ofstream> nbest_out_;
+    int sent_;
+
 
 };
 
