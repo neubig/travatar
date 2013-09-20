@@ -55,6 +55,7 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
             }
             si++;
         }
+        mbr_eval_->ClearCache();
         
         // Apply these to the actual scores
         BOOST_FOREACH(RescorerNbestElement & elem, nbest)
