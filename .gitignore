@@ -24,6 +24,7 @@ gmon.out
 m4
 missing
 src/bin/travatar
+src/bin/rescorer
 src/bin/forest-extractor
 src/bin/tree-converter
 src/bin/batch-tune

@@ -29,8 +29,8 @@ inline bool operator< ( const RescorerNbestElement& lhs,
 class RescorerRunner {
 public:
 
-
-    RescorerRunner() : rescore_weights_(false), sent_(0) { }
+    RescorerRunner() : rescore_weights_(false), sent_(0),
+                       mbr_scale_(1.0) { }
     ~RescorerRunner() { }
     
     // Read in the entire n-best one by one and rescore
@@ -47,7 +47,10 @@ protected:
     bool rescore_weights_;
     boost::shared_ptr<std::ofstream> nbest_out_;
     int sent_;
-
+    // For minimum Bayes risk rescoring
+    std::string mbr_eval_;
+    double mbr_scale_;
+    
 
 };
 

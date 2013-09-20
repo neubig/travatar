@@ -23,8 +23,30 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
             elem.score = elem.feat * weights_;
     }
     
+    // If we are doing MBR rescoring
+    if(mbr_eval_.get() != NULL) {
+        // First get the maximum probability
+        double max_score = -DBL_MAX;
+        BOOST_FOREACH(RescorerNbestElement & elem, nbest)
+            max_score = max(max_score, elem.score);
+        // Convert to probabilities and and sum
+        double sum = 0;
+        BOOST_FOREACH(RescorerNbestElement & elem, nbest) {
+            elem.score = exp( (elem.score-max_score)*mbr_scale_ );
+            sum += elem.score;
+        }
+        // A map with the probability/Bayes risk of each unique sentence
+        SentProbExp HERE
+        std::map<Sentence, pair<int,int> > prob_exp;
+        
+        vector<double> prob(nbest.size());
+        for(int i = 0; i < (int)nbest.size(); i++)
+            prob[i] = nbest[i].score/sum;
+    }
+
     // Finally, sort in descending order of weight
     sort(nbest.begin(), nbest.end());
+
 }
 
 // Print at least the top of the rescored n-best list
@@ -47,17 +69,6 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
 
-    // If we have weights, read in the weights file
-    if(config.GetString("weight_in") != "") {
-        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
-        ifstream weight_in(config.GetString("weight_in").c_str());
-        if(!weight_in)
-            THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
-        weights_ = Dict::ParseFeatures(weight_in);
-        rescore_weights_ = true;
-        weight_in.close();
-    }
-
     // Read in from the source
     istream * nbest_in;
     if(config.GetString("nbest").size() == 0 || config.GetString("nbest") == "-") {
@@ -71,6 +82,23 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     if(config.GetString("nbest_out").size() != 0) {
         nbest_out_.reset(new ofstream(config.GetString("nbest_out").c_str()));
         if(!(*nbest_out_)) THROW_ERROR("Could not open nbest out: " << config.GetString("nbest_out"));
+    }
+
+    // If we have weights, read in the weights file
+    if(config.GetString("weight_in") != "") {
+        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
+        ifstream weight_in(config.GetString("weight_in").c_str());
+        if(!weight_in)
+            THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
+        weights_ = Dict::ParseFeatures(weight_in);
+        rescore_weights_ = true;
+        weight_in.close();
+    }
+
+    // Create an evaluation measure for MBR if necessary
+    if(config.GetString("mbr_eval") != "") {
+        mbr_eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("mbr_eval")));
+        mbr_scale_ = config.GetDouble("mbr_scale");
     }
 
     // Load n-best lists
