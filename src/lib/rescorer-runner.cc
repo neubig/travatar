@@ -36,7 +36,7 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
             sum += elem.score;
         }
         // A map with the probability/Bayes risk of each unique sentence
-        SentProbExp HERE
+        // TODO
         std::map<Sentence, pair<int,int> > prob_exp;
         
         vector<double> prob(nbest.size());

@@ -6,6 +6,7 @@
 #include <boost/shared_ptr.hpp>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
+#include <travatar/eval-measure.h>
 
 namespace travatar {
 
@@ -48,7 +49,7 @@ protected:
     boost::shared_ptr<std::ofstream> nbest_out_;
     int sent_;
     // For minimum Bayes risk rescoring
-    std::string mbr_eval_;
+    boost::shared_ptr<EvalMeasure> mbr_eval_;
     double mbr_scale_;
     
 

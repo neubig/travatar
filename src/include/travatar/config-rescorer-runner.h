@@ -27,6 +27,8 @@ public:
 
         AddConfigEntry("nbest", "", "File containing the n-best list (blank for stdin)");
         AddConfigEntry("nbest_out", "", "File to output the rescored n-best list to");
+        AddConfigEntry("mbr_eval", "", "The evaluation measure to use for MBR (blank for no MBR)");
+        AddConfigEntry("mbr_scale", "1", "The scaling factor for MBR probabilities"); 
         AddConfigEntry("debug", "0", "What level of debugging output to print");
         AddConfigEntry("weight_in", "", "File of initial weights");
 

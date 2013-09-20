@@ -6,6 +6,7 @@
 *.swp
 .deps
 .libs
+.nfs*
 Makefile
 Makefile.in
 config.h.in
