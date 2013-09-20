@@ -35,13 +35,31 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
             elem.score = exp( (elem.score-max_score)*mbr_scale_ );
             sum += elem.score;
         }
-        // A map with the probability/Bayes risk of each unique sentence
-        // TODO
-        std::map<Sentence, pair<int,int> > prob_exp;
-        
-        vector<double> prob(nbest.size());
+
+        // A map with the probability/expected BLEU of each sentence
+        typedef pair<const Sentence, pair<double,double> > SentProbExp; 
+        std::map<Sentence, pair<double,double> > prob_exp; 
+
+        // Calculate probabilities
         for(int i = 0; i < (int)nbest.size(); i++)
-            prob[i] = nbest[i].score/sum;
+            prob_exp[nbest[i].sent].first += nbest[i].score/sum;
+
+        // Calculate the expectation for each sentence
+        int si = 0;
+        BOOST_FOREACH(SentProbExp & hyp, prob_exp) {
+            int sj = 0;
+            BOOST_FOREACH(SentProbExp & ref, prob_exp) {
+                hyp.second.second += ref.second.first * 
+                    mbr_eval_->CalculateCachedStats(ref.first,hyp.first,sj,si)->ConvertToScore();
+                sj++;
+            }
+            si++;
+        }
+        
+        // Apply these to the actual scores
+        BOOST_FOREACH(RescorerNbestElement & elem, nbest)
+            elem.score = prob_exp[elem.sent].second;
+
     }
 
     // Finally, sort in descending order of weight
