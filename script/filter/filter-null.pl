@@ -12,6 +12,11 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+my $SHOW_FILTERED = 0;
+GetOptions(
+"show-filtered" => \$SHOW_FILTERED,
+);
+
 if(@ARGV != 0) {
     print STDERR "Usage: $0\n";
     exit 1;
@@ -30,5 +35,7 @@ while(<STDIN>) {
             $ok = can_be_null($1);
         }
     }
-    print "$_\n" if($ok);
+    print "$_\n" if 
+        ($ok and (not $SHOW_FILTERED)) or 
+        ((not $ok) and $SHOW_FILTERED);
 }
