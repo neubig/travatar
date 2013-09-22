@@ -178,7 +178,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }
 
     // Create the binarizer_
-    binarizer_.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarizer")));
+    binarizer_.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
 
     // Get the input format parser
     shared_ptr<TreeIO> tree_io;
