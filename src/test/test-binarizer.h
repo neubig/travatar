@@ -23,7 +23,7 @@ public:
             HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));   trinary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
             HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); trinary_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
             HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); trinary_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
-            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); trinary_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("B3"));
+            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); trinary_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
             HyperEdge * e = new HyperEdge(na); trinary_graph_->AddEdge(e); e->AddTail(nb1); e->AddTail(nb2); e->AddTail(nb3); na->AddEdge(e);
             e->SetScore(1); e->AddFeature(Dict::WID("feat"), 1);
         }
@@ -35,7 +35,7 @@ public:
             HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));   unordered_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
             HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); unordered_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
             HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); unordered_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
-            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); unordered_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("B3"));
+            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); unordered_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
             HyperEdge * e1 = new HyperEdge(nb1); unordered_graph_->AddEdge(e1); nb1->AddEdge(e1);
             HyperEdge * e = new HyperEdge(na); unordered_graph_->AddEdge(e); e->AddTail(nb1); e->AddTail(nb2); e->AddTail(nb3); na->AddEdge(e);
             e->SetScore(1); e->AddFeature(Dict::WID("feat"), 1);
@@ -53,7 +53,7 @@ public:
         HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
         HyperNode * nb23 = new HyperNode; nb23->SetSpan(make_pair(1,3)); exp_graph->AddNode(nb23); nb23->SetSym(Dict::WID("A'"));
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
-        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
         HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb1); e1->AddTail(nb23); na->AddEdge(e1);
         e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
         HyperEdge * e2 = new HyperEdge(nb23); exp_graph->AddEdge(e2); e2->AddTail(nb2); e2->AddTail(nb3); nb23->AddEdge(e2);
@@ -69,7 +69,7 @@ public:
         HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
         HyperNode * nb23 = new HyperNode; nb23->SetSpan(make_pair(1,3)); exp_graph->AddNode(nb23); nb23->SetSym(Dict::WID("A'"));
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
-        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
         HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb1); e1->AddTail(nb23); na->AddEdge(e1);
         e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
         HyperEdge * e2 = new HyperEdge(nb23); exp_graph->AddEdge(e2); e2->AddTail(nb2); e2->AddTail(nb3); nb23->AddEdge(e2);
@@ -83,7 +83,7 @@ public:
         shared_ptr<HyperGraph> exp_graph(new HyperGraph);
         exp_graph->SetWords(src_);
         HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
-        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
         HyperNode * nb12 = new HyperNode; nb12->SetSpan(make_pair(0,2)); exp_graph->AddNode(nb12); nb12->SetSym(Dict::WID("A'"));
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
         HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
@@ -104,7 +104,7 @@ public:
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
         HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
         HyperNode * nb23 = new HyperNode; nb23->SetSpan(make_pair(1,3)); exp_graph->AddNode(nb23); nb23->SetSym(Dict::WID("A'"));
-        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("B3"));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
         HyperEdge * e12 = new HyperEdge(nb12); exp_graph->AddEdge(e12); e12->AddTail(nb1); e12->AddTail(nb2); nb12->AddEdge(e12);
         HyperEdge * e1r = new HyperEdge(na); exp_graph->AddEdge(e1r); e1r->AddTail(nb1); e1r->AddTail(nb23); na->AddEdge(e1r);
         HyperEdge * e1l = new HyperEdge(na); exp_graph->AddEdge(e1l); e1l->AddTail(nb12); e1l->AddTail(nb3); na->AddEdge(e1l);
