@@ -4,6 +4,7 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/generic-string.h>
 #include <travatar/sentence.h>
+#include <travatar/binarizer.h>
 #include <boost/unordered_map.hpp>
 #include <string>
 
@@ -16,7 +17,7 @@ class HyperGraph;
 // See:
 //  Binarizing Syntax Trees to Improve Syntax-Based Machine Translation Accuracy
 //  Wei Wang, Kevin Knight, and Daniel Marcu
-class BinarizerCKY : public GraphTransformer {
+class BinarizerCKY : public Binarizer {
 
 public:
 

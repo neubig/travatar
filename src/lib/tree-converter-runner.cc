@@ -68,15 +68,7 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
 
     // Create the binarizer
     scoped_ptr<GraphTransformer> binarizer;
-    if(config.GetString("binarize") == "left") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
-    } else if(config.GetString("binarize") == "right") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
-    } else if(config.GetString("binarize") == "cky") {
-        binarizer.reset(new BinarizerCKY());
-    } else if(config.GetString("binarize") != "none") {
-        THROW_ERROR("Invalid binarizer type " << config.GetString("binarize"));
-    }
+    binarizer.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
     // Create the flattener
     scoped_ptr<GraphTransformer> flattener;
     if(config.GetBool("flatten")) {

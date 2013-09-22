@@ -14,10 +14,7 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
 #include <travatar/lm-composer-bu.h>
-#include <travatar/binarizer-directional.h>
-#include <travatar/binarizer-cky.h>
-#include <travatar/eval-measure-bleu.h>
-#include <travatar/eval-measure-ribes.h>
+#include <travatar/binarizer.h>
 #include <travatar/eval-measure.h>
 #include <travatar/timer.h>
 #include <travatar/input-file-stream.h>
@@ -181,15 +178,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }
 
     // Create the binarizer_
-    if(config.GetString("binarize") == "left") {
-        binarizer_.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
-    } else if(config.GetString("binarize") == "right") {
-        binarizer_.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
-    } else if(config.GetString("binarize") == "cky") {
-        binarizer_.reset(new BinarizerCKY);
-    } else if(config.GetString("binarize") != "none") {
-        THROW_ERROR("Invalid binarizer_ type " << config.GetString("binarizer_"));
-    }
+    binarizer_.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarizer")));
 
     // Get the input format parser
     shared_ptr<TreeIO> tree_io;

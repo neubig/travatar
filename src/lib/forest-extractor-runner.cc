@@ -5,8 +5,7 @@
 #include <travatar/rule-extractor.h>
 #include <travatar/forest-extractor-runner.h>
 #include <travatar/config-forest-extractor-runner.h>
-#include <travatar/binarizer-directional.h>
-#include <travatar/binarizer-cky.h>
+#include <travatar/binarizer.h>
 #include <travatar/rule-composer.h>
 #include <travatar/rule-filter.h>
 #include <travatar/hyper-graph.h>
@@ -48,15 +47,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
     scoped_ptr<GraphTransformer> binarizer, composer;
     // Create the binarizer
-    if(config.GetString("binarize") == "left") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_LEFT));
-    } else if(config.GetString("binarize") == "right") {
-        binarizer.reset(new BinarizerDirectional(BinarizerDirectional::BINARIZE_RIGHT));
-    } else if(config.GetString("binarize") == "cky") {
-        binarizer.reset(new BinarizerCKY());
-    } else if(config.GetString("binarize") != "none") {
-        THROW_ERROR("Invalid binarizer type " << config.GetString("binarizer"));
-    }
+    binarizer.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
     // Create the binarizer
     if(config.GetInt("compose") > 1)
         composer.reset(new RuleComposer(config.GetInt("compose")));
