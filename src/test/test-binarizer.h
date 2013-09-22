@@ -60,6 +60,22 @@ public:
         return exp_graph->CheckEqual(*act_graph);
     }
 
+    int TestBinarizerRightRaisePunc() {
+        BinarizerDirectional br(BinarizerDirectional::BINARIZE_RIGHT, true);
+        shared_ptr<HyperGraph> act_graph(br.TransformGraph(*trinary_graph_));
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+        exp_graph->SetWords(src_);
+        HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));  exp_graph->AddNode(na);      na->SetSym(Dict::WID("A" ));
+        HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
+        HyperNode * nb12 = new HyperNode; nb12->SetSpan(make_pair(0,2)); exp_graph->AddNode(nb12); nb12->SetSym(Dict::WID("A'"));
+        HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
+        HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
+        HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb12); e1->AddTail(nb3); na->AddEdge(e1);
+        e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+        HyperEdge * e2 = new HyperEdge(nb12); exp_graph->AddEdge(e2); e2->AddTail(nb1); e2->AddTail(nb2); nb12->AddEdge(e2);
+        return exp_graph->CheckEqual(*act_graph);
+    }
+
     int TestBinarizerUnordered() {
         BinarizerDirectional br(BinarizerDirectional::BINARIZE_RIGHT);
         shared_ptr<HyperGraph> act_graph(br.TransformGraph(*unordered_graph_));
@@ -117,6 +133,7 @@ public:
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestBinarizerRight()" << endl; if(TestBinarizerRight()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBinarizerRightRaisePunc()" << endl; if(TestBinarizerRightRaisePunc()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBinarizerUnordered()" << endl; if(TestBinarizerUnordered()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBinarizerLeft()" << endl; if(TestBinarizerLeft()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBinarizerCKY()" << endl; if(TestBinarizerCKY()) succeeded++; else cout << "FAILED!!!" << endl;

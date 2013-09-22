@@ -50,21 +50,37 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) const {
         bool first = true;
         while(first || (head != NULL && head->GetEdges().size() == 0 && tail_str.length() > 1)) {
             HyperNode *small = NULL, *big = NULL;
+
+            // Choose the direction to do
+            Direction dir = dir_;
+            if(raise_punc_) {
+                // If we are binarizing right, but the last symbol is punctuation
+                if(dir_ == BINARIZE_RIGHT &&
+                   punc_labs_.find(hg.GetNode(tail_str[tail_str.length()-1])->GetSym()) != punc_labs_.end()) {
+                    dir = BINARIZE_LEFT;
+                }
+                // If we are binarizing left, but the first symbol is punctuation
+                if(dir_ == BINARIZE_LEFT &&
+                   punc_labs_.find(hg.GetNode(tail_str[0])->GetSym()) != punc_labs_.end())
+                    dir = BINARIZE_RIGHT;
+            }
+
+            // Find the small and big tails
             if(tail_str.length() > 0) {
-                GenericString<int> str = (dir_ == BINARIZE_RIGHT ? 
+                GenericString<int> str = (dir == BINARIZE_RIGHT ? 
                                           tail_str.substr(0,1) :
                                           tail_str.substr(tail_str.length()-1));
                 small = FindIndexedNode(hg, *ret, built_nodes, str, xbar);
             }
             if(tail_str.length() > 1) {
-                tail_str = (dir_ == BINARIZE_RIGHT ?
+                tail_str = (dir == BINARIZE_RIGHT ?
                             tail_str.substr(1) :
                             tail_str.substr(0, tail_str.length()-1));
                 big = FindIndexedNode(hg, *ret, built_nodes, tail_str, xbar);
             }
             // Create the left and right edges
             HyperEdge * next_edge = new HyperEdge(head);
-            if(dir_ == BINARIZE_RIGHT) {
+            if(dir == BINARIZE_RIGHT) {
                 if(small) next_edge->AddTail(small);
                 if(big) next_edge->AddTail(big);
             } else {

@@ -4,7 +4,9 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/generic-string.h>
 #include <travatar/sentence.h>
+#include <travatar/dict.h>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <string>
 
 namespace travatar {
@@ -27,8 +29,16 @@ public:
 
     typedef boost::unordered_map<GenericString<int>, HyperNode*, GenericHash<GenericString<int> > > SNMap;
 
-    BinarizerDirectional(Direction dir) : dir_(dir) { }
+    BinarizerDirectional(Direction dir, bool raise_punc = false) 
+            : dir_(dir), raise_punc_(raise_punc) {
+        punc_labs_.insert(Dict::WID("."));
+        punc_labs_.insert(Dict::WID("$."));
+        punc_labs_.insert(Dict::WID(","));
+        punc_labs_.insert(Dict::WID("$,"));
+    }
     virtual ~BinarizerDirectional() { }
+
+    void SetRaisePunc(bool raise_punc) { raise_punc_ = raise_punc; }
 
     // Binarize the graph to the right
     virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
@@ -37,6 +47,12 @@ protected:
 
     // Which direction to binarize in
     Direction dir_;
+
+    // Raise punctuation first in right binarization
+    bool raise_punc_;
+
+    // A set of labels that indicate punctuation
+    boost::unordered_set<WordId> punc_labs_;
 
     // Find a node indexed by its remaining tails str
     //  hg is the original graph
