@@ -14,6 +14,7 @@ class ConfigRescorer;
 
 class RescorerNbestElement {
 public:
+    RescorerNbestElement() : score(0.0) { }
     RescorerNbestElement(const Sentence & se, const SparseMap & f, double sc) :
         sent(se), feat(f), score(sc) { }
     Sentence sent;
@@ -31,7 +32,7 @@ class RescorerRunner {
 public:
 
     RescorerRunner() : rescore_weights_(false), sent_(0),
-                       mbr_scale_(1.0) { }
+                       mbr_scale_(1.0), mbr_hyp_cnt_(0) { }
     ~RescorerRunner() { }
     
     // Read in the entire n-best one by one and rescore
@@ -51,6 +52,7 @@ protected:
     // For minimum Bayes risk rescoring
     boost::shared_ptr<EvalMeasure> mbr_eval_;
     double mbr_scale_;
+    int mbr_hyp_cnt_;
     
 
 };

@@ -12,13 +12,19 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+my $SRC_COL = 0;
+my $TRG_COL = 0;
 my $SHOW_FILTERED = 0;
 my $SKIP_SAHEN = 0;
 my $SKIP_NUMBER = 0;
+my $SKIP_TRGPART = 0;
 GetOptions(
+"src-col=s" => \$SRC_COL,
+"trg-col=s" => \$TRG_COL,
 "show-filtered" => \$SHOW_FILTERED,
-"skip-sahen" => \$SKIP_SAHEN,
-"skip-number" => \$SKIP_NUMBER,
+"skip-sahen"    => \$SKIP_SAHEN,
+"skip-number"   => \$SKIP_NUMBER,
+"skip-trgpart"  => \$SKIP_TRGPART,
 );
 
 if(@ARGV != 0) {
@@ -30,8 +36,15 @@ if(@ARGV != 0) {
 #  Currently a simple rule that says if the Japanese side starts with
 #  "し" "する" or "さ", the only verb acceptable is "do" "did" "does" "doing"
 sub sahen_ok {
-    if(($_[1] =~ /^"(し|する|さ")"/) and
-       ($_[0] !~ /"(do|did|does|doing)"/)) {
+    # For now, this should not apply to modals
+    for($_[$SRC_COL] =~ /(x\d+):v(p|b.*) /g) {
+        my $vs = $1;
+        $_[$TRG_COL] =~ s/$vs/VP/g;
+    }
+    my @arr = split(/ /,$_[$TRG_COL]);
+    while($arr[0] =~ /^(x|"を")/) { shift @arr; }
+    if(($arr[0] =~ /^"(し|する|さ")"/) and
+       ($_[$SRC_COL] !~ /"(do|did|does|doing)"/)) {
         return 0;
     }
     return 1;
@@ -39,20 +52,33 @@ sub sahen_ok {
 
 # Make sure that all single-word numbers are translated as the identity
 sub number_ok {
-    if($_[0] =~ /^[^ ]+ \( "([0-9]+)" \)$/) {
-        if($_[1] !~ /^"$1"$/) {
-            return 0;
-        }
-    }
+    my %num;
+    while($_[$SRC_COL] =~ /"([0-9]+)"/g) { $num{$1}++; }
+    my $newj = $_[$TRG_COL];
+    $newj =~ tr/一ニ三四五六七八九〇/1234567890/;
+    $newj =~ tr/１２３４５６７８９０/1234567890/;
+    if(keys(%num)) { while($newj =~ /"([0-9]+)"/g) { $num{$1}--; } }
+    for(values %num) { return 0 if $_ != 0; }
     return 1;
+}
+
+# Make sure that no content word is translated into a single Hiragana
+sub trgpart_ok {
+    return 1 if (($_[$SRC_COL] !~ /^[^pit][^ ]* \( "/) and ($_[$SRC_COL] !~ / [^pit][^ ]* \( "/));
+    my $size = 0;
+    my $str;
+    while($_[$TRG_COL] =~ /"([^" ]+)"/g) { $size++; $str = $1; }
+    return 1 if (($size != 1) or ($str !~ /^\p{Hiragana}$/));
+    return 0;
 }
 
 while(<STDIN>) {
     chomp;
     my @arr = split(/ \|\|\| /);
     my $ok = 1;
-    if($ok and not $SKIP_SAHEN) { $ok = sahen_ok(@arr); }
+    if($ok and not $SKIP_TRGPART) { $ok = trgpart_ok(@arr); }
     if($ok and not $SKIP_NUMBER) { $ok = number_ok(@arr); }
+    if($ok and not $SKIP_SAHEN) { $ok = sahen_ok(@arr); }
     print "$_\n" if 
         ($ok and (not $SHOW_FILTERED)) or 
         ((not $ok) and $SHOW_FILTERED);
