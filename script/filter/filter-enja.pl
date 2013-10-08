@@ -39,10 +39,11 @@ sub sahen_ok {
 
 # Make sure that all single-word numbers are translated as the identity
 sub number_ok {
-    if($_[0] =~ /^[^ ]+ \( "([0-9]+)" \)$/) {
-        if($_[1] !~ /^"$1"$/) {
-            return 0;
-        }
+    my %num;
+    while($_[0] =~ /"([0-9]+)"/g) { $num{$1}++; }
+    if(keys(%num)) { while($_[1] =~ /"([0-9]+)"/g) { $num{$1}--; } }
+    for(values %num) {
+        return 0 if $_ != 0;
     }
     return 1;
 }
@@ -53,6 +54,7 @@ while(<STDIN>) {
     my $ok = 1;
     if($ok and not $SKIP_SAHEN) { $ok = sahen_ok(@arr); }
     if($ok and not $SKIP_NUMBER) { $ok = number_ok(@arr); }
+    if($ok and not $SKIP_HIRA) { $ok = hira_ok(@arr); }
     print "$_\n" if 
         ($ok and (not $SHOW_FILTERED)) or 
         ((not $ok) and $SHOW_FILTERED);

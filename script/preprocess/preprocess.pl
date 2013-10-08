@@ -6,6 +6,8 @@
 # This is a preprocessing script for machine translation,
 # specifically using Travatar. It can be used by running
 #   $ preprocess.pl -src SRC -trg TRG INPUT_SRC INPUT_TRG OUTPUT_DIR
+# or
+#   $ preprocess.pl -src SRC INPUT_SRC OUTPUT_DIR
 #
 # Where INPUT_SRC and INPUT_TRG are source and target files of parallel
 # sentences, and OUTPUT_DIR is the directory where you will put the output.
@@ -94,8 +96,8 @@ my $KYTEA = "kytea";
 my $FOREST_SRC;
 my $FOREST_TRG;
 my $ALIGN;
-my $SRC = "ja";
-my $TRG = "en";
+my $SRC;
+my $TRG;
 
 ############## Definitions ################
 use strict;
@@ -156,22 +158,32 @@ if(not $TRAVATAR_DIR) {
 }
 
 # Sanity check of input
-if(@ARGV != 3) {
-    print STDERR "Usage: $0 INPUT_SRC INPUT_TRG OUTPUT_DIR\n";
+my ($SRCORIG, $TRGORIG, $PREF);
+if((@ARGV == 3) and $SRC and $TRG) {
+    (-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
+    (-f $ARGV[1]) or die "$TRG file $ARGV[1] doesn't exist.";
+    my ($SRCORIG, $TRGORIG, $PREF) = @ARGV;
+} elsif((@ARGV == 2) and $SRC and not $TRG) {
+    (-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
+    my ($SRCORIG, $PREF) = @ARGV;
+} else {
+    print STDERR "Usage: $0 -src SRC -trg TRG INPUT_SRC INPUT_TRG OUTPUT_DIR\n";
+    print STDERR " or\n";
+    print STDERR "Usage: $0 -src SRC INPUT_SRC OUTPUT_DIR\n";
     exit 1;
 }
-(-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
-(-f $ARGV[1]) or die "$TRG file $ARGV[1] doesn't exist.";
-my ($SRCORIG, $TRGORIG, $PREF) = @ARGV;
 -e "$PREF" or mkdir "$PREF";
 
 ###### Get and check the lengths #######
-my $SRCLEN = file_len($ARGV[0]);
-my $TRGLEN = file_len($ARGV[1]);
-die "$SRC and $TRG lengths don't match ($SRCLEN != $TRGLEN)" if ($SRCLEN != $TRGLEN);
+my ($SRCLEN, $TRGLEN);
+$SRCLEN = file_len($ARGV[0]);
 my $len = int($SRCLEN/$THREADS+1);
 my $suflen = int(log($THREADS)/log(10)+1);
 my @suffixes = map { sprintf("%0${suflen}d", $_) } (0 .. $THREADS-1);
+if($TRG) {
+    $TRGLEN = file_len($ARGV[1]);
+    die "$SRC and $TRG lengths don't match ($SRCLEN != $TRGLEN)" if ($SRCLEN != $TRGLEN);
+}
 
 ###### Split the input files #######
 if(-e "$PREF/orig") {
@@ -180,9 +192,11 @@ if(-e "$PREF/orig") {
     -e "$PREF/orig" or mkdir "$PREF/orig";
     # Copy the original, but remove carriage returns unicode newlines
     -e "$PREF/orig/$SRC" or safesystem("sed 's/\\r\\|\\xE2\\x80\\xA8//g' < $ARGV[0] > $PREF/orig/$SRC");
-    -e "$PREF/orig/$TRG" or safesystem("sed 's/\\r\\|\\xE2\\x80\\xA8//g' < $ARGV[1] > $PREF/orig/$TRG");
     split_file($len, $suflen, \@suffixes, "$PREF/orig/$SRC", "$PREF/orig/$SRC.");
-    split_file($len, $suflen, \@suffixes, "$PREF/orig/$TRG", "$PREF/orig/$TRG.");
+    if($TRG) {
+        -e "$PREF/orig/$TRG" or safesystem("sed 's/\\r\\|\\xE2\\x80\\xA8//g' < $ARGV[1] > $PREF/orig/$TRG");
+        split_file($len, $suflen, \@suffixes, "$PREF/orig/$TRG", "$PREF/orig/$TRG.");
+    }
     safesystem("touch $PREF/orig.DONE") or die;
 }
 
@@ -195,12 +209,13 @@ sub tokenize_cmd {
     else { die "Cannot tokenize $_[0]"; }
 }
 run_parallel("$PREF/orig", "$PREF/tok", $SRC, tokenize_cmd($SRC));
-run_parallel("$PREF/orig", "$PREF/tok", $TRG, tokenize_cmd($TRG));
+run_parallel("$PREF/orig", "$PREF/tok", $TRG, tokenize_cmd($TRG)) if $TRG;
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
     safesystem("ln -s ".abs_path("$PREF/tok")." $PREF/clean") if not -e "$PREF/clean";
 } elsif (not -e "$PREF/clean/$SRC") {
+    $TRG or die "Currently, cleaning is only supported for bilingual preprocessing.";
     -e "$PREF/clean" or mkdir "$PREF/clean";
     foreach my $i (@suffixes) {
         safesystem("bash -c '$TRAVATAR_DIR/script/train/clean-corpus.pl -max_len $CLEAN_LEN $PREF/tok/$SRC.$i $PREF/tok/$TRG.$i $PREF/clean/$SRC.$i $PREF/clean/$TRG.$i; touch $PREF/clean/$SRC.$i.DONE' &")  if not -e "$PREF/clean/$SRC.$i";
@@ -301,7 +316,7 @@ sub run_tree_parsing {
     run_parallel("$PREF/treelow", "$PREF/low", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
 }
 run_tree_parsing($SRC, $SPLIT_WORDS_SRC, 1);
-run_tree_parsing($TRG, $SPLIT_WORDS_TRG, 0);
+run_tree_parsing($TRG, $SPLIT_WORDS_TRG, 0) if $TRG;
 
 ###### Forest Parsing ######
 
@@ -348,6 +363,7 @@ run_forest_parsing($TRG, $SPLIT_WORDS_TRG, 0) if $FOREST_TRG;
 
 # Run the training script
 if($ALIGN) {
+    $TRG or die "Aligning cannot be performed when target is not specified.";
 
     # Align using GIZA++
     safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step lex -work_dir $PREF/train -no_lm true -src_words $PREF/low/$SRC -src_file $PREF/treelow/$SRC -trg_file $PREF/low/$TRG -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train";
