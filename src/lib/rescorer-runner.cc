@@ -25,6 +25,13 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
     
     // If we are doing MBR rescoring
     if(mbr_eval_.get() != NULL) {
+
+        // Reduce the number of hypotheses before MBR
+        if(mbr_hyp_cnt_ && (int)nbest.size() > mbr_hyp_cnt_) {
+            sort(nbest.begin(), nbest.end());
+            nbest.resize(mbr_hyp_cnt_);
+        }
+
         // First get the maximum probability
         double max_score = -DBL_MAX;
         BOOST_FOREACH(RescorerNbestElement & elem, nbest)
@@ -43,6 +50,7 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
         // Calculate probabilities
         for(int i = 0; i < (int)nbest.size(); i++)
             prob_exp[nbest[i].sent].first += nbest[i].score/sum;
+        PRINT_DEBUG("Sentence " << sent_ << " MBR hypotheses: " << prob_exp.size() << endl, 1);
 
         // Calculate the expectation for each sentence
         int si = 0;
@@ -118,6 +126,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     if(config.GetString("mbr_eval") != "") {
         mbr_eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("mbr_eval")));
         mbr_scale_ = config.GetDouble("mbr_scale");
+        mbr_hyp_cnt_ = config.GetInt("mbr_hyp_cnt");
     }
 
     // Load n-best lists
