@@ -162,10 +162,10 @@ my ($SRCORIG, $TRGORIG, $PREF);
 if((@ARGV == 3) and $SRC and $TRG) {
     (-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
     (-f $ARGV[1]) or die "$TRG file $ARGV[1] doesn't exist.";
-    my ($SRCORIG, $TRGORIG, $PREF) = @ARGV;
+    ($SRCORIG, $TRGORIG, $PREF) = @ARGV;
 } elsif((@ARGV == 2) and $SRC and not $TRG) {
     (-f $ARGV[0]) or die "$SRC file $ARGV[0] doesn't exist.";
-    my ($SRCORIG, $PREF) = @ARGV;
+    ($SRCORIG, $PREF) = @ARGV;
 } else {
     print STDERR "Usage: $0 -src SRC -trg TRG INPUT_SRC INPUT_TRG OUTPUT_DIR\n";
     print STDERR " or\n";
