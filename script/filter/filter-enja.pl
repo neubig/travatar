@@ -13,7 +13,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $SRC_COL = 0;
-my $TRG_COL = 0;
+my $TRG_COL = 1;
 my $SHOW_FILTERED = 0;
 my $SKIP_SAHEN = 0;
 my $SKIP_NUMBER = 0;
@@ -36,13 +36,15 @@ if(@ARGV != 0) {
 #  Currently a simple rule that says if the Japanese side starts with
 #  "し" "する" or "さ", the only verb acceptable is "do" "did" "does" "doing"
 sub sahen_ok {
-    # For now, this should not apply to modals
-    for($_[$SRC_COL] =~ /(x\d+):v(p|b.*) /g) {
-        my $vs = $1;
-        $_[$TRG_COL] =~ s/$vs/VP/g;
-    }
+    # # For now, this should not apply to modals
+    # for($_[$SRC_COL] =~ /(x\d+):v(p|b.*) /g) {
+    #     my $vs = $1;
+    #     $_[$TRG_COL] =~ s/$vs/VP/g;
+    # }
     my @arr = split(/ /,$_[$TRG_COL]);
-    while($arr[0] =~ /^(x|"を")/) { shift @arr; }
+    # This is too agressive for now, but eventually we'd like to remove ones
+    # that take variables as well
+    # while($arr[0] =~ /^(x|"を")/) { shift @arr; }
     if(($arr[0] =~ /^"(し|する|さ")"/) and
        ($_[$SRC_COL] !~ /"(do|did|does|doing)"/)) {
         return 0;
