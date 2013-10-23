@@ -18,6 +18,7 @@ my $SHOW_FILTERED = 0;
 my $SKIP_SAHEN = 0;
 my $SKIP_NUMBER = 0;
 my $SKIP_TRGPART = 0;
+my $SKIP_POLAR = 0;
 GetOptions(
 "src-col=s" => \$SRC_COL,
 "trg-col=s" => \$TRG_COL,
@@ -25,6 +26,7 @@ GetOptions(
 "skip-sahen"    => \$SKIP_SAHEN,
 "skip-number"   => \$SKIP_NUMBER,
 "skip-trgpart"  => \$SKIP_TRGPART,
+"skip-polar"  => \$SKIP_POLAR,
 );
 
 if(@ARGV != 0) {
@@ -72,6 +74,13 @@ sub trgpart_ok {
     return 0;
 }
 
+sub polar_ok {
+    my $en_polar = ($_[$SRC_COL] =~ /"(not|n't|no|without)"/) ? 1 : 0;
+    my $ja_polar = ($_[$TRG_COL] =~ /("ま" "せ" "ん"|"な" "い"|"な" "かっ" "た"|"な" "く"|"いいえ")/) ? 1 : 0;
+    print STDERR "$en_polar $ja_polar @_\n";
+    return ($en_polar + $ja_polar == 2) ? 1 : 0;
+}
+
 while(<STDIN>) {
     chomp;
     my @arr = split(/ \|\|\| /);
@@ -79,6 +88,7 @@ while(<STDIN>) {
     if($ok and not $SKIP_TRGPART) { $ok = trgpart_ok(@arr); }
     if($ok and not $SKIP_NUMBER) { $ok = number_ok(@arr); }
     if($ok and not $SKIP_SAHEN) { $ok = sahen_ok(@arr); }
+    if($ok and not $SKIP_POLAR) { $ok = polar_ok(@arr); }
     print "$_\n" if 
         ($ok and (not $SHOW_FILTERED)) or 
         ((not $ok) and $SHOW_FILTERED);
