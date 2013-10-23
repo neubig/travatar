@@ -77,10 +77,10 @@ sub trgpart_ok {
 }
 
 sub polar_ok {
-    my $en_polar = ($_[$SRC_COL] =~ /"(not|n't|no|without)"/) ? 1 : 0;
-    my $ja_polar = ($_[$TRG_COL] =~ /("ま" "せ" "ん"|"な" "い"|"な" "かっ" "た"|"な" "く"|"いいえ")/) ? 1 : 0;
-    print STDERR "$en_polar $ja_polar @_\n";
-    return ($en_polar + $ja_polar == 2) ? 1 : 0;
+    my $en_polar = (($_[$SRC_COL] =~ /"(not|n't|no|without)"/) or ($_[$SRC_COL] =~ /"(in|un)[a-z]/)) ? 1 : 0;
+    my $ja_polar = ($_[$TRG_COL] =~ /("ま" "せ" "ん"|"な" "い"|"な" "かっ" "た"|"な" "く"|"な" "けれ"|"いいえ")/) ? 1 : 0;
+    $ja_polar = 0 if ($ja_polar == 1) and ($_[$TRG_COL] =~ /"か" "も"/);
+    return ($en_polar == $ja_polar) ? 1 : 0;
 }
 
 while(<STDIN>) {
