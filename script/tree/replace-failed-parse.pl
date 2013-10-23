@@ -12,10 +12,12 @@ binmode STDERR, ":utf8";
 my $FORMAT = "penn";
 my $NOBUF = "";
 my $ROOT = "ROOT";
+my $MAX_FOREST = 0;
 GetOptions(
     "format=s" => \$FORMAT,
     "nobuf!" => \$NOBUF,
     "root=s" => \$ROOT,
+    "max-forest=s" => \$MAX_FOREST,
 );
 
 if(@ARGV != 2) {
@@ -46,9 +48,15 @@ if($FORMAT eq "penn") {
     while(1) {
         my $correct = &get_egret(\*FILE0);
         my $sketchy = &get_egret(\*FILE1);
-        die "Found sentence in suspicious file, but not correcft: $sketchy\n" if $sketchy and not $correct;
+        die "Found sentence in suspicious file, but not correct: $sketchy\n" if $sketchy and not $correct;
         last if not $correct;
-        print ($sketchy ? $sketchy : $correct);
+        my @arr = split(/\n/, $sketchy);
+        print STDERR "".scalar(@arr)." $MAX_FOREST\n" if @arr > $MAX_FOREST;
+        if($sketchy and ((not $MAX_FOREST) or (@arr <= $MAX_FOREST))) {
+            print $sketchy;
+        } else {
+            print $correct;
+        }
     }
 } else {
     die "Bad tree format $FORMAT\n";
