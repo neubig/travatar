@@ -45,7 +45,7 @@ sub sahen_ok {
     # This is too agressive for now, but eventually we'd like to remove ones
     # that take variables as well
     # while($arr[0] =~ /^(x|"を")/) { shift @arr; }
-    if(($arr[0] =~ /^"(し|する|さ")"/) and
+    if(($arr[0] =~ /^"(し|する|さ)"/) and
        ($_[$SRC_COL] !~ /"(do|did|does|doing)"/)) {
         return 0;
     }
