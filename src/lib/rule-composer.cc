@@ -13,6 +13,9 @@ void RuleComposer::BuildComposedEdges(int id,
                         vector<vector<RuleComposer::SizedEdge> > & composed_edges,
                         HyperGraph * ret) const {
     if(SafeAccess(composed_edges,id).size() != 0) return;
+    // Save the node size
+    std::pair<int,int> node_span = ret->GetNode(id)->GetSpan();
+    int node_len = node_span.second-node_span.first;
     // For each edge coming from this node
     BOOST_FOREACH(HyperEdge* min_edge, min_edges[id]) {
         int start = composed_edges[id].size();
@@ -28,14 +31,18 @@ void RuleComposer::BuildComposedEdges(int id,
                 BOOST_FOREACH(const SizedEdge & below, composed_edges[tail->GetId()]) {
                     // If we have reached a point where composing would exceed the limit, break
                     int sum = above.first+below.first;
-                    if(sum > order_) break;
-                    // Compose and add the edge
-                    HyperEdge * comp = RuleComposer::ComposeEdge(
-                                        *above.second, *below.second,
-                                        above.second->NumTails()-tail_left);
-                    ret->AddEdge(comp);
-                    ret->GetNode(id)->AddEdge(comp);
-                    composed_edges[id].push_back(make_pair(sum, comp));
+                    // Compose and add the edge in the standard fashion
+                    if(sum <= order_ || 
+                       (node_len <= src_lex_span_ && above.second->NumTails() == 1 && below.second->NumTails() == 0)) {
+                        HyperEdge * comp = RuleComposer::ComposeEdge(
+                                            *above.second, *below.second,
+                                            above.second->NumTails()-tail_left);
+                        ret->AddEdge(comp);
+                        ret->GetNode(id)->AddEdge(comp);
+                        composed_edges[id].push_back(make_pair(sum, comp));
+                    } else if(src_lex_span_ == 0) {
+                        break;
+                    }
                 }
             }
         }

@@ -43,6 +43,9 @@ protected:
 
     // The order of composition to perform
     int order_;
+    // The maximum size of the span to be used on the source side, which can
+    // override the limit on composition of rules
+    int src_lex_span_;
 
 };
 
