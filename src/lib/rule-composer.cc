@@ -55,7 +55,7 @@ void RuleComposer::BuildComposedEdges(int id,
 // Binarize the graph to the right
 HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
     HyperGraph * ret = new HyperGraph(hg);
-    if(order_ == 1) return ret;
+    if(order_ == 1 && src_lex_span_ == 0) return ret;
     // Create the edges
     vector<vector<HyperEdge*> > min_edges;
     vector<vector<SizedEdge> > composed_edges(ret->NumNodes());

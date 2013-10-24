@@ -524,6 +524,21 @@ public:
 
         return exp_graph->CheckEqual(*act_graph);
     }
+    
+    int TestRuleComposerLex() {
+        ForestExtractor forest_ext;
+        scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
+        RuleComposer rc(1, 3);
+        shared_ptr<HyperGraph> exp_graph(new HyperGraph(*rule_graph)), act_graph(rc.TransformGraph(*rule_graph));
+        // Example rule graph
+        const vector<HyperEdge*> & edges = exp_graph->GetEdges();
+
+        // Make lexicalized composed rules of size up to 3
+        HyperEdge * e23 = RuleComposer::ComposeEdge(*edges[2], *edges[3], 0); exp_graph->AddEdge(e23); exp_graph->GetNode(2)->AddEdge(e23);
+        HyperEdge * e45 = RuleComposer::ComposeEdge(*edges[4], *edges[5], 0); exp_graph->AddEdge(e45); exp_graph->GetNode(4)->AddEdge(e45);
+
+        return exp_graph->CheckEqual(*act_graph);
+    }
 
     int TestTrinary() {
         // Use the example from Galley et al.
@@ -568,6 +583,7 @@ public:
         done++; cout << "TestRulePrintingTrgSyntax()" << endl; if(TestRulePrintingTrgSyntax()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRuleComposerLex()" << endl; if(TestRuleComposerLex()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTrinary()" << endl; if(TestTrinary()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

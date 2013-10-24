@@ -21,7 +21,8 @@ public:
     // An edge, annotated with the size of the original edges composed
     typedef std::pair<int, HyperEdge*>  SizedEdge;
 
-    RuleComposer(int order) : order_(order) { }
+    RuleComposer(int order, int src_lex_span = 0)
+            : order_(order), src_lex_span_(src_lex_span) { }
     virtual ~RuleComposer() { }
 
     // Binarize the graph to the right

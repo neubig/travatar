@@ -48,9 +48,11 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     scoped_ptr<GraphTransformer> binarizer, composer;
     // Create the binarizer
     binarizer.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
-    // Create the binarizer
-    if(config.GetInt("compose") > 1)
-        composer.reset(new RuleComposer(config.GetInt("compose")));
+    // Create the composer
+    int src_lex_len = config.GetInt("src_lex_len");
+    if(src_lex_len < 0) src_lex_len = config.GetInt("term_len");
+    if(config.GetInt("compose") > 1 || src_lex_len > 0)
+        composer.reset(new RuleComposer(config.GetInt("compose"), src_lex_len));
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
     ifstream src_in(argv[0].c_str());

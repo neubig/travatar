@@ -28,7 +28,8 @@ public:
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
         AddConfigEntry("output_format", "word", "The format of the output (word/penn/json)");
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
-        AddConfigEntry("compose", "4", "How many rules to compose (default 1=no composition)");
+        AddConfigEntry("compose", "5", "How many rules to compose (default 4, 1=no composition)");
+        AddConfigEntry("src_lex_span", "-1", "Use all fully lexicalized rules up to this length (default -1: same as term_len)");
         AddConfigEntry("attach", "top", "Where to attach null aligned target words (top/none/exhaustive, default top)");
         AddConfigEntry("attach_len", "1", "The maximum length of null segments to attach");
         AddConfigEntry("term_len", "10", "The maximum number of terminals in a rule");
