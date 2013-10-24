@@ -42,6 +42,7 @@ my $SYMMETRIZE = "grow";
 my $NORMALIZE = "false";
 my $BINARIZE = "right";
 my $COMPOSE = "4";
+my $SRC_LEX_LEN = "-1";
 my $ATTACH = "top";
 my $ATTACH_LEN = "1";
 my $NONTERM_LEN = "2";
@@ -77,6 +78,7 @@ GetOptions(
     "normalize=s" => \$NORMALIZE, # Normalize rule counts to probabilities
     "binarize=s" => \$BINARIZE, # Binarize trees in a certain direction
     "compose=s" => \$COMPOSE, # The number of rules to compose
+    "src_lex_len=s" => \$SRC_LEX_LEN, # The length of fully lexicalized rules to use
     "smooth=s" => \$SMOOTH, # The type of smoothing to use on the rule table
     "attach=s" => \$ATTACH, # Where to attach nulls
     "attach_len=s" => \$ATTACH_LEN, # The number of nulls to attach
