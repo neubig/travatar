@@ -101,10 +101,10 @@ sub prep_ok {
     $jaw =~ s/ //g;
     if($enw =~ /^up$/)      { return ($jaw =~ /上/) ? 1 : 0; }
     elsif($enw =~ /^down$/) { return ($jaw =~ /下/) ? 1 : 0; }
-    elsif($enw =~ /^in$/)   { return ($jaw =~ /^(に|で|の中の|中)$/) ? 1 : 0; }
+    elsif($enw =~ /^in$/)   { return ($jaw =~ /^(に|で|の中の|中|の)$/) ? 1 : 0; }
     elsif($enw =~ /^out$/)  { return ($jaw =~ /^(外|から)$/) ? 1 : 0; }
-    elsif($enw =~ /^to$/)   { return ($jaw =~ /^(に|へ)$/) ? 1 : 0; }
-    elsif($enw =~ /^on$/)   { return ($jaw =~ /^(で|上)$/) ? 1 : 0; }
+    elsif($enw =~ /^to$/)   { return ($jaw =~ /^(に|へ|まで|こと)$/) ? 1 : 0; }
+    elsif($enw =~ /^on$/)   { return ($jaw =~ /^(で|上|に)$/) ? 1 : 0; }
     elsif($enw =~ /^for$/)  { return ($jaw =~ /^(の|のための|のために|へ)$/) ? 1 : 0; }
     return 1;
 }
