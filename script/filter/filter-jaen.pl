@@ -20,6 +20,7 @@ my $SKIP_POLAR = 0;
 my $SKIP_DET = 0;
 my $SKIP_MD = 0;
 my $SKIP_PRN = 0;
+my $SKIP_PREP = 0;
 GetOptions(
 "src-col=s" => \$SRC_COL,
 "trg-col=s" => \$TRG_COL,
@@ -29,6 +30,7 @@ GetOptions(
 "skip-det"  => \$SKIP_DET,
 "skip-md"  => \$SKIP_MD,
 "skip-prn"  => \$SKIP_PRN,
+"skip-prep"  => \$SKIP_PREP,
 );
 
 if(@ARGV != 0) {
@@ -90,6 +92,19 @@ sub md_ok {
     return 1;
 }
 
+sub prep_ok {
+    my ($ja, $en, $jaw, $enw) = @_;
+    $jaw =~ s/ //g;
+    if($enw =~ /^up$/)      { return ($jaw =~ /上/) ? 1 : 0; }
+    elsif($enw =~ /^down$/) { return ($jaw =~ /下/) ? 1 : 0; }
+    elsif($enw =~ /^in$/)   { return ($jaw =~ /^(に|で|の中の|中)$/) ? 1 : 0; }
+    elsif($enw =~ /^out$/)  { return ($jaw =~ /^(外|から)$/) ? 1 : 0; }
+    elsif($enw =~ /^to$/)   { return ($jaw =~ /^(に|へ)$/) ? 1 : 0; }
+    elsif($enw =~ /^on$/)   { return ($jaw =~ /^(で|上)$/) ? 1 : 0; }
+    elsif($enw =~ /^for$/)  { return ($jaw =~ /^(の|のための|のために|へ)$/) ? 1 : 0; }
+    return 1;
+}
+
 sub words {
     my @arr;
     while($_[0] =~ /"([^ "]+)"/g) {
@@ -113,6 +128,7 @@ while(<STDIN>) {
     if($ok and not $SKIP_DET) { $ok = det_ok($src, $trg, $srcw, $trgw); }
     if($ok and not $SKIP_MD) { $ok = md_ok($src, $trg, $srcw, $trgw); }
     if($ok and not $SKIP_PRN) { $ok = prn_ok($src, $trg, $srcw, $trgw); }
+    if($ok and not $SKIP_PREP) { $ok = prep_ok($src, $trg, $srcw, $trgw); }
     print "$_\n" if 
         ($ok and (not $SHOW_FILTERED)) or 
         ((not $ok) and $SHOW_FILTERED);
