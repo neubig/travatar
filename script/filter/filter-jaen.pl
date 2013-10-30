@@ -69,14 +69,18 @@ sub det_ok {
 sub prn_ok {
     my ($ja, $en, $jaw, $enw) = @_;
     $jaw =~ s/ //g;
-    if($enw =~ /^(i|me)$/) { return ($jaw =~ /^((私|僕|俺)(は|が|に|を|)|)$/) ? 1 : 0; }
-    elsif($enw =~ /^you$/) { return ($jaw =~ /^((あなた|君)(は|が|に|を|)|)$/) ? 1 : 0; }
-    elsif($enw =~ /^he$/)  { return ($jaw =~ /^((かれ|彼)(は|が|に|を|)|)$/) ? 1 : 0; }
-    elsif($enw =~ /^she$/) { return ($jaw =~ /^(彼女(は|が|に|を|)|)$/) ? 1 : 0; }
-    elsif($en =~ /"(my|mine)"/)    { return ($ja =~ /"(私|僕|俺|子供|夫|妻|家内|息子|父)"/) ? 1 : 0; }
-    elsif($en =~ /"(your|yours)"/) { return ($ja =~ /"(あなた|君|さん|主人|お|ご)"/) ? 1 : 0; }
-    elsif($en =~ /"his"/)          { return ($ja =~ /"(かれ|彼)"/) ? 1 : 0; }
-    elsif($en =~ /"(her|hers)"/)   { return ($ja =~ /"(彼女)"/) ? 1 : 0; }
+    if($enw =~ /^(i|me)$/)         { return ($jaw =~ /^((私|僕|俺)(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^us$/)          { return ($jaw =~ /^(((私|僕|俺)(ら|達|たち)|我々)(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^you$/)         { return ($jaw =~ /^((あなた|君)(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^he$/)          { return ($jaw =~ /^((かれ|彼)(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^she$/)         { return ($jaw =~ /^(彼女(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^(they|them)$/) { return ($jaw =~ /^((彼女|かれ|彼)(ら|達|たち)(は|が|に|を|)|)$/) ? 1 : 0; }
+    elsif($enw =~ /^my$/)          { return ($jaw =~ /^(私|僕|俺)の$/) ? 1 : 0; }
+    elsif($enw =~ /^ours$/)        { return ($jaw =~ /^((私|僕|俺)(ら|達|たち)|我々)の$/) ? 1 : 0; }
+    elsif($enw =~ /^your$/)        { return ($jaw =~ /^(あなた|君)の$/) ? 1 : 0; }
+    elsif($enw =~ /^his$/)         { return ($jaw =~ /^(かれ|彼)の$/) ? 1 : 0; }
+    elsif($enw =~ /^(her|her)$/)   { return ($jaw =~ /^彼女の$/) ? 1 : 0; }
+    elsif($enw =~ /^their$/)       { return ($jaw =~ /^(彼女|かれ|彼)(ら|達|たち)の$/) ? 1 : 0; }
     return 1;
 }
 
