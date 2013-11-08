@@ -21,6 +21,6 @@ while(<STDIN>) {
     my @arr = split(/ \|\|\| /);
     my @freq = split(/ /, $arr[3]);
     my $bad = ($freq[0] <= $THRESHOLD);
-    $bad = 0 if (not $bad) or ($arr[0] =~ /^\( "/);
+    $bad = 0 if (not $bad) or ($arr[0] =~ /^[^ ]+ \( "/);
     print "$_\n" if not $bad;
 }

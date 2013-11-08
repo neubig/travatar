@@ -265,7 +265,7 @@ sub run_tree_parsing {
         }
     } elsif($lang eq "ja") {
         # JA Parsing with Eda
-        run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -in tok -out eda > OUTFILE", 1);
+        run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -nows -in tok -out eda > OUTFILE", 1);
         run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
         if($EGRET_MODEL) {
             run_parallel("$PREF/eda", "$PREF/edacfg", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);

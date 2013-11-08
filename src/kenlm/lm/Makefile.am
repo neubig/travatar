@@ -1,5 +1,8 @@
 include $(top_srcdir)/common.am
-bin_PROGRAMS = build_binary lmplz
+bin_PROGRAMS = query build_binary lmplz
+
+query_SOURCES = query_main.cc
+query_LDADD = libklm.a ../util/libklm_util.a -lz
 
 build_binary_SOURCES = build_binary_main.cc
 build_binary_LDADD = libklm.a ../util/libklm_util.a -lz
