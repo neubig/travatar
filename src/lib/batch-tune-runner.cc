@@ -203,6 +203,12 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
     tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tgm, weights));
     pool.Submit(tasks[0].get());
+    
+    // Randomize if necessary
+    if(config.GetInt("rand_seed") == 0)
+        srand(time(NULL));
+    else
+        srand(config.GetInt("rand_seed"));
     for(int i = 1; i < runs; i++) {
         // Randomize the weights
         SparseMap rand_weights = weights;
