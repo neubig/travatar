@@ -140,6 +140,8 @@ const ChartEntry & LMComposerBU::BuildChart(
         // cerr << " Updated node: " << *next_node << endl;
     }
     sort(chart[id]->begin(), chart[id]->end(), NodeScoreMore());
+    if(chart_limit_ > 0 && (int)chart[id]->size() > chart_limit_)
+        chart[id]->resize(chart_limit_);
     return *chart[id];
 }
 

@@ -21,9 +21,12 @@ protected:
 
     // The maximum number of stack items popped during search
     int stack_pop_limit_;
+    // The maximum number of elements in a single chart cell
+    int chart_limit_;
 
 public:
-    LMComposerBU(lm::ngram::Model * lm) : LMComposer(lm) { }
+    LMComposerBU(lm::ngram::Model * lm) :
+        LMComposer(lm), stack_pop_limit_(0), chart_limit_(0) { }
     virtual ~LMComposerBU() { }
 
     // Intersect this graph with a language model, using cube pruning to control
@@ -32,6 +35,8 @@ public:
 
     int GetStackPopLimit() const { return stack_pop_limit_; }
     void SetStackPopLimit(double stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
+    int GetChartLimit() const { return chart_limit_; }
+    void SetChartLimit(double chart_limit) { chart_limit_ = chart_limit; }
 
 protected:
 
