@@ -63,6 +63,7 @@ HyperGraph * WordSplitter::TransformGraph(const HyperGraph & hg) const {
             vector<HyperEdge*> & edges = node->GetEdges();
             HyperEdge* edge = new HyperEdge(node);
             edge->SetId(edges[0]->GetId());
+            delete ret->GetEdges()[edge->GetId()];
             ret->GetEdges()[edge->GetId()] = edge;
             BOOST_FOREACH(HyperNode* new_node, new_nodes[node_idx]) {
                 edge->AddTail(new_node);
