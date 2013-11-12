@@ -36,6 +36,7 @@ class InputFileStream : public std::istream
 {
 protected:
   std::streambuf *m_streambuf;
+  std::ifstream *ifs_;
 public:
 
   InputFileStream(std::string filePath);

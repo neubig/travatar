@@ -85,6 +85,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
             THROW_ERROR("Expecting parenthesis but got '("<<(int)next_char<<")"<<next_char<<"'");
         }
     }
+    delete hg;
     return NULL;
 }
 

@@ -50,9 +50,9 @@ InputFileStream::InputFileStream(std::string filePath)
     if(filePath.size() > 3 &&
        filePath.substr(filePath.size() - 3, 3) == ".gz") {
       filtering_streambuf<input> * in = new filtering_streambuf<input>;
-      ifstream * ifs = new ifstream(filePath.c_str());
+      ifs_ = new ifstream(filePath.c_str());
       in->push(gzip_decompressor());
-      in->push(*ifs);
+      in->push(*ifs_);
       m_streambuf = in;
     } else {
       std::filebuf* fb = new std::filebuf();
@@ -70,6 +70,7 @@ InputFileStream::~InputFileStream()
 {
   delete m_streambuf;
   m_streambuf = NULL;
+  if(ifs_) delete ifs_;
 }
 
 void InputFileStream::Close()
