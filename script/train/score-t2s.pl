@@ -110,7 +110,7 @@ sub print_counts {
             $extra_feat .= " stl_${src_lab}_${trg_lab}=1" if $SRC_TRG_LABEL and $src_lab and $trg_lab;
         }
         # Find the counts/probabilities
-        my $lfreq = ($cnt ? log($cnt) : -99);
+        my $lfreq = ($cnt > 0) ? log($cnt) : -99;
         my $lprob = $lfreq-$lsum;
         printf "$src ||| $trg ||| p=1 lfreq=%f ${PREFIX}p=%f$extra_feat", $lfreq, $lprob;
         printf " ${PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
