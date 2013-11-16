@@ -16,6 +16,7 @@ my $TRG_LABEL = 0;
 my $SRC_TRG_LABEL = 0;
 my $PREFIX = "egf";
 my $FOF_MAX = 20;
+my $KEEP_EMPTY = 0;
 my $FOF_FILE;
 GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
@@ -27,6 +28,7 @@ GetOptions(
     "trg-label" => \$TRG_LABEL,           # Calculate sparse features for the target labels
     "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
     "fof-file=s" => \$FOF_FILE,           # Save frequencies of frequencies to a file
+    "keep-empty" => \$KEEP_EMPTY,         # Keep rules that have an empty string on one side
 );
 
 if(@ARGV != 0) {
@@ -87,6 +89,7 @@ my $SYNTAX_FEATS = ($TRG_SYNTAX or $SRC_LABEL or $TRG_LABEL or $SRC_TRG_LABEL);
 sub print_counts {
     my $src = shift;
     my $counts = shift;
+    return if ($src eq "") and not $KEEP_EMPTY;
     my $ist2s = ($src =~ /^[^ ]+ \( /); # Check if this is a string
     my @srcarr = strip_arr($src, !$ist2s);
     my $sum = sum(map { $_->[1] } @$counts);
@@ -95,6 +98,7 @@ sub print_counts {
     foreach my $kv (@$counts) {
         my $trg = $kv->[0];
         my $cnt = $kv->[1];
+        next if ($trg eq "") and not $KEEP_EMPTY;
         my $words = 0;
         my @trgarr = strip_arr($trg, $ist2s);
         # If we are using target side syntax and the rule is bad
