@@ -43,7 +43,10 @@ sub readtree {
     for(@ret) { $ishead[$_->[1]]++ if $_->[1] >= 0; }
     # Relabel sa-hen nouns
     foreach my $i ( 1 .. $#ret ) {
-        $ret[$i-1]->[3] = "動詞" if not (($ret[$i]->[2] !~ /^(する|す|し|さ|せ)$/) or ($ret[$i-1]->[3] !~ /^名詞$/));
+        if(($ret[$i]->[2] =~ /^(する|す|し|さ|せ|でき)$/) and ($ret[$i-1]->[3] =~ /^名詞$/)) {
+            $ret[$i-1]->[3] = "動詞";
+            $ret[$i]->[3] = "語尾";
+        }
     }
     # Find chunks. These include:
     #  - a verb (including sa-hen) followed by auxiliaries, word endings, or other verbs
@@ -56,7 +59,7 @@ sub readtree {
         $connect = 1 if(
             ($ishead[$i] == 1) and
             ((($head_type[-1] =~ /^(動詞|形容詞|助動詞)/) and 
-               (($ret[$i]->[3] =~ /^(語尾|助動詞)/) or
+               (($ret[$i]->[3] =~ /^(語尾|助動詞)$/) or
                 ($ret[$i]->[3] =~ /^助詞(て|つつ|ば)/) or
                 (($ret[$i]->[3] =~ /^(動詞|助詞も|助詞は|形容詞な)/) and ($head_type[-1] eq "助動詞で")) or
                 (($ret[$i]->[3] =~ /^動詞$/) and ($head_type[-1] eq "動詞")))) or
@@ -86,7 +89,7 @@ sub readtree {
     }
     # For common punctuation, propagate them up to the first head on the left
     for(my $i = $#ret; $i > 0; $i--) {
-        next if $ret[$i]->[2] !~ /^[、,。\.：:．，]$/;
+        next if $ret[$i]->[2] !~ /^[、,。\.：:．，？\?！!]$/;
         my @children = getchildren(\@ret, $i);
         next if not @children;
         $ret[$children[-1]]->[1] = $ret[$i]->[1];
