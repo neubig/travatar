@@ -32,7 +32,7 @@ protected:
 
 public:
 
-    MTSegmenterRunner() { }
+    MTSegmenterRunner() : slack_(2.0) { }
     ~MTSegmenterRunner() { }
     
     // Run the model
@@ -43,10 +43,11 @@ public:
     // sys_sents
     void SegmentMT(
         const std::vector<Sentence> & ref_sents, const Sentence & sys_corpus,
-        boost::shared_ptr<EvalMeasure> & eval_measure, int max_len,
+        boost::shared_ptr<EvalMeasure> & eval_measure,
         std::vector<Sentence> & sys_sents);
 
-private:
+protected:
+    double slack_;
 
 };
 

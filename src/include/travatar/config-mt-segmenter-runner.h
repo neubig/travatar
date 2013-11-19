@@ -28,7 +28,8 @@ public:
 );
 
         AddConfigEntry("ref", "", "A reference file");
-        AddConfigEntry("eval", "bleu", "Evaluation measure to be used for the separation");
+        AddConfigEntry("eval", "bleu:smooth=1", "Evaluation measure to be used for the separation");
+        AddConfigEntry("slack", "2.0", "Segmentations can be slack times the length of the reference");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
 
     }

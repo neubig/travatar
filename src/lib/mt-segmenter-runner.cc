@@ -26,7 +26,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
     Sentence curr_sentence;
     // Special treatment of the last sentence, only look at ones that go
     // all the way to the end
-    int max_len = 3 * ref_sents[curr_refsys.first].size();
+    int max_len = slack_ * ref_sents[curr_refsys.first].size();
     bool is_last = (curr_refsys.first == (int)ref_sents.size()-1);
     int first = (is_last ? (int)sys_corpus.size() : curr_refsys.second);
     int last  = min((int)sys_corpus.size(), curr_refsys.second + max_len);
@@ -72,7 +72,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
 // sys_sents
 void MTSegmenterRunner::SegmentMT(
         const vector<Sentence> & ref_sents, const Sentence & sys_corpus,
-        shared_ptr<EvalMeasure> & eval_measure, int max_len,
+        shared_ptr<EvalMeasure> & eval_measure,
         vector<Sentence> & sys_sents) {
     MTSegmenterMemo memo;
     pair<int,int> curr_refsys(0,0);
@@ -90,8 +90,9 @@ void MTSegmenterRunner::SegmentMT(
 // Run the model
 void MTSegmenterRunner::Run(const ConfigMTSegmenterRunner & config) {
 
-    // Set the debugging level
+    // Set the global variables
     GlobalVars::debug = config.GetInt("debug");
+    slack_ = config.GetDouble("slack");
 
     // Load the reference
     ifstream refin(config.GetString("ref").c_str());
@@ -119,8 +120,7 @@ void MTSegmenterRunner::Run(const ConfigMTSegmenterRunner & config) {
 
     // Call the function to split the corpus
     vector<Sentence> sys_sents;
-    SegmentMT(ref_sents, sys_corpus, eval_measure, max_ref_size*2,
-              sys_sents);
+    SegmentMT(ref_sents, sys_corpus, eval_measure, sys_sents);
 
     // Print out the segmentation
     BOOST_FOREACH(const Sentence & sent, sys_sents)
