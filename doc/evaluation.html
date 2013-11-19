@@ -43,6 +43,16 @@
 
 <h1>MT Evaluation with Travatar</h1>
 
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#measures">Supported Evaluation Measures</a></li>
+<li><a href="#significance">Significance Testing</a></li>
+<li><a href="#segmenting">Segmenting Output for Evaluation</a></li>
+</ul>
+
+<a name="overview">
+<h2>Overview</h2>
+
 <p>
 Travatar contains a tool for evaluating translations according to various automatic evaluation metrics.
 We do this by passing the reference (<tt>ref.txt</tt>) and system outputs (<tt>sys1.txt</tt> <tt>sys2.txt</tt> or more) to the <tt>mt-evaluator</tt> program.
@@ -56,6 +66,7 @@ travatar/src/bin/mt-evaluator -ref ref.txt sys1.txt sys2.txt
 This will print scores for BLEU and RIBES. Normal scores for systems should be a BLEU of around 10-40, and RIBES of around 50-90, with systems on the low end of the range generally being bad and high end of the range being good.
 </p>
 
+<a name="measures">
 <h2>Supported Evaluation Measures</h2>
 
 <p>
@@ -66,6 +77,7 @@ The evaluation supports several evaluation measures, each of which can optionall
 <li><b>BLEU</b> (indicator string: <tt>bleu:order=4,smooth=0,scope=corpus</tt>)</li>
 <li><b>RIBES</b> (indicator string: <tt>ribes:alpha=0.25,beta=0.1</tt>)</li>
 <li><b>TER</b> (indicator string: <tt>ter</tt>)</li>
+<li><b>WER</b> (indicator string: <tt>wer</tt>)</li>
 </ul>
 
 <p>
@@ -85,6 +97,7 @@ It is also possible (mainly for tuning) to linearly interpolate two or more eval
 <li><b>Interpolated</b> (indicator string: <tt>interp:0.4|bleu:order=5|0.6|ribes</tt>)</li>
 </ul>
 
+<a name="significance">
 <h2>Significance Testing</h2>
 
 <p>
@@ -100,6 +113,25 @@ travatar/src/bin/mt-evaluator -bootstrap 10000 -ref ref.txt sys1.txt sys2.txt
 <p>
 After the normal evaluation output, you will also get a significance report for each system pair and evaluation measure.
 The first column is the fraction of the time that the first system achieves a higher value than the second system, the center value indicates ties, and the final value indicates that the first system gets a lower value.
+</p>
+
+<a name="segmenting">
+<h2>Segmenting MT Output for Evaluation</h2>
+
+<p>
+Sometimes the sentence segmentation of the reference translations and system output does not match, such as in speech translation where sentence boundaries are not clear (<a href="http://mt-archive.info/IWSLT-2005-Matusov.pdf">Matusov et al. 2005</a>).
+In this case, you can use the <tt>mt-segmenter</tt> utility to divide the system output into sentences first before evaluation.
+Usage is as follows, where <tt>ref.txt</tt> is the reference,  <tt>sys.txt</tt> is the system output (line boundaries are ignored), and <tt>seg.txt</tt> is the segmented output.
+</p>
+
+<pre>
+travatar/src/bin/mt-segmenter -ref ref.txt sys.txt &gt; seg.txt
+</pre>
+
+<p>
+By default the segmentation is created to approximately optimize BLEU (with +1 smoothing to make dynamic programming go smoothly), but you can use other optimization measures as listed above.
+Also, note that this process is very slow, as it is not using any approximate search techniques.
+If you have document boundaries, it would be best to divide along these document boundaries, and send one document at a time to <tt>mt-segmenter</tt>, which will greatly improve speed.
 </p>
 
 
