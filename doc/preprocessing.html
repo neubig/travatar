@@ -79,9 +79,13 @@ ln -s `pwd`/stanford-parser-*-models.jar stanford-parser-models.jar
 </li>
 
 <li><a href="http://plata.ar.media.kyoto-u.ac.jp/tool/EDA">Eda Parser</a> (ja): Unzip, enter the directory, <tt>make</tt>.</li>
+
+<li><a href="http://code.google.com/p/nile/">Nile</a> (optional): Requires several libraries, etc. Follow the install directions.</li>
 </ul>
 
 <h2>Running Preprocessing</h2>
+
+<h3>Preprocessing Training Data</h3>
 
 <p>
 If you have all of the tools installed in the <tt>$HOME/usr/local</tt> directory, running the preprocessing script is quite simple.
@@ -98,6 +102,21 @@ where <tt>train.en</tt> is the source file, <tt>train.ja</tt> is the target file
 <tt>-threads</tt> indicates the number of threads you want to use (if you use more, preprocessing will finish more quickly), <tt>-clean 60</tt> indicates you want to remove all sentences of more than 60 words, and <tt>-align</tt> indicates that you want to run GIZA++ to generate alignments.
 When preprocessing finishes, you will have a number of directories under <tt>preproc-train</tt> containing the corpus in various forms.
 </p>
+
+<p>
+In addition, if you don't mind a small amount of extra work to achieve the best accuracy possible, you can use Nile to obtain better word alignments.
+This can be done by adding "<tt>-nile-model MODEL_NAME.txt</tt>" where <tt>MODEL_NAME.txt</tt> is the name of a model for Nile that you have trained according to the Nile directions.
+You can download a model for the following language pairs (if you have a model for a different language pair, please contribute! We will list it here):
+</p>
+<ul>
+<li>English-Japanese (<a href="http://www.phontron.com/travatar/download/nile-en-ja.model">en-ja</a>)</li>
+</ul>
+<p>
+If the model is in the opposite direction as the source/target in the preprocessing script, add the "<tt>-nile-direction trgsrc</tt>" option.
+</p>
+
+
+<h3>Preprocessing Testing Data</h3>
 
 <p>
 When preprocessing your development and testing data, you might want to use a command like this:
