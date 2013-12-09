@@ -8,12 +8,17 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+my $SIDE = "src";
+GetOptions(
+"side=s" => \$SIDE,
+);
+
 if(@ARGV != 0) {
     print STDERR "Usage: $0\n";
     exit 1;
 }
 
-sub make_child {
+sub make_src {
     my $id = shift;
     ($_ = <STDIN>) or exit 0;
     chomp;
@@ -26,7 +31,7 @@ sub make_child {
         my $sym = $arr[$pos];
         # Wildcard
         if($sym =~ /x\d+:(.*)/) {
-            $ret .= make_child($1);
+            $ret .= make_src($1);
         # Terminal
         } elsif ($sym =~ /^"(.+)"$/) {
             $ret .= $1;
@@ -34,7 +39,7 @@ sub make_child {
         } elsif ($sym =~ /^[\(\)]$/) {
             $ret .= $sym;
         } elsif ($sym =~ /UNK/) {
-            $ret .= make_child($1);
+            $ret .= make_src($1);
         } else {
             $arr[++$pos] eq "(" or die "No expected paren after $sym: $_\n";
             $ret .= "($sym ";
@@ -43,7 +48,41 @@ sub make_child {
     return $ret;
 }
 
+sub make_trg {
+    ($_ = <STDIN>) or exit 0;
+    chomp;
+    my ($sent, $span, $src, $trg, $feat) = split(/ \|\|\| /);
+    return "" if not $src;
+    my @arr = split(/ +/, $trg);
+    my $ret;
+    my (@retarr, @unfilled);
+    for(my $pos = 0; $pos < @arr; $pos++) {
+        my $sym = $arr[$pos];
+        # Wildcard
+        if($sym =~ /^x(\d+)$/) {
+            $unfilled[$1] = scalar(@retarr);
+            push @retarr, "FILLER";
+        # Terminal
+        } elsif ($sym =~ /^"(.+)"$/) {
+            push @retarr, "(X $1)";
+        } else {
+            die "Bad symbol: $sym\n$_";
+        }
+    }
+    foreach my $i (@unfilled) {
+        @retarr[$i] = make_trg();
+    }
+    return "(X ".join("", @retarr).")";
+}
+
 while(1) {
-    my $parse = make_child("root");
+    my $parse;
+    if($SIDE eq "src") {
+        $parse = make_src("root");
+    } elsif($SIDE eq "trg") {
+        $parse = make_trg();
+    } else {
+        die "Bad -side $SIDE";
+    }
     print "$parse\n" if($parse);
 }
