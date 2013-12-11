@@ -38,7 +38,7 @@ if(@ARGV != 0) {
 
 # Make sure that "suru" is not assigned to overly many verbs
 #  Currently a simple rule that says if the Japanese side starts with
-#  "し" "する" or "さ", the only verb acceptable is "do" "did" "does" "doing"
+#  "し" "する" or "さ", the only verbs acceptable are "do" "did" "does" "doing"
 sub sahen_ok {
     # # For now, this should not apply to modals
     # for($_[$SRC_COL] =~ /(x\d+):v(p|b.*) /g) {
@@ -50,7 +50,7 @@ sub sahen_ok {
     # that take variables as well
     # while($arr[0] =~ /^(x|"を")/) { shift @arr; }
     if(($arr[0] =~ /^"(し|する|さ)"/) and
-       ($_[$SRC_COL] !~ /"(do|did|does|doing)"/)) {
+       ($_[$SRC_COL] !~ /"(do|did|does|doing|be|was|is|being|have|had|has|having)"/)) {
         return 0;
     }
     return 1;

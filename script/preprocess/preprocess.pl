@@ -89,6 +89,7 @@ my $GIZA_DIR;
 my $NILE_DIR;
 my $NILE_GIZATYPE = "intersect";
 my $NILE_MODEL;
+my $NILE_BINARIZE = "rightrp";
 my $NILE_SEGMENTS = 200;
 my $NILE_BEAM = 64;
 my $NILE_ORDER = "srctrg";
@@ -391,8 +392,8 @@ if($ALIGN) {
         my $nilesuflen = int(log($NILE_SEGMENTS)/log(10)+1);
         my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS-1);
         # Binarize the trees on both sides
-        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NTRG, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
-        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NSRC, "$TRAVATAR_DIR/src/bin/tree-converter -binarize right < INFILE > OUTFILE");
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NTRG, "$TRAVATAR_DIR/src/bin/tree-converter -binarize $NILE_BINARIZE < INFILE > OUTFILE");
+        run_parallel("$PREF/treelow", "$PREF/treelowbin", $NSRC, "$TRAVATAR_DIR/src/bin/tree-converter -binarize $NILE_BINARIZE < INFILE > OUTFILE");
         # Create and split GIZA++ union alignments
         my $GIZAOUTDIR = ($NILE_GIZATYPE eq "union") ? "gizau" : "gizai";
         (safesystem("mkdir $PREF/$GIZAOUTDIR") or die) if not -e "$PREF/$GIZAOUTDIR";

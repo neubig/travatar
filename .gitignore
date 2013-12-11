@@ -30,6 +30,7 @@ src/bin/forest-extractor
 src/bin/tree-converter
 src/bin/batch-tune
 src/bin/mt-evaluator
+src/bin/mt-segmenter
 src/test/test-travatar
 src/include/travatar/stamp-h1
 src/kenlm/lm/lmplz
