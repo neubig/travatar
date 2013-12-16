@@ -6,6 +6,7 @@
 #include <travatar/dict.h>
 #include <travatar/config-rescorer-runner.h>
 #include <travatar/rescorer-runner.h>
+#include <travatar/input-file-stream.h>
 #include <travatar/util.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
@@ -101,7 +102,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     if(config.GetString("nbest").size() == 0 || config.GetString("nbest") == "-") {
         nbest_in = &cin;
     } else {
-        nbest_in = new ifstream(config.GetString("nbest").c_str());
+        nbest_in = new InputFileStream(config.GetString("nbest").c_str());
         if(!(*nbest_in)) THROW_ERROR("Could not find nbest file: " << config.GetString("nbest"));
     }
 

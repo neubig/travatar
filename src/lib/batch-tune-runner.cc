@@ -6,6 +6,7 @@
 #include <travatar/util.h>
 #include <travatar/config-batch-tune.h>
 #include <travatar/batch-tune-runner.h>
+#include <travatar/input-file-stream.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
@@ -148,7 +149,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     PRINT_DEBUG("Loading system output..." << endl, 1);
     for(int i = 0; i < (int)sys_files.size(); i++) {
         // Open the system file
-        ifstream sys_in(sys_files[i].c_str());
+        InputFileStream sys_in(sys_files[i].c_str());
         if(!sys_in)
             THROW_ERROR(sys_files[i] << " could not be opened for reading");
         // Open the stats file
