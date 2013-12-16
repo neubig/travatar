@@ -49,10 +49,11 @@ Here is a short list, in approximate order of priority:
 </p>
 
 <ul>
-<li>Finish the implementation of online learning algorithms such as MIRA (and integration with <tt>mert-travatar.pl</tt>.</li>
+<li>Finish the implementation of online learning algorithms such as <a href="http://acl.ldc.upenn.edu/D/D07/D07-1080.pdf">MIRA</a> (and integration with <tt>mert-travatar.pl</tt>.</li>
 <li>On-disk storage of the rule table and language model.</li>
 <li>More efficient storage of the rule table in memory.</li>
-<li>Support for minimum Bayes risk (MBR) decoding or rescoring.</li>
+<li>Create better phrase table filtering scripts, based on <a href="http://aclweb.org/anthology/D/D12/D12-1089.pdf">entropy filtering</a>, etc.</li>
+<li>Implement <a href="http://www.cs.ust.hk/~dekai/library/WU_Dekai/CarpuatWu_TMI2007.pdf">phrase-sense disambiguation</a>.</li>
 <li>Implement a clone of the Berkeley parser within Travatar to remove dependency on external software and remove hacky replacement of failed parses.</li>
 <li>Build KenLM's language model estimator together with travatar, and use it as the default in the tutorial.</li>
 <li>Expand the ability to use target-side syntax.</li>
