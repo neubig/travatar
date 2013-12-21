@@ -85,7 +85,7 @@ namespace TERCpp
 	{
 		    cerr <<"DEBUG tercpp : multiEvaluation::launchTxtEvaluation : testing references and hypothesis size  "<<endl<<" number of references : "<<  referencesTxt.getSize()<<endl; 
 		    vector <string> s =referencesTxt.getListDocuments();
-		    cerr << " avaiable ids : ";
+		    cerr << " available ids : ";
 		    for (vector <string>::iterator iterS=s.begin(); iterS!=s.end(); iterS++)
 		    {
 			cerr << " " << (*iterS);
