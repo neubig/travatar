@@ -382,7 +382,9 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
 //////////////////////////////////////////
 //        HIERO RULE EXTRACTOR          //
 //////////////////////////////////////////
-string getstring(Sentence & s, int begin, int end) {
+
+// LOCAL ROUTINE
+string AppendString(Sentence & s, int begin, int end) {
     string ret = string("");
     for (unsigned i=begin; i<=end; ++i) {
         ret += Dict::WSym(s[i]);
@@ -391,79 +393,101 @@ string getstring(Sentence & s, int begin, int end) {
     return ret;
 }
 
+int MapMaxKey(const std::map<int,int> & map) {
+    int max = 0;
+    pair<int,int> item;
+    BOOST_FOREACH(item, map) {
+        if (item.first > max) max = item.first;
+    } 
+    return max;
+}
+
+int MapMinKey(const std::map<int,int> & map) {
+    int min = 0;
+    int is_first = 1;
+    pair<int,int> item;
+    BOOST_FOREACH(item, map) {
+        if (is_first || item.first < min) {
+            is_first = 0;
+            min = item.first;
+        }
+    } 
+    return min;
+}
+
+// HEADER IMPLEMENTATION
 void HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
     PhrasePairs pairs = ExtractPhrase(align,source, target);
     BOOST_FOREACH(PhrasePair pp, pairs) {
-        cerr << getstring(source, pp.first.first, pp.first.second) << " -> " << getstring(target, pp.second.first,pp.second.second) << endl;
+        cerr << AppendString(source, pp.first.first, pp.first.second) << " -> " << AppendString(target, pp.second.first,pp.second.second) << endl;
     }
 }
 
-
+int QuasiConsecutive(unsigned small, 
+				unsigned large, map<int,int> & tp, 
+				vector<set<int> > & t2s) {
+    for (int i=small; i <= large; ++i) {
+        if (t2s[i].size() != 0 && tp[i] == 0) {
+            return 0;
+        }
+    }   
+    return 1;
+}
 
 // The implementation of phrase extraction algorithm. It can be found on Koehn, 2011 section 5.2.3 page 133
 // The algorithm to extract all consistent phrase pairs from a word-aligned sentence pair
-PhrasePairs HieroExtractor::ExtractPhrase(Alignment & align, Sentence & source, Sentence & target) {
+PhrasePairs HieroExtractor::ExtractPhrase(Alignment & align, Sentence & source, 
+		Sentence & target) {
+    std::vector<std::set<int> > s2t = align.GetSrcAlignments();
+    std::vector<std::set<int> > t2s = std::vector<std::set<int> >();
+    PhrasePairs ret = PhrasePairs();
 
-    // This is the set of alignments
-    std::vector<std::set<int> > A = align.GetSrcAlignments();
-    PhrasePairs BP = PhrasePairs();
+    // Remap from source -> target back to target -> source
+    for (unsigned t=0; t < target.size(); ++t) {
+        t2s.push_back(set<int>());
+    }
+    for (unsigned s=0; s < s2t.size(); ++s) {
+        set<int> ts = s2t[s];
+        BOOST_FOREACH(int t, ts) {
+            t2s[t].insert((int)s);
+        }
+    }
 
-    // Let the algorithm do the job
-    for (unsigned e_end = 0; e_end < source.size(); ++e_end) {
-        for (unsigned e_start = 0; e_start < source.size(); ++e_start) {
-            int f_start = target.size()-1;
-            int f_end =  -1;
-
-            for (unsigned e=0; e < A.size(); ++e) {
-                set<int> fs = A[e];
-                BOOST_FOREACH(int f, fs) {
-                    if (e >= e_start && e <= e_end) {
-                        f_start = f < f_start ? f : f_start;
-                        f_end = f > f_end ? f : f_end;
+    // Phrase Extraction Algorithm 
+    for (unsigned s_begin=0; s_begin < s2t.size(); ++s_begin) {
+        std::map<int, int> tp;
+        for (unsigned s_end=s_begin; s_end < s2t.size(); ++s_end) {
+            if (s2t[s_end].size() != 0) { 
+                BOOST_FOREACH(int _t, s2t[s_end]) { tp[_t]++;}
+            }
+            int t_begin = MapMinKey(tp);
+            int t_end = MapMaxKey(tp);
+            if (QuasiConsecutive(t_begin,t_end,tp,t2s)) {
+                std::map<int, int> sp;
+                for (int t=t_begin; t<=t_end;++t) {
+                    if (t2s[t].size() != 0) {
+                        BOOST_FOREACH(int _s, t2s[t]) { sp[_s]++; }
                     }
                 }
-            }
-
-            // slight modification, we do the filtering outside the extract algorithm
-            if (f_end != -1) {
-                bool flag = 0;
-                // phrase consistency.
-                // there is a modification on the original algorithm,
-                // because if we filter 'return {} if e < e_start or e > e_end', it doesn't make sense!
-                /*int furthest = *(A[e_end].rbegin());
-                for (int e=e_start; e < e_end; ++e) {
-                    set<int> fs = A[e];
-                    BOOST_FOREACH(int f, fs) {
-                        if (f>furthest) {
-                            flag = 1;
+                if (MapMinKey(sp) >= s_begin && MapMaxKey(sp) <= s_end) {
+                    while (t_begin >= 0) {
+                        int jp = t_end;
+                        while (jp <= t2s.size()) {
+                            ret.push_back(make_pair(make_pair(s_begin,s_end),make_pair(t_begin,jp)));
+                            ++jp;   
+                            if (t2s[jp].size() != 0 || jp == t2s.size()) {
+                                break;
+                            }
+                        }
+                        --t_begin;
+                        if(t_begin < 0 || t2s[t_begin].size() != 0) {
                             break;
                         }
-                    }
-                } */
-                
-                if (!flag) {
-
-                    vector<PhrasePair> phrasepairs = ExtractMinimalPhrase(f_start,f_end,e_start,e_end,A,target.size());
-                    BOOST_FOREACH(PhrasePair pp,phrasepairs) {
-                        BP.push_back(pp);
+                        
                     }
                 }
             }
         }
     }
-    return BP;
-}
-
-std::vector<PhrasePair> HieroExtractor::ExtractMinimalPhrase(int fstart, int fend, int estart, int eend, std::vector<std::set<int> > & A, int target_len) {
-    cout << fstart << "," << fend << "," << estart << "," << eend << endl;
-    vector<PhrasePair> E = vector<PhrasePair>();
-    int f_s = fstart;
-    do {
-        int f_e = fend;
-        do {
-            cout << "\t" << estart << "," << eend << "->" << f_s << "," <<f_e <<endl;
-            E.push_back(std::make_pair(std::make_pair(estart,eend),std::make_pair(f_s,f_e)));
-        } while (A[eend].find(f_e++) == A[eend].end() && f_e < target_len);
-    } while (A[estart].find(f_s--) == A[estart].end() && f_s >= 0);
-    return E;
+    return ret;
 }

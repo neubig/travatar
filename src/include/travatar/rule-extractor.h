@@ -112,8 +112,7 @@ public:
     void ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
 private:
     PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
-    std::vector<PhrasePair> ExtractMinimalPhrase(int fstart, int fend, int estart, int eend, std::vector<std::set<int> > & A, int target_len);
-
+    QuasiConsecutive(unsigned small, unsigned large, map<int,int> & tp, vector<set<int> > & t2s);
 };
 
 

@@ -55,7 +55,5 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         Sentence trg_sent = Dict::ParseWords(trg_line);
 
         extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
-
-        break;
     }
 }
