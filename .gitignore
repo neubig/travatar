@@ -18,6 +18,7 @@ config.status
 config.sub
 configure
 depcomp
+debug.sh
 install-sh
 libtool
 ltmain.sh
