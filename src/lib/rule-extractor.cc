@@ -378,3 +378,256 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     oss << " ||| " << exp(rule.GetScore());
     return oss.str();
 }
+
+//////////////////////////////////////////
+//        HIERO RULE EXTRACTOR          //
+//////////////////////////////////////////
+
+// LOCAL ROUTINE
+string AppendString(Sentence & s, int begin, int end) {
+    string ret = string("");
+    for (int i=begin; i<=(int)end; ++i) {
+        ret += Dict::WSym(s[i]);
+        ret += " ";
+    }
+    return ret;
+}
+
+string PrintPhrasePair(PhrasePair & pp, Sentence & source, Sentence & target) {
+    return AppendString(source, pp.first.first, pp.first.second) + string(" -> ") 
+        + AppendString(target, pp.second.first, pp.second.second);
+}
+
+void PrintPhrasePairs(PhrasePairs pairs, Sentence & source, Sentence & target) {
+    BOOST_FOREACH(PhrasePair pp , pairs) {
+        cerr << PrintPhrasePair(pp,source,target) <<endl;
+    }
+}
+
+int MapMaxKey(const std::map<int,int> & map) {
+    int max = 0;
+    pair<int,int> item;
+    BOOST_FOREACH(item, map) {
+        if (item.first > max) max = item.first;
+    } 
+    return max;
+}
+
+int MapMinKey(const std::map<int,int> & map) {
+    int min = 0;
+    int is_first = 1;
+    pair<int,int> item;
+    BOOST_FOREACH(item, map) {
+        if (is_first || item.first < min) {
+            is_first = 0;
+            min = item.first;
+        }
+    } 
+    return min;
+}
+
+int QuasiConsecutive(int small, 
+                int large, map<int,int> & tp, 
+                vector<set<int> > & t2s) {
+    for (int i=small; i <= large; ++i) {
+        if (t2s[i].size() != 0 && tp[i] == 0) {
+            return 0;
+        }
+    }   
+    return 1;
+}
+
+int IsTerritoryOverlapping(pair<int,int> & a, pair<int,int> & b) {
+    return 
+        (a.first >= b.first && a.second <= b.second) || // a in b
+        (b.first >= a.first && b.second <= a.second) || // b in a
+        (a.first <= b.first && a.second >= b.first)  || // a preceeds b AND they are overlapping
+        (b.first <= a.first && b.second >= a.first);    // b preceeds a AND they are overlapping
+}
+
+int IsPhraseOverlapping(PhrasePair & pair1, PhrasePair & pair2) {
+    return IsTerritoryOverlapping(pair1.first, pair2.first) || IsTerritoryOverlapping(pair1.second,pair2.second);
+}
+
+string PrintRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair1, std::pair<int,int> & pair2) {
+    string ret = "";
+    int x1 = 0;
+    int x2 = 0;
+
+    for (int i=0; (unsigned)i < sentence.size(); ++i) {
+        if (i >= pair1.first && i <= pair1.second) {
+            if (x2) {
+                ret += "X2 ";
+                x2 = 0;
+            }
+            x1 = 1;
+        } else if (i >= pair2.first && i <= pair2.second) {
+            if (x1) {
+                ret += "X1 ";
+                x1 = 0;
+            }
+            x2 = 1;
+        } else {
+            if (x1) {
+                ret += "X1 ";
+                x1 = 0;
+            } 
+            if (x2) {
+                ret += "X2 ";
+                x2 = 0;
+            }
+            ret += Dict::WSym(sentence[i]);
+            ret += " ";
+        }
+    }
+    if (x1) ret += "X1 ";
+    else if (x2) ret += "X2 ";
+    return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
+}
+
+string PrintBinaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair1, PhrasePair & pair2) {
+    return "<" + PrintRuleWith2NonTerminals(source,pair1.first,pair2.first) + " ||| " + 
+        PrintRuleWith2NonTerminals(target,pair1.second,pair2.second) + ">";
+}
+
+string PrintRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair) {
+    string ret = "";
+    int x = 0;
+    for (int i=0; (unsigned)i < sentence.size(); ++i) {
+        if (i >= pair.first && i <= pair.second) {
+            x = 1;
+        } else {
+            if (x) {
+                ret += "X1 ";
+                x = 0; 
+            } 
+            ret += Dict::WSym(sentence[i]);
+            ret += " ";
+        }
+    }
+    if (x) ret += "X1 ";
+    return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
+}
+
+string PrintUnaryPhraseRule(Sentence & source, Sentence & target, PhrasePair& pair) {
+    return "<" + PrintRuleWith1NonTerminals(source,pair.first) + " ||| " + 
+        PrintRuleWith1NonTerminals(target,pair.second) + ">";
+}
+
+// THIS SHOULD BE REMOVED LATER
+int INITIAL_PHRASE_LIMIT = 100;
+
+// HEADER IMPLEMENTATION
+std::vector<string> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
+    vector<string> ret = vector<string>();
+    // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT words on either side
+    if (source.size() <= (unsigned) INITIAL_PHRASE_LIMIT || target.size() <= (unsigned) INITIAL_PHRASE_LIMIT) {
+        PhrasePairs pairs = ExtractPhrase(align,source, target);
+
+        // if there are multiple initial phrase pairs containing the same set of alignments, only the 
+        // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
+        PhrasePairs filtered_pairs = PhrasePairs();
+        map<int, int> mp = map<int,int>();
+        BOOST_FOREACH(PhrasePair pp, pairs) {
+            pair<int,int> src = pp.first;
+            pair<int,int> trg = pp.second;
+            int index = src.first * 10000 + src.second;
+            int len = trg.second-trg.first;
+
+            if (mp.find(index)==mp.end() || mp[index] > len) {
+                mp[index] = len;
+            }
+        }
+        
+        BOOST_FOREACH(PhrasePair pp, pairs) {
+            pair<int,int> src = pp.first;
+            pair<int,int> trg = pp.second;
+            int index = src.first * 10000 + src.second;
+            int len = trg.second-trg.first;
+            if (len == mp[index]) {
+                filtered_pairs.push_back(pp);
+            }
+        }
+        pairs = filtered_pairs;
+
+        // DEBUG PrintPhrasePairs();
+
+        // Only 2 nonlexical right?
+        for (int i=0; (unsigned) i < pairs.size()-1; ++i) {
+            for (int j=i+1; (unsigned) j < pairs.size(); ++j) {
+                PhrasePair pair1 = pairs[i];
+                PhrasePair pair2 = pairs[j];
+
+                if (!IsPhraseOverlapping(pair1,pair2)) {
+                    ret.push_back(PrintBinaryPhraseRule(source, target, pair1,pair2));
+                } 
+            }
+        }
+
+        // 1 nonlexical
+        for(int i=0; (unsigned) i < pairs.size(); ++i) {
+            ret.push_back(PrintUnaryPhraseRule(source,target,pairs[i]));
+        }
+    }
+
+    return ret;
+}
+
+// The implementation of phrase extraction algorithm. It can be found on Koehn, 2011 section 5.2.3 page 133
+// The algorithm to extract all consistent phrase pairs from a word-aligned sentence pair
+PhrasePairs HieroExtractor::ExtractPhrase(Alignment & align, Sentence & source, 
+		Sentence & target) {
+    std::vector<std::set<int> > s2t = align.GetSrcAlignments();
+    std::vector<std::set<int> > t2s = std::vector<std::set<int> >();
+    PhrasePairs ret = PhrasePairs();
+
+    // Remap from source -> target back to target -> source
+    for (unsigned t=0; t < target.size(); ++t) {
+        t2s.push_back(set<int>());
+    }
+    for (unsigned s=0; s < s2t.size(); ++s) {
+        set<int> ts = s2t[s];
+        BOOST_FOREACH(int t, ts) {
+            t2s[t].insert((int)s);
+        }
+    }
+
+    // Phrase Extraction Algorithm 
+    // This is very slow (actually), maybe better data structure can improves it.
+    for (int s_begin=0; s_begin < (int)s2t.size(); ++s_begin) {
+        std::map<int, int> tp;
+        for (int s_end=s_begin; s_end < (int)s2t.size(); ++s_end) {
+            if (s2t[s_end].size() != 0) { 
+                BOOST_FOREACH(int _t, s2t[s_end]) { tp[_t]++;}
+            }
+            int t_begin = MapMinKey(tp);
+            int t_end = MapMaxKey(tp);
+            if (QuasiConsecutive(t_begin,t_end,tp,t2s)) {
+                std::map<int, int> sp;
+                for (int t=t_begin; t<=t_end;++t) {
+                    if (t2s[t].size() != 0) {
+                        BOOST_FOREACH(int _s, t2s[t]) { sp[_s]++; }
+                    }
+                }
+                if (MapMinKey(sp) >= s_begin && MapMaxKey(sp) <= s_end) {
+                    while (t_begin >= 0) {
+                        int jp = t_end;
+                        while (jp <= (int)t2s.size()) {
+                            ret.push_back(make_pair(make_pair(s_begin,s_end),make_pair(t_begin,jp)));
+                            ++jp;   
+                            if (t2s[jp].size() != 0 || jp == (int)t2s.size()) {
+                                break;
+                            }
+                        }
+                        --t_begin;
+                        if(t_begin < 0 || t2s[t_begin].size() != 0) {
+                            break;
+                        }
+                        
+                    }
+                }
+            }
+        }
+    }
+    return ret;
+}

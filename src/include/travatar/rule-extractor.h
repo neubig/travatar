@@ -15,6 +15,8 @@ class Alignment;
 
 typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
 typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
+typedef std::pair< std::pair<int,int>, std::pair<int,int> > PhrasePair;
+typedef std::vector< PhrasePair > PhrasePairs;
 
 // A virtual class to overload that converts a source parse, a target sentence
 // and an alignment into a forest of matched rules
@@ -98,6 +100,20 @@ protected:
                                HyperNode & node);
 
 };
+
+
+class HieroExtractor {
+    int max_nonterm_;
+public:
+    HieroExtractor() : max_nonterm_(2) { }
+
+    void SetMaxNonterm(int max_nonterm_) { max_nonterm_ = max_nonterm_; }
+
+    std::vector<std::string> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
+private:
+    PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
+};
+
 
 }
 

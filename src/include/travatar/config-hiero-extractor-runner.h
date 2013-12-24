@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
+#include <climits>
 #include <travatar/config-base.h>
 
 namespace travatar {
@@ -21,14 +22,12 @@ public:
             "~~~ hiero-extractor ~~~\n"
             "  by Philip Arthur\n"
             "\n"
-            //"Extracts cfg translation rules from trees or forests.\n"
-            //"  Usage: forest-extractor [SRG_TREES] [TRG_FILE] [ALIGN]\n"
+            "Extracts the CFG rule from alligned sentences\n"
+            "  Usage: hiero-extractor [SRC] [TRG] [ALIGN]\n"
         );
 
-        AddConfigEntry("term_len", "10", "The maximum number of terminals in a rule");
+        AddConfigEntry("term_len", "13", "The maximum number of terminals in a rule");
         AddConfigEntry("nonterm_len", "3", "The maximum number of non-terminals in a rule");
-
-
     }
 	
 };
