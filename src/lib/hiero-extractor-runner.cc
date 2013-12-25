@@ -40,6 +40,8 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     
     string src_line,trg_line, align_line;
    
+
+    long long int line = 0;
     while(true) {
 		int has_src = getline(src_in,src_line) ? 1 : 0;
         int has_trg = getline(trg_in,trg_line) ? 1 : 0;
@@ -54,6 +56,13 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         Sentence src_sent = Dict::ParseWords(src_line);
         Sentence trg_sent = Dict::ParseWords(trg_line);
 
-        extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
+        std::vector<string> rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
+
+        BOOST_FOREACH(string r , rule) {
+            cout << r << endl;
+        }
+        if (++line % 1000 == 0) {
+            cerr << "Finished Processing: " << line << " lines. " << endl; 
+        }
     }
 }

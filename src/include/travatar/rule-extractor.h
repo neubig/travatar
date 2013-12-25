@@ -109,10 +109,9 @@ public:
 
     void SetMaxNonterm(int max_nonterm_) { max_nonterm_ = max_nonterm_; }
 
-    void ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
+    std::vector<std::string> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
 private:
     PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
-    QuasiConsecutive(unsigned small, unsigned large, map<int,int> & tp, vector<set<int> > & t2s);
 };
 
 
