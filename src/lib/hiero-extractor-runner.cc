@@ -25,7 +25,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
    
     // Create the rule extractor
     HieroExtractor extractor;
-    extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
+    //extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
 
     int term_len = config.GetInt("term_len");
 

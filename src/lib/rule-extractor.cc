@@ -449,12 +449,11 @@ int IsPhraseOverlapping(PhrasePair & pair1, PhrasePair & pair2) {
     return IsTerritoryOverlapping(pair1.first, pair2.first) || IsTerritoryOverlapping(pair1.second,pair2.second);
 }
 
-string PrintRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair1, std::pair<int,int> & pair2) {
+string PrintRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair1, std::pair<int,int> & pair2, std::pair<int,int> & pair_span) {
     string ret = "";
     int x1 = 0;
     int x2 = 0;
-
-    for (int i=0; (unsigned)i < sentence.size(); ++i) {
+    for (int i=pair_span.first; i <= pair_span.second; ++i) {
         if (i >= pair1.first && i <= pair1.second) {
             if (x2) {
                 ret += "X2 ";
@@ -485,15 +484,15 @@ string PrintRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair
     return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
 }
 
-string PrintBinaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair1, PhrasePair & pair2) {
-    return "<" + PrintRuleWith2NonTerminals(source,pair1.first,pair2.first) + " ||| " + 
-        PrintRuleWith2NonTerminals(target,pair1.second,pair2.second) + ">";
+string PrintBinaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair1, PhrasePair & pair2, PhrasePair & pair_span) {
+    return "<" + PrintRuleWith2NonTerminals(source,pair1.first,pair2.first,pair_span.first) + " ||| " + 
+        PrintRuleWith2NonTerminals(target,pair1.second,pair2.second,pair_span.second) + ">";
 }
 
-string PrintRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair) {
+string PrintRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair, std::pair<int,int> & pair_span) {
     string ret = "";
     int x = 0;
-    for (int i=0; (unsigned)i < sentence.size(); ++i) {
+    for (int i=pair_span.first; i <= pair_span.second; ++i) {
         if (i >= pair.first && i <= pair.second) {
             x = 1;
         } else {
@@ -509,71 +508,93 @@ string PrintRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair
     return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
 }
 
-string PrintUnaryPhraseRule(Sentence & source, Sentence & target, PhrasePair& pair) {
-    return "<" + PrintRuleWith1NonTerminals(source,pair.first) + " ||| " + 
-        PrintRuleWith1NonTerminals(target,pair.second) + ">";
+string PrintRuleWithAllTerminals(Sentence & sentence, std::pair<int,int> span) {
+    string ret = "";
+    for (int i=span.first; i <= span.second; ++i) {
+        if (i != span.first) ret += " ";
+        ret += Dict::WSym(sentence[i]);
+    }
+    return ret;
+}
+
+string PrintUnaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair, PhrasePair & pair_span) {
+    return "<" + PrintRuleWith1NonTerminals(source,pair.first,pair_span.first) + " ||| " + 
+        PrintRuleWith1NonTerminals(target,pair.second,pair_span.second) + ">" ;
+        
+}
+
+string PrintPhraseTranslationRule(Sentence & source, Sentence target, PhrasePair & pair) {
+    return "<" + PrintRuleWithAllTerminals(source,pair.first) + " ||| " + 
+        PrintRuleWithAllTerminals(target,pair.second) + ">";
+}
+
+int InPhrase(PhrasePair & p1, PhrasePair & p2) {
+    return p1.first.first >= p2.first.first && p1.first.second <= p2.first.second;
 }
 
 // THIS SHOULD BE REMOVED LATER
-int INITIAL_PHRASE_LIMIT = 100;
+int INITIAL_PHRASE_LIMIT = 10;
 
 // HEADER IMPLEMENTATION
 std::vector<string> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
     vector<string> ret = vector<string>();
-    // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT words on either side
-    if (source.size() <= (unsigned) INITIAL_PHRASE_LIMIT || target.size() <= (unsigned) INITIAL_PHRASE_LIMIT) {
-        PhrasePairs pairs = ExtractPhrase(align,source, target);
+    PhrasePairs filtered_pairs = PhrasePairs();
+    PhrasePairs pairs = ExtractPhrase(align,source, target);
 
-        // if there are multiple initial phrase pairs containing the same set of alignments, only the 
-        // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
-        PhrasePairs filtered_pairs = PhrasePairs();
-        map<int, int> mp = map<int,int>();
-        BOOST_FOREACH(PhrasePair pp, pairs) {
-            pair<int,int> src = pp.first;
-            pair<int,int> trg = pp.second;
-            int index = src.first * 10000 + src.second;
-            int len = trg.second-trg.first;
+    // if there are multiple initial phrase pairs containing the same set of alignments, only the 
+    // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
+    map<int, int> mp = map<int,int>();
+    BOOST_FOREACH(PhrasePair pp, pairs) {
+        pair<int,int> src = pp.first;
+        pair<int,int> trg = pp.second;
+        int index = src.first * 10000 + src.second;
+        int len = trg.second-trg.first;
 
-            if (mp.find(index)==mp.end() || mp[index] > len) {
-                mp[index] = len;
-            }
-        }
-        
-        BOOST_FOREACH(PhrasePair pp, pairs) {
-            pair<int,int> src = pp.first;
-            pair<int,int> trg = pp.second;
-            int index = src.first * 10000 + src.second;
-            int len = trg.second-trg.first;
-            if (len == mp[index]) {
-                filtered_pairs.push_back(pp);
-            }
-        }
-        pairs = filtered_pairs;
-
-        // DEBUG PrintPhrasePairs();
-
-        // Only 2 nonlexical right?
-        for (int i=0; (unsigned) i < pairs.size()-1; ++i) {
-            for (int j=i+1; (unsigned) j < pairs.size(); ++j) {
-                PhrasePair pair1 = pairs[i];
-                PhrasePair pair2 = pairs[j];
-
-                if (!IsPhraseOverlapping(pair1,pair2)) {
-                    ret.push_back(PrintBinaryPhraseRule(source, target, pair1,pair2));
-                } 
-            }
-        }
-
-        // 1 nonlexical
-        for(int i=0; (unsigned) i < pairs.size(); ++i) {
-            ret.push_back(PrintUnaryPhraseRule(source,target,pairs[i]));
+        if (mp.find(index)==mp.end() || mp[index] > len) {
+            mp[index] = len;
         }
     }
+    
+    BOOST_FOREACH(PhrasePair pp, pairs) {
+        pair<int,int> src = pp.first;
+        pair<int,int> trg = pp.second;
+        int index = src.first * 10000 + src.second;
+        int len = trg.second-trg.first;
+        if (len == mp[index]) {
+            filtered_pairs.push_back(pp);
+        }
+    }
+    pairs = filtered_pairs;
 
+    // Rule extraction algorithm for 1 + 2 NonTerminal Symbol. If we use Higher, algorithm is too complex
+    for (int ii=0; (unsigned) ii < pairs.size(); ++ii) {
+        // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT (10) words on either side
+        if (pairs[ii].first.second - pairs[ii].first.first < INITIAL_PHRASE_LIMIT || 
+                pairs[ii].second.second - pairs[ii].second.first < INITIAL_PHRASE_LIMIT) 
+        {
+            // Find pairs of 2 rules
+            for (int jj=0; (unsigned) jj < pairs.size(); ++jj) {
+                if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
+                    for (int kk=0; (unsigned) kk < pairs.size(); ++kk) {
+                        // that are in the span of INITIAL phrase, and NOT overlapping each other, and replace them!
+                        if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
+                        {
+                            ret.push_back(PrintBinaryPhraseRule(source, target, pairs[jj], pairs[kk], pairs[ii]));
+                        }
+                    }
+                    // Unary rule
+                    ret.push_back(PrintUnaryPhraseRule(source,target,pairs[jj],pairs[ii]));
+                    ret.push_back(PrintPhraseTranslationRule(source,target,pairs[jj]));
+                }
+            }
+        }
+        // 
+    }
+    // DEBUG PrintPhrasePairs();
     return ret;
 }
 
-// The implementation of phrase extraction algorithm. It can be found on Koehn, 2011 section 5.2.3 page 133
+// The implementation of phrase extraction algorithm.
 // The algorithm to extract all consistent phrase pairs from a word-aligned sentence pair
 PhrasePairs HieroExtractor::ExtractPhrase(Alignment & align, Sentence & source, 
 		Sentence & target) {

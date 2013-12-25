@@ -26,8 +26,7 @@ public:
             "  Usage: hiero-extractor [SRC] [TRG] [ALIGN]\n"
         );
 
-        AddConfigEntry("term_len", "13", "The maximum number of terminals in a rule");
-        AddConfigEntry("nonterm_len", "3", "The maximum number of non-terminals in a rule");
+        AddConfigEntry("term_len", "10", "The maximum number of terminals in a rule");
     }
 	
 };
