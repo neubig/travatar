@@ -24,12 +24,12 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     // Set the debugging level
     //GlobalVars::debug = config.GetInt("debug");
    
+    //int term_len = config.GetInt("term_len");
+
     // Create the rule extractor
     HieroExtractor extractor;
-    //extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
-
-    int term_len = config.GetInt("term_len");
-
+    extractor.SetMaxInitalPhrase(config.GetInt("initial_phrase_len"));
+    
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
     ifstream src_in(argv[0].c_str());

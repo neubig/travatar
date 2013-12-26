@@ -26,7 +26,7 @@ public:
             "  Usage: hiero-extractor [SRC] [TRG] [ALIGN]\n"
         );
 
-        AddConfigEntry("term_len", "10", "The maximum number of terminals in a rule");
+        AddConfigEntry("initial_phrase_len", "10", "The maximum length of initial phrase in a rule");
     }
 	
 };

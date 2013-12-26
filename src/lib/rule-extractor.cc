@@ -531,9 +531,6 @@ int InPhrase(PhrasePair & p1, PhrasePair & p2) {
     return p1.first.first >= p2.first.first && p1.first.second <= p2.first.second;
 }
 
-// THIS SHOULD BE REMOVED LATER
-int INITIAL_PHRASE_LIMIT = 10;
-
 // HEADER IMPLEMENTATION
 std::vector<HieroRule> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
 
@@ -569,14 +566,14 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(Alignment & align, Sente
     // Rule extraction algorithm for 1 + 2 NonTerminal Symbol. If we use Higher, algorithm is too complex
     for (int ii=0; (unsigned) ii < pairs.size(); ++ii) {
         // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT (10) words on either side
-        if (pairs[ii].first.second - pairs[ii].first.first < INITIAL_PHRASE_LIMIT || 
-                pairs[ii].second.second - pairs[ii].second.first < INITIAL_PHRASE_LIMIT) 
+        if (pairs[ii].first.second - pairs[ii].first.first < HieroExtractor::GetMaxInitialPhrase() || 
+                pairs[ii].second.second - pairs[ii].second.first < HieroExtractor::GetMaxInitialPhrase()) 
         {
             // Find pairs of 2 rules
             for (int jj=0; (unsigned) jj < pairs.size(); ++jj) {
                 if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
                     for (int kk=0; (unsigned) kk < pairs.size(); ++kk) {
-                        // that are in the span of INITIAL phrase, and NOT overlapping each other, and replace them!
+                        // that are in the span of INITIAL phrase, and NOT overlapping each other
                         if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
                             HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);

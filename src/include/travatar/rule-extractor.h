@@ -104,13 +104,16 @@ protected:
 
 
 class HieroExtractor {
-    int max_nonterm_;
+    int max_initial_phrase_len_;
 public:
-    HieroExtractor() : max_nonterm_(2) { }
+    HieroExtractor() : max_initial_phrase_len_(10) { }
 
-    void SetMaxNonterm(int max_nonterm_) { max_nonterm_ = max_nonterm_; }
+    void SetMaxInitalPhrase(int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
 
     std::vector<HieroRule> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
+
+    // ACCESSOR 
+    int GetMaxInitialPhrase() { return max_initial_phrase_len_; }
 private:
     PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
 };
