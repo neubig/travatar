@@ -115,7 +115,7 @@ struct HieroRuleManager {
 		// DUPLICATION-FILTER
 		// who cares that rules may have length of 7 from source and they may duplicate?
 		// maybe there is some, but yes, don't be so defensive.
-		if (rule.GetNumberOfWords(HIERO_SOURCE) > 7) {
+		if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7) {
 			// Get the HashValue [we do primitive hash value implementation
 			// with assumption of perfect hashing]
 			Sentence source = rule.GetSourceSentence();
