@@ -580,14 +580,14 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(Alignment & align, Sente
                         if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
                             HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
-                            ret.push_back(_rule);
+                            HieroRuleManager::AddRule(ret,_rule);
                         }
                     }
                     // Unary rule
                     HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
-                    ret.push_back(_rule);
+                    HieroRuleManager::AddRule(ret,_rule);
                     _rule = ParsePhraseTranslationRule(source,target,pairs[jj]);
-                    ret.push_back(_rule);
+                    HieroRuleManager::AddRule(ret,_rule);
                 }
             }
         }

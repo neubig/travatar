@@ -70,21 +70,77 @@ public:
 		return ss.str();
 	}
 
+	int GetNumberOfNonTerm(int type = -1) {
+		return (source_non_term + target_non_term) / 2;
+	}
+
+	int GetNumberOfWords(int type = -1) {
+		switch (type) {
+			case HIERO_SOURCE:
+				return source_words.size();
+			case HIERO_TARGET:
+				return target_words.size();
+			default:
+				THROW_ERROR("Undefined type when requesting number of words.");
+		}
+		return -1;
+	}
+
+	Sentence GetSourceSentence() {
+		return source_words;
+	}
+
+	Sentence GetTargetSentence() {
+		return target_words;
+	}
+
 private:
-	std::vector<WordId> source_words;
-	std::vector<WordId> target_words;
+	Sentence source_words;
+	Sentence target_words;
 	int source_non_term;
 	int target_non_term;
 	int type;
 };
 
+static std::set<long long int> rule_set;
 
-class HieroRuleTable {
+struct HieroRuleManager {
+	static int IsFiltered(HieroRule rule) {
+		int nterm = rule.GetNumberOfNonTerm();
+		// RULE CONTAINS ALL NON TERMINAL FILTER
+		if (rule.GetNumberOfWords(HIERO_TARGET) == nterm || rule.GetNumberOfWords(HIERO_SOURCE) == nterm) {
+			return 1;
+		}
 
+		// DUPLICATION-FILTER
+		// who cares that rules may have length of 7 from source and they may duplicate?
+		// maybe there is some, but yes, don't be so defensive.
+		if (rule.GetNumberOfWords(HIERO_SOURCE) > 7) {
+			// Get the HashValue [we do primitive hash value implementation
+			// with assumption of perfect hashing]
+			Sentence source = rule.GetSourceSentence();
+			long long int value = 0;
+			long long int multiplier = 31; // some fancy prime number
+			for (int i=0; i < (int)source.size(); ++i) {
+				value += (long long int) source[i] * multiplier;
+				multiplier *= 31;
+			}
+
+			// check our set whether rule is in set or not
+			if (rule_set.find(value) == rule_set.end()) {
+				rule_set.insert(value);
+			} else {
+				return 1; // rule in set, filter it!
+			}
+		}
+		return 0;
+	}
+
+	static void AddRule(vector<HieroRule> & target, HieroRule & rule) {
+		if (!IsFiltered(rule)) {
+			target.push_back(rule);
+		}
+	}
 };
-
-
-
-
 }
 #endif
