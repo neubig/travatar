@@ -11,6 +11,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
+#include <travatar/hiero-rule-table.h>
 #include <boost/scoped_ptr.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -56,12 +57,12 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         Sentence src_sent = Dict::ParseWords(src_line);
         Sentence trg_sent = Dict::ParseWords(trg_line);
 
-        std::vector<string> rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
+        std::vector<HieroRule> rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
 
-        BOOST_FOREACH(string r , rule) {
-            cout << r << endl;
+        BOOST_FOREACH(HieroRule r , rule) {
+            cout << r.ToString() << endl;
         }
-        if (++line % 1000 == 0) {
+        if (++line % 100 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
     }

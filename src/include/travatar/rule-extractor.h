@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <travatar/sentence.h>
+#include <travatar/hiero-rule-table.h>
 
 namespace travatar {
 
@@ -109,7 +110,7 @@ public:
 
     void SetMaxNonterm(int max_nonterm_) { max_nonterm_ = max_nonterm_; }
 
-    std::vector<std::string> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
+    std::vector<HieroRule> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
 private:
     PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
 };

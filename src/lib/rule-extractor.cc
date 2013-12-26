@@ -5,6 +5,7 @@
 #include <travatar/rule-extractor.h>
 #include <travatar/util.h>
 #include <travatar/dict.h>
+#include <travatar/hiero-rule-table.h>
 #include <queue>
 #include <stack>
 #include <list>
@@ -449,83 +450,81 @@ int IsPhraseOverlapping(PhrasePair & pair1, PhrasePair & pair2) {
     return IsTerritoryOverlapping(pair1.first, pair2.first) || IsTerritoryOverlapping(pair1.second,pair2.second);
 }
 
-string PrintRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair1, std::pair<int,int> & pair2, std::pair<int,int> & pair_span) {
-    string ret = "";
+void ParseRuleWith2NonTerminals(Sentence & sentence, std::pair<int,int> & pair1, std::pair<int,int> & pair2, 
+        std::pair<int,int> & pair_span, HieroRule & target, int type) 
+{
+    target.SetType(type);
     int x1 = 0;
     int x2 = 0;
     for (int i=pair_span.first; i <= pair_span.second; ++i) {
         if (i >= pair1.first && i <= pair1.second) {
             if (x2) {
-                ret += "X2 ";
+                target.AddNonTermX(2);
                 x2 = 0;
             }
             x1 = 1;
         } else if (i >= pair2.first && i <= pair2.second) {
             if (x1) {
-                ret += "X1 ";
+                target.AddNonTermX(1);
                 x1 = 0;
             }
             x2 = 1;
         } else {
             if (x1) {
-                ret += "X1 ";
+                target.AddNonTermX(1);
                 x1 = 0;
             } 
             if (x2) {
-                ret += "X2 ";
+                target.AddNonTermX(2);
                 x2 = 0;
             }
-            ret += Dict::WSym(sentence[i]);
-            ret += " ";
+            target.AddWord(sentence[i]);
         }
     }
-    if (x1) ret += "X1 ";
-    else if (x2) ret += "X2 ";
-    return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
+    if (x1) target.AddNonTermX(1);
+    else if (x2) target.AddNonTermX(2);
 }
 
-string PrintBinaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair1, PhrasePair & pair2, PhrasePair & pair_span) {
-    return "<" + PrintRuleWith2NonTerminals(source,pair1.first,pair2.first,pair_span.first) + " ||| " + 
-        PrintRuleWith2NonTerminals(target,pair1.second,pair2.second,pair_span.second) + ">";
+HieroRule ParseBinaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair1, PhrasePair & pair2, PhrasePair & pair_span) {
+    HieroRule _rule = HieroRule();
+    ParseRuleWith2NonTerminals(source,pair1.first,pair2.first,pair_span.first,_rule,HIERO_SOURCE);
+    ParseRuleWith2NonTerminals(target,pair1.second,pair2.second,pair_span.second,_rule,HIERO_TARGET);
+    return _rule;
 }
 
-string PrintRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair, std::pair<int,int> & pair_span) {
-    string ret = "";
+void ParseRuleWith1NonTerminals(Sentence & sentence, std::pair<int,int> & pair, 
+        std::pair<int,int> & pair_span, HieroRule & target, int type) 
+{
+    target.SetType(type);
     int x = 0;
     for (int i=pair_span.first; i <= pair_span.second; ++i) {
         if (i >= pair.first && i <= pair.second) {
             x = 1;
         } else {
             if (x) {
-                ret += "X1 ";
+                target.AddNonTermX(1);
                 x = 0; 
             } 
-            ret += Dict::WSym(sentence[i]);
-            ret += " ";
+            target.AddWord(sentence[i]);
         }
     }
-    if (x) ret += "X1 ";
-    return (ret.size() > (unsigned) 0 ? ret.substr(0,ret.size()-1) : "");
+    if (x) target.AddNonTermX(1);
 }
 
-string PrintRuleWithAllTerminals(Sentence & sentence, std::pair<int,int> span) {
-    string ret = "";
-    for (int i=span.first; i <= span.second; ++i) {
-        if (i != span.first) ret += " ";
-        ret += Dict::WSym(sentence[i]);
-    }
-    return ret;
+HieroRule ParseUnaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair, PhrasePair & pair_span) {
+    HieroRule _rule = HieroRule();
+    ParseRuleWith1NonTerminals(source,pair.first,pair_span.first,_rule,HIERO_SOURCE);
+    ParseRuleWith1NonTerminals(target,pair.second,pair_span.second,_rule,HIERO_TARGET);
+    return _rule;
 }
 
-string PrintUnaryPhraseRule(Sentence & source, Sentence & target, PhrasePair & pair, PhrasePair & pair_span) {
-    return "<" + PrintRuleWith1NonTerminals(source,pair.first,pair_span.first) + " ||| " + 
-        PrintRuleWith1NonTerminals(target,pair.second,pair_span.second) + ">" ;
-        
-}
-
-string PrintPhraseTranslationRule(Sentence & source, Sentence target, PhrasePair & pair) {
-    return "<" + PrintRuleWithAllTerminals(source,pair.first) + " ||| " + 
-        PrintRuleWithAllTerminals(target,pair.second) + ">";
+HieroRule ParsePhraseTranslationRule(Sentence & source, Sentence target, PhrasePair & pair) {
+    HieroRule _rule = HieroRule();
+    _rule.SetType(HIERO_SOURCE);
+    for (int i=pair.first.first; i <= pair.first.second; ++i) _rule.AddWord(source[i]);
+    _rule.SetType(HIERO_TARGET);
+    for (int i=pair.second.first; i <= pair.second.second; ++i) _rule.AddWord(target[i]);
+    return _rule;
 }
 
 int InPhrase(PhrasePair & p1, PhrasePair & p2) {
@@ -536,8 +535,9 @@ int InPhrase(PhrasePair & p1, PhrasePair & p2) {
 int INITIAL_PHRASE_LIMIT = 10;
 
 // HEADER IMPLEMENTATION
-std::vector<string> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
-    vector<string> ret = vector<string>();
+std::vector<HieroRule> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target) {
+
+    vector<HieroRule> ret = vector<HieroRule>();
     PhrasePairs filtered_pairs = PhrasePairs();
     PhrasePairs pairs = ExtractPhrase(align,source, target);
 
@@ -579,12 +579,15 @@ std::vector<string> HieroExtractor::ExtractHieroRule(Alignment & align, Sentence
                         // that are in the span of INITIAL phrase, and NOT overlapping each other, and replace them!
                         if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
-                            ret.push_back(PrintBinaryPhraseRule(source, target, pairs[jj], pairs[kk], pairs[ii]));
+                            HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
+                            ret.push_back(_rule);
                         }
                     }
                     // Unary rule
-                    ret.push_back(PrintUnaryPhraseRule(source,target,pairs[jj],pairs[ii]));
-                    ret.push_back(PrintPhraseTranslationRule(source,target,pairs[jj]));
+                    HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
+                    ret.push_back(_rule);
+                    _rule = ParsePhraseTranslationRule(source,target,pairs[jj]);
+                    ret.push_back(_rule);
                 }
             }
         }
