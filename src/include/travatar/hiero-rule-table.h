@@ -141,6 +141,17 @@ struct HieroRuleManager {
 			target.push_back(rule);
 		}
 	}
+
+	static std::vector<HieroRule> GlueRules() {
+		HieroRule rule = HieroRule();
+		rule.SetType(HIERO_SOURCE);
+		rule.AddNonTermX(1);
+		rule.SetType(HIERO_TARGET);
+		rule.AddNonTermX(1);
+		std::vector<HieroRule> ret = std::vector<HieroRule>();
+		ret.push_back(rule);
+		return ret;
+	}
 };
 }
 #endif

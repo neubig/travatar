@@ -41,7 +41,13 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     
     string src_line,trg_line, align_line;
    
+    // Glue Rules
+    std::vector<HieroRule> rule = HieroRuleManager::GlueRules();
+    BOOST_FOREACH(HieroRule r , rule) {
+        cout << r.ToString() << endl;
+    }
 
+    // Rule Extraction Algorithm
     long long int line = 0;
     while(true) {
 		int has_src = getline(src_in,src_line) ? 1 : 0;
@@ -57,7 +63,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         Sentence src_sent = Dict::ParseWords(src_line);
         Sentence trg_sent = Dict::ParseWords(trg_line);
 
-        std::vector<HieroRule> rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
+        rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
 
         BOOST_FOREACH(HieroRule r , rule) {
             cout << r.ToString() << endl;
