@@ -110,12 +110,39 @@ public:
 
     void SetMaxInitalPhrase(int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
 
-    std::vector<HieroRule> ExtractHieroRule(Alignment & align, Sentence & source, Sentence & target);
+    std::vector<HieroRule> ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
 
     // ACCESSOR 
     int GetMaxInitialPhrase() { return max_initial_phrase_len_; }
 private:
-    PhrasePairs ExtractPhrase(Alignment & align, Sentence & source, Sentence & target);
+    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target);
+    std::string AppendString(const Sentence & s, int begin, int end);
+    std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target);
+    void PrintPhrasePairs(const PhrasePairs & pairs, const Sentence & source, const Sentence & target);
+
+    int MapMaxKey(const std::map<int,int> & map);
+    int MapMinKey(const std::map<int,int> & map);
+    int QuasiConsecutive(int small, int large, const std::map<int,int> & tp, const std::vector<set<int> > & t2s);
+    int IsTerritoryOverlapping(const pair<int,int> & a, const pair<int,int> & b);
+    int IsPhraseOverlapping(const PhrasePair & pair1, const PhrasePair & pair2);
+
+    void ParseRuleWith2NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair1, const std::pair<int,int> & pair2, 
+                                    const std::pair<int,int> & pair_span, HieroRule & target, int type);
+
+    HieroRule ParseBinaryPhraseRule(const Sentence & source, const Sentence & target, const PhrasePair & pair1, 
+                                    const PhrasePair & pair2, const PhrasePair & pair_span);
+
+    void ParseRuleWith1NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair, 
+                                    const std::pair<int,int> & pair_span, HieroRule & target, int type);
+
+    HieroRule ParseUnaryPhraseRule(const Sentence & source, const Sentence & target, 
+                                    const PhrasePair & pair, const PhrasePair & pair_span);
+
+    HieroRule ParsePhraseTranslationRule(const Sentence & source, const Sentence & target, 
+                                        const PhrasePair & pair);
+
+    int InPhrase(const PhrasePair & p1, const PhrasePair & p2);
+
 };
 
 
