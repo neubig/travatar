@@ -103,8 +103,8 @@ private:
 };
 
 static std::set<long long int> rule_set;
-
 struct HieroRuleManager {
+
 	static int IsFiltered(HieroRule & rule) {
 		int nterm = rule.GetNumberOfNonTerm();
 		// RULE CONTAINS ALL NON TERMINAL FILTER
@@ -115,15 +115,16 @@ struct HieroRuleManager {
 		// DUPLICATION-FILTER
 		// who cares that rules may have length of 7 from source and they may duplicate?
 		// maybe there is some, but yes, don't be so defensive.
-		if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7) {
+		//if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7)  [feature is turned off]
+		{
 			// Get the HashValue [we do primitive hash value implementation
 			// with assumption of perfect hashing]
 			Sentence source = rule.GetSourceSentence();
 			long long int value = 0;
-			long long int multiplier = 31; // some fancy prime number
+			long long int multiplier = 13; // some fancy prime number
 			for (int i=0; i < (int)source.size(); ++i) {
 				value += (long long int) source[i] * multiplier;
-				multiplier *= 31;
+				multiplier *= 13;
 			}
 
 			// check our set whether rule is in set or not
