@@ -28,6 +28,7 @@ missing
 src/bin/travatar
 src/bin/rescorer
 src/bin/forest-extractor
+src/bin/hiero-extractor
 src/bin/tree-converter
 src/bin/batch-tune
 src/bin/mt-evaluator
