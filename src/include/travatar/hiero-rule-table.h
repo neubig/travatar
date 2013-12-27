@@ -27,7 +27,7 @@ public:
 		type = -1;
 	}
 
-	void AddWord(WordId & word, int non_term=0) {
+	void AddWord(WordId word, int non_term=0) {
 		if (type == HIERO_SOURCE) {
 			if (non_term) ++source_non_term;
 			source_words.push_back(word);
@@ -43,7 +43,7 @@ public:
 		type = _type;
 	}
 
-	string GetNonTermX(int number) {
+	string GetNonTermX(int number) const {
 		std::ostringstream ss;
 		ss << "[X" << number << "]";
 		return ss.str();
@@ -54,7 +54,7 @@ public:
 		AddWord(id,1);
 	}
 
-	string ToString() {
+	string ToString() const {
 		std::ostringstream ss;
 		ss << "<";
 		for (int i=0; (unsigned)i < source_words.size(); ++i) {
@@ -70,11 +70,11 @@ public:
 		return ss.str();
 	}
 
-	int GetNumberOfNonTerm(int type = -1) {
+	int GetNumberOfNonTerm(int type = -1) const {
 		return (source_non_term + target_non_term) / 2;
 	}
 
-	int GetNumberOfWords(int type = -1) {
+	int GetNumberOfWords(int type = -1) const {
 		switch (type) {
 			case HIERO_SOURCE:
 				return source_words.size();
@@ -86,11 +86,11 @@ public:
 		return -1;
 	}
 
-	Sentence GetSourceSentence() {
+	const Sentence & GetSourceSentence() {
 		return source_words;
 	}
 
-	Sentence GetTargetSentence() {
+	const Sentence & GetTargetSentence() {
 		return target_words;
 	}
 
@@ -103,9 +103,9 @@ private:
 };
 
 static std::set<long long int> rule_set;
-
 struct HieroRuleManager {
-	static int IsFiltered(HieroRule rule) {
+
+	static int IsFiltered(HieroRule & rule) {
 		int nterm = rule.GetNumberOfNonTerm();
 		// RULE CONTAINS ALL NON TERMINAL FILTER
 		if (rule.GetNumberOfWords(HIERO_TARGET) == nterm || rule.GetNumberOfWords(HIERO_SOURCE) == nterm) {
@@ -115,15 +115,16 @@ struct HieroRuleManager {
 		// DUPLICATION-FILTER
 		// who cares that rules may have length of 7 from source and they may duplicate?
 		// maybe there is some, but yes, don't be so defensive.
-		if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7) {
+		//if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7)  [feature is turned off]
+		{
 			// Get the HashValue [we do primitive hash value implementation
 			// with assumption of perfect hashing]
 			Sentence source = rule.GetSourceSentence();
 			long long int value = 0;
-			long long int multiplier = 31; // some fancy prime number
+			long long int multiplier = 13; // some fancy prime number
 			for (int i=0; i < (int)source.size(); ++i) {
 				value += (long long int) source[i] * multiplier;
-				multiplier *= 31;
+				multiplier *= 13;
 			}
 
 			// check our set whether rule is in set or not
