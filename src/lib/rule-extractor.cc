@@ -385,12 +385,22 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
 //////////////////////////////////////////
 
 // Public 
-std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align, const Sentence & source, 
+std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment & align, const Sentence & source, 
         const Sentence & target) 
 {
-    vector<HieroRule> ret = vector<HieroRule>();
+    vector<vector<HieroRule> >ret = vector<vector<HieroRule> >();
     PhrasePairs filtered_pairs = PhrasePairs();
-    PhrasePairs pairs = ExtractPhrase(align,source, target);
+    PhrasePairs pairs;
+
+    // Doing extraction safely
+    try {
+        pairs = ExtractPhrase(align,source, target);
+    } catch (std::exception& exc) {
+        THROW_ERROR("Input or alignment error. \n\tOn Source: " + Dict::PrintWords(source) + 
+            "\n\tOn Target: " + Dict::PrintWords(target));
+    }
+
+    int rule_max_len = HieroExtractor::GetMaxRuleLen();
 
     // if there are multiple initial phrase pairs containing the same set of alignments, only the 
     // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
@@ -416,30 +426,40 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align,
         }
     }
     pairs = filtered_pairs;
-
     // Rule extraction algorithm for 1 + 2 NonTerminal Symbol. If we use Higher, algorithm is too complex
     for (int ii=0; (unsigned) ii < pairs.size(); ++ii) {
         // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT (10) words on either side
         if (pairs[ii].first.second - pairs[ii].first.first < HieroExtractor::GetMaxInitialPhrase() || 
                 pairs[ii].second.second - pairs[ii].second.first < HieroExtractor::GetMaxInitialPhrase()) 
         {
+            vector<HieroRule> _extracted = vector<HieroRule>();
+            _extracted.push_back(ParsePhraseTranslationRule(source,target,pairs[ii]));
             // Find pairs of 2 rules
             for (int jj=0; (unsigned) jj < pairs.size(); ++jj) {
                 if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
-                    for (int kk=0; (unsigned) kk < pairs.size(); ++kk) {
+                    for (int kk=jj+1; (unsigned) kk < pairs.size(); ++kk) {
                         // that are in the span of INITIAL phrase, and NOT overlapping each other
                         if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
                             HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
-                            HieroRuleManager::AddRule(ret,_rule);
+                            if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                                    (int) _rule.GetTargetSentence().size() <= rule_max_len)
+                            {
+                                HieroRuleManager::AddRule(_extracted,_rule);
+                            }
                         }
                     }
                     // Unary rule
                     HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
-                    HieroRuleManager::AddRule(ret,_rule);
-                    _rule = ParsePhraseTranslationRule(source,target,pairs[jj]);
-                    HieroRuleManager::AddRule(ret,_rule);
+                    if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                            (int) _rule.GetTargetSentence().size() <= rule_max_len)
+                    {
+                        HieroRuleManager::AddRule(_extracted,_rule);
+                    }
                 }
+            }
+            if (_extracted.size() > (unsigned) 0) {
+                ret.push_back(_extracted);
             }
         }
         // 
@@ -584,35 +604,35 @@ void HieroExtractor::ParseRuleWith2NonTerminals(const Sentence & sentence, const
         HieroRule & target, int type) 
 {
     target.SetType(type);
+    int x0 = 0;
     int x1 = 0;
-    int x2 = 0;
     for (int i=pair_span.first; i <= pair_span.second; ++i) {
         if (i >= pair1.first && i <= pair1.second) {
-            if (x2) {
-                target.AddNonTermX(2);
-                x2 = 0;
+            if (x1) {
+                target.AddNonTermX(1);
+                x1 = 0;
+            }
+            x0 = 1;
+        } else if (i >= pair2.first && i <= pair2.second) {
+            if (x0) {
+                target.AddNonTermX(0);
+                x0 = 0;
             }
             x1 = 1;
-        } else if (i >= pair2.first && i <= pair2.second) {
-            if (x1) {
-                target.AddNonTermX(1);
-                x1 = 0;
-            }
-            x2 = 1;
         } else {
+            if (x0) {
+                target.AddNonTermX(0);
+                x0 = 0;
+            } 
             if (x1) {
                 target.AddNonTermX(1);
                 x1 = 0;
-            } 
-            if (x2) {
-                target.AddNonTermX(2);
-                x2 = 0;
             }
             target.AddWord(sentence[i]);
         }
     }
-    if (x1) target.AddNonTermX(1);
-    else if (x2) target.AddNonTermX(2);
+    if (x0) target.AddNonTermX(0);
+    else if (x1) target.AddNonTermX(1);
 }
 
 HieroRule HieroExtractor::ParseBinaryPhraseRule(const Sentence & source, const Sentence & target, const PhrasePair & pair1, 
@@ -634,13 +654,13 @@ void HieroExtractor::ParseRuleWith1NonTerminals(const Sentence & sentence, const
             x = 1;
         } else {
             if (x) {
-                target.AddNonTermX(1);
+                target.AddNonTermX(0);
                 x = 0; 
             } 
             target.AddWord(sentence[i]);
         }
     }
-    if (x) target.AddNonTermX(1);
+    if (x) target.AddNonTermX(0);
 }
 
 HieroRule HieroExtractor::ParseUnaryPhraseRule(const Sentence & source, const Sentence & target, 
