@@ -14,9 +14,9 @@ public:
     
     // Run the model
     void Run(const ConfigHieroExtractorRunner & config);
-
+    
 private:
-
+	void IsSane(const ConfigHieroExtractorRunner & config);
 };
 
 }

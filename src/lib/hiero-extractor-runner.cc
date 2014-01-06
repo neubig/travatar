@@ -21,10 +21,8 @@ using namespace boost;
 
 // Run the model
 void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
-    // Set the debugging level
-    //GlobalVars::debug = config.GetInt("debug");
-   
-    //int term_len = config.GetInt("term_len");
+    // Sanity Check
+    IsSane(config);
 
     // Create the rule extractor
     HieroExtractor extractor;
@@ -72,5 +70,15 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         if (++line % 100 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
+    }
+}
+
+void HieroExtractorRunner::IsSane(const ConfigHieroExtractorRunner & config) 
+{
+    if (config.GetInt("initial_phrase_len") < 0) {
+        THROW_ERROR("initial_phrase_len must be greater than 0.");
+    } 
+    if (config.GetInt("rule_max_len") < 0) {
+        THROW_ERROR("rule_max_len must be greater than 0.");
     }
 }

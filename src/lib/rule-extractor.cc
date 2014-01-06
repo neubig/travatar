@@ -395,7 +395,7 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align,
     // Doing extraction safely
     try {
         pairs = ExtractPhrase(align,source, target);
-    } catch (...) {
+    } catch (std::exception& exc) {
         THROW_ERROR("Input or alignment error. \n\tOn Source: " + Dict::PrintWords(source) + 
             "\n\tOn Target: " + Dict::PrintWords(target));
     }
