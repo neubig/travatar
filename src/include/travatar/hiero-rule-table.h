@@ -25,9 +25,13 @@ public:
 		source_non_term = 0;
 		target_non_term = 0;
 		type = -1;
+		nt_side_side = -1;
 	}
 
 	void AddWord(WordId word, int non_term=0) {
+		if (type == HIERO_SOURCE && !non_term && nt_side_side != 1) {
+			nt_side_side = -1;
+		}
 		if (type == HIERO_SOURCE) {
 			if (non_term) ++source_non_term;
 			source_words.push_back(word);
@@ -39,24 +43,39 @@ public:
 		}
 	} 
 
+	void SetSourceSentence(Sentence & source) {
+		source_words = source;
+	}
+
+	void SetTargetSentence(Sentence & target) {
+		target_words = target;
+	}
+
 	void SetType(int _type) {
 		type = _type;
 	}
 
 	string GetNonTermX(int number) const {
 		std::ostringstream ss;
-		ss << "[X" << number << "]";
+		ss << "x" << number << "";
 		return ss.str();
 	}
 
 	void AddNonTermX(int number) {
+		if (type == HIERO_SOURCE) {
+			if (nt_side_side >= 0) {
+				nt_side_side = 1;
+			} else {
+				nt_side_side = 0;
+			}
+		}
+
 		WordId id = Dict::WID(GetNonTermX(number));
 		AddWord(id,1);
 	}
 
 	string ToString() const {
 		std::ostringstream ss;
-		ss << "<";
 		for (int i=0; (unsigned)i < source_words.size(); ++i) {
 			if (i > 0) ss << " ";
 			ss << Dict::WSym(source_words[i]);
@@ -66,7 +85,6 @@ public:
 			ss << " ";
 			ss << Dict::WSym(target_words[i]);
 		}
-		ss << ">";
 		return ss.str();
 	}
 
@@ -86,6 +104,10 @@ public:
 		return -1;
 	}
 
+	int IsNonTerminalSideBySide() {
+		return nt_side_side == 1;
+	}
+
 	const Sentence & GetSourceSentence() {
 		return source_words;
 	}
@@ -100,6 +122,7 @@ private:
 	int source_non_term;
 	int target_non_term;
 	int type;
+	int nt_side_side;
 };
 
 static std::set<long long int> rule_set;
@@ -111,29 +134,11 @@ struct HieroRuleManager {
 		if (rule.GetNumberOfWords(HIERO_TARGET) == nterm || rule.GetNumberOfWords(HIERO_SOURCE) == nterm) {
 			return 1;
 		}
-
-		// DUPLICATION-FILTER
-		// who cares that rules may have length of 7 from source and they may duplicate?
-		// maybe there is some, but yes, don't be so defensive.
-		//if (rule.GetNumberOfWords(HIERO_SOURCE) <= 7)  [feature is turned off]
-		{
-			// Get the HashValue [we do primitive hash value implementation
-			// with assumption of perfect hashing]
-			Sentence source = rule.GetSourceSentence();
-			long long int value = 0;
-			long long int multiplier = 13; // some fancy prime number
-			for (int i=0; i < (int)source.size(); ++i) {
-				value += (long long int) source[i] * multiplier;
-				multiplier *= 13;
-			}
-
-			// check our set whether rule is in set or not
-			if (rule_set.find(value) == rule_set.end()) {
-				rule_set.insert(value);
-			} else {
-				return 1; // rule in set, filter it!
-			}
+		if (rule.IsNonTerminalSideBySide()) {
+			return 1;
 		}
+
+
 		return 0;
 	}
 

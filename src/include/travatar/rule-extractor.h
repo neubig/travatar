@@ -109,7 +109,7 @@ class HieroExtractor {
 public:
     HieroExtractor() : max_initial_phrase_len_(10), max_rule_len_(5) { }
 
-    std::vector<HieroRule> ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
+    std::vector<vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
 
     // MUTATOR
     void SetMaxInitalPhrase(int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
