@@ -125,7 +125,6 @@ private:
 	int nt_side_side;
 };
 
-static std::set<long long int> rule_set;
 struct HieroRuleManager {
 
 	static int IsFiltered(HieroRule & rule) {
