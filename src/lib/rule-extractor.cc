@@ -392,6 +392,8 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align,
     PhrasePairs filtered_pairs = PhrasePairs();
     PhrasePairs pairs = ExtractPhrase(align,source, target);
 
+    int rule_max_len = HieroExtractor::GetMaxRuleLen();
+
     // if there are multiple initial phrase pairs containing the same set of alignments, only the 
     // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
     map<int, int> mp = map<int,int>();
@@ -431,12 +433,20 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align,
                         if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
                             HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
-                            HieroRuleManager::AddRule(ret,_rule);
+                            if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                                    (int) _rule.GetTargetSentence().size() <= rule_max_len)
+                            {
+                                HieroRuleManager::AddRule(ret,_rule);
+                            }
                         }
                     }
                     // Unary rule
                     HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
-                    HieroRuleManager::AddRule(ret,_rule);
+                    if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                            (int) _rule.GetTargetSentence().size() <= rule_max_len)
+                    {
+                        HieroRuleManager::AddRule(ret,_rule);
+                    }
                     _rule = ParsePhraseTranslationRule(source,target,pairs[jj]);
                     HieroRuleManager::AddRule(ret,_rule);
                 }
