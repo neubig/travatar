@@ -390,7 +390,15 @@ std::vector<HieroRule> HieroExtractor::ExtractHieroRule(const Alignment & align,
 {
     vector<HieroRule> ret = vector<HieroRule>();
     PhrasePairs filtered_pairs = PhrasePairs();
-    PhrasePairs pairs = ExtractPhrase(align,source, target);
+    PhrasePairs pairs;
+
+    // Doing extraction safely
+    try {
+        pairs = ExtractPhrase(align,source, target);
+    } catch (std::exception& exc) {
+        THROW_ERROR("Input or alignment error. \n\tOn Source: " + Dict::PrintWords(source) + 
+            "\n\tOn Target: " + Dict::PrintWords(target));
+    }
 
     int rule_max_len = HieroExtractor::GetMaxRuleLen();
 
