@@ -110,6 +110,7 @@ public:
     HieroExtractor() : max_initial_phrase_len_(10), max_rule_len_(5) { }
 
     std::vector<vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
+    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target);
 
     // MUTATOR
     void SetMaxInitalPhrase(int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
@@ -119,7 +120,6 @@ public:
     int GetMaxInitialPhrase() { return max_initial_phrase_len_; }
     int GetMaxRuleLen() { return max_rule_len_; }
 private:
-    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target);
     std::string AppendString(const Sentence & s, int begin, int end);
     std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target);
     void PrintPhrasePairs(const PhrasePairs & pairs, const Sentence & source, const Sentence & target);
