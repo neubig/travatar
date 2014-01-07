@@ -263,6 +263,7 @@ public:
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const HyperEdge* GetEdge(int i) const { return edges_[i]; }
     HyperEdge* GetEdge(int i) { return edges_[i]; }
+    int NumEdges() const { return edges_.size(); }
     WordId GetWord(int i) const { return words_[i]; }
     const std::vector<WordId> & GetWords() const { return words_; }
     std::vector<WordId> & GetWords() { return words_; }
