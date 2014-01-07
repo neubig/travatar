@@ -69,7 +69,6 @@ public:
 				nt_side_side = 0;
 			}
 		}
-
 		WordId id = Dict::WID(GetNonTermX(number));
 		AddWord(id,1);
 	}
@@ -83,7 +82,7 @@ public:
 		ss << " |||";
 		for (int i=0; (unsigned)i < target_words.size(); ++i) {
 			ss << " ";
-			ss << Dict::WSym(target_words[i]);
+			ss << "\""<<Dict::WSym(target_words[i])<<"\"";
 		}
 		return ss.str();
 	}
@@ -136,8 +135,6 @@ struct HieroRuleManager {
 		if (rule.IsNonTerminalSideBySide()) {
 			return 1;
 		}
-
-
 		return 0;
 	}
 
