@@ -1,6 +1,6 @@
 // $Id$
 
-// This file is originally from travatar with the following copyright information:
+// This file is originally from Moses with the following copyright information:
 /***********************************************************************
 travatar - factored phrase-based language decoder
 Copyright (C) 2006 University of Edinburgh

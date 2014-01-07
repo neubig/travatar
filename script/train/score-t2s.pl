@@ -76,7 +76,7 @@ sub m1prob {
     my $ret = 0;
     foreach my $f (@$trgarr) {
         my $prob = 0;
-        foreach my $e (@$srcarr, "") {
+        foreach my $e (@$srcarr, "NULL") {
             $prob += max($min_prob, $lex{"$f\t$e"});
         }
         $ret += ($prob ? log($prob/(@$srcarr+1)) : -99);

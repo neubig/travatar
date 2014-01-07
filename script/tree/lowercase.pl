@@ -9,12 +9,20 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+my $NOBUF = 0;
+GetOptions(
+    "nobuf" => \$NOBUF,
+);
+
 if(@ARGV != 0) {
     print STDERR "Usage: $0 < input.txt > output.txt\n";
     exit 1;
 }
 
-$| = 1;
+if($NOBUF) {
+    $| = 1;
+}
+
 while(<STDIN>) {
     $_ =~ tr/A-ZＡ-Ｚ/a-zａ-ｚ/;
     print $_;
