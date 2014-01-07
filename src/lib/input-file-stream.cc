@@ -40,7 +40,7 @@ inline bool FileExists(const std::string& filePath)
 }
 
 InputFileStream::InputFileStream(std::string filePath)
-  : std::istream(NULL), m_streambuf(NULL) {
+  : std::istream(NULL), m_streambuf(NULL), ifs_(NULL) {
     if(!FileExists(filePath)) {
         if(FileExists(filePath+".gz"))
             filePath += ".gz";

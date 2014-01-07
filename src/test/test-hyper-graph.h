@@ -284,6 +284,31 @@ public:
         return CheckPtrVector(exp_nbest, act_nbest);
     }
 
+    // Test the ordering of the n-best list when all hypotheses are tied
+    // The ordering should fall back to orthographic order of edge IDs
+    int TestNbestTied() {
+        // Create a new copy of the rule graph where all scores are tied
+        boost::scoped_ptr<HyperGraph> tied_graph(new HyperGraph(*rule_graph_));
+        BOOST_FOREACH(HyperEdge* e, tied_graph->GetEdges())
+            e->SetScore(0.0);
+        // Accumulate Viterbi scores over nodes
+        tied_graph->ResetViterbiScores();
+        vector<double> exp_scores(3), act_scores(3);
+        exp_scores[0] = 0; exp_scores[1] = 0; exp_scores[2] = 0;
+        for(int i = 0; i < 3; i++)
+            act_scores[i] = tied_graph->GetNode(i)->CalcViterbiScore();
+        if(!CheckAlmostVector(exp_scores, act_scores))
+            return false;
+        // Get the three-best n-best lists (a b x) (a b y) (a c x)
+        vector<shared_ptr<HyperPath> > exp_nbest, act_nbest;
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[0]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[0]->AddEdge(tied_graph->GetEdge(2)); exp_nbest[0]->AddEdge(tied_graph->GetEdge(4)); exp_nbest[0]->SetScore(0);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(2)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(5)); exp_nbest[1]->SetScore(0);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(2)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(6)); exp_nbest[2]->SetScore(0);
+        exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(3)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(4)); exp_nbest[3]->SetScore(0);
+        act_nbest = tied_graph->GetNbest(4, tied_graph->GetWords());
+        return CheckPtrVector(exp_nbest, act_nbest);
+    }
+
     int TestPathTranslation() {
         // Get the three-best edge values
         vector<shared_ptr<HyperPath> > paths;
@@ -357,8 +382,8 @@ public:
         // HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
         // rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
         // HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-        // rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
-        // HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
+            // rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
+            // HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
         // Start on options for the left node, there should be two nodes for "a*b" and "a*c"
         HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ab);
         n_01_ab->SetViterbiScore(-0.1286666 + -0.6368221 + -0.1);
@@ -464,6 +489,7 @@ public:
         done++; cout << "TestCalculateFrontier()" << endl; if(TestCalculateFrontier()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCalculateFrontierForest()" << endl; if(TestCalculateFrontierForest()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestNbestPath()" << endl; if(TestNbestPath()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestNbestTied()" << endl; if(TestNbestTied()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPathTranslation()" << endl; if(TestPathTranslation()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutside()" << endl; if(TestInsideOutside()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInsideOutsideUnbalanced()" << endl; if(TestInsideOutsideUnbalanced()) succeeded++; else cout << "FAILED!!!" << endl;

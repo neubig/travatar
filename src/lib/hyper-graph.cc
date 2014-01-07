@@ -213,7 +213,12 @@ class PathScoreMore {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
         if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() > y->GetScore();
-        return x->GetEdges() > y->GetEdges();
+        const vector<HyperEdge*> & xe = x->GetEdges(), ye = y->GetEdges();
+        if(xe.size() != ye.size()) return xe.size() > ye.size();
+        for(int i = 0; i < (int)xe.size(); i++)
+            if(xe[i]->GetId() != ye[i]->GetId())
+                return xe[i]->GetId() < ye[i]->GetId();
+        return 0;
     }
 };
 
