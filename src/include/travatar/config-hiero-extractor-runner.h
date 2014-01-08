@@ -27,6 +27,7 @@ public:
         );
 
         AddConfigEntry("initial_phrase_len", "10", "The maximum length of initial phrase in a rule");
+        AddConfigEntry("rule_max_len", "5", "The maximum number of words in each extracted rule");
     }
 	
 };

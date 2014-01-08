@@ -104,20 +104,25 @@ protected:
 
 
 class HieroExtractor {
-    int max_initial_phrase_len_;
+    int max_initial_phrase_len_; 
+    int max_rule_len_;
 public:
-    HieroExtractor() : max_initial_phrase_len_(10) { }
+    HieroExtractor() : max_initial_phrase_len_(10), max_rule_len_(5) { }
 
+    std::vector<vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
+    std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target);
+    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target);
+
+    // MUTATOR
     void SetMaxInitalPhrase(int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
-
-    std::vector<HieroRule> ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target);
-
+    void SetMaxRuleLen(int max_rule_len) {max_rule_len_ = max_rule_len; }
+    
     // ACCESSOR 
     int GetMaxInitialPhrase() { return max_initial_phrase_len_; }
+    int GetMaxRuleLen() { return max_rule_len_; }
 private:
-    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target);
     std::string AppendString(const Sentence & s, int begin, int end);
-    std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target);
+    
     void PrintPhrasePairs(const PhrasePairs & pairs, const Sentence & source, const Sentence & target);
 
     int MapMaxKey(const std::map<int,int> & map);
@@ -142,7 +147,6 @@ private:
                                         const PhrasePair & pair);
 
     int InPhrase(const PhrasePair & p1, const PhrasePair & p2);
-
 };
 
 

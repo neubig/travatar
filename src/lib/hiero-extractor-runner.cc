@@ -21,14 +21,13 @@ using namespace boost;
 
 // Run the model
 void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
-    // Set the debugging level
-    //GlobalVars::debug = config.GetInt("debug");
-   
-    //int term_len = config.GetInt("term_len");
+    // Sanity Check
+    IsSane(config);
 
     // Create the rule extractor
     HieroExtractor extractor;
     extractor.SetMaxInitalPhrase(config.GetInt("initial_phrase_len"));
+    extractor.SetMaxRuleLen(config.GetInt("rule_max_len"));
     
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
@@ -42,9 +41,9 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     string src_line,trg_line, align_line;
    
     // Glue Rules
-    std::vector<HieroRule> rule = HieroRuleManager::GlueRules();
-    BOOST_FOREACH(HieroRule r , rule) {
-        cout << r.ToString() << endl;
+    std::vector<vector<HieroRule> > rules;
+    BOOST_FOREACH(HieroRule r , HieroRuleManager::GlueRules()) {
+        cout << r.ToString() << " ||| " << "1" << endl;
     }
 
     // Rule Extraction Algorithm
@@ -63,13 +62,26 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         Sentence src_sent = Dict::ParseWords(src_line);
         Sentence trg_sent = Dict::ParseWords(trg_line);
 
-        rule = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
+        rules = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
 
-        BOOST_FOREACH(HieroRule r , rule) {
-            cout << r.ToString() << endl;
+        BOOST_FOREACH(vector<HieroRule> rule , rules) {
+            double score = (double)1.0 / rule.size();
+            BOOST_FOREACH(HieroRule r , rule) {
+                cout << r.ToString() << " ||| " << score << endl;
+            }
         }
         if (++line % 100 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
+    }
+}
+
+void HieroExtractorRunner::IsSane(const ConfigHieroExtractorRunner & config) 
+{
+    if (config.GetInt("initial_phrase_len") < 0) {
+        THROW_ERROR("initial_phrase_len must be greater than 0.");
+    } 
+    if (config.GetInt("rule_max_len") < 0) {
+        THROW_ERROR("rule_max_len must be greater than 0.");
     }
 }

@@ -13,6 +13,7 @@
 #include "test-eval-measure.h"
 #include "test-tune.h"
 #include "test-trimmer.h"
+#include "test-hiero.h"
 
 using namespace std;
 using namespace travatar;
@@ -33,6 +34,7 @@ int main() {
     tests.push_back(new TestEvalMeasure());
     tests.push_back(new TestTune());
     tests.push_back(new TestTrimmer());
+    tests.push_back(new TestHiero());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
