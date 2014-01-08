@@ -22,8 +22,6 @@ public:
 	HieroRule() { 
 		source_words = std::vector<WordId>();
 		target_words = std::vector<WordId>();
-		source_non_term = 0;
-		target_non_term = 0;
 		type = -1;
 		nt_side_side = -1;
 	}
@@ -33,10 +31,10 @@ public:
 			nt_side_side = -1;
 		}
 		if (type == HIERO_SOURCE) {
-			if (non_term) ++source_non_term;
+			if (non_term) source_nt_position.insert(source_words.size());
 			source_words.push_back(word);
 		} else if (type == HIERO_TARGET) {
-			if (non_term) ++target_non_term;
+			if (non_term) target_nt_position.insert(target_words.size());
 			target_words.push_back(word);
 		} else {
 			THROW_ERROR("Undefined type when adding rule.");
@@ -77,18 +75,28 @@ public:
 		std::ostringstream ss;
 		for (int i=0; (unsigned)i < source_words.size(); ++i) {
 			if (i > 0) ss << " ";
-			ss << Dict::WSym(source_words[i]);
+			if (source_nt_position.find(i) == source_nt_position.end()) {
+				ss << "\"" << Dict::WSym(source_words[i])<< "\"";
+			} else {
+				ss << Dict::WSym(source_words[i]);
+			}
+			
 		}
 		ss << " |||";
 		for (int i=0; (unsigned)i < target_words.size(); ++i) {
 			ss << " ";
-			ss << "\""<<Dict::WSym(target_words[i])<<"\"";
+			if (target_nt_position.find(i) == target_nt_position.end()) {
+				ss << "\""<<Dict::WSym(target_words[i])<<"\"";
+			} else {
+				ss <<Dict::WSym(target_words[i]);
+			}
+			
 		}
 		return ss.str();
 	}
 
 	int GetNumberOfNonTerm(int type = -1) const {
-		return (source_non_term + target_non_term) / 2;
+		return (source_nt_position.size() + target_nt_position.size()) / 2;
 	}
 
 	int GetNumberOfWords(int type = -1) const {
@@ -118,10 +126,10 @@ public:
 private:
 	Sentence source_words;
 	Sentence target_words;
-	int source_non_term;
-	int target_non_term;
 	int type;
 	int nt_side_side;
+	set<int> source_nt_position;
+	set<int> target_nt_position;
 };
 
 struct HieroRuleManager {

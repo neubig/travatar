@@ -533,7 +533,9 @@ string HieroExtractor::AppendString(const Sentence & s, int begin, int end) {
     string ret = string("");
     for (int i=begin; i<=(int)end; ++i) {
         ret += Dict::WSym(s[i]);
-        ret += " ";
+        if (i != end) {
+            ret += " ";
+        }
     }
     return ret;
 }
