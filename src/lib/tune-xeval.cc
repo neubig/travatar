@@ -66,7 +66,7 @@ void TuneXeval::CalcBleuGradient(
     double B = (ex-1)/(e10kx+1) + 1;
     double Bprime = (ex*(1+e10kx)-(ex-1)*10000*e10kx)/(1+e10kx)/(1+e10kx);
     // This is used in the calculation of dB/log(p_{i,k})
-    PRINT_DEBUG("P=" << P << ", B=" << B << ", R=" << R << ", e10kx="<<e10kx<<", ex=" << ex << endl, 2);
+    PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kx="<<e10kx<<", ex=" << ex << endl, 2);
 
     // THe left and right constants
     double left = eP * Bprime * -R;
@@ -90,15 +90,16 @@ void TuneXeval::CalcBleuGradient(
             // Calculate the derivative of B with respect to log(p_{i,k})
             double my_left = left * (
                              DivideZero(stats_i_k_bleu->GetRefLen(),stats_bleu->GetRefLen()) -
-                             DivideZero(stats_i_k_bleu->GetCount(1),stats_bleu->GetCount(1)));
+                             DivideZero(stats_i_k_bleu->GetCount(0),stats_bleu->GetCount(0)));
             PRINT_DEBUG("my_left: " << my_left << endl, 2);
             // Calculate the derivative of xeval
             double d_xeval_logpik = my_left + my_right;
             PRINT_DEBUG("d_xeval_logpik: " << d_xeval_logpik << endl, 2);
             // Now multiply this value for every k'
-            for(int kprime = 0; kprime < K; kprime++)
+            for(int kprime = 0; kprime < K; kprime++) {
                 d_xeval_dsikprime[kprime] += 
                     d_xeval_logpik * ((kprime == k?1:0)-p_i_k[i][kprime]);
+            }
         }
         // Calculate the actual gradient
         const vector<ExamplePair> & nbest = examps_[i]->CalculateNbest(weights);
@@ -168,9 +169,9 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
         // Add to the expectation of the statistics
         if(stats_i_k[i].size() != nbest.size()) stats_i_k[i].resize(nbest.size());
         for(int k = 0; k < (int)nbest.size(); k++) {
-            PRINT_DEBUG("Iter " << iter_ << " "<<i<<" " << k << ": p=" << p_i_k[i][k] << endl, 3);
             stats_i_k[i][k] = nbest[k].second->Times(p_i_k[i][k]);
             stats->PlusEquals(*stats_i_k[i][k]);
+            PRINT_DEBUG("Iter " << iter_ << " "<<i<<" " << k << ": p=" << p_i_k[i][k] << ", s=" << stats_i_k[i][k]->ConvertToString() << ", stats=" << stats->ConvertToString() << endl, 3);
         }
         PRINT_DEBUG("Iter " << iter_ << " "<<i<<": F=" << p_i_k[i][0] << endl, 2);
     }

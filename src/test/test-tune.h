@@ -286,14 +286,24 @@ public:
         return CheckVector(act_hull,exp_hull);
     }
 
-    int TestTuneXeval() {
-        TuneXeval xeval;
-        xeval.SetIters(100);
-        xeval.SetExamples(examp_set);
-        SparseMap weights;
-        xeval.RunTuning(weights);
-        Dict::PrintFeatures(weights);
-        return 1;
+    int TestTuneXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        // Calculate the gradients
+        string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        tune.CalcGradient(SparseMap(), act_feat);
+        return CheckAlmostMap(act_feat, exp_feat);
     }
 
     bool RunTest() {
@@ -306,7 +316,7 @@ public:
         done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestTuneXeval()" << endl; if(TestTuneXeval()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestTuneXbleu()" << endl; if(TestTuneXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

@@ -36,16 +36,19 @@ stats = [
   (0.5 , 0.25, 0.0, 0.0, 0.5 , 0.25, 0.0 , 0.0, 0.5),
   (0.25, 0.0 , 0.0, 0.0, 0.25, 0.0 , 0.0 , 0.0, 0.5),
   (0.5 , 0.25, 0.0, 0.0, 0.75, 0.5 , 0.25, 0.0, 0.5),
-  (0.0 , 0.0 , 0.0, 0.0, 0.75, 0.5 , 0.25, 0.0, 0.5),
+  (0.0 , 0.0 , 0.0, 0.0, 0.25, 0.0 , 0.0 , 0.0, 0.5),
   (4.0 , 3.0 , 2.0, 1.0, 4.0 , 3.0 , 2.0 , 1.0, 4.0)
 ]
 t = (5.25, 3.5, 2.0, 1.0, 5.75, 3.75, 2.25, 1.0, 6.0)
 
+left = map(lambda x: (expP*Bprime*mR*(x[8]/t[8] - x[4]/t[4])), stats)
+right = map(lambda x: (expP*(x[0]/t[0]+x[1]/t[1]+x[2]/t[2]+x[3]/t[3]-x[4]/t[4]-x[5]/t[5]-x[6]/t[6]-x[7]/t[7])/4*B), stats)
 grads = map(lambda x: (expP*Bprime*mR*(x[8]/t[8] - x[4]/t[4]) + expP*(x[0]/t[0]+x[1]/t[1]+x[2]/t[2]+x[3]/t[3]-x[4]/t[4]-x[5]/t[5]-x[6]/t[6]-x[7]/t[7])/4*B), stats)
 
 feats = [0.0, 0.0, 0.0, 0.0]
 for k in range(4):
     for kp in range(4):
         feats[kp] += grads[k] * (0.75 if (kp == k) else -0.25)
+        print "%r %r: %r %r %r" % (k, kp, grads[k], (0.75 if (kp == k) else -0.25), feats[kp])
 
-print "P=%r\nexpP=%r\nR=%r\nB=%r\nBprime=%r\ngrads=%r\nfeats=%r" % (P, expP, R, B, Bprime, grads, feats)
+print "P=%r\nexpP=%r\nR=%r\nB=%r\nBprime=%r\ngrads=%r\nleft=%r\nright=%r\nfeats=%r" % (P, expP, R, B, Bprime, grads, left, right, feats)
