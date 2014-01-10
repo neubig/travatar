@@ -64,7 +64,7 @@ void TuneXeval::CalcBleuGradient(
     double x = 1-R;
     double ex = exp(x), e10kx = std::min(DBL_MAX,exp(10000*x));
     double B = (ex-1)/(e10kx+1) + 1;
-    double Bprime = (ex*(1+e10kx)-(ex-1)*10000*e10kx)/(1+e10kx)/(1+e10kx);
+    double Bprime = (ex-(ex-1)*10000*(e10kx/(1+e10kx)))/(1+e10kx);
     // This is used in the calculation of dB/log(p_{i,k})
     PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kx="<<e10kx<<", ex=" << ex << endl, 2);
 
