@@ -14,12 +14,12 @@ namespace travatar {
 class Weights;
 
 // Performs gradient ascent to maximize the expectation of the eval measure
-// This is a generalization of the method proposed in:
+// This is similar to the methods proposed in:
+//   David Smith and Jason Eisner
+//   Minimum Risk Annealing for Training Log-Linear Models
+//
 //   Rosti, A.-V., Zhang, B., Matsoukas, S. and Schwartz, R.
 //   BBN System Description for WMT10 System Combination Task
-//
-// The implementation here follows the description (in Japanese)
-//   機械翻訳 7.2.4章 (ベイズリスク最小化)
 class TuneXeval : public Tune {
 
 public:
@@ -39,7 +39,6 @@ public:
     void CalcAvgGradient(
             const std::vector<std::vector<double> > & p_i_k,
             const std::vector<std::vector<EvalStatsPtr> > & stats_i_k,
-            const std::vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const;
@@ -48,7 +47,6 @@ public:
     void CalcBleuGradient(
             const std::vector<std::vector<double> > & p_i_k,
             const std::vector<std::vector<EvalStatsPtr> > & stats_i_k,
-            const std::vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const;

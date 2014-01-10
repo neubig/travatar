@@ -22,7 +22,6 @@ inline double DivideZero(double x, double y) {
 void TuneXeval::CalcAvgGradient(
             const vector<vector<double> > & p_i_k,
             const vector<vector<EvalStatsPtr> > & stats_i_k,
-            const vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const {
@@ -53,7 +52,6 @@ void TuneXeval::CalcAvgGradient(
 void TuneXeval::CalcBleuGradient(
             const vector<vector<double> > & p_i_k,
             const vector<vector<EvalStatsPtr> > & stats_i_k,
-            const vector<EvalStatsPtr> & stats_i,
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const {
@@ -63,36 +61,39 @@ void TuneXeval::CalcBleuGradient(
     double P = stats_bleu->GetAvgLogPrecision();
     double eP = exp(P);
     double R = 1.0/stats_bleu->GetLengthRatio();
-    double omR = 1-R;
-    double eomR = exp(omR), e10komR = std::min(DBL_MAX,exp(10000*omR));
-    double B = (eomR-1)/(e10komR+1) + 1;
+    double x = 1-R;
+    double ex = exp(x), e10kx = std::min(DBL_MAX,exp(10000*x));
+    double B = (ex-1)/(e10kx+1) + 1;
+    double Bprime = (ex*(1+e10kx)-(ex-1)*10000*e10kx)/(1+e10kx)/(1+e10kx);
     // This is used in the calculation of dB/log(p_{i,k})
-    double d_B_logpik_Rpart = (eomR/(e10komR+1)-e10komR/(e10komR+1)/(e10komR+1)*10000*(eomR-1)) * -R;
-    PRINT_DEBUG("P=" << P << ", B=" << B << ", R=" << R << ", Rpart=" << d_B_logpik_Rpart << ", e10komR="<<e10komR<<", eomR=" << eomR << endl, 2);
+    PRINT_DEBUG("P=" << P << ", B=" << B << ", R=" << R << ", e10kx="<<e10kx<<", ex=" << ex << endl, 2);
+
+    // THe left and right constants
+    double left = eP * Bprime * -R;
+    double right = eP * B / stats_bleu->GetNgramOrder();
 
     // Calculate the stats for each example
     for(int i = 0; i < N; i++) {
         int K = p_i_k[i].size();
-        EvalStatsBleu * stats_i_bleu = (EvalStatsBleu*)stats_i[i].get();
         // The amount to multiply each member k' by
         vector<double> d_xeval_dsikprime(K,0);
         for(int k = 0; k < K; k++) {
             EvalStatsBleu * stats_i_k_bleu = (EvalStatsBleu*)stats_i_k[i][k].get();
             PRINT_DEBUG("s_i_k_bleu: " << stats_i_k_bleu->ConvertToString() << endl, 2);
             // Calculate the derivative of exp(P) with respect to log(p_{i,k})
-            double d_expP_logpik = 0;
+            double my_right = 0;
             for(int n = 0; n < stats_bleu->GetNgramOrder(); n++)
-                d_expP_logpik += DivideZero(stats_i_k_bleu->GetMatch(n),stats_i_bleu->GetMatch(n)) -
-                                 DivideZero(stats_i_k_bleu->GetCount(n),stats_i_bleu->GetCount(n));
-            d_expP_logpik /= stats_bleu->GetNgramOrder();
-            PRINT_DEBUG("d_expP_logpik: " << d_expP_logpik << endl, 2);
+                my_right += DivideZero(stats_i_k_bleu->GetMatch(n),stats_bleu->GetMatch(n)) -
+                            DivideZero(stats_i_k_bleu->GetCount(n),stats_bleu->GetCount(n));
+            my_right *= right;
+            PRINT_DEBUG("my_right: " << my_right << endl, 2);
             // Calculate the derivative of B with respect to log(p_{i,k})
-            double d_B_logpik = d_B_logpik_Rpart * (
-                                    DivideZero(stats_i_k_bleu->GetRefLen(),stats_i_bleu->GetRefLen()) -
-                                    DivideZero(stats_i_k_bleu->GetCount(1),stats_i_bleu->GetCount(1)));
-            PRINT_DEBUG("d_B_logpik: " << d_B_logpik << endl, 2);
+            double my_left = left * (
+                             DivideZero(stats_i_k_bleu->GetRefLen(),stats_bleu->GetRefLen()) -
+                             DivideZero(stats_i_k_bleu->GetCount(1),stats_bleu->GetCount(1)));
+            PRINT_DEBUG("my_left: " << my_left << endl, 2);
             // Calculate the derivative of xeval
-            double d_xeval_logpik = eP * ( d_B_logpik + d_expP_logpik * B );
+            double d_xeval_logpik = my_left + my_right;
             PRINT_DEBUG("d_xeval_logpik: " << d_xeval_logpik << endl, 2);
             // Now multiply this value for every k'
             for(int kprime = 0; kprime < K; kprime++)
@@ -146,7 +147,6 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     int N = examps_.size();
     vector<vector<double> > p_i_k(N);
     vector<vector<EvalStatsPtr> > stats_i_k(N);
-    vector<EvalStatsPtr> stats_i(N); 
     EvalStatsPtr stats;
     // Create the expected stats, make sure it is of the right type by cloning
     // the first stats of the first n-best list
@@ -167,20 +167,18 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
 
         // Add to the expectation of the statistics
         if(stats_i_k[i].size() != nbest.size()) stats_i_k[i].resize(nbest.size());
-        stats_i[i] = first_stats->Times(0);
         for(int k = 0; k < (int)nbest.size(); k++) {
             PRINT_DEBUG("Iter " << iter_ << " "<<i<<" " << k << ": p=" << p_i_k[i][k] << endl, 3);
             stats_i_k[i][k] = nbest[k].second->Times(p_i_k[i][k]);
-            stats_i[i]->PlusEquals(*stats_i_k[i][k]);
+            stats->PlusEquals(*stats_i_k[i][k]);
         }
-        stats->PlusEquals(*stats_i[i]);
-        PRINT_DEBUG("Iter " << iter_ << " "<<i<<": F=" << p_i_k[i][0] << " S=" << stats_i[i]->ConvertToString() << endl, 2);
+        PRINT_DEBUG("Iter " << iter_ << " "<<i<<": F=" << p_i_k[i][0] << endl, 2);
     }
     
     if(first_stats->GetIdString() == "BLEU") {
-        CalcBleuGradient(p_i_k, stats_i_k, stats_i, stats, *weights, d_xeval_dw);
+        CalcBleuGradient(p_i_k, stats_i_k, stats, *weights, d_xeval_dw);
     } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES") {
-        CalcAvgGradient(p_i_k, stats_i_k, stats_i, stats, *weights, d_xeval_dw);
+        CalcAvgGradient(p_i_k, stats_i_k, stats, *weights, d_xeval_dw);
     } else {
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");
     }
