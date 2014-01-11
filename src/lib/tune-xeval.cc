@@ -198,7 +198,7 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     
     if(first_stats->GetIdString() == "BLEU") {
         CalcBleuGradient(p_i_k, stats_i_k, stats, *weights, d_xeval_dw);
-    } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES") {
+    } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES" || first_stats->GetIdString() == "TER") {
         CalcAvgGradient(p_i_k, stats_i_k, stats, *weights, d_xeval_dw);
     } else {
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");
