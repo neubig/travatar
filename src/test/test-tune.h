@@ -309,6 +309,7 @@ public:
     int TestScaleXbleu() {
         // Create tuning examples and references
         TuneXeval tune;
+        tune.SetAutoScale(true);
         EvalMeasureBleu bleu;
         vector<shared_ptr<TuningExample> > examps;
         TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -318,17 +319,24 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
-        // Calculate the gradients
-        string exp_feat_str = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647 __SCALE__=0.0353502067385957";
-        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        // Add some weights
         SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
-        tune.CalcGradient(weights, act_feat);
-        return CheckAlmostMap(exp_feat, act_feat);
+        // Calculate the gradients
+        string exp_feat_str1 = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647 __SCALE__=0.0353502067385957";
+        SparseMap exp_feat1 = Dict::ParseFeatures(exp_feat_str1), act_feat1;
+        tune.CalcGradient(weights, act_feat1);
+        // Calculate the gradients without auto scaling
+        tune.SetAutoScale(false);
+        string exp_feat_str2 = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647";
+        SparseMap exp_feat2 = Dict::ParseFeatures(exp_feat_str2), act_feat2;
+        tune.CalcGradient(weights, act_feat2);
+        return CheckAlmostMap(exp_feat1, act_feat1) && CheckAlmostMap(exp_feat2, act_feat2);
     }
 
     int TestBigScaleXbleu() {
         // Create tuning examples and references
         TuneXeval tune;
+        tune.SetAutoScale(true);
         EvalMeasureBleu bleu;
         vector<shared_ptr<TuningExample> > examps;
         TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -349,6 +357,7 @@ public:
     int TestL2Xbleu() {
         // Create tuning examples and references
         TuneXeval tune;
+        tune.SetAutoScale(true);
         tune.SetL2Coefficient(0.01);
         EvalMeasureBleu bleu;
         vector<shared_ptr<TuningExample> > examps;

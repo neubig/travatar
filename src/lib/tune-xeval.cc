@@ -113,7 +113,8 @@ void TuneXeval::CalcBleuGradient(
         }
         PRINT_DEBUG("s_xeval_dw: " << Dict::PrintFeatures(d_xeval_dw) << endl, 2);
     }
-    if(d_xeval_dgamma != 0.0) d_xeval_dw[scale_id_] = d_xeval_dgamma;
+    if(auto_scale_ && d_xeval_dgamma != 0.0)
+        d_xeval_dw[scale_id_] = d_xeval_dgamma;
 }
 
 void TuneXeval::Init() {
@@ -254,7 +255,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         if(use_init)
             for(int i = 0; i < (int)dense2sparse_.size(); i++)
                 weights[i] = kv[dense2sparse_[i]];
-        if(weights[sparse2dense_[scale_id_]] == 0.0)
+        if(auto_scale_ && weights[sparse2dense_[scale_id_]] == 0.0)
             weights[sparse2dense_[scale_id_]] = 1.0;
         // Optimize and save
         liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
