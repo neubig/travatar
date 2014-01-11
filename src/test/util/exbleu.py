@@ -84,6 +84,7 @@ right = map(lambda x: (expP*(x[0]/t[0]+x[1]/t[1]+x[2]/t[2]+x[3]/t[3]-x[4]/t[4]-x
 grads = map(lambda x: (expP*Bprime*mR*(x[8]/t[8] - x[4]/t[4]) + expP*(x[0]/t[0]+x[1]/t[1]+x[2]/t[2]+x[3]/t[3]-x[4]/t[4]-x[5]/t[5]-x[6]/t[6]-x[7]/t[7])/4*B), stats)
 
 probs = [0.5, 0.25, 0.25]
+
 feats = [0.0, 0.0, 0.0]
 cross = [0.0, math.log(0.5), math.log(0.5)]
 scale = 0.0
@@ -94,3 +95,18 @@ for k in range(3):
         print "%r %r: %r %r %r" % (k, kp, grads[k], (1 if (kp == k) else 0)-probs[kp], feats[kp])
 
 print "P=%r\nexpP=%r\nR=%r\nB=%r\nBprime=%r\ngrads=%r\nleft=%r\nright=%r\nfeats=%r\nscale=%r" % (P, expP, R, B, Bprime, grads, left, right, feats, scale)
+
+# Calculation for average
+avgs = [0.5, 0.09196975, 0.0]
+grads = map(lambda x: x/2, avgs)
+
+feats = [0.0, 0.0, 0.0]
+cross = [0.0, math.log(0.5), math.log(0.5)]
+scale = 0.0
+for k in range(3):
+    for kp in range(3):
+        feats[kp] += grads[k] * ((1 if (kp == k) else 0)-probs[kp])
+        scale += grads[k] * cross[kp] * ((1 if (kp == k) else 0)-probs[kp])
+        print "%r %r: %r %r %r" % (k, kp, grads[k], (1 if (kp == k) else 0)-probs[kp], feats[kp])
+
+print "grads=%r\nfeats=%r\nscale=%r" % (grads, feats, scale)

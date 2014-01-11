@@ -25,9 +25,13 @@ void TuneXeval::CalcAvgGradient(
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const {
-    THROW_ERROR("Not working with scale yet");
     EvalStatsAverage * stats_avg = (EvalStatsAverage*)stats.get();
     int N = p_i_k.size();
+    // The scaling constant and its
+    double gamma = weights.GetCurrent(scale_id_);
+    if(gamma == 0.0) gamma = 1.0;
+    double d_xeval_dgamma = 0;
+
     // Calculate the stats for each example
     for(int i = 0; i < N; i++) {
         int K = p_i_k[i].size();
@@ -45,9 +49,13 @@ void TuneXeval::CalcAvgGradient(
         }
         // Calculate the actual gradient
         const vector<ExamplePair> & nbest = examps_[i]->CalculateNbest(weights);
-        for(int kprime = 0; kprime < K; kprime++)
-            d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime];
+        for(int kprime = 0; kprime < K; kprime++) {
+            d_xeval_dw += nbest[kprime].first * (d_xeval_dsikprime[kprime] * gamma);
+            d_xeval_dgamma += weights * nbest[kprime].first * d_xeval_dsikprime[kprime];
+        }
     }
+    if(auto_scale_ && d_xeval_dgamma != 0.0)
+        d_xeval_dw[scale_id_] = d_xeval_dgamma;
 }
 
 void TuneXeval::CalcBleuGradient(
