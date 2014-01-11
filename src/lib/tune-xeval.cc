@@ -154,6 +154,7 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     // Allocate some space for statistics
     SparseMap::const_iterator kvit = kv.find(scale_id_);
     double gamma = (kvit != kv.end() ? kvit->second : 1.0);
+    if(gamma == 0.0) gamma = 1.0;
     shared_ptr<Weights> weights(new Weights(kv));
     EvalStatsPtr first_stats = examps_[0]->CalculateNbest(*weights)[0].second;
     int N = examps_.size();
@@ -200,7 +201,7 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     // Perform L2 regularization if necessary
     if(l2_coeff_ != 0.0) {
         BOOST_FOREACH(SparseMap::value_type val, weights->GetCurrent()) {
-            if(val.second != 0.0) {
+            if(val.second != 0.0 && val.first != scale_id_) {
                 score -= l2_coeff_*val.second*val.second;
                 d_xeval_dw[val.first] -= 2 * l2_coeff_ * val.second;
             }
@@ -255,7 +256,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         if(use_init)
             for(int i = 0; i < (int)dense2sparse_.size(); i++)
                 weights[i] = kv[dense2sparse_[i]];
-        if(auto_scale_ && weights[sparse2dense_[scale_id_]] == 0.0)
+        if(weights[sparse2dense_[scale_id_]] == 0.0)
             weights[sparse2dense_[scale_id_]] = 1.0;
         // Optimize and save
         liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
