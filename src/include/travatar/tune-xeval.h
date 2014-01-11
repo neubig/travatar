@@ -7,6 +7,7 @@
 #include <tr1/unordered_map>
 #include <travatar/sparse-map.h>
 #include <travatar/tune.h>
+#include <travatar/dict.h>
 #include <travatar/eval-measure.h>
 
 namespace travatar {
@@ -26,7 +27,7 @@ public:
 
     TuneXeval() : iters_(100), iter_(0), mult_(1.0),
                   l1_coeff_(0.0), l2_coeff_(0.0),
-                  optimizer_("lbfgs") { }
+                  optimizer_("lbfgs"), scale_id_(Dict::WID("__SCALE__")) { }
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
@@ -69,6 +70,7 @@ protected:
     std::string optimizer_;
     std::vector<int> dense2sparse_;
     SparseIntMap sparse2dense_;
+    WordId scale_id_;
     
 
 };

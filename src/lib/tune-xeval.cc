@@ -25,6 +25,7 @@ void TuneXeval::CalcAvgGradient(
             const EvalStatsPtr & stats, 
             const Weights & weights,
             SparseMap & d_xeval_dw) const {
+    THROW_ERROR("Not working with scale yet");
     EvalStatsAverage * stats_avg = (EvalStatsAverage*)stats.get();
     int N = p_i_k.size();
     // Calculate the stats for each example
@@ -67,10 +68,11 @@ void TuneXeval::CalcBleuGradient(
     double Bprime = (ex-(ex-1)*10000*(e10kx/(1+e10kx)))/(1+e10kx);
     // This is used in the calculation of dB/log(p_{i,k})
     PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kx="<<e10kx<<", ex=" << ex << endl, 2);
-
-    // THe left and right constants
+    // The left and right constants
     double left = eP * Bprime * -R;
     double right = eP * B / stats_bleu->GetNgramOrder();
+    // The derivative of the scaling constant
+    double d_xeval_dgamma = 0;
 
     // Calculate the stats for each example
     for(int i = 0; i < N; i++) {
@@ -103,10 +105,13 @@ void TuneXeval::CalcBleuGradient(
         }
         // Calculate the actual gradient
         const vector<ExamplePair> & nbest = examps_[i]->CalculateNbest(weights);
-        for(int kprime = 0; kprime < K; kprime++)
+        for(int kprime = 0; kprime < K; kprime++) {
             d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime]; 
+            d_xeval_dgamma += weights * nbest[kprime].first * d_xeval_dsikprime[kprime];
+        }
         PRINT_DEBUG("s_xeval_dw: " << Dict::PrintFeatures(d_xeval_dw) << endl, 2);
     }
+    if(d_xeval_dgamma != 0.0) d_xeval_dw[scale_id_] = d_xeval_dgamma;
 }
 
 void TuneXeval::Init() {
@@ -115,6 +120,7 @@ void TuneXeval::Init() {
         SparseMap potential;
         BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
             examp->CountWeights(potential);
+        potential[scale_id_] = 1;
         BOOST_FOREACH(SparseMap::value_type val, potential) {
             sparse2dense_[val.first] = dense2sparse_.size();
             dense2sparse_.push_back(val.first);
@@ -143,6 +149,8 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
     iter_++;
 
     // Allocate some space for statistics
+    SparseMap::const_iterator kvit = kv.find(scale_id_);
+    double gamma = (kvit != kv.end() ? kvit->second : 1.0);
     shared_ptr<Weights> weights(new Weights(kv));
     EvalStatsPtr first_stats = examps_[0]->CalculateNbest(*weights)[0].second;
     int N = examps_.size();
@@ -163,7 +171,7 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
         // Get the probabilities of the n-best list
         if(p_i_k[i].size()!=nbest.size()) p_i_k[i].resize(nbest.size());
         for(int k = 0; k < (int)nbest.size(); k++)
-            p_i_k[i][k] = (*weights) * nbest[k].first;
+            p_i_k[i][k] = (*weights) * nbest[k].first * gamma;
         p_i_k[i] = Softmax(p_i_k[i]);
 
         // Add to the expectation of the statistics
@@ -244,6 +252,8 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         if(use_init)
             for(int i = 0; i < (int)dense2sparse_.size(); i++)
                 weights[i] = kv[dense2sparse_[i]];
+        if(weights[sparse2dense_[scale_id_]] == 0.0)
+            weights[sparse2dense_[scale_id_]] = 1.0;
         // Optimize and save
         liblbfgs::LBFGS<TuneXeval> lbfgs(*this, iters_, l1_coeff_, 1);
         last_score = lbfgs(weights.size(), &(*weights.begin()));

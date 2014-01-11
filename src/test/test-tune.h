@@ -283,7 +283,7 @@ public:
         ConvexHull exp_hull;
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(0.0))));
         exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
-        return CheckVector(act_hull,exp_hull);
+        return CheckVector(exp_hull, act_hull);
     }
 
     int TestTuneXbleu() {
@@ -303,7 +303,27 @@ public:
         string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
         SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
         tune.CalcGradient(SparseMap(), act_feat);
-        return CheckAlmostMap(act_feat, exp_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
+    }
+
+    int TestScaleXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        // Calculate the gradients
+        string exp_feat_str = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647 __SCALE__=0.0353502067385957";
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
+        tune.CalcGradient(weights, act_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
     }
 
     bool RunTest() {
@@ -317,6 +337,7 @@ public:
         done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTuneXbleu()" << endl; if(TestTuneXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestScaleXbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
