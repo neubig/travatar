@@ -96,6 +96,8 @@ if(@ARGV != 0) {
     exit 1;
 }
 
+print STDERR "$SCORE_OPTIONS\n";
+
 # Sanity check!
 ((!$WORK_DIR) or (!$SRC_FILE) or (!$TRG_FILE) or (!$TRAVATAR_DIR)) and
     die "Must specify -work_dir ($WORK_DIR) -src_file ($SRC_FILE) -trg_file ($TRG_FILE) -travatar_dir ($TRAVATAR_DIR)";
@@ -231,7 +233,6 @@ if(not $CONFIG_FILE) {
     print TINI "[binarize]\n$BINARIZE\n\n";
     # Default values for the weights
     my $weights = "egfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\nparse=1\n";
-    $weights .= "isx=-0.5\n" if ($TRG_FORMAT ne "word"); # Add syntax augmented weights
     print TINI "[weight_vals]\n$weights\n";
     close TINI;
     print "Finished training! You can find the configuation file in:\n$TINI_FILE\n";

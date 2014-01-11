@@ -63,7 +63,9 @@ travatar/src/bin/mt-evaluator -ref ref.txt sys1.txt sys2.txt
 </pre>
 
 <p>
-This will print scores for BLEU and RIBES. Normal scores for systems should be a BLEU of around 10-40, and RIBES of around 50-90, with systems on the low end of the range generally being bad and high end of the range being good.
+This will print scores for BLEU and RIBES.
+Normal scores for systems should be a BLEU of around 10-50, and RIBES of around 50-90, with systems on the low end of the range generally being bad and high end of the range being good.
+If you would like to get separate evaluation results for every sentence, you can also add <tt>-sent true</tt>.
 </p>
 
 <a name="measures">

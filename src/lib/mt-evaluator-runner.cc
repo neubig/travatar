@@ -29,6 +29,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     while(getline(refin, line))
         ref_sentences[0].push_back(Dict::ParseWords(line));
     int ref_len = ref_sentences[0].size();
+    bool sent = config.GetBool("sent");
     
     // Load the evaluation measure
     vector<shared_ptr<EvalMeasure> > eval_measures;
@@ -74,6 +75,10 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
             Sentence sys_sent = Dict::ParseWords(line);
             for(int i = 0; i < eval_count; i++) {
                 EvalStatsPtr stats = eval_measures[i]->CalculateStats(ref_sentences[0][id],sys_sent);
+                if(sent) {
+                    if(config.GetMainArgs().size() > 1) cout << filename << " ";
+                    cout << "Sent " << id << ": " << stats->ConvertToString() << endl;
+                }
                 // Add the regular stats
                 if(total_stats[i].get() == NULL) total_stats[i] = stats->Clone();
                 else                             total_stats[i]->PlusEquals(*stats);
