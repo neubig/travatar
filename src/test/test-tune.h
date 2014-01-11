@@ -326,6 +326,26 @@ public:
         return CheckAlmostMap(exp_feat, act_feat);
     }
 
+    int TestBigScaleXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        // Calculate the gradients
+        string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
+        tune.CalcGradient(weights, act_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
+    }
+
     int TestL2Xbleu() {
         // Create tuning examples and references
         TuneXeval tune;
@@ -359,6 +379,7 @@ public:
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestTuneXbleu()" << endl; if(TestTuneXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestScaleXbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBigScaleXbleu()" << endl; if(TestBigScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestL2Xbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

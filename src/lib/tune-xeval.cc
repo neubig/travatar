@@ -71,7 +71,9 @@ void TuneXeval::CalcBleuGradient(
     // The left and right constants
     double left = eP * Bprime * -R;
     double right = eP * B / stats_bleu->GetNgramOrder();
-    // The derivative of the scaling constant
+    // The scaling constant and its
+    double gamma = weights.GetCurrent(scale_id_);
+    if(gamma == 0.0) gamma = 1.0;
     double d_xeval_dgamma = 0;
 
     // Calculate the stats for each example
@@ -106,7 +108,7 @@ void TuneXeval::CalcBleuGradient(
         // Calculate the actual gradient
         const vector<ExamplePair> & nbest = examps_[i]->CalculateNbest(weights);
         for(int kprime = 0; kprime < K; kprime++) {
-            d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime]; 
+            d_xeval_dw += nbest[kprime].first * d_xeval_dsikprime[kprime] * gamma; 
             d_xeval_dgamma += weights * nbest[kprime].first * d_xeval_dsikprime[kprime];
         }
         PRINT_DEBUG("s_xeval_dw: " << Dict::PrintFeatures(d_xeval_dw) << endl, 2);
