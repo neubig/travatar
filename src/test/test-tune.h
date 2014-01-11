@@ -391,9 +391,11 @@ public:
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
         // Calculate the gradients, plus regularization
-        string exp_feat_str = "fa=0.050999567956171644 fb=-.006026887891708035 fc=-.017246792842065795 __SCALE__=0.0353502067385957";
+        // string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
+        string exp_feat_str = "fa=0.101999135912343288 fb=-0.012053775783416064 fc=-0.034493585684131585 __SCALE__=-.00154301718743020644";
+
         SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
-        SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
         tune.CalcGradient(weights, act_feat);
         return CheckAlmostMap(exp_feat, act_feat);
     }
@@ -412,7 +414,7 @@ public:
         done++; cout << "TestScaleXbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBigScaleXbleu()" << endl; if(TestBigScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBigScaleXbleup1()" << endl; if(TestBigScaleXbleup1()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestL2Xbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestL2Xbleu()" << endl; if(TestL2Xbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

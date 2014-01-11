@@ -159,10 +159,12 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
 
     iter_++;
 
-    // Allocate some space for statistics
+    // Get the scaling factor
     SparseMap::const_iterator kvit = kv.find(scale_id_);
     double gamma = (kvit != kv.end() ? kvit->second : 1.0);
     if(gamma == 0.0) gamma = 1.0;
+
+    // Allocate some space for statistics
     shared_ptr<Weights> weights(new Weights(kv));
     EvalStatsPtr first_stats = examps_[0]->CalculateNbest(*weights)[0].second;
     int N = examps_.size();
@@ -208,12 +210,18 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
 
     // Perform L2 regularization if necessary
     if(l2_coeff_ != 0.0) {
+        double dgamma = 0;
+        double gamma2 = gamma*gamma;
         BOOST_FOREACH(SparseMap::value_type val, weights->GetCurrent()) {
             if(val.second != 0.0 && val.first != scale_id_) {
-                score -= l2_coeff_*val.second*val.second;
-                d_xeval_dw[val.first] -= 2 * l2_coeff_ * val.second;
+                double v2 = val.second*val.second;
+                score -= l2_coeff_*v2*gamma2;
+                d_xeval_dw[val.first] -= 2 * l2_coeff_ * val.second * gamma2;
+                dgamma -= 2 * l2_coeff_ * v2 * gamma;
             }
         }
+        if(auto_scale_ && dgamma != 0.0)
+            d_xeval_dw[scale_id_] += dgamma;
     }
 
     // If there is a multiplier to the gradient (i.e. -1)
@@ -234,6 +242,8 @@ double TuneXeval::RunTuning(SparseMap & kv) {
     // Sanity checks
     if(examps_.size() < 1)
         THROW_ERROR("Must have at least one example to perform tuning");
+    if(l1_coeff_ != 0.0)
+        THROW_ERROR("L1 regularization is not supported yet.");
 
     // Start
     PRINT_DEBUG("Starting Expected Eval Tuning Run: " << Dict::PrintFeatures(kv) << endl, 2);
@@ -243,8 +253,6 @@ double TuneXeval::RunTuning(SparseMap & kv) {
 
     // Do iterations of SGD learning
     if(optimizer_ == "sgd") {
-        if(l1_coeff_ != 0.0)
-            THROW_ERROR("L1 regularization and SGD are not compatible yet.");
         double step_size_ = 1.0;
         for(int iter = 0; iter < iters_; iter++) {
             // Calculate the gradient and score
