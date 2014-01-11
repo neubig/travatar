@@ -27,8 +27,8 @@ public:
 
     TuneXeval() : iters_(100), iter_(0), mult_(1.0),
                   l1_coeff_(0.0), l2_coeff_(0.0),
-                  optimizer_("lbfgs"), scale_id_(Dict::WID("__SCALE__")),
-                  auto_scale_(false) { }
+                  optimizer_("lbfgs"),
+                  auto_scale_(false), use_init_(true) { }
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
@@ -72,8 +72,8 @@ protected:
     std::string optimizer_;
     std::vector<int> dense2sparse_;
     SparseIntMap sparse2dense_;
-    WordId scale_id_;
     bool auto_scale_;
+    bool use_init_;
     
 
 };

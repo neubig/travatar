@@ -236,9 +236,6 @@ double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) con
 // Tune new weights using the expected BLEU algorithm
 double TuneXeval::RunTuning(SparseMap & kv) {
 
-    // Whether to start at the initial point
-    bool use_init = false;
-
     // Sanity checks
     if(examps_.size() < 1)
         THROW_ERROR("Must have at least one example to perform tuning");
@@ -269,7 +266,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         mult_ = -1;
         // Initialize the weights if we are using this setting
         vector<double> weights(dense2sparse_.size(),0.0);
-        if(use_init)
+        if(use_init_)
             for(int i = 0; i < (int)dense2sparse_.size(); i++)
                 weights[i] = kv[dense2sparse_[i]];
         if(weights[sparse2dense_[scale_id_]] == 0.0)
