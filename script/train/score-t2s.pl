@@ -39,7 +39,7 @@ if(@ARGV != 0) {
 my %lex;
 if($LEX_PROB_FILE) {
     print STDERR "Loading from $LEX_PROB_FILE\n";
-    open FILE, "<:utf8", $LEX_PROB_FILE or die "Couldn't open $LEX_PROB_FILE\n";
+    open FILE, "<:utf8", $LEX_PROB_FILE or die "Couldn't open $LEX_PROB_FILE $!\n";
     while(<FILE>) {
         chomp;
         my @arr = split(/[\t ]/);
@@ -55,7 +55,7 @@ if($LEX_PROB_FILE) {
 
 sub strip_arr {
     my $str = shift;
-    my $isstring = shift;
+    my $isstring = !($str =~ /^[^ ]+ \( /);
     my @ret;
     my @arr = split(/ +/, $str);
     for(@arr) {
@@ -90,8 +90,7 @@ sub print_counts {
     my $src = shift;
     my $counts = shift;
     return if ($src eq "") and not $KEEP_EMPTY;
-    my $ist2s = ($src =~ /^[^ ]+ \( /); # Check if this is a string
-    my @srcarr = strip_arr($src, !$ist2s);
+    my @srcarr = strip_arr($src);
     my $sum = sum(map { $_->[1] } @$counts);
     return if $sum < $SRC_MIN_FREQ;
     my $lsum = log($sum);
@@ -100,13 +99,13 @@ sub print_counts {
         my $cnt = $kv->[1];
         next if ($trg eq "") and not $KEEP_EMPTY;
         my $words = 0;
-        my @trgarr = strip_arr($trg, $ist2s);
+        my @trgarr = strip_arr($trg);
         # If we are using target side syntax and the rule is bad
         my $extra_feat;
         if($SYNTAX_FEATS) {
-            $src =~ /^([^ ]+) /;
+            $src =~ /^([^ ]+) /;+
             my $src_lab = $1;
-            $trg =~ / @ ([^ ]+)/;
+            $trg =~ /@ ([^ ]+)/; #~ / @ ([^ ]+)/
             my $trg_lab = $1;
             $extra_feat .= " isx=1" if($TRG_SYNTAX and $trg_lab eq "\@X\@");
             $extra_feat .= " sl_${src_lab}=1" if $SRC_LABEL and $src_lab;
@@ -126,7 +125,6 @@ sub print_counts {
         $fof[$cnt]++ if $FOF_FILE and ($cnt <= $FOF_MAX);
     }
 }
-
 my (@counts, $curr_id);
 while(<STDIN>) {
     chomp;

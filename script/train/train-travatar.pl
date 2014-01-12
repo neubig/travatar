@@ -226,7 +226,6 @@ if(not $TM_FILE) {
         my $EXTRACT_OPTIONS = "-initial_phrase_len $INITIAL_PHRASE_LEN -rule_max_len $RULE_MAX_LEN";
         safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     }
-    die;
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
