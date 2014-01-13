@@ -299,6 +299,7 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
         // Calculate the gradients
         string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
         SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
@@ -319,6 +320,7 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
         // Add some weights
         SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
         // Calculate the gradients
@@ -346,6 +348,7 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
         // Calculate the gradients
         string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
         SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
@@ -367,6 +370,7 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
         // Add some weights
         SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
         // Calculate the gradients
@@ -390,6 +394,7 @@ public:
         nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
         tune.AddExample(shared_ptr<TuningExample>(nbest1));
         tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
         // Calculate the gradients, plus regularization
         // string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
         string exp_feat_str = "fa=0.101999135912343288 fb=-0.012053775783416064 fc=-0.034493585684131585 __SCALE__=-.00154301718743020644";

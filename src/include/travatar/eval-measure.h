@@ -54,6 +54,19 @@ public:
         }
         return *this;
     }
+    virtual EvalStats & PlusEqualsTimes(const EvalStats & rhs, double p) {
+        if(vals_.size() == 0) {
+            vals_ = rhs.vals_;
+            for(int i = 0; i < (int)vals_.size(); i++)
+                vals_[i] *= p;
+        } else if (rhs.vals_.size() != 0) {
+            if(rhs.vals_.size() != vals_.size())
+                THROW_ERROR("Mismatched in EvalStats::PlusEqualsTimes");
+            for(int i = 0; i < (int)rhs.vals_.size(); i++)
+                vals_[i] += rhs.vals_[i] * p;
+        }
+        return *this;
+    }
     virtual EvalStats & TimesEquals(EvalStatsDataType mult) {
         BOOST_FOREACH(EvalStatsDataType & val, vals_)
             val *= mult;

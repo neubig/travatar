@@ -28,7 +28,8 @@ public:
     TuneXeval() : iters_(100), iter_(0), mult_(1.0),
                   l1_coeff_(0.0), l2_coeff_(0.0),
                   optimizer_("lbfgs"),
-                  auto_scale_(false), use_init_(true) { }
+                  auto_scale_(false), use_init_(true),
+                  dense_scale_id_(-1) { }
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
@@ -36,22 +37,19 @@ public:
     // Calculate the gradient for particular weights
     // The return is the expectation of the evaluation
     double CalcGradient(const SparseMap & weights, SparseMap & d_xeval_dw) const;
+    double CalcGradient(size_t n, const double * x, double * g) const;
 
     // Calculate the gradient for averaged measures based on expectations, probabilities
     void CalcAvgGradient(
             const std::vector<std::vector<double> > & p_i_k,
-            const std::vector<std::vector<EvalStatsPtr> > & stats_i_k,
             const EvalStatsPtr & stats, 
-            const Weights & weights,
-            SparseMap & d_xeval_dw) const;
+            size_t n, const double * x, double * g) const;
     
     // Calculate the gradient for BLEU based on expectations, probabilities
     void CalcBleuGradient(
             const std::vector<std::vector<double> > & p_i_k,
-            const std::vector<std::vector<EvalStatsPtr> > & stats_i_k,
             const EvalStatsPtr & stats, 
-            const Weights & weights,
-            SparseMap & d_xeval_dw) const;
+            size_t n, const double * x, double * g) const;
 
     // For tuning with LBFGS
     double operator()(size_t n, const double * x, double * g) const;
@@ -74,7 +72,9 @@ protected:
     SparseIntMap sparse2dense_;
     bool auto_scale_;
     bool use_init_;
-    
+    std::vector<std::vector<EvalStatsPtr> > all_stats_;    
+    std::vector<std::vector<std::vector<std::pair<WordId,double> > > > all_feats_;    
+    WordId dense_scale_id_;
 
 };
 
