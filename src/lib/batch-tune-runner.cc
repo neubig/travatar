@@ -111,6 +111,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         TuneXeval * tx = new TuneXeval;
         tx->SetL1Coefficient(config.GetDouble("l1"));
         tx->SetL2Coefficient(config.GetDouble("l2"));
+        tx->SetEntCoefficient(config.GetDouble("ent"));
         tgm.reset(tx);
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;

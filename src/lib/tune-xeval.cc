@@ -18,6 +18,9 @@ using namespace travatar;
 inline double DivideZero(double x, double y) {
     return (y==0?0:x/y);
 }
+inline double LogZero(double x) {
+    return (x<=0?-DBL_MAX:log(x));
+}
 
 void TuneXeval::CalcAvgGradient(
             const vector<vector<double> > & p_i_k,
@@ -162,19 +165,6 @@ void TuneXeval::Init() {
 
 double TuneXeval::operator()(size_t n, const double * x, double * g) const {
     return CalcGradient(n, x, g);
-    // SparseMap kv, d_xeval_dw;
-    // for(size_t i = 0; i < n; i++) {
-    //     kv[dense2sparse_[i]] = x[i];
-    //     g[i] = 0;
-    // }
-    // double ret = CalcGradient(kv, d_xeval_dw);
-    // BOOST_FOREACH(SparseMap::value_type val, d_xeval_dw) {
-    //     SparseIntMap::const_iterator it = sparse2dense_.find(val.first);
-    //     if(it == sparse2dense_.end())
-    //         THROW_ERROR("Could not find feature in sparse-to-dense mapping");
-    //     g[it->second] = val.second;
-    // }
-    // return ret;
 }
 
 double TuneXeval::CalcGradient(const SparseMap & kv, SparseMap & d_xeval_dw) const {
@@ -256,6 +246,29 @@ double TuneXeval::CalcGradient(size_t n, const double * x, double * g) const {
         }
         if(auto_scale_ && dgamma != 0.0 && dense_scale_id_ != -1)
             g[dense_scale_id_] += dgamma;
+    }
+
+    // Perform entropy regularization if necessary
+    if(ent_coeff_ != 0.0) {
+        double dgamma = 0;
+        double log2 = log(2.0);
+        for(int i = 0; i < N; i++) {
+            int K = all_feats_[i].size();
+            vector<double> ps(K, 0.0);
+            for(int k = 0; k < K; k++) {
+                double val = (LogZero(p_i_k[i][k])/log2 + 1) * p_i_k[i][k];
+                for(int kprime = 0; kprime < K; kprime++)
+                    ps[kprime] += val * ((kprime == k ? 1.0 : 0.0) - p_i_k[i][kprime]);
+            }
+            for(int kprime = 0; kprime < K; kprime++) {
+                BOOST_FOREACH(const SparseMap::value_type & val, all_feats_[i][kprime]) {
+                    g[val.first] -= ps[kprime] * val.second * gamma * ent_coeff_;
+                    dgamma -= ps[kprime] * x[val.first] * val.second;
+                }
+            }
+        }
+        if(auto_scale_ && dgamma != 0.0 && dense_scale_id_ != -1)
+            g[dense_scale_id_] += dgamma * ent_coeff_;
     }
 
     // If there is a multiplier to the gradient (i.e. -1)
