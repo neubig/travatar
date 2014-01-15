@@ -353,7 +353,7 @@ int CheckMap(const std::map<K,V> & exp, const std::map<K,V> & act) {
 }
 
 template<class K>
-int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act) {
+int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act, double diff = 0.01) {
     typedef std::tr1::unordered_map<K,double> MapType;
     typedef std::pair<K,double> MapPair;
     int ok = 1;
@@ -362,7 +362,7 @@ int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1
         if(it == act.end()) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << std::endl;
             ok = 0;
-        } else if(abs(it->second - kv.second) > 0.01) {
+        } else if(abs(it->second - kv.second) > diff) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != "<<it->second<<")" << std::endl;
             ok = 0;
         }
