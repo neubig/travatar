@@ -7,6 +7,7 @@
 .deps
 .libs
 .nfs*
+*.d
 Makefile
 Makefile.in
 config.h.in
