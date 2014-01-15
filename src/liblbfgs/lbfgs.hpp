@@ -34,7 +34,6 @@ namespace liblbfgs
       lbfgs_parameter_init(&param_);
       
       param_.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-      param_.epsilon = 1e-6;
       
       if (l1 > 0.0) {
         param_.orthantwise_c = l1;
