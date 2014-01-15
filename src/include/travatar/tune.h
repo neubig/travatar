@@ -7,12 +7,7 @@
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <travatar/util.h>
-// #include <boost/thread.hpp>
-// #include <tr1/unordered_map>
-// #include <travatar/sparse-map.h>
-
-// #include <travatar/thread-pool.h>
-// #include <travatar/eval-measure.h>
+#include <travatar/dict.h>
 
 namespace travatar {
 
@@ -24,7 +19,7 @@ class Tune {
 public:
 
     // **** Non-static Members ****
-    Tune() : gain_threshold_(0.000001) {
+    Tune() : gain_threshold_(0.000001), scale_id_(Dict::WID("__SCALE__")) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -59,11 +54,15 @@ public:
     TuningExample & GetExample(int id) {
         return *SafeAccess(examps_, id);
     }
+    WordId GetScaleId() { return scale_id_; }
 
 protected:
 
     // A feature must create a gain of more than this to be added
     double gain_threshold_;
+
+    // A special word ID that corresponds to the scaling factor
+    WordId scale_id_;
 
     // The range of the weights
     typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;

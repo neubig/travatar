@@ -283,17 +283,126 @@ public:
         ConvexHull exp_hull;
         exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(0.0))));
         exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
-        return CheckVector(act_hull,exp_hull);
+        return CheckVector(exp_hull, act_hull);
     }
 
-    int TestTuneXeval() {
-        TuneXeval xeval;
-        xeval.SetIters(100);
-        xeval.SetExamples(examp_set);
-        SparseMap weights;
-        xeval.RunTuning(weights);
-        Dict::PrintFeatures(weights);
-        return 1;
+    int TestTuneXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
+        // Calculate the gradients
+        string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        tune.CalcGradient(SparseMap(), act_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
+    }
+
+    int TestScaleXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        tune.SetAutoScale(true);
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
+        // Add some weights
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
+        // Calculate the gradients
+        string exp_feat_str1 = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647 __SCALE__=0.0353502067385957";
+        SparseMap exp_feat1 = Dict::ParseFeatures(exp_feat_str1), act_feat1;
+        tune.CalcGradient(weights, act_feat1);
+        // Calculate the gradients without auto scaling
+        tune.SetAutoScale(false);
+        string exp_feat_str2 = "fa=0.050999567956171644 fb=-0.01988983150290694 fc=-0.0311097364532647";
+        SparseMap exp_feat2 = Dict::ParseFeatures(exp_feat_str2), act_feat2;
+        tune.CalcGradient(weights, act_feat2);
+        return CheckAlmostMap(exp_feat1, act_feat1) && CheckAlmostMap(exp_feat2, act_feat2);
+    }
+
+    int TestBigScaleXbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        tune.SetAutoScale(true);
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
+        // Calculate the gradients
+        string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
+        tune.CalcGradient(weights, act_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
+    }
+
+    int TestBigScaleXbleup1() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        tune.SetAutoScale(true);
+        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
+        // Add some weights
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
+        // Calculate the gradients
+        string exp_feat_str1 = "fa=.2040151250 fb=-.05602268750 fc=-.14799243750 __SCALE__=.0353531271713337";
+        SparseMap exp_feat1 = Dict::ParseFeatures(exp_feat_str1), act_feat1;
+        tune.CalcGradient(weights, act_feat1);
+        return CheckAlmostMap(exp_feat1, act_feat1);
+    }
+
+    int TestL2Xbleu() {
+        // Create tuning examples and references
+        TuneXeval tune;
+        tune.SetAutoScale(true);
+        tune.SetL2Coefficient(0.01);
+        EvalMeasureBleu bleu;
+        vector<shared_ptr<TuningExample> > examps;
+        TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
+        nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+        nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+        nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+        tune.AddExample(shared_ptr<TuningExample>(nbest1));
+        tune.AddExample(shared_ptr<TuningExample>(nbest2));
+        tune.Init();
+        // Calculate the gradients, plus regularization
+        // string exp_feat_str = "fa=0.101999135912343288 fb=-0.03977966300581388 fc=-0.0622194729065294 __SCALE__=0.01767510336929785000";
+        string exp_feat_str = "fa=0.101999135912343288 fb=-0.012053775783416064 fc=-0.034493585684131585 __SCALE__=-.00154301718743020644";
+
+        SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+        SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
+        tune.CalcGradient(weights, act_feat);
+        return CheckAlmostMap(exp_feat, act_feat);
     }
 
     bool RunTest() {
@@ -306,7 +415,11 @@ public:
         done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestTuneXeval()" << endl; if(TestTuneXeval()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestTuneXbleu()" << endl; if(TestTuneXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestScaleXbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBigScaleXbleu()" << endl; if(TestBigScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBigScaleXbleup1()" << endl; if(TestBigScaleXbleup1()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestL2Xbleu()" << endl; if(TestL2Xbleu()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTune Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

@@ -30,6 +30,7 @@ public:
         AddConfigEntry("eval", "bleu ribes", "Space separated array of evaluation types (bleu/ribes/ter)");
         AddConfigEntry("bootstrap", "0", "The number of bootstrap resampling runs to perform");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
+        AddConfigEntry("sent", "false", "Print sentence-wise statistics");
 
     }
 	

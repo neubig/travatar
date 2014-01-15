@@ -112,7 +112,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         tx->SetL1Coefficient(config.GetDouble("l1"));
         tx->SetL2Coefficient(config.GetDouble("l2"));
         tgm.reset(tx);
-        runs = 1; // random restarts make no sense for xeval
+        // runs = 1; // random restarts make no sense for xeval
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
@@ -214,7 +214,8 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         // Randomize the weights
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
-            rw.second *= rand()/(double)RAND_MAX;
+            if(rw.first != tgm->GetScaleId())
+                rw.second *= rand()/(double)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
         tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, rand_weights));
         pool.Submit(tasks[i].get());
