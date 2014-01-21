@@ -90,6 +90,7 @@ public:
 
         // Intersect the graph with the LM
         LMComposerBU lm(new lm::ngram::Model(file_name.c_str()));
+        lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
         shared_ptr<HyperGraph> exp_graph(new HyperGraph), act_graph(lm.TransformGraph(*rule_graph_));
 
@@ -109,7 +110,7 @@ public:
         HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_y);
         n_12_y->SetViterbiScore(-0.8129134 + -0.5);
         HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_t);
-        n_12_t->SetViterbiScore(-100 + -2.5);
+        n_12_t->SetViterbiScore(-100 + -2.5 + -20);
         // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
         HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ax);
         n_02_ax->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_x->GetViterbiScore() + -0.3 + -0.4855544 - -0.8129134);
@@ -141,7 +142,8 @@ public:
         HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t);
         e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures());
         e_12_t->AddFeature(Dict::WID("lm"), -100); // P(unk)
-        e_12_t->SetScore(-100 + -2.5);
+        e_12_t->AddFeature(Dict::WID("lmunk"), 1); // P(unk)
+        e_12_t->SetScore(-100 + -2.5 + -20);
         e_12_t->SetTrgWords(rule_graph_->GetEdge(6)->GetTrgWords());
         // Make edges for 0,2. There are more than three, so only expand the best three
         HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx);

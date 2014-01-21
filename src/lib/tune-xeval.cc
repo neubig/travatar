@@ -256,7 +256,9 @@ double TuneXeval::CalcGradient(size_t n, const double * x, double * g) const {
             int K = all_feats_[i].size();
             vector<double> ps(K, 0.0);
             for(int k = 0; k < K; k++) {
-                double val = (LogZero(p_i_k[i][k])/log2 + 1) * p_i_k[i][k];
+                double my_log2 = max(LogZero(p_i_k[i][k])/log2,-DBL_MAX);
+                double val = (my_log2 + 1) * p_i_k[i][k];
+                score += my_log2 * p_i_k[i][k] * ent_coeff_;
                 for(int kprime = 0; kprime < K; kprime++)
                     ps[kprime] += val * ((kprime == k ? 1.0 : 0.0) - p_i_k[i][kprime]);
             }

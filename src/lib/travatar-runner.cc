@@ -196,7 +196,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     if(config.GetString("lm_file") != "") {
         LMComposerBU * bu = 
             new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetLMWeight(weights_->GetCurrent(Dict::WID("lm")));
+        bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
+        bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
         bu->SetStackPopLimit(config.GetInt("pop_limit"));
         bu->SetChartLimit(config.GetInt("chart_limit"));
         lm_.reset(bu);

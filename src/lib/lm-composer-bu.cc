@@ -67,7 +67,8 @@ const ChartEntry & LMComposerBU::BuildChart(
     }
     // For each edge on the queue, process it
     int num_popped = 0;
-    WordId feature_id = Dict::WID(feature_name_);
+    WordId lm_feature_id = Dict::WID(lm_feature_name_);
+    WordId lm_unk_feature_id = Dict::WID(lm_unk_feature_name_);
     while(hypo_queue.size() != 0) {
         if(num_popped++ >= stack_pop_limit_) break;
         // Get the score, id string, and edge
@@ -82,6 +83,7 @@ const ChartEntry & LMComposerBU::BuildChart(
         next_edge->SetRuleStr(id_edge->GetRuleStr());
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(*lm_, my_state);
+        int unk = 0;
         BOOST_FOREACH(int trg_id, id_edge->GetTrgWords()) {
             if(trg_id < 0) {
                 int curr_id = -1 - trg_id;
@@ -109,7 +111,9 @@ const ChartEntry & LMComposerBU::BuildChart(
             } else {
                 // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
                 // Re-index vocabulary
-                my_rule_score.Terminal(lm_->GetVocabulary().Index(Dict::WSym(trg_id)));
+                lm::WordIndex index = lm_->GetVocabulary().Index(Dict::WSym(trg_id));
+                if(index == 0) unk++;
+                my_rule_score.Terminal(index);
             }
         }
         double lm_score = my_rule_score.Finish();
@@ -127,13 +131,15 @@ const ChartEntry & LMComposerBU::BuildChart(
         } else {
             next_node = it->second;
         }
-        next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight_));
+        next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight_+unk*lm_unk_weight_));
         next_edge->SetHead(next_node);
         // Sort the tails in source order
         sort(next_edge->GetTails().begin(), next_edge->GetTails().end(), NodeSrcLess());
-        next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_);
+        next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_ + unk*lm_unk_weight_);
         if(lm_score != 0.0)
-            next_edge->GetFeatures().insert(make_pair(feature_id, lm_score));
+            next_edge->GetFeatures().insert(make_pair(lm_feature_id, lm_score));
+        if(unk != 0)
+            next_edge->GetFeatures().insert(make_pair(lm_unk_feature_id, unk));
         rule_graph.AddEdge(next_edge);
         next_node->AddEdge(next_edge);
         // cerr << " HERE @ " << *next_node << ": " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;
@@ -180,7 +186,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
         double my_score = my_rule_score.Finish();
         edge->AddTail(node);
         if(my_score != 0.0) {
-            edge->AddFeature(Dict::WID(feature_name_), my_score);
+            edge->AddFeature(Dict::WID(lm_feature_name_), my_score);
             edge->SetScore(my_score * lm_weight_);
         }
         ret->AddEdge(edge);
