@@ -12,20 +12,24 @@ using namespace boost;
 
 namespace travatar {
 
-typedef std::tr1::unordered_map<WordId, std::vector<TranslationRuleHiero*> > RuleMapHiero;
+typedef std::map<WordId, std::vector<TranslationRuleHiero*> > RuleMapHiero;
 
 class LookupTableHiero {
 public:
-	virtual ~LookupTableHiero() {}
-
+	virtual ~LookupTableHiero() { }
+	
 	static LookupTableHiero * ReadFromRuleTable(std::istream & in);
 
-	static TranslationRuleHiero & BuildRule(travatar::TranslationRuleHiero & rule, std::vector<std::string> & source, 
+	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
 			std::vector<std::string> & target, SparseMap features);
 
+	virtual HyperGraph * BuildHyperGraph();
+
+	
 	// Inheritable functions
-	virtual void AddRule(WordId rule_starting_word, TranslationRuleHiero rule);
+	virtual void AddRule(WordId rule_starting_word, TranslationRuleHiero * rule);
 	virtual std::vector<TranslationRuleHiero*> & FindRules(WordId input);
+	virtual std::string ToString();
 protected:
 	
 	RuleMapHiero rule_map;

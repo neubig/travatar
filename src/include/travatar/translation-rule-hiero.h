@@ -20,6 +20,7 @@ public:
 	void AddFeature(int id, double feat);
     void AddFeature(const std::string & str, double feat);
     void SetFeatures(SparseMap & features);
+    string ToString();
     
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
@@ -37,6 +38,7 @@ public:
     bool operator!=(const TranslationRuleHiero & rhs) const {
         return !(*this == rhs);
     }
+    
 
 protected:
 	Sentence source_sent;
