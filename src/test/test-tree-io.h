@@ -14,6 +14,7 @@ public:
 
     TestTreeIO() {
         tree_str = " (A (B (C x) (D y))\n (E z))AAA";
+        rule_str = "A ( B ( C ( \"x\" ) D ( \"y\" ) ) E ( \"z\" ) )";
         // Create the words
         HyperNode* a_node = new HyperNode(Dict::WID("A"), -1, make_pair(0,3)); tree_exp.AddNode(a_node);
         HyperNode* b_node = new HyperNode(Dict::WID("B"), -1, make_pair(0,2)); tree_exp.AddNode(b_node);
@@ -141,6 +142,15 @@ public:
         return tree_exp.CheckEqual(*hg_act) && left_act == left_exp;
     }
 
+    int TestReadRule() {
+        // Use this rule_str
+        istringstream instr(rule_str);
+        RuleTreeIO io;
+        boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(instr));
+        // Check that both values are equal
+        return tree_exp.CheckEqual(*hg_act);
+    }
+
     int TestReadEgret() {
         // Use this tree
         istringstream instr(egret_str);
@@ -205,6 +215,15 @@ public:
         return CheckEqual(tree_str, act_str);
     }
 
+    int TestWriteRule() {
+        RuleTreeIO rule;
+        istringstream iss(rule_str);
+        shared_ptr<HyperGraph> graph(rule.ReadTree(iss));
+        ostringstream oss; rule.WriteTree(*graph, oss);
+        string act_str = oss.str();
+        return CheckEqual(rule_str, act_str);
+    }
+
     int TestWriteMosesXML() {
         string tree_str = "(A (B (C x) (D y)) (E z))";
         string exp_str = "<tree label=\"A\"> <tree label=\"B\"> <tree label=\"C\"> x </tree> <tree label=\"D\"> y </tree> </tree> <tree label=\"E\"> z </tree> </tree>";
@@ -232,10 +251,11 @@ public:
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestReadRule()" << endl; if(TestReadRule()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadEgret()" << endl; if(TestReadEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReadWord()" << endl; if(TestReadWord()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWritePenn()" << endl; if(TestWritePenn()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestWriteRule()" << endl; if(TestWriteRule()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteEgret()" << endl; if(TestWriteEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -246,7 +266,7 @@ public:
 
 private:
 
-    string tree_str, graph_str, egret_str;
+    string tree_str, rule_str, graph_str, egret_str;
     HyperGraph tree_exp, graph_exp, quote_exp, egret_exp;
 
 };

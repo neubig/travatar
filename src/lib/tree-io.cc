@@ -109,6 +109,66 @@ void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     WriteNode(tree.GetWords(), *tree.GetNode(0), out);
 }
 
+HyperGraph * RuleTreeIO::ReadTree(istream & in) {
+    // The new hypergraph and stack to read the nodes
+    HyperGraph * hg = new HyperGraph;
+    vector<HyperNode*> stack;
+    string str;
+    int pos = 0;
+    // Continue until the end of the corpus
+    while(in >> str) {
+        if(str == ")") {
+            if(!stack.size()) { getline(in, str); THROW_ERROR("Unmatched close parenthesis at )" << str); }
+            HyperNode * child = *stack.rbegin(); stack.pop_back();
+            child->GetSpan().second = pos;
+            // If no parent exists, we are at the root. Return.
+            if(!stack.size()) return hg;
+            // If a parent exists, add the child to its tails
+            HyperNode * parent = *stack.rbegin();
+            parent->GetEdge(0)->AddTail(child);
+        } else if(str.length() > 1 && str[0] == '"' && str[str.length()-1] == '"') {
+            WordId wid = Dict::WID(str.substr(1, str.length()-2));
+            hg->GetWords().push_back(wid);
+            HyperNode* child = new HyperNode(wid, -1, make_pair(pos,pos+1));
+            hg->AddNode(child);
+            if(!stack.size()) return hg;
+            // If a parent exists, add the child to its tails
+            HyperNode * parent = *stack.rbegin();
+            parent->GetEdge(0)->AddTail(child);
+            pos++;
+        } else {
+            // Create a new node
+            HyperNode* node = new HyperNode(Dict::WID(str), -1, make_pair(pos,-1));
+            stack.push_back(node); hg->AddNode(node);
+            HyperEdge* edge = new HyperEdge(node);
+            node->AddEdge(edge); hg->AddEdge(edge);
+            if(!(in >> str) || str != "(") 
+                THROW_ERROR("Expecting open paren but got: " << str);
+        }
+    }
+    delete hg;
+    return NULL;
+}
+
+void RuleTreeIO::WriteNode(const vector<WordId> & words, 
+                           const HyperNode & node, ostream & out) {
+    if (node.NumEdges() > 1)
+        THROW_ERROR("Cannot write hypergraphs of degree > 1 to Rule format");
+    if (node.NumEdges() == 1) {
+        out << Dict::WSym(node.GetSym()) << " ( ";
+        BOOST_FOREACH(const HyperNode * child, node.GetEdge(0)->GetTails()) {
+            WriteNode(words, *child, out);
+            out << ' ';
+        }
+        out << ')';
+    } else {
+        out << '"' << Dict::WSym(words[node.GetSpan().first]) << '"';
+    }
+}
+
+void RuleTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
+    WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+}
 
 HyperGraph * JSONTreeIO::ReadTree(istream & in) {
     ptree pt;
