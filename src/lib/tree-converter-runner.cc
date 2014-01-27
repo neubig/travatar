@@ -32,6 +32,8 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_in.reset(new EgretTreeIO);
     else if(config.GetString("input_format") == "json")
         tree_in.reset(new JSONTreeIO);
+    else if(config.GetString("input_format") == "rule")
+        tree_in.reset(new RuleTreeIO);
     else if(config.GetString("input_format") == "word")
         tree_in.reset(new WordTreeIO);
     else
@@ -46,6 +48,8 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         tree_out.reset(new JSONTreeIO);
     else if(config.GetString("output_format") == "mosesxml")
         tree_out.reset(new MosesXMLTreeIO);
+    else if(config.GetString("output_format") == "rule")
+        tree_out.reset(new RuleTreeIO);
     else if(config.GetString("output_format") == "word")
         tree_out.reset(new WordTreeIO);
     else
