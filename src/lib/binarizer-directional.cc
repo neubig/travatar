@@ -71,18 +71,24 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) const {
                                           tail_str.substr(0,1) :
                                           tail_str.substr(tail_str.length()-1));
                 small = FindIndexedNode(hg, *ret, built_nodes, str, xbar);
+                // cerr << "sml: " << Dict::WSym(xbar) << endl;
             }
             if(tail_str.length() > 1) {
                 tail_str = (dir == BINARIZE_RIGHT ?
                             tail_str.substr(1) :
                             tail_str.substr(0, tail_str.length()-1));
                 big = FindIndexedNode(hg, *ret, built_nodes, tail_str, xbar);
+                // cerr << "big: " << Dict::WSym(xbar) << endl;
             }
             // Create the left and right edges
             HyperEdge * next_edge = new HyperEdge(head);
             if(dir == BINARIZE_RIGHT) {
                 if(small) next_edge->AddTail(small);
                 if(big) next_edge->AddTail(big);
+                cerr << Dict::WSym(head->GetSym()) << "[" << head->GetSpan().first << "," << head->GetSpan().second-1 << "]("<<head->GetId()<<") => ";
+                if(small) cerr << Dict::WSym(small->GetSym()) << "[" << small->GetSpan().first << "," << small->GetSpan().second-1 << "]("<<small->GetId()<<") ";
+                if(big)   cerr << Dict::WSym(big->GetSym()) << "[" << big->GetSpan().first << "," << big->GetSpan().second-1 << "]("<<big->GetId()<<")";
+                cerr << endl;
             } else {
                 if(big) next_edge->AddTail(big);
                 if(small) next_edge->AddTail(small);
