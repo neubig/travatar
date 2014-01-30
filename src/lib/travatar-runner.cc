@@ -222,7 +222,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
         if(!*nbest_out)
             THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
-        nbest_collector.reset(new OutputCollector(nbest_out.get(), NULL, config.GetBool("buffer")));
+        nbest_collector.reset(new OutputCollector(nbest_out.get(), &cerr, config.GetBool("buffer")));
     } else if (!do_tuning_) {
         nbest_count_ = 1;
     }
@@ -234,7 +234,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         forest_out.reset(new ofstream(config.GetString("forest_out").c_str()));
         if(!*forest_out)
             THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
-        forest_collector.reset(new OutputCollector(forest_out.get(), NULL, config.GetBool("buffer")));
+        forest_collector.reset(new OutputCollector(forest_out.get(), &cerr, config.GetBool("buffer")));
     } 
 
     // Get the class to trim the forest if necessary
@@ -249,7 +249,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
-        trace_collector.reset(new OutputCollector(trace_out.get(), NULL, config.GetBool("buffer")));
+        trace_collector.reset(new OutputCollector(trace_out.get(), &cerr, config.GetBool("buffer")));
     }
 
     // Create the thread pool
