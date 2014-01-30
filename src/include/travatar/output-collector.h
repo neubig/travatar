@@ -26,6 +26,8 @@ public:
                 *err_stream_ << it->second.second;
                 saved_.erase(it);
             }
+            out_stream_->flush();
+            err_stream_->flush();
         } else {
             saved_[id] = std::pair<std::string,std::string>(out,err);
         }
