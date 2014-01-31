@@ -34,8 +34,8 @@ public:
 
 const ChartEntry & LMComposerBU::BuildChart(
                     const HyperGraph & parse,
-                    vector<shared_ptr<ChartEntry> > & chart, 
-                    vector<ChartState> & states, 
+                    vector<shared_ptr<ChartEntry> > & chart,
+                    vector<ChartState> & states,
                     int id,
                     HyperGraph & rule_graph) const {
     // Save the nodes for easy access
@@ -44,10 +44,12 @@ const ChartEntry & LMComposerBU::BuildChart(
     if(chart[id].get() != NULL) return *chart[id];
     // cerr << "Building chart @ " << id << endl;
     chart[id].reset(new ChartEntry);
+    ChartEntry & my_chart = *chart[id].get();
     // The priority queue of values yet to be expanded
     priority_queue<pair<double, GenericString<int> > > hypo_queue;
     // The hypothesis combination map
     map<ChartState, HyperNode*> hypo_comb;
+    map<HyperNode*, ChartState> hypo_rev;
     // The set indicating already-expanded combinations
     unordered_set<GenericString<int>, GenericHash<GenericString<int> > > finished;
     // For each edge outgoing from this node, add its best hypothesis
@@ -124,10 +126,11 @@ const ChartEntry & LMComposerBU::BuildChart(
         if(it == hypo_comb.end()) {
             // Create a new copy of the current node
             next_node = new HyperNode(nodes[id]->GetSym(), -1, nodes[id]->GetSpan());
-            rule_graph.AddNode(next_node);
-            states.push_back(my_state);
+            // rule_graph.AddNode(next_node);
+            // states.push_back(my_state);
             hypo_comb.insert(make_pair(my_state, next_node));
-            chart[id]->push_back(next_node);
+            hypo_rev.insert(make_pair(next_node, my_state));
+            my_chart.push_back(next_node);
         } else {
             next_node = it->second;
         }
@@ -140,15 +143,29 @@ const ChartEntry & LMComposerBU::BuildChart(
             next_edge->GetFeatures().insert(make_pair(lm_feature_id, lm_score));
         if(unk != 0)
             next_edge->GetFeatures().insert(make_pair(lm_unk_feature_id, unk));
-        rule_graph.AddEdge(next_edge);
+        // rule_graph.AddEdge(next_edge);
         next_node->AddEdge(next_edge);
         // cerr << " HERE @ " << *next_node << ": " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;
         // cerr << " Updated node: " << *next_node << endl;
     }
-    sort(chart[id]->begin(), chart[id]->end(), NodeScoreMore());
-    if(chart_limit_ > 0 && (int)chart[id]->size() > chart_limit_)
-        chart[id]->resize(chart_limit_);
-    return *chart[id];
+    sort(my_chart.begin(), my_chart.end(), NodeScoreMore());
+    // Destroy all edges/nodes over the chart limit
+    if(chart_limit_ > 0 && (int)my_chart.size() > chart_limit_) {
+        for(int i = chart_limit_; i < (int)my_chart.size(); i++) {
+            BOOST_FOREACH(HyperEdge * edge, my_chart[i]->GetEdges())
+                delete edge;
+            delete my_chart[i];
+        }
+        my_chart.resize(chart_limit_);
+    }
+    // Add the rest of the nodes to the chart
+    BOOST_FOREACH(HyperNode * node, my_chart) {
+        rule_graph.AddNode(node);
+        states.push_back(hypo_rev[node]);
+        BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
+            rule_graph.AddEdge(edge);
+    }
+    return my_chart;
 }
 
 // Intersect this rule_graph with a language model, using cube pruning to control
