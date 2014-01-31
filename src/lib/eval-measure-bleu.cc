@@ -47,23 +47,23 @@ shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, cons
 
 shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngrams, int ref_len,
                                                       const NgramStats & sys_ngrams, int sys_len) const {
-    int vals_n = 2*ngram_order_+1;
+    int vals_n = 3*ngram_order_;
     vector<EvalStatsDataType> vals(vals_n);
 
     for (int i =0; i<ngram_order_; i++) {
-        vals[2*i] = 0;
-        vals[2*i+1] = max(sys_len-i,0);
+        vals[3*i] = 0;
+        vals[3*i+1] = max(sys_len-i,0);
+        vals[3*i+2] = max(ref_len-i,0);
     }
 
     for (NgramStats::const_iterator it = sys_ngrams.begin(); it != sys_ngrams.end(); it++) {
         NgramStats::const_iterator ref_it = ref_ngrams.find(it->first);
         if(ref_it != ref_ngrams.end()) {
-            vals[2* (it->first.size()-1)] += min(ref_it->second,it->second);
+            vals[3* (it->first.size()-1)] += min(ref_it->second,it->second);
         }
     }
-    vals[vals_n-1] = ref_len;
     // Create the stats for this sentence
-    EvalStatsPtr ret(new EvalStatsBleu(vals, smooth_val_));
+    EvalStatsPtr ret(new EvalStatsBleu(vals, smooth_val_, prec_weight_, mean_));
     // If we are using sentence based, take the average immediately
     if(scope_ == SENTENCE)
         ret = EvalStatsPtr(new EvalStatsAverage(ret->ConvertToScore()));
@@ -76,19 +76,19 @@ shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line) {
     if(scope_ == SENTENCE)
         ret.reset(new EvalStatsAverage);
     else
-        ret.reset(new EvalStatsBleu(std::vector<EvalStatsDataType>(), smooth_val_));
+        ret.reset(new EvalStatsBleu(std::vector<EvalStatsDataType>(), smooth_val_, prec_weight_, mean_));
     ret->ReadStats(line);
     return ret;
 }
 
 double EvalStatsBleu::GetAvgLogPrecision() const {
-    int ngram_order = (vals_.size()-1)/2;
+    int ngram_order = GetNgramOrder();
     double log_prec = 0.0;
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
         double smooth = (i == 0 ? 0 : smooth_);
-        double num = (vals_[2*i]+smooth);
-        double denom = (vals_[2*i+1]+smooth);
+        double num = (vals_[3*i]+smooth);
+        double denom = (vals_[3*i+1]+smooth);
         double prec = (denom ? num/denom : 0);
         log_prec += (prec ? log(prec) : -DBL_MAX);
     }
@@ -97,29 +97,37 @@ double EvalStatsBleu::GetAvgLogPrecision() const {
 }
 
 double EvalStatsBleu::GetLengthRatio() const {
-    double ref_len = vals_[vals_.size()-1];
-    double sys_len = vals_[1];
-    return sys_len/ref_len;
+    return vals_[1]/vals_[2];
 }
 
 BleuReport EvalStatsBleu::CalcBleuReport() const {
     BleuReport report;
-    double log_bleu = 0.0;
-    int ngram_order = (vals_.size()-1)/2;
+    double log_bleu = (mean_ == GEOMETRIC ? 1.0 : 0.0);
+    int ngram_order = GetNgramOrder();
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
         double smooth = (i == 0 ? 0 : smooth_);
-        double num = (vals_[2*i]+smooth);
-        double denom = (vals_[2*i+1]+smooth);
-        double prec = (denom ? num/denom : 0);
-        // cerr << "i="<<i<<", num="<<num<<", denom="<<denom<<", prec="<<prec<<endl;
-        report.precs.push_back(prec);
-        log_bleu += (prec ? log(prec) : -DBL_MAX);
+        double mat = (vals_[3*i]+smooth);
+        double sys = (vals_[3*i+1]+smooth);
+        double ref = (vals_[3*i+2]+smooth);
+        double fmeas = mat / (prec_weight_ * sys + (1-prec_weight_) * ref);
+        // cerr << "i="<<i<<", mat="<<mat<<", sys="<<sys<<", ref="<<ref<<", fmeas="<<fmeas<<", pw="<<prec_weight_<<endl;
+        report.scores.push_back(fmeas);
+        if(mean_ == GEOMETRIC)
+            log_bleu *= fmeas;
+        else
+            log_bleu += fmeas;
     }
-    log_bleu /= ngram_order;
+    // Average and convert to log scale
+    if(log_bleu == 0)
+        log_bleu = -DBL_MAX;
+    else if(mean_ == GEOMETRIC)
+        log_bleu = log(log_bleu)/4;
+    else
+        log_bleu = log(log_bleu/4);
     // vals_[vals__n-1] is the ref length, vals_[1] is the test length
-    report.ref_len = vals_[vals_.size()-1];
     report.sys_len = vals_[1];
+    report.ref_len = vals_[2];
     // Calculate the brevity penalty
     report.ratio = (double)report.sys_len/report.ref_len;
     double log_bp = 1.0-(double)report.ref_len/report.sys_len;
@@ -139,9 +147,9 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
 std::string EvalStatsBleu::ConvertToString() const {
     BleuReport report = CalcBleuReport();
     ostringstream oss;
-    oss << "BLEU = " << report.bleu << ", " << SafeAccess(report.precs, 0);
-    for(int i = 1; i < (int)report.precs.size(); i++)
-        oss << "/" << report.precs[i];
+    oss << "BLEU = " << report.bleu << ", " << SafeAccess(report.scores, 0);
+    for(int i = 1; i < (int)report.scores.size(); i++)
+        oss << "/" << report.scores[i];
     oss << " (BP=" << report.brevity << ", ratio=" << report.ratio << ", hyp_len=" << report.sys_len << ", ref_len=" << report.ref_len << ")";
     return oss.str();
 }
@@ -151,18 +159,28 @@ double EvalStatsBleu::ConvertToScore() const {
 }
 
 
-EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), smooth_val_(0), scope_(CORPUS) {
+EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), smooth_val_(0), scope_(CORPUS), prec_weight_(1.0), mean_(GEOMETRIC) {
     if(config.length() == 0) return;
     BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
         if(strs.first == "order") {
             ngram_order_ = boost::lexical_cast<int>(strs.second);
         } else if(strs.first == "smooth") {
             smooth_val_ = boost::lexical_cast<double>(strs.second);
+        } else if(strs.first == "prec") {
+            prec_weight_ = boost::lexical_cast<double>(strs.second);
         } else if(strs.first == "scope") {
             if(strs.second == "corpus") {
                 scope_ = CORPUS;
             } else if(strs.second == "sentence") {
                 scope_ = SENTENCE;
+            } else {
+                THROW_ERROR("Bad BLEU scope: " << config);
+            }
+        } else if(strs.first == "mean") {
+            if(strs.second == "geom") {
+                mean_ = GEOMETRIC;
+            } else if(strs.second == "arith") {
+                mean_ = ARITHMETIC;
             } else {
                 THROW_ERROR("Bad BLEU scope: " << config);
             }

@@ -15,6 +15,9 @@ public:
 
     TestEvalMeasure() :
         eval_measure_bleup1_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1")),
+        eval_measure_bleup1r_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0")),
+        eval_measure_bleup1f_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0.5")),
+        eval_measure_bleup1a_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,mean=arith")),
         eval_measure_ribes_(EvalMeasure::CreateMeasureFromString("ribes")),
         eval_measure_ter_(EvalMeasure::CreateMeasureFromString("ter")),
         eval_measure_wer_(EvalMeasure::CreateMeasureFromString("wer")),
@@ -64,6 +67,34 @@ public:
         return CheckAlmost(bleu_exp, bleu_act);
     }
 
+    int TestBleuRecall() {
+        // System is longer than ref, so there is no brevity penalty
+        // Recall for BLEU+1 is ((3/3)*(2/3)*(1/2)*(1/1))^(1/4)
+        double bleu_exp = exp(log((3.0/3.0) * (2.0/3.0) * (1.0/2.0) * (1.0/1.0))/4);
+        double bleu_act = eval_measure_bleup1r_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
+        return CheckAlmost(bleu_exp, bleu_act);
+    }
+
+    int TestBleuFmeas() {
+        // System is longer than ref, so there is no brevity penalty
+        // Recall for BLEU+1 is ((3/3)*(2/3)*(1/2)*(1/1))^(1/4)
+        double p1 = 3.0/5.0, r1 = 3.0/3.0, f1=2*p1*r1/(p1+r1);
+        double p2 = 2.0/5.0, r2 = 2.0/3.0, f2=2*p2*r2/(p2+r2);
+        double p3 = 1.0/4.0, r3 = 1.0/2.0, f3=2*p3*r3/(p3+r3);
+        double p4 = 1.0/3.0, r4 = 1.0/1.0, f4=2*p4*r4/(p4+r4);
+        double bleu_exp = exp(log(f1 * f2 * f3 * f4)/4);
+        double bleu_act = eval_measure_bleup1f_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
+        return CheckAlmost(bleu_exp, bleu_act);
+    }
+
+    int TestBleuArith() {
+        // System is longer than ref, so there is no brevity penalty
+        // Precision for BLEU+1 is ((3/5)*(2/5)*(1/4)*(1/3))^(1/4)
+        double bleu_exp = ((3.0/5.0) + (2.0/5.0) + (1.0/4.0) + (1.0/3.0))/4;
+        double bleu_act = eval_measure_bleup1a_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
+        return CheckAlmost(bleu_exp, bleu_act);
+    }
+
     int TestWerScore() {
         double wer_exp = 2.0/3.0;
         double wer_act = eval_measure_wer_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
@@ -96,13 +127,16 @@ public:
         done++; cout << "TestTerIO()" << endl; if(TestTerIO()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInterpIO()" << endl; if(TestInterpIO()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBleuScore()" << endl; if(TestBleuScore()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBleuRecall()" << endl; if(TestBleuRecall()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBleuFmeas()" << endl; if(TestBleuFmeas()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBleuArith()" << endl; if(TestBleuArith()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWerScore()" << endl; if(TestWerScore()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInterpScore()" << endl; if(TestInterpScore()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestEvalMeasure Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 protected:
-    shared_ptr<EvalMeasure> eval_measure_bleup1_, eval_measure_ribes_, eval_measure_ter_, eval_measure_wer_, eval_measure_interp_;
+    shared_ptr<EvalMeasure> eval_measure_bleup1_, eval_measure_bleup1r_, eval_measure_bleup1f_, eval_measure_bleup1a_, eval_measure_ribes_, eval_measure_ter_, eval_measure_wer_, eval_measure_interp_;
     Sentence ref1_sent_, sys1_sent_;
 
 };

@@ -177,7 +177,7 @@ public:
     }
 
     int TestLatticeHull() {
-        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        EvalMeasureBleu bleu(4, 1, SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 1, 1);
         tef.AddHypothesis(forest);
@@ -196,7 +196,7 @@ public:
     }
 
     int TestForestHull() {
-        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        EvalMeasureBleu bleu(4, 1, SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 2, 1);
         tef.AddHypothesis(forest2);
@@ -215,7 +215,7 @@ public:
     }
 
     int TestMultipleForests() {
-        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        EvalMeasureBleu bleu(4, 1, SENTENCE);
         Sentence ref = Dict::ParseWords("c a");
         TuningExampleForest tef(&bleu, ref, 2, 1);
         tef.AddHypothesis(forest2c);
@@ -237,7 +237,7 @@ public:
     }
 
     int TestForestUnk() {
-        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        EvalMeasureBleu bleu(4, 1, SENTENCE);
         shared_ptr<HyperGraph> rule_graph(new HyperGraph);
         Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
         rule_graph->SetWords(exp_sent);
@@ -333,7 +333,7 @@ public:
         // Create tuning examples and references
         TuneXeval tune;
         tune.SetAutoScale(true);
-        EvalMeasureBleu bleu(4, 1, EvalMeasureBleu::SENTENCE);
+        EvalMeasureBleu bleu(4, 1, SENTENCE);
         vector<shared_ptr<TuningExample> > examps;
         TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
         nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 

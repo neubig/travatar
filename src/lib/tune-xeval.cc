@@ -101,13 +101,13 @@ void TuneXeval::CalcBleuGradient(
             double my_right = 0;
             for(int n = 0; n < stats_bleu->GetNgramOrder(); n++)
                 my_right += DivideZero(stats_i_k_bleu->GetMatch(n)*pik,stats_bleu->GetMatch(n)) -
-                            DivideZero(stats_i_k_bleu->GetCount(n)*pik,stats_bleu->GetCount(n));
+                            DivideZero(stats_i_k_bleu->GetSysCount(n)*pik,stats_bleu->GetSysCount(n));
             my_right *= right;
             PRINT_DEBUG("my_right: " << my_right << endl, 2);
             // Calculate the derivative of B with respect to log(p_{i,k})
             double my_left = left * (
-                             DivideZero(stats_i_k_bleu->GetRefLen()*pik,stats_bleu->GetRefLen()) -
-                             DivideZero(stats_i_k_bleu->GetCount(0)*pik,stats_bleu->GetCount(0)));
+                             DivideZero(stats_i_k_bleu->GetRefCount(0)*pik,stats_bleu->GetRefCount(0)) -
+                             DivideZero(stats_i_k_bleu->GetSysCount(0)*pik,stats_bleu->GetSysCount(0)));
             PRINT_DEBUG("my_left: " << my_left << endl, 2);
             // Calculate the derivative of xeval
             double d_xeval_logpik = my_left + my_right;
