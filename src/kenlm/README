@@ -1,0 +1,73 @@
+This code takes in a hypergraph and a language model then outputs a sentence.  
+It is split into a library (search/) and a standalone wrapper (alone/).  The
+library is also in Moses (-search-algorithm 5) and cdec (--incremental_search
+$lm).  
+
+COMPILING
+Requires Boost >= 1.41.  Tested on linux.  
+
+Compile with 
+./bjam
+
+USAGE
+After compiling, the decoder is bin/decode.  Run without an argument for help.
+
+To run, you will need one language model, feature weights, and hypergraphs.  
+
+The language model must be in ARPA or KenLM format.  Pass -l lm where lm is
+the file name.  
+
+Feaure weights can be specified in a file using -w or on the command line with
+-W.  Weights are key=value pairs like cdec.  The hard-coded features are
+LanguageModel, LanguageModel_OOV, and WordPenalty.  WordPenalty is word count
+times -1/ln(10) for odd historical reasons dating back to Hiero.  The feature
+definitions are compatible with Moses and cdec.  
+
+Hypergraphs are stored in a directory with one file per sentence.  The files
+are named starting with 0.  The first line of each file is
+
+total_vertex_count total_edge_count
+
+Then the file enumerates each vertex in bottom-up order (i.e. they can only
+reference vertices that have already been defined).  A vertex is simply a list
+of competing ways to derive it (downward edges).  The first line lists the
+number of edges.  An edge looks like
+
+foo [3] bar [7] [5] baz ||| Feature=5 AnotherFeature=10
+
+where foo, bar, and baz are literal words and [n] references vertex n.   Edges
+can have arbitrary arity (i.e. as many references as desired).  The tokens <s>
+and </s> should appear explicitly; they are not added by the decoder.  
+
+A complete example:
+
+7 13
+1
+<s> ||| Quux=10
+2
+[0] le ||| Distance=1.5
+[0] la ||| Distance=1.1
+2
+[1] petit ||| Distance=0.0
+[1] peti ||| Distance=3.0 Foo=4
+3
+[2] chas ||| Distance=1.1
+[2] char [1] ||| Distance=0.8
+[2] chat ||| Distance=1.0
+2
+[3] est ||| Distance=2.0
+[3] Est ||| Distance=0.0
+2
+[4] more ||| Distance=1.0
+[4] mort ||| Distance=0.0
+1
+[5] </s> |||
+
+This is the format produced by cdec's --show_target_graph option.  But if
+you're using cdec, the code has already been natively ported and can be
+accessed using --incremental_search lm.  
+
+DIRECTORY LAYOUT
+util and lm: copied from KenLM
+search: core search algorithm and portable to other decoders.  
+alone: a standalone wrapper around the search implementation.  

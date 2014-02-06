@@ -11,6 +11,7 @@
 #include "util/file_piece.hh"
 
 #include <vector>
+#include <cstdlib>
 
 #include <assert.h>
 
@@ -41,7 +42,8 @@ template <class Quant, class Bhiksha> class TrieSearch {
     static void UpdateConfigFromBinary(int fd, const std::vector<uint64_t> &counts, Config &config) {
       Quant::UpdateConfigFromBinary(fd, counts, config);
       util::AdvanceOrThrow(fd, Quant::Size(counts.size(), config) + Unigram::Size(counts[0]));
-      Bhiksha::UpdateConfigFromBinary(fd, config);
+      // Currently the unigram pointers are not compresssed, so there will only be a header for order > 2.
+      if (counts.size() > 2) Bhiksha::UpdateConfigFromBinary(fd, config);
     }
 
     static uint64_t Size(const std::vector<uint64_t> &counts, const Config &config) {
@@ -103,12 +105,12 @@ template <class Quant, class Bhiksha> class TrieSearch {
   private:
     friend void BuildTrie<Quant, Bhiksha>(SortedFiles &files, std::vector<uint64_t> &counts, const Config &config, TrieSearch<Quant, Bhiksha> &out, Quant &quant, const SortedVocabulary &vocab, Backing &backing);
 
-    // Middles are managed manually so we can delay construction and they don't have to be copyable.  
+    // Middles are managed manually so we can delay construction and they don't have to be copyable.
     void FreeMiddles() {
       for (const Middle *i = middle_begin_; i != middle_end_; ++i) {
         i->~Middle();
       }
-      free(middle_begin_);
+      std::free(middle_begin_);
     }
 
     typedef trie::BitPackedMiddle<Bhiksha> Middle;
