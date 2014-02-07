@@ -41,7 +41,7 @@ public:
 protected:
 
     // Build a chart entry for one of the nodes in the input parse
-    const ChartEntry & BuildChart(
+    const ChartEntry & BuildChartCubePruning(
                         const HyperGraph & parse,
                         std::vector<boost::shared_ptr<ChartEntry> > & chart, 
                         std::vector<lm::ngram::ChartState> & states, 

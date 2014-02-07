@@ -32,7 +32,7 @@ public:
 
 }
 
-const ChartEntry & LMComposerBU::BuildChart(
+const ChartEntry & LMComposerBU::BuildChartCubePruning(
                     const HyperGraph & parse,
                     vector<shared_ptr<ChartEntry> > & chart,
                     vector<ChartState> & states,
@@ -62,7 +62,7 @@ const ChartEntry & LMComposerBU::BuildChart(
         double viterbi_score = my_edge->GetScore();
         for(int j = 1; j < (int)q_id.length(); j++) {
             q_id[j] = 0;
-            const ChartEntry & my_entry = BuildChart(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
+            const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
             viterbi_score += my_entry[0]->CalcViterbiScore();
         }
         hypo_queue.push(make_pair(viterbi_score, q_id));
@@ -91,7 +91,7 @@ const ChartEntry & LMComposerBU::BuildChart(
                 int curr_id = -1 - trg_id;
                 // vector<HyperNode*> nodes;
                 // Get the chart for the particular node we're interested in
-                const ChartEntry & my_entry = BuildChart(parse, chart, states, id_edge->GetTail(curr_id)->GetId(), rule_graph);
+                const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, id_edge->GetTail(curr_id)->GetId(), rule_graph);
                 // From the node, get the appropriately ranked node
                 int edge_pos = id_str[curr_id+1];
                 HyperNode * chart_node = my_entry[edge_pos];
@@ -190,7 +190,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     if(parse.NumNodes() == 0) return ret;
     states.resize(1);
     // Build the chart
-    BuildChart(parse, chart, states, 0, *ret);
+    BuildChartCubePruning(parse, chart, states, 0, *ret);
     // Build the final nodes
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
