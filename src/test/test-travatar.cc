@@ -7,6 +7,7 @@
 #include "test-io-util.h"
 #include "test-lookup-table.h"
 #include "test-graph-transformer.h"
+#include "test-lm-composer.h"
 #include "test-binarizer.h"
 #include "test-base.h"
 #include "test-weights.h"
@@ -29,6 +30,7 @@ int main() {
     tests.push_back(new TestTravatarRunner());
     tests.push_back(new TestLookupTable());
     tests.push_back(new TestGraphTransformer());
+    tests.push_back(new TestLMComposer());
     tests.push_back(new TestBinarizer());
     tests.push_back(new TestWeights());
     tests.push_back(new TestEvalMeasure());

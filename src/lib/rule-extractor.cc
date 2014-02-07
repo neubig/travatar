@@ -511,7 +511,7 @@ PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentenc
                         while (jp <= (int)t2s.size()) {
                             ret.push_back(make_pair(make_pair(s_begin,s_end),make_pair(t_begin,jp)));
                             ++jp;   
-                            if (t2s[jp].size() != 0 || jp == (int)t2s.size()) {
+                            if (jp == (int)t2s.size() || t2s[jp].size() != 0) {
                                 break;
                             }
                         }
@@ -581,7 +581,7 @@ int HieroExtractor::QuasiConsecutive(int small, int large, const map<int,int> & 
         const vector<set<int> > & t2s) 
 {
     for (int i=small; i <= large; ++i) {
-        if (t2s[i].size() != 0 && tp.find(i)->second == 0) {
+        if (t2s[i].size() != 0 && tp.find(i) == tp.end()) {
             return 0;
         }
     }   
