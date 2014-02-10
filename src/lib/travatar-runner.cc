@@ -14,6 +14,7 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
 #include <travatar/lm-composer-bu.h>
+#include <travatar/lm-composer-incremental.h>
 #include <travatar/binarizer.h>
 #include <travatar/eval-measure.h>
 #include <travatar/timer.h>
@@ -194,13 +195,24 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load the language model
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
     if(config.GetString("lm_file") != "") {
-        LMComposerBU * bu = 
-            new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
-        bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
-        bu->SetStackPopLimit(config.GetInt("pop_limit"));
-        bu->SetChartLimit(config.GetInt("chart_limit"));
-        lm_.reset(bu);
+        if(config.GetString("search") == "cp") {
+            LMComposerBU * bu = 
+                new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+            bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
+            bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
+            bu->SetStackPopLimit(config.GetInt("pop_limit"));
+            bu->SetChartLimit(config.GetInt("chart_limit"));
+            lm_.reset(bu);
+        } else if(config.GetString("search") == "inc") {
+            LMComposerIncremental * inc = 
+                new LMComposerIncremental(new Model(config.GetString("lm_file").c_str()));
+            inc->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
+            inc->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
+            inc->SetStackPopLimit(config.GetInt("pop_limit"));
+            lm_.reset(inc);
+        } else {
+            THROW_ERROR("Unknown search algorithm: " << config.GetString("search"));
+        }
     }
 
     // Load the rule table
