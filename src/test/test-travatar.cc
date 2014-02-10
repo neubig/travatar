@@ -30,13 +30,13 @@ int main() {
     tests.push_back(new TestTravatarRunner());
     tests.push_back(new TestLookupTable());
     tests.push_back(new TestGraphTransformer());
-    tests.push_back(new TestLMComposer());
     tests.push_back(new TestBinarizer());
     tests.push_back(new TestWeights());
     tests.push_back(new TestEvalMeasure());
     tests.push_back(new TestTune());
     tests.push_back(new TestTrimmer());
     tests.push_back(new TestHiero());
+    tests.push_back(new TestLMComposer());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

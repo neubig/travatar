@@ -6,8 +6,60 @@
 #include <lm/left.hh>
 #include <search/applied.hh>
 #include <search/edge.hh>
+#include <search/nbest.hh>
 #include <search/edge_generator.hh>
 #include <travatar/lm-composer.h>
+#include <travatar/hyper-graph.h>
+
+namespace search {
+
+class Forest {
+public:
+
+    // Constructor
+    Forest(double lm_weight, double lm_unk_weight) : hg(new travatar::HyperGraph),
+                lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight) {
+        hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
+    }
+
+    // Destructor. Destroy the hypergraph if it still exists.
+    ~Forest() {
+        if(hg) delete hg;
+    }
+
+    // The edges that we will want to add together
+    typedef std::vector<PartialEdge> Combine;
+
+    // At the beginning, just add new edges
+    void Add(std::vector<PartialEdge> &existing, PartialEdge add) const {
+        existing.push_back(add);
+    }
+    
+    // Return the hypergraph and set the pointer to null
+    travatar::HyperGraph* StealPointer() {
+        travatar::HyperGraph* ret = hg;
+        hg = NULL;
+        return ret;
+    }
+
+    // Set the number of LM unknown words for an edge
+    void SetLMUnk(int id, int unk) {
+        if((int)lm_unks_.size() <= id)
+            lm_unks_.resize(id+1, 0);
+        lm_unks_[id] = unk;
+    }
+
+    // Convert all of the edges together into a node
+    NBestComplete Complete(std::vector<PartialEdge> &partial);
+
+  private:
+    travatar::HyperGraph* hg;
+    double lm_weight_, lm_unk_weight_;
+    std::vector<int> lm_unks_;
+    util::Pool pool_;
+};
+
+} // namespace search
 
 namespace travatar {
 
@@ -26,8 +78,11 @@ protected:
     // The maximum number of stack items popped during search
     int stack_pop_limit_;
 
+    // The maximum number of edges to add during search
+    int edge_limit_;
+
 public:
-    LMComposerIncremental(lm::ngram::Model * lm) : LMComposer(lm), stack_pop_limit_(0) { }
+    LMComposerIncremental(lm::ngram::Model * lm) : LMComposer(lm), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }
 
     // Intersect this graph with a language model, using incremental search
@@ -42,8 +97,13 @@ protected:
     // Calculate a single vertex
     search::Vertex* CalculateVertex(
                     const HyperGraph & parse, std::vector<search::Vertex*> & verticies,
-                    search::Context<lm::ngram::Model> & context, search::SingleBest & best,
+                    search::Context<lm::ngram::Model> & context, search::Forest & best,
                     int id) const;
+    // Calculate the root vertex
+    search::Vertex* CalculateRootVertex(
+                    std::vector<search::Vertex*> & vertices,
+                    search::Context<lm::ngram::Model> & context,
+                    search::Forest & best) const;
 
 };
 

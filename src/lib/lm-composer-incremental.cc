@@ -18,15 +18,85 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 using namespace lm;
+using namespace search;
+
+// Convert all of the edges together into a node
+NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
+    WordId lm_id = Dict::WID("lm");
+    WordId lm_unk_id = Dict::WID("lmunk");
+    // For each vector, create a node
+    HyperNode * node = new HyperNode;
+    hg->AddNode(node);
+    // For remembering duplicate edges
+    int multiplier = hg->NumNodes()+1;
+    set<int> node_memo;
+    // For each edge, add a hyperedge to the graph
+    PartialEdge existing;
+    HyperEdge *old_edge = NULL, *edge = NULL;
+    BOOST_FOREACH(const PartialEdge & add, partial) {
+        if (!existing.Valid() || existing.GetScore() < add.GetScore())
+            existing = add;
+        double edge_score = add.GetScore();
+        int node_id = 0;
+        // Add the new tails  
+        vector<HyperNode*> tails; 
+        const PartialVertex *part = add.NT();
+        const PartialVertex *const part_end_loop = part + add.GetArity();
+        for (; part != part_end_loop; ++part) {
+            HyperNode* child = (HyperNode*)part->End();
+            tails.push_back(child);
+            edge_score -= child->GetViterbiScore();
+            // Keep track of the node ID
+            node_id *= multiplier;
+            node_id += child->GetId()+1;
+        }
+        // Skip duplicate edges
+        if(node_memo.find(node_id) != node_memo.end())
+            continue;
+        node_memo.insert(node_id);
+        // Create the new edge
+        int lm_unk = 0;
+        if(add.GetNote().vp) {
+            old_edge = (HyperEdge*)add.GetNote().vp;
+            edge = new HyperEdge(*old_edge);
+            lm_unk = lm_unks_[old_edge->GetId()];
+        } else {
+            edge = new HyperEdge;
+            edge->SetTrgWords(vector<WordId>(1,-1));
+        }
+        edge->SetHead(node);
+        edge->SetTails(tails);
+        hg->AddEdge(edge); node->AddEdge(edge);
+        edge->GetFeatures()[lm_id] = (edge_score - edge->GetScore())/lm_weight_;
+        edge->GetFeatures()[lm_id] = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
+        if(lm_unk)
+            edge->GetFeatures()[lm_unk_id] = lm_unk;
+        edge->SetScore(edge_score);
+    }
+    // Set the span for either the internal or final nodes
+    if(old_edge) {
+        node->SetSpan(old_edge->GetHead()->GetSpan());
+        node->SetSym(old_edge->GetHead()->GetSym());
+    } else {
+        node->SetSpan(edge->GetTail(0)->GetSpan());
+        node->SetSym(Dict::WID("LMROOT"));
+    }
+    node->SetViterbiScore(existing.GetScore());
+    // Return the n-best
+    if (!existing.Valid())
+        return NBestComplete(NULL, lm::ngram::ChartState(), -INFINITY);
+    else
+        return NBestComplete(node, existing.CompletedState(), existing.GetScore());
+}
 
 // Calculate a single vertex
 search::Vertex* LMComposerIncremental::CalculateVertex(
-                    const HyperGraph & parse, vector<search::Vertex*> & verticies,
-                    search::Context<lm::ngram::Model> & context, search::SingleBest & best,
+                    const HyperGraph & parse, vector<search::Vertex*> & vertices,
+                    search::Context<lm::ngram::Model> & context, search::Forest & best,
                     int id) const {
 
     // Don't redo ones we've already finished
-    if(verticies[id]) return verticies[id];
+    if(vertices[id]) return vertices[id];
     // Get the nodes from the parse
     const vector<HyperNode*> & nodes = parse.GetNodes();
     // For the edges coming from this node, add them to the EdgeGenerator
@@ -44,7 +114,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
             if(wid < 0) {
                 words.push_back(lm::kMaxWordIndex);
                 int tid = -1 - wid;
-                children.push_back(CalculateVertex(parse, verticies, context, best, edge->GetTail(tid)->GetId()));
+                children.push_back(CalculateVertex(parse, vertices, context, best, edge->GetTail(tid)->GetId()));
                 below_score += children.back()->Bound();
             // Add terminal
             } else {
@@ -65,6 +135,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
         // Score the rule
         search::ScoreRuleRet score = search::ScoreRule(*lm_, words, pedge.Between());
         pedge.SetScore(below_score + edge->GetScore() + lm_weight_ * score.prob + lm_unk_weight_ * score.oov);
+        best.SetLMUnk(edge->GetId(), score.oov);
 
         // Set the note
         search::Note note;
@@ -73,10 +144,45 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
         edges.AddEdge(pedge);
     }
 
-    verticies[id] = new search::Vertex;
-    search::VertexGenerator<search::SingleBest> vertex_gen(context, *verticies[id], best);
+    vertices[id] = new search::Vertex;
+    search::VertexGenerator<search::Forest> vertex_gen(context, *vertices[id], best);
     edges.Search(context, vertex_gen);
-    return verticies[id];
+    return vertices[id];
+}
+
+// Calculate the root vetex
+search::Vertex* LMComposerIncremental::CalculateRootVertex(
+                    vector<search::Vertex*> & vertices,
+                    search::Context<lm::ngram::Model> & context, search::Forest & best) const {
+    assert(vertices[0]);
+    // Don't redo ones we've already finished
+    int id = vertices.size()-1;
+    if(vertices[id]) return vertices[id];
+    // For the edges coming from this node, add them to the EdgeGenerator
+    search::EdgeGenerator edges;
+    std::vector<lm::WordIndex> words(3,0);
+    // Calculate the word indexes
+    words[0] = lm_->GetVocabulary().Index("<s>");
+    words[1] = lm::kMaxWordIndex;
+    words[2] = lm_->GetVocabulary().Index("</s>");
+    // Allocate the edge
+    search::PartialEdge pedge(edges.AllocateEdge(1));
+    (*pedge.NT()) = vertices[0]->RootAlternate();
+    double below_score = vertices[0]->Bound();
+    // Set the note
+    search::Note note;
+    note.vp = NULL;
+    pedge.SetNote(note);
+    edges.AddEdge(pedge);
+    // Perform scoring and add the edge
+    search::ScoreRuleRet score = search::ScoreRule(*lm_, words, pedge.Between());
+    pedge.SetScore(below_score + lm_weight_ * score.prob + lm_unk_weight_ * score.oov);
+    edges.AddEdge(pedge);
+    // Create the vertex
+    vertices[id] = new search::Vertex;
+    search::VertexGenerator<search::Forest> vertex_gen(context, *vertices[id], best);
+    edges.Search(context, vertex_gen);
+    return vertices[id];
 }
 
 // Intersect this rule_graph with a language model, using cube pruning to control
@@ -84,36 +190,35 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
 HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) const {
 
     // Create the search configuration
-    search::Config config(lm_weight_, stack_pop_limit_, search::NBestConfig(1));
+    search::NBestConfig nconfig(edge_limit_);
+    search::Config config(lm_weight_, stack_pop_limit_, nconfig);
     search::Context<lm::ngram::Model> context(config, *lm_);
-    search::SingleBest best;
+    search::Forest best(lm_weight_, lm_unk_weight_);
 
     // Create the search graph
-    vector<search::Vertex*> verticies(parse.NumNodes());
+    vector<search::Vertex*> vertices(parse.NumNodes() + 1);
     for(int i = 0; i < parse.NumNodes(); i++)
-        verticies[i] = NULL;
-    verticies[0] = CalculateVertex(parse, verticies, context, best, 0);
+        vertices[i] = NULL;
+    vertices[0] = CalculateVertex(parse, vertices, context, best, 0);
+
+    // Create the final vertex (recursively creating the others)
+    CalculateRootVertex(vertices, context, best);
 
     // Clear the memory
-    BOOST_FOREACH(search::Vertex * vertex, verticies)
+    BOOST_FOREACH(search::Vertex * vertex, vertices)
         if(vertex)
             delete vertex;
-    return NULL;
 
-    // assert(graph.VertexCapacity());
-    // for (std::size_t v = 0; v < graph.VertexCapacity() - 1; ++v) {
-    //     search::EdgeGenerator edges;
-    //     ReadEdges(features, context.LanguageModel(), in, graph, edges);
-    //     search::VertexGenerator<Best> vertex_gen(context, *graph.NewVertex(), best);
-    //     edges.Search(context, vertex_gen);
-    // }
-    // // Create the final edge
-    // search::EdgeGenerator edges;
-    // ReadEdges(features, context.LanguageModel(), in, graph, edges);
-    // search::Vertex &root = *graph.NewVertex();
-    // search::RootVertexGenerator<Best> vertex_gen(root, best);
-    // edges.Search(context, vertex_gen);
+    // Get the hypergraph and set words
+    HyperGraph* ret = best.StealPointer();
+    ret->SetWords(parse.GetWords());
+    vector<HyperNode*> & nodes = ret->GetNodes();
+    // Swap the root into the first position
+    nodes[0] = nodes[nodes.size()-1];
+    nodes[0]->SetId(0);
+    nodes.resize(nodes.size()-1);
 
+    // Return the pointer
+    return ret;
 
-    // return root.BestChild();
 }
