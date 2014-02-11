@@ -31,11 +31,11 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
     int multiplier = hg->NumNodes()+1;
     set<int> node_memo;
     // For each edge, add a hyperedge to the graph
-    PartialEdge existing;
+    PartialEdge best;
     HyperEdge *old_edge = NULL, *edge = NULL;
     BOOST_FOREACH(const PartialEdge & add, partial) {
-        if (!existing.Valid() || existing.GetScore() < add.GetScore())
-            existing = add;
+        if (!best.Valid() || best.GetScore() < add.GetScore())
+            best = add;
         double edge_score = add.GetScore();
         int node_id = 0;
         // Add the new tails  
@@ -81,12 +81,12 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         node->SetSpan(edge->GetTail(0)->GetSpan());
         node->SetSym(Dict::WID("LMROOT"));
     }
-    node->SetViterbiScore(existing.GetScore());
+    node->SetViterbiScore(best.GetScore());
     // Return the n-best
-    if (!existing.Valid())
+    if (!best.Valid())
         return NBestComplete(NULL, lm::ngram::ChartState(), -INFINITY);
     else
-        return NBestComplete(node, existing.CompletedState(), existing.GetScore());
+        return NBestComplete(node, best.CompletedState(), best.GetScore());
 }
 
 // Calculate a single vertex
