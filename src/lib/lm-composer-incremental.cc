@@ -36,19 +36,22 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
     BOOST_FOREACH(const PartialEdge & add, partial) {
         if (!best.Valid() || best.GetScore() < add.GetScore())
             best = add;
+        old_edge = (HyperEdge*)add.GetNote().vp;
         double edge_score = add.GetScore();
         int node_id = 0;
-        // Add the new tails  
-        vector<HyperNode*> tails; 
-        const PartialVertex *part = add.NT();
-        const PartialVertex *const part_end_loop = part + add.GetArity();
-        for (; part != part_end_loop; ++part) {
-            HyperNode* child = (HyperNode*)part->End();
-            tails.push_back(child);
-            edge_score -= child->GetViterbiScore();
-            // Keep track of the node ID
-            node_id *= multiplier;
-            node_id += child->GetId()+1;
+        // Add the new tails in *source* order 
+        vector<HyperNode*> tails;
+        std::vector<WordId> wids = (old_edge ? old_edge->GetTrgWords() : vector<WordId>(1,-1));
+        BOOST_FOREACH(WordId wid, wids) {
+            if(wid < 0) {
+                int tid = -1-wid;
+                const PartialVertex & part = add.NT()[tid];
+                HyperNode* child = (HyperNode*)part.End();
+                tails.push_back(child);
+                edge_score -= child->GetViterbiScore();
+                // Keep track of the node ID
+                node_id += (child->GetId()+1)*pow(multiplier, tid);
+            }
         }
         // Skip duplicate edges
         if(node_memo.find(node_id) != node_memo.end())
@@ -56,8 +59,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         node_memo.insert(node_id);
         // Create the new edge
         int lm_unk = 0;
-        if(add.GetNote().vp) {
-            old_edge = (HyperEdge*)add.GetNote().vp;
+        if(old_edge) {
             edge = new HyperEdge(*old_edge);
             lm_unk = lm_unks_[old_edge->GetId()];
         } else {
