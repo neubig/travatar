@@ -50,6 +50,7 @@ void TravatarRunnerTask::Run() {
     }
 
     // Calculate the n-best list
+    PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
     NbestList nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
 
     // Print the best answer. This will generally be the answer with the highest score
