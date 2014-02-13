@@ -28,8 +28,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
     HyperNode * node = new HyperNode;
     hg->AddNode(node);
     // For remembering duplicate edges
-    int multiplier = hg->NumNodes()+1;
-    set<int> node_memo;
+    map<GenericString<WordId>, HyperEdge*> node_memo;
     // For each edge, add a hyperedge to the graph
     PartialEdge best;
     HyperEdge *old_edge = NULL, *edge = NULL;
@@ -38,10 +37,18 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
             best = add;
         old_edge = (HyperEdge*)add.GetNote().vp;
         double edge_score = add.GetScore();
-        int node_id = 0;
         // Add the new tails in *source* order 
         vector<HyperNode*> tails;
-        std::vector<WordId> wids = (old_edge ? old_edge->GetTrgWords() : vector<WordId>(1,-1));
+        std::vector<WordId> wids;
+        GenericString<WordId> node_id;
+        if(old_edge) {
+            wids = old_edge->GetTrgWords();
+            node_id = GenericString<WordId>(old_edge->GetTails().size()+1);
+            node_id[old_edge->GetTails().size()] = old_edge->GetId();
+        } else{
+            wids = vector<WordId>(1,-1);
+            node_id = GenericString<WordId>(1);
+        }
         BOOST_FOREACH(WordId wid, wids) {
             if(wid < 0) {
                 int tid = -1-wid;
@@ -50,13 +57,15 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
                 tails.push_back(child);
                 edge_score -= child->GetViterbiScore();
                 // Keep track of the node ID
-                node_id += (child->GetId()+1)*pow(multiplier, tid);
+                node_id[tid] = child->GetId();
             }
         }
         // Skip duplicate edges
         if(node_memo.find(node_id) != node_memo.end())
             continue;
-        node_memo.insert(node_id);
+            // if(edge_score != node_memo[node_id]->GetScore()) {
+            //     THROW_ERROR("Duplicate edges with different scores" << node_id << endl << edge_score << endl << *old_edge << endl << *node_memo[node_id]);
+            // }
         // Create the new edge
         int lm_unk = 0;
         if(old_edge) {
@@ -66,6 +75,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
             edge = new HyperEdge;
             edge->SetTrgWords(vector<WordId>(1,-1));
         }
+        node_memo.insert(make_pair(node_id, edge));
         edge->SetHead(node);
         edge->SetTails(tails);
         hg->AddEdge(edge); node->AddEdge(edge);
