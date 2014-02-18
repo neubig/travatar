@@ -23,7 +23,7 @@ public:
 	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
 			std::vector<std::string> & target, SparseMap features);
 
-	virtual HyperGraph * BuildHyperGraph();
+	virtual HyperGraph * BuildHyperGraph(string input);
 
 	
 	// Inheritable functions
@@ -33,6 +33,12 @@ public:
 protected:
 	
 	RuleMapHiero rule_map;
+
+private:
+	int Hash(int x, int y) { return 1000000*x + y; }
+	std::pair<int,int> Dehash(int value) { return std::make_pair<int,int>(value / 1000000, value % 1000000);}
+	HyperNode* FindNode(map<int, HyperNode*> & _map, int begin, int end);
+
 };
 
 }

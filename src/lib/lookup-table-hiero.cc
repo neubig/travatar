@@ -27,11 +27,10 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
     	BuildRule(rule, source_word, target_word, features);
 
     	Sentence src_sent = rule->GetSourceSentence();
-    	Sentence trg_sent = rule->GetTargetSentence();
+    	Sentence trg_sent = rule->GetTrgWords();
 
     	int p=0;
     	while (p < (int)src_sent.size() && src_sent[p] < 0) p++; // finding position of terminal symbol;
-    	cerr << rule->ToString() << endl;
     	ret->AddRule(src_sent[p], rule);
     }
     return ret;
@@ -40,43 +39,20 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
 TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, vector<string> & source, 
 		vector<string> & target, SparseMap features) 
 {
+	ostringstream source_string;
 	for (int i=0; i < (int) source.size(); ++i) {
 		int id = Dict::QuotedWID(source[i]);
-		if (id < 0) {
-			// case of nonterminal
-			if (i == 0) {
-				//beginning of the word
-				rule->AddSourceWord(id,make_pair<int,int>(-1,1));
-			} else if (i == (int) source.size() -1) {
-				// end of the word
-				rule->AddSourceWord(id,make_pair<int,int>(i,-1));
-			} else {
-				// non terminal in the middle
-				rule->AddSourceWord(id,make_pair<int,int>(i,i+1));
-			}
-		} else {
-			rule->AddSourceWord(id,make_pair<int,int>(i,i+1));
-		}
+		rule->AddSourceWord(id);
+
+		if (i) source_string << " ";
+		source_string << source[i];
 	}
 
 	for (int i=0; i < (int) target.size(); ++i) {
 		int id = Dict::QuotedWID(target[i]);
-		if (id < 0) {
-			// case of nonterminal
-			if (i == 0) {
-				//beginning of the word
-				rule->AddTargetWord(id,make_pair<int,int>(-1,1));
-			} else if (i == (int) target.size() -1) {
-				// end of the word
-				rule->AddTargetWord(id,make_pair<int,int>(i,-1));
-			} else {
-				// non terminal in the middle
-				rule->AddTargetWord(id,make_pair<int,int>(i,i+1));
-			}
-		} else {
-			rule->AddTargetWord(id,make_pair<int,int>(i,i+1));
-		}
+		rule->AddTrgWord(id);
 	}
+	rule->SetSrcStr(source_string.str());
 	rule->SetFeatures(features);
 	return rule;
 }
@@ -105,11 +81,8 @@ string LookupTableHiero::ToString() {
 	RuleMapHiero::iterator it = rule_map.begin();
 	int i=0;
 	while(it != rule_map.end() && i++ < (int) rule_map.size()) {
-		//cerr << i << endl;
 		vector<TranslationRuleHiero*> vt = it->second;
-		//cerr << "here" << endl;
 		BOOST_FOREACH(TranslationRuleHiero* pt, vt) {
-			//cerr << "there";
 			oss << pt->ToString() << endl;
 		}
 		++it;
@@ -117,8 +90,43 @@ string LookupTableHiero::ToString() {
 	return oss.str();
 }
 
-HyperGraph * LookupTableHiero::BuildHyperGraph() {
+HyperGraph * LookupTableHiero::BuildHyperGraph(string input) {
 	HyperGraph * ret = new HyperGraph;
-	cerr << LookupTableHiero::ToString() << endl;
+	map<int, HyperNode*> node_cache = map<int, HyperNode*>();
+
+	Sentence sent = Dict::ParseWords(input);
+
+
+	for (int index = 0; index < (int)sent.size(); ++index) {
+		vector<TranslationRuleHiero*> rule = FindRules(sent[index]);
+		BOOST_FOREACH(TranslationRuleHiero* r, rule) {
+			int n_term = r->GetNumberOfNonTerminals();
+			Sentence source = r -> GetSourceSentence();
+			if (n_term == 0) {
+				HyperNode* target = FindNode(node_cache, index, index+1);
+				HyperEdge* rule_edge = new HyperEdge(target);
+				rule_edge-> SetRule(r);
+				target->AddEdge(rule_edge);
+			} else {
+				int head = 0;
+				int tail = ((int) source.size())-1;
+
+				vector<int> head_temp = vector<int>();
+				stack<int> tail_temp = stack<int>();
+				while (source[head] != sent[index]) { head_temp.push_back(head++); }
+				while (source[tail] < 0) { tail_temp.push(tail--); } 
+				
+			}
+		}
+	}
 	return ret;
+}
+
+HyperNode* LookupTableHiero::FindNode(map<int, HyperNode*> & _map, int begin, int end) {
+	int value = Hash(begin,end);
+	if (_map.find(value) == _map.end()) {
+		return new HyperNode;
+	} else {
+		return (_map.find(value))->second;
+	}
 }

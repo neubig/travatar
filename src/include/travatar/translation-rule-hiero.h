@@ -6,46 +6,35 @@
 #include <travatar/sentence.h>
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
+#include <travatar/translation-rule.h>
 
 using namespace std;
 
 namespace travatar {
-class TranslationRuleHiero {
+class TranslationRuleHiero : public TranslationRule {
 public: 
-	TranslationRuleHiero() {}
-	~TranslationRuleHiero() {}
+	TranslationRuleHiero() { n_term = 0; }
 
-	void AddSourceWord (WordId id, std::pair<int,int> span);
-	void AddTargetWord (WordId id, std::pair<int,int> span);
-	void AddFeature(int id, double feat);
-    void AddFeature(const std::string & str, double feat);
+	void AddSourceWord (WordId id);
     void SetFeatures(SparseMap & features);
+    void SetSrcStr(std::string src_str) { src_str_ = src_str; }
     string ToString();
+
+    virtual bool operator==(const TranslationRuleHiero & rhs) const {
+        return
+            n_term == rhs.n_term &&
+            trg_words_ == rhs.trg_words_ &&
+            features_ == rhs.features_ &&
+            source_sent == rhs.source_sent;
+    }
     
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
-    Sentence & GetTargetSentence() { return target_sent; }
-
-    // COMPARATOR
-    bool operator==(const TranslationRuleHiero & rhs) const {
-        return
-            source_sent == rhs.source_sent &&
-            target_sent == rhs.target_sent &&
-            source_span == rhs.source_span &&
-            target_span == rhs.target_span &&
-            features == rhs.features;
-    }
-    bool operator!=(const TranslationRuleHiero & rhs) const {
-        return !(*this == rhs);
-    }
-    
+    int GetNumberOfNonTerminals() { return n_term; }
 
 protected:
+    int n_term;
 	Sentence source_sent;
-	Sentence target_sent;
-	std::vector<pair<int,int> > source_span;
-	std::vector<pair<int,int> > target_span;
-	SparseMap features;
 };
 
 }

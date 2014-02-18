@@ -31,7 +31,7 @@ public:
         rule_oss << "\"I\" ||| \"watashi\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"hamburgers\" ||| \"hamburger\" ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl;
 
         istringstream rule_iss_hash(rule_oss.str());
 
@@ -105,7 +105,7 @@ public:
         exp_rules[2].push_back(LookupTableHiero::BuildRule(hrule, word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718")));
         
         hrule = new TranslationRuleHiero();
-        algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hamburger\"", is_any_of(" "));
+        algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
         exp_rules[3].push_back(LookupTableHiero::BuildRule(hrule, word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718")));
         
         int result = CheckSetAndCleanUp(act_rules,exp_rules);
@@ -149,7 +149,7 @@ public:
     }
 
     bool TestBuildRules(LookupTableHiero & lookup) {
-        scoped_ptr<HyperGraph> hg(lookup.BuildHyperGraph());
+        scoped_ptr<HyperGraph> hg(lookup.BuildHyperGraph("I eat two hamburgers"));
     }
 
     bool RunTest() {

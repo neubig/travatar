@@ -17,12 +17,14 @@ public:
                     const SparseMap & features = SparseMap()) :
         src_str_(src_str), trg_words_(trg_words), trg_syms_(trg_syms), features_(features) { }
 
+    virtual ~TranslationRule() {} 
+
     void AddTrgWord(int id) { trg_words_.push_back(id); }
     void AddTrgSym(int id) { trg_syms_.push_back(id); }
     void AddFeature(int id, double feat);
     void AddFeature(const std::string & str, double feat);
-
-    bool operator==(const TranslationRule & rhs) const {
+    
+    virtual bool operator==(const TranslationRule & rhs) const {
         return
             src_str_ == rhs.src_str_ &&
             trg_words_ == rhs.trg_words_ &&
