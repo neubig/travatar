@@ -7,16 +7,47 @@
 #include <travatar/translation-rule-hiero.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
+#include <generic-string.h>
 
 using namespace boost;
+using namespace std;
+
+
 
 namespace travatar {
+class LookupNodeHiero {
+typedef std::map<GenericString<WordId>, LookupNodeHiero*> NodeMap;
+public:
+	LookupNodeHiero() { 
+		lookup_map = NodeMap(); 
+	}
 
-typedef std::map<WordId, std::vector<TranslationRuleHiero*> > RuleMapHiero;
+	virtual ~LookupNodeHiero() { 
+		BOOST_FOREACH(NodeMap::value_type &it, lookup_map) {
+			free(it.second++);
+		}
+		BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
+			free(rule);
+		}
+	}
+
+	virtual void AddEntry(GenericString<WordId> & key, LookupNodeHiero* rule);
+	virtual LookupNodeHiero* FindNode(GenericString<WordId> & key);
+	virtual void AddRule(TranslationRuleHiero* rule);
+	virtual std::string ToString();
+	
+protected:
+	NodeMap lookup_map;
+	std::vector<TranslationRuleHiero*> rules;
+private:
+	std::string ToString(int indent);
+};	
 
 class LookupTableHiero {
 public:
-	virtual ~LookupTableHiero() { }
+	virtual ~LookupTableHiero() { 
+		free(root_node);
+	}
 	
 	static LookupTableHiero * ReadFromRuleTable(std::istream & in);
 
@@ -25,21 +56,19 @@ public:
 
 	virtual HyperGraph * BuildHyperGraph(string input);
 
-	
-	// Inheritable functions
-	virtual void AddRule(WordId rule_starting_word, TranslationRuleHiero * rule);
-	virtual std::vector<TranslationRuleHiero*> & FindRules(WordId input);
+	void AddRule(TranslationRuleHiero* rule);
+
 	virtual std::string ToString();
 protected:
-	
-	RuleMapHiero rule_map;
-
+	LookupNodeHiero* root_node = new LookupNodeHiero;
+ 
 private:
 	int Hash(int x, int y) { return 1000000*x + y; }
 	std::pair<int,int> Dehash(int value) { return std::make_pair<int,int>(value / 1000000, value % 1000000);}
-	HyperNode* FindNode(map<int, HyperNode*> & _map, int begin, int end);
-
+	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 };
+
+
 
 }
 

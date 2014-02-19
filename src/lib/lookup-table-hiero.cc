@@ -12,6 +12,10 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
+
+///////////////////////////////////
+///     LOOK UP TABLE HIERO      //
+///////////////////////////////////
 LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
 	string line;
     LookupTableHiero * ret = new LookupTableHiero;
@@ -24,14 +28,8 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
         algorithm::split(target_word, columns[1], is_any_of(" "));
         SparseMap features = Dict::ParseFeatures(columns[2]);
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
-    	BuildRule(rule, source_word, target_word, features);
-
-    	Sentence src_sent = rule->GetSourceSentence();
-    	Sentence trg_sent = rule->GetTrgWords();
-
-    	int p=0;
-    	while (p < (int)src_sent.size() && src_sent[p] < 0) p++; // finding position of terminal symbol;
-    	ret->AddRule(src_sent[p], rule);
+    	rule = BuildRule(rule, source_word, target_word, features);
+    	ret->AddRule(rule);
     }
     return ret;
 }
@@ -57,76 +55,88 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 	return rule;
 }
 
-void LookupTableHiero::AddRule(WordId rule_starting_word, TranslationRuleHiero * rule) {
-	if (rule_map.find(rule_starting_word) == rule_map.end()) {
-		rule_map.insert(make_pair<int,vector<TranslationRuleHiero*> >(rule_starting_word, std::vector<TranslationRuleHiero*>()));
-	}
-	if (rule_map.find(rule_starting_word) != rule_map.end()) {
-		(rule_map.find(rule_starting_word)->second).push_back(rule);
-	} else {
-		THROW_ERROR("Error when adding rule.");
-	}
-}
-
-vector<TranslationRuleHiero*> & LookupTableHiero::FindRules(WordId input) {
-	if (rule_map.find(input) == rule_map.end()){
-		THROW_ERROR("Cannot find rule");
-	} else {
-		return (rule_map.find(input))->second;
-	}
-}
-
-string LookupTableHiero::ToString() {
-	std::ostringstream oss;
-	RuleMapHiero::iterator it = rule_map.begin();
-	int i=0;
-	while(it != rule_map.end() && i++ < (int) rule_map.size()) {
-		vector<TranslationRuleHiero*> vt = it->second;
-		BOOST_FOREACH(TranslationRuleHiero* pt, vt) {
-			oss << pt->ToString() << endl;
-		}
-		++it;
-	}
-	return oss.str();
-}
 
 HyperGraph * LookupTableHiero::BuildHyperGraph(string input) {
-	HyperGraph * ret = new HyperGraph;
-	map<int, HyperNode*> node_cache = map<int, HyperNode*>();
-
-	Sentence sent = Dict::ParseWords(input);
-
-
-	for (int index = 0; index < (int)sent.size(); ++index) {
-		vector<TranslationRuleHiero*> rule = FindRules(sent[index]);
-		BOOST_FOREACH(TranslationRuleHiero* r, rule) {
-			int n_term = r->GetNumberOfNonTerminals();
-			Sentence source = r -> GetSourceSentence();
-			if (n_term == 0) {
-				HyperNode* target = FindNode(node_cache, index, index+1);
-				HyperEdge* rule_edge = new HyperEdge(target);
-				rule_edge-> SetRule(r);
-				target->AddEdge(rule_edge);
-			} else {
-				int head = 0;
-				int tail = ((int) source.size())-1;
-
-				vector<int> head_temp = vector<int>();
-				stack<int> tail_temp = stack<int>();
-				while (source[head] != sent[index]) { head_temp.push_back(head++); }
-				while (source[tail] < 0) { tail_temp.push(tail--); } 
-				
-			}
-		}
-	}
-	return ret;
+	return new HyperGraph;
 }
 
-HyperNode* LookupTableHiero::FindNode(map<int, HyperNode*> & _map, int begin, int end) {
-	int value = Hash(begin,end);
-	if (_map.find(value) == _map.end()) {
-		return new HyperNode;
-	} else {
-		return (_map.find(value))->second;
+void LookupTableHiero::AddRule(TranslationRuleHiero* rule) {
+	LookupTableHiero::AddRule(0,root_node, rule);
+}
+
+
+void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule) {
+	Sentence source = rule->GetSourceSentence();
+	std::vector<WordId> key_id = std::vector<WordId>();
+
+	// Skip all non-terminal symbol
+	while (source[position] < 0 && position < (int) source.size()) ++position;
+	
+	// Scanning all terminal symbols as key
+	while (source[position] > 0 && position < (int) source.size()) {
+		key_id.push_back(source[position++]);
 	}
+
+	// That's it we scanned the rule
+	if (position == (int)source.size()) {
+		target_node->AddRule(rule);
+	} else {
+		GenericString<WordId> key = GenericString<WordId>(key_id);
+		LookupNodeHiero* child_node = target_node->FindNode(key); 
+		if (child_node == NULL) {
+			child_node = new LookupNodeHiero;
+			target_node->AddEntry(key, child_node);
+		} 
+		AddRule(position, child_node, rule);
+	}
+}
+
+
+std::string LookupTableHiero::ToString() {
+	return root_node->ToString();
+}
+
+///////////////////////////////////
+///     LOOK UP NODE HIERO       //
+///////////////////////////////////
+void LookupNodeHiero::AddEntry(GenericString<WordId> & key, LookupNodeHiero* rule) {
+	lookup_map[key] = rule;
+}
+
+void LookupNodeHiero::AddRule(TranslationRuleHiero* rule) {
+	rules.push_back(rule);
+}
+
+
+LookupNodeHiero* LookupNodeHiero::FindNode(GenericString<WordId> & key) {
+	NodeMap::iterator it = lookup_map.find(key); 
+	if (it != lookup_map.end()) {
+		return it->second;
+	} else {
+		return NULL;
+	}
+}
+
+std::string LookupNodeHiero::ToString() {
+	return ToString(0);
+}
+
+std::string LookupNodeHiero::ToString(int indent) {
+	ostringstream str;
+	for (int i=0; i < indent; ++i) str << " ";
+	str << "===================================" << endl;
+	BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
+		for (int i=0; i < indent; ++i) str << " ";
+		str << rule->ToString() << endl;
+	}
+	for (int i=0; i < indent; ++i) str << " ";
+	str << "===================================" << endl;
+	NodeMap::iterator it = lookup_map.begin();
+	cerr << lookup_map.size() << endl;
+	while (it != lookup_map.end()) {
+		string t_str = it->second->ToString(indent+1);
+		str << t_str << endl;
+		++it;
+	}	
+	return str.str();
 }
