@@ -24,10 +24,10 @@ public:
 
 	virtual ~LookupNodeHiero() { 
 		BOOST_FOREACH(NodeMap::value_type &it, lookup_map) {
-			free(it.second++);
+			delete it.second++;
 		}
 		BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
-			free(rule);
+			delete rule;
 		}
 	}
 
@@ -35,6 +35,7 @@ public:
 	virtual LookupNodeHiero* FindNode(GenericString<WordId> & key);
 	virtual void AddRule(TranslationRuleHiero* rule);
 	virtual std::string ToString();
+	std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
 	
 protected:
 	NodeMap lookup_map;
@@ -45,8 +46,12 @@ private:
 
 class LookupTableHiero {
 public:
+	LookupTableHiero() {
+		root_node = new LookupNodeHiero;
+	}
+
 	virtual ~LookupTableHiero() { 
-		free(root_node);
+		delete root_node;
 	}
 	
 	static LookupTableHiero * ReadFromRuleTable(std::istream & in);
@@ -59,13 +64,14 @@ public:
 	void AddRule(TranslationRuleHiero* rule);
 
 	virtual std::string ToString();
+
+	virtual std::vector<TranslationRuleHiero*> FindRules(Sentence input);
 protected:
-	LookupNodeHiero* root_node = new LookupNodeHiero;
+	LookupNodeHiero* root_node ;
  
 private:
-	int Hash(int x, int y) { return 1000000*x + y; }
-	std::pair<int,int> Dehash(int value) { return std::make_pair<int,int>(value / 1000000, value % 1000000);}
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
+	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node,  Sentence input, int start);
 };
 
 

@@ -40,6 +40,11 @@ public:
     }
 
     int TestLookup(LookupTableHiero & lookup) {
+        vector<TranslationRuleHiero*> expected = lookup.FindRules(Dict::ParseWords("I eat"));
+        BOOST_FOREACH(TranslationRuleHiero* rule, expected) {
+            cerr << rule -> ToString() << endl;
+        }
+
         /*vector<int> act_match_cnt(4, 0), exp_match_cnt(4, 0);
         for (int i=0; i < (int)src1_sent.size(); ++i) {
             vector<TranslationRuleHiero*> expected = lookup.FindRules(src1_sent[i]);

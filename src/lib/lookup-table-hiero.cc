@@ -77,23 +77,52 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 		key_id.push_back(source[position++]);
 	}
 
-	// That's it we scanned the rule
-	if (position == (int)source.size()) {
-		target_node->AddRule(rule);
-	} else {
-		GenericString<WordId> key = GenericString<WordId>(key_id);
-		LookupNodeHiero* child_node = target_node->FindNode(key); 
-		if (child_node == NULL) {
-			child_node = new LookupNodeHiero;
-			target_node->AddEntry(key, child_node);
-		} 
+	GenericString<WordId> key = GenericString<WordId>(key_id);
+	LookupNodeHiero* child_node = target_node->FindNode(key); 
+	if (child_node == NULL) {
+		child_node = new LookupNodeHiero;
+		target_node->AddEntry(key, child_node);
+	} 
+	
+	if (position+1 < (int) source.size()) {
 		AddRule(position, child_node, rule);
+	} else {
+		child_node->AddRule(rule);
 	}
 }
 
 
 std::string LookupTableHiero::ToString() {
 	return root_node->ToString();
+}
+
+std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(Sentence input) {
+	return FindRules(root_node,input,0);
+}
+
+std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node,  Sentence input, int start) {
+	std::vector<TranslationRuleHiero*> result = std::vector<TranslationRuleHiero*>();
+	for (int i=start; i < (int)input.size(); ++i) {
+		for (int j=i; j < (int)input.size(); ++j) {
+			std::vector<WordId> temp_key = std::vector<WordId>();
+			for (int k=i; k<=j; ++k) temp_key.push_back(input[k]);
+			GenericString<WordId> key_substr = GenericString<WordId>(temp_key);
+
+			LookupNodeHiero* result_node = node->FindNode(key_substr);
+			if (result_node != NULL) {
+				std::vector<TranslationRuleHiero*> temp = result_node->GetTranslationRules();
+				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
+					result.push_back(r);
+				}
+				temp = FindRules(result_node, input, start+2);
+				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
+					result.push_back(r);
+				}
+			}
+			
+		}
+	}
+	return result;
 }
 
 ///////////////////////////////////
@@ -132,7 +161,6 @@ std::string LookupNodeHiero::ToString(int indent) {
 	for (int i=0; i < indent; ++i) str << " ";
 	str << "===================================" << endl;
 	NodeMap::iterator it = lookup_map.begin();
-	cerr << lookup_map.size() << endl;
 	while (it != lookup_map.end()) {
 		string t_str = it->second->ToString(indent+1);
 		str << t_str << endl;
