@@ -59,19 +59,19 @@ public:
 	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
 			std::vector<std::string> & target, SparseMap features);
 
-	virtual HyperGraph * BuildHyperGraph(string input);
+	virtual HyperGraph * BuildHyperGraph(string & input);
 
 	void AddRule(TranslationRuleHiero* rule);
 
 	virtual std::string ToString();
 
-	virtual std::vector<TranslationRuleHiero*> FindRules(Sentence input);
+	virtual std::vector<TranslationRuleHiero*> FindRules(const Sentence & input) const;
 protected:
 	LookupNodeHiero* root_node ;
  
 private:
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
-	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node,  Sentence input, int start);
+	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node, const Sentence & input, int start) const;
 };
 
 

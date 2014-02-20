@@ -28,6 +28,7 @@ public:
         rule_oss << "x0 \"eat\" x1 ||| x0 \"wa\" x1 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"eat\" x0 ||| x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"I\" x0 \"two\" \"hamburgers\" ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"I\" x0 \"two\" x1 ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"I\" ||| \"watashi\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
         rule_oss << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl;
@@ -36,14 +37,28 @@ public:
         istringstream rule_iss_hash(rule_oss.str());
 
         lookup_hiero.reset(LookupTableHiero::ReadFromRuleTable(rule_iss_hash));
-        cerr << lookup_hiero->ToString() << endl;
     }
 
     int TestLookup(LookupTableHiero & lookup) {
-        vector<TranslationRuleHiero*> expected = lookup.FindRules(Dict::ParseWords("I eat"));
+        Sentence c = Dict::ParseWords("I eat two");
+        vector<TranslationRuleHiero*> expected = lookup.FindRules(c);
         BOOST_FOREACH(TranslationRuleHiero* rule, expected) {
             cerr << rule -> ToString() << endl;
         }
+        cerr << "----------------------------" << endl;
+        c = Dict::ParseWords("I eat and buy two delicious hamburgers");
+        expected = lookup.FindRules(c);
+        BOOST_FOREACH(TranslationRuleHiero* rule, expected) {
+            cerr << rule -> ToString() << endl;
+        }
+        cerr << "----------------------------" << endl;
+
+        c = Dict::ParseWords("I eat two hamburgers");
+        expected = lookup.FindRules(c);
+        BOOST_FOREACH(TranslationRuleHiero* rule, expected) {
+            cerr << rule -> ToString() << endl;
+        }
+        cerr << "----------------------------" << endl;
 
         /*vector<int> act_match_cnt(4, 0), exp_match_cnt(4, 0);
         for (int i=0; i < (int)src1_sent.size(); ++i) {

@@ -36,6 +36,11 @@ string TranslationRuleHiero::ToString() {
 		else 
 			ss << "x" << (-trg_words_[i])-1;
 	}
-	ss << " [" << n_term << "]"; 
+	ss << " [";
+	std::pair<int,int> prs;
+	BOOST_FOREACH(prs, span_vector) {
+		ss << "(" << prs.first << "," << prs.second << ")";
+	}
+	ss << "]"; 
 	return ss.str();
 }

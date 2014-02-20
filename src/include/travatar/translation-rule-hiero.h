@@ -1,4 +1,4 @@
-#ifndef TRANSLATION_RULE_HIERO_H__
+    #ifndef TRANSLATION_RULE_HIERO_H__
 #define TRANSLATION_RULE_HIERO_H__
 
 #include <string>
@@ -7,6 +7,7 @@
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
 #include <travatar/translation-rule.h>
+#include <deque>
 
 using namespace std;
 
@@ -27,14 +28,28 @@ public:
             features_ == rhs.features_ &&
             source_sent == rhs.source_sent;
     }
+
+    void ClearNonTermSpan() {
+        span_vector.clear();
+    }
+
+    // MUTATOR
+    void AddNonTermSpanInEnd(int begin, int end) {
+        span_vector.push_back(make_pair<int,int>(begin, end));
+    }
+
+    void AddNonTermSpanInFront(int begin, int end) {
+        span_vector.push_front(make_pair<int,int>(begin,end));
+    }
     
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
     int GetNumberOfNonTerminals() { return n_term; }
-
+    std::deque<std::pair<int,int> > GetAllSpans() { return span_vector; }
 protected:
     int n_term;
 	Sentence source_sent;
+    std::deque<std::pair<int, int> > span_vector;
 };
 
 }

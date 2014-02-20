@@ -56,7 +56,7 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 }
 
 
-HyperGraph * LookupTableHiero::BuildHyperGraph(string input) {
+HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 	return new HyperGraph;
 }
 
@@ -96,30 +96,69 @@ std::string LookupTableHiero::ToString() {
 	return root_node->ToString();
 }
 
-std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(Sentence input) {
+std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(const Sentence & input) const {
 	return FindRules(root_node,input,0);
 }
 
-std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node,  Sentence input, int start) {
+std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node, const Sentence & input, int start) const {
 	std::vector<TranslationRuleHiero*> result = std::vector<TranslationRuleHiero*>();
+
+	// For All Possible Phrase
 	for (int i=start; i < (int)input.size(); ++i) {
 		for (int j=i; j < (int)input.size(); ++j) {
 			std::vector<WordId> temp_key = std::vector<WordId>();
+
+			// Get The substring
 			for (int k=i; k<=j; ++k) temp_key.push_back(input[k]);
 			GenericString<WordId> key_substr = GenericString<WordId>(temp_key);
 
+			// Find node corresponds to the key
 			LookupNodeHiero* result_node = node->FindNode(key_substr);
+
+			// We found the node [hash]
 			if (result_node != NULL) {
 				std::vector<TranslationRuleHiero*> temp = result_node->GetTranslationRules();
+				// For every Translation rule in that node
 				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
-					result.push_back(r);
+					Sentence src_sent = r->GetSourceSentence();
+					// Consider if the rule contains non terminal in the beginning or in the end.
+					// If either is true, then the corresponding phrase must not reach end of the sentence
+					// or not in the beginning of the sentence according to which condition it meets.
+					bool start_nt_front = i==0 && src_sent[i] < 0;
+					bool reach_nt_end = j==(int)input.size()-1 && src_sent[src_sent.size()-1] < 0;
+
+					if (!start_nt_front && !reach_nt_end)
+					{
+						r->ClearNonTermSpan();
+						if (src_sent[0] < 0) {
+							r-> AddNonTermSpanInFront(-1, i);
+						} 
+						if (src_sent[src_sent.size()-1] < 0) {
+							r-> AddNonTermSpanInEnd(j+1,-1);
+						}
+						result.push_back(r);
+					}
 				}
-				temp = FindRules(result_node, input, start+2);
+
+				// Recursively finding node and skipping the non-terminal, starting with fresh terminal symbol .
+				int skip = 1;
+				GenericString<WordId> now_key = GenericString<WordId>(input[j+skip]);
+				// Scan as many terminals as possible
+				while (result_node->FindNode(now_key) == NULL && j+skip < (int) input.size()) {
+					temp_key.clear();
+					temp_key.push_back(input[j+ ++skip]);
+					now_key = GenericString<WordId>(temp_key);
+				}
+
+				// Find All rules in the child scanning from forward position
+				temp = FindRules(result_node, input, j+skip);
+				// That rule in the child has a nonterminal symbol that is scanned in parent.
+				// We have to include them also.
 				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
+					r->AddNonTermSpanInFront(j+1,j+skip);
 					result.push_back(r);
 				}
 			}
-			
 		}
 	}
 	return result;
