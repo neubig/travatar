@@ -15,7 +15,7 @@ my $TRAVATAR_DIR = "";
 my $BIN_DIR = "";
 
 # Translation Method options
-my $TRANSLATION_METHOD = "f2s";
+my $TRANSLATION_METHOD = "t2s";
 
 # Parallelization options
 my $THREADS = "1";
@@ -97,7 +97,7 @@ GetOptions(
     "lm_file=s" => \$LM_FILE, # An already created LM file
     "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
     "no_lm=s" => \$NO_LM, # Indicates that no LM will be used
-    "method=s" => \$TRANSLATION_METHOD, # The translation method that is used for travatar (f2s or hiero)
+    "method=s" => \$TRANSLATION_METHOD, # The translation method that is used for travatar (t2s or hiero)
     "initial_phrase=s" => \$INITIAL_PHRASE_LEN, # The maximum length of initial phrase in hiero extraction
     "hiero_rule_len=s" => \$RULE_MAX_LEN, # The maximum length of hiero rules that are extracted from hiero extraction
 );

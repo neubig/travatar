@@ -103,7 +103,7 @@ sub print_counts {
         # If we are using target side syntax and the rule is bad
         my $extra_feat;
         if($SYNTAX_FEATS) {
-            $src =~ /^([^ ]+) /;+
+            $src =~ /^([^ ]+) /;
             my $src_lab = $1;
             $trg =~ /@ ([^ ]+)/; #~ / @ ([^ ]+)/
             my $trg_lab = $1;

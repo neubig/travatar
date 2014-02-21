@@ -1,4 +1,4 @@
-    #ifndef TRANSLATION_RULE_HIERO_H__
+#ifndef TRANSLATION_RULE_HIERO_H__
 #define TRANSLATION_RULE_HIERO_H__
 
 #include <string>

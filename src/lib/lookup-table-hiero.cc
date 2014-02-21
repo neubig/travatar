@@ -58,6 +58,7 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 	// TODO IMPLEMENTING HYPERGRAPH
+	THROW_ERROR("Build HyperGraph is not implemented yet.");
 	return new HyperGraph;
 }
 
