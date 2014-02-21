@@ -14,6 +14,9 @@ my $WORK_DIR = "";
 my $TRAVATAR_DIR = ""; 
 my $BIN_DIR = "";
 
+# Translation Method options
+my $TRANSLATION_METHOD = "t2s";
+
 # Parallelization options
 my $THREADS = "1";
 
@@ -38,7 +41,7 @@ my $ALIGN_FILE = "";
 my $ALIGN = "giza";
 my $SYMMETRIZE = "grow";
 
-# Rule extraction options
+# Rule extraction options (T2S)
 my $NORMALIZE = "false";
 my $BINARIZE = "right";
 my $COMPOSE = "4";
@@ -50,6 +53,10 @@ my $TERM_LEN = "10";
 my $NBEST_RULES = "20";
 my $SCORE_OPTIONS = "";
 my $SMOOTH = "none";
+
+# Rule extraction options (Hiero)
+my $INITIAL_PHRASE_LEN = "10";
+my $RULE_MAX_LEN = "5";
 
 # Model files
 my $TM_FILE = "";
@@ -90,6 +97,9 @@ GetOptions(
     "lm_file=s" => \$LM_FILE, # An already created LM file
     "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
     "no_lm=s" => \$NO_LM, # Indicates that no LM will be used
+    "method=s" => \$TRANSLATION_METHOD, # The translation method that is used for travatar (t2s or hiero)
+    "initial_phrase=s" => \$INITIAL_PHRASE_LEN, # The maximum length of initial phrase in hiero extraction
+    "hiero_rule_len=s" => \$RULE_MAX_LEN, # The maximum length of hiero rules that are extracted from hiero extraction
 );
 if(@ARGV != 0) {
     print STDERR "Usage: $0 --work_dir=work --src_file=src.txt --trg_file=trg.txt\n";
@@ -126,11 +136,21 @@ $TRG_WORDS = $TRG_FILE if((not $TRG_WORDS) and ($TRG_FORMAT eq "word"));
 (safesystem("mkdir $WORK_DIR/data") or die) if ((not $SRC_WORDS) or (not $TRG_WORDS));
 if(not $SRC_WORDS) {
     $SRC_WORDS = "$WORK_DIR/data/src.word";
-    safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $SRC_FORMAT -output_format word < $SRC_FILE > $SRC_WORDS") or die;
+    if ($TRANSLATION_METHOD eq "t2s") {
+        safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $SRC_FORMAT -output_format word < $SRC_FILE > $SRC_WORDS") or die;
+    } else {
+        # Hiero
+        safesystem("cp $SRC_FILE $SRC_WORDS");
+    }
 }
 if(not $TRG_WORDS) {
     $TRG_WORDS = "$WORK_DIR/data/trg.word";
-    safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $TRG_FORMAT -output_format word < $TRG_FILE > $TRG_WORDS") or die;
+    if ($TRANSLATION_METHOD eq "t2s") {
+        safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $TRG_FORMAT -output_format word < $TRG_FILE > $TRG_WORDS") or die;
+    } else {
+        # Hiero
+        safesystem("cp $TRG_FILE $TRG_WORDS");
+    }
 }
 
 # ****** 2: Create Alignments *******
@@ -201,8 +221,13 @@ if(not $TM_FILE) {
     safesystem("mkdir $WORK_DIR/model") or die;
     # First extract the rules
     my $EXTRACT_FILE = "$WORK_DIR/model/extract.gz";
-    my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
-    safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
+    if ($TRANSLATION_METHOD eq "t2s") {
+        my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
+        safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
+    } else {
+        my $EXTRACT_OPTIONS = "-initial_phrase_len $INITIAL_PHRASE_LEN -rule_max_len $RULE_MAX_LEN";
+        safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
+    }
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 

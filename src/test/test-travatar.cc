@@ -15,6 +15,7 @@
 #include "test-tune.h"
 #include "test-trimmer.h"
 #include "test-hiero.h"
+#include "test-hiero-lookup-table.h"
 
 using namespace std;
 using namespace travatar;
@@ -36,6 +37,7 @@ int main() {
     tests.push_back(new TestTune());
     tests.push_back(new TestTrimmer());
     tests.push_back(new TestHiero());
+    tests.push_back(new TestLookupTableHiero());
     tests.push_back(new TestLMComposer());
     // Run all the tests
     int number_passed = 0;
