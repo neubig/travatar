@@ -57,6 +57,7 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 
 HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
+	// TODO IMPLEMENTING HYPERGRAPH
 	return new HyperGraph;
 }
 
