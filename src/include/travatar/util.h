@@ -14,6 +14,7 @@
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
+#define DEFAULT_ALMOST 1e-6
 #define TRAVATAR_SAFE
 
 #define THROW_ERROR(msg) do {                   \
@@ -287,7 +288,7 @@ int CheckAlmostVector(const std::vector<T> & exp,
     for(int i = 0; i < (int)std::max(exp.size(), act.size()); i++) {
         if(i >= (int)exp.size() || 
            i >= (int)act.size() || 
-           abs(exp[i] - act[i]) > 0.01) {
+           abs(exp[i] - act[i]) > DEFAULT_ALMOST) {
            
             ok = 0;
             std::cout << "exp["<<i<<"] != act["<<i<<"] (";
@@ -353,7 +354,7 @@ int CheckMap(const std::map<K,V> & exp, const std::map<K,V> & act) {
 }
 
 template<class K>
-int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act) {
+int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act, double diff = DEFAULT_ALMOST) {
     typedef std::tr1::unordered_map<K,double> MapType;
     typedef std::pair<K,double> MapPair;
     int ok = 1;
@@ -362,7 +363,7 @@ int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1
         if(it == act.end()) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << std::endl;
             ok = 0;
-        } else if(abs(it->second - kv.second) > 0.01) {
+        } else if(abs(it->second - kv.second) > diff) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != "<<it->second<<")" << std::endl;
             ok = 0;
         }
@@ -378,7 +379,7 @@ int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1
 }
 
 inline int CheckAlmost(double exp, double act) {
-    if(abs(exp - act) > 0.01) {
+    if((act != act) || abs(exp - act) > DEFAULT_ALMOST) {
         std::cout << "CheckAlmost: " << exp << " != " << act << std::endl;
         return 0;
     }

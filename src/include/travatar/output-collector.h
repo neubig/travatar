@@ -12,8 +12,8 @@ namespace travatar {
 
 class OutputCollector {
 public:
-    OutputCollector(std::ostream* out_stream=&std::cout, std::ostream* err_stream=&std::cerr) :
-            next_(0), out_stream_(out_stream), err_stream_(err_stream) { }
+    OutputCollector(std::ostream* out_stream=&std::cout, std::ostream* err_stream=&std::cerr, bool buffer=true) :
+            next_(0), out_stream_(out_stream), err_stream_(err_stream), buffer_(buffer) { }
 
     void Write(int id, const std::string & out, const std::string & err) {
         boost::mutex::scoped_lock lock(mutex_);
@@ -26,6 +26,10 @@ public:
                 *err_stream_ << it->second.second;
                 saved_.erase(it);
             }
+            if(!buffer_) {
+                out_stream_->flush();
+                err_stream_->flush();
+            }
         } else {
             saved_[id] = std::pair<std::string,std::string>(out,err);
         }
@@ -36,6 +40,7 @@ private:
     int next_;
     std::ostream *out_stream_, *err_stream_;
     boost::mutex mutex_;
+    bool buffer_;
 
 };
 

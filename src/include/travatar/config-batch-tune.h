@@ -33,10 +33,11 @@ public:
         AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
         AddConfigEntry("l1", "0.0", "Coefficient for L1 regularization");
         AddConfigEntry("l2", "0.0", "Coefficient for L2 regularization");
+        AddConfigEntry("ent", "0.0", "Coefficient for Entropy regularization");
         AddConfigEntry("margin_scale", "0", "The size of the margin");
         AddConfigEntry("rand_seed", "0", "The random seed, zero to use the time");
         AddConfigEntry("rate", "1", "The learning rate");
-        AddConfigEntry("restarts", "20", "The number of random tuning restarts");
+        AddConfigEntry("restarts", "18", "The number of random tuning restarts");
         AddConfigEntry("stat_in", "", "Files containing pre-computed statistics for each n-best list");
         AddConfigEntry("stat_out", "", "Set this option to pre-compute statistics for an n-best list");
         AddConfigEntry("threads", "1", "The number of threads to use");

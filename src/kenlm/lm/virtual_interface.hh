@@ -6,6 +6,7 @@
 #include "util/string_piece.hh"
 
 #include <string>
+#include <string.h>
 
 namespace lm {
 namespace base {
@@ -119,13 +120,18 @@ class Model {
 
     size_t StateSize() const { return state_size_; }
     const void *BeginSentenceMemory() const { return begin_sentence_memory_; }
+    void BeginSentenceWrite(void *to) const { memcpy(to, begin_sentence_memory_, StateSize()); }
     const void *NullContextMemory() const { return null_context_memory_; }
+    void NullContextWrite(void *to) const { memcpy(to, null_context_memory_, StateSize()); }
 
     // Requires in_state != out_state
     virtual float Score(const void *in_state, const WordIndex new_word, void *out_state) const = 0;
 
     // Requires in_state != out_state
     virtual FullScoreReturn FullScore(const void *in_state, const WordIndex new_word, void *out_state) const = 0;
+
+    // Prefer to use FullScore.  The context words should be provided in reverse order.
+    virtual FullScoreReturn FullScoreForgotState(const WordIndex *context_rbegin, const WordIndex *context_rend, const WordIndex new_word, void *out_state) const = 0;
 
     unsigned char Order() const { return order_; }
 

@@ -97,7 +97,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     
     // Save number of threads and runs
     int threads = config.GetInt("threads");
-    int runs = config.GetInt("restarts")+1;
+    int runs = config.GetInt("restarts")+2;
     
     // Chose the tuning method
     shared_ptr<Tune> tgm;
@@ -111,8 +111,8 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         TuneXeval * tx = new TuneXeval;
         tx->SetL1Coefficient(config.GetDouble("l1"));
         tx->SetL2Coefficient(config.GetDouble("l2"));
+        tx->SetEntCoefficient(config.GetDouble("ent"));
         tgm.reset(tx);
-        // runs = 1; // random restarts make no sense for xeval
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
@@ -204,13 +204,17 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
     tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tgm, weights));
     pool.Submit(tasks[0].get());
+
+    // Set up zeroed weights
+    tasks[1] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(1, "Zero", *tgm, SparseMap()));
+    pool.Submit(tasks[1].get());
     
     // Randomize if necessary
     if(config.GetInt("rand_seed") == 0)
         srand(time(NULL));
     else
         srand(config.GetInt("rand_seed"));
-    for(int i = 1; i < runs; i++) {
+    for(int i = 2; i < runs; i++) {
         // Randomize the weights
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)

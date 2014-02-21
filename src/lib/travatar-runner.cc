@@ -14,6 +14,7 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
 #include <travatar/lm-composer-bu.h>
+#include <travatar/lm-composer-incremental.h>
 #include <travatar/binarizer.h>
 #include <travatar/eval-measure.h>
 #include <travatar/timer.h>
@@ -49,6 +50,7 @@ void TravatarRunnerTask::Run() {
     }
 
     // Calculate the n-best list
+    PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
     NbestList nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
 
     // Print the best answer. This will generally be the answer with the highest score
@@ -194,12 +196,24 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load the language model
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
     if(config.GetString("lm_file") != "") {
-        LMComposerBU * bu = 
-            new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
-        bu->SetLMWeight(weights_->GetCurrent(Dict::WID("lm")));
-        bu->SetStackPopLimit(config.GetInt("pop_limit"));
-        bu->SetChartLimit(config.GetInt("chart_limit"));
-        lm_.reset(bu);
+        if(config.GetString("search") == "cp") {
+            LMComposerBU * bu = 
+                new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+            bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
+            bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
+            bu->SetStackPopLimit(config.GetInt("pop_limit"));
+            bu->SetChartLimit(config.GetInt("chart_limit"));
+            lm_.reset(bu);
+        } else if(config.GetString("search") == "inc") {
+            LMComposerIncremental * inc = 
+                new LMComposerIncremental(new Model(config.GetString("lm_file").c_str()));
+            inc->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
+            inc->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
+            inc->SetStackPopLimit(config.GetInt("pop_limit"));
+            lm_.reset(inc);
+        } else {
+            THROW_ERROR("Unknown search algorithm: " << config.GetString("search"));
+        }
     }
 
     // Load the rule table
@@ -221,7 +235,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
         if(!*nbest_out)
             THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
-        nbest_collector.reset(new OutputCollector(nbest_out.get()));
+        nbest_collector.reset(new OutputCollector(nbest_out.get(), &cerr, config.GetBool("buffer")));
     } else if (!do_tuning_) {
         nbest_count_ = 1;
     }
@@ -233,7 +247,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         forest_out.reset(new ofstream(config.GetString("forest_out").c_str()));
         if(!*forest_out)
             THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
-        forest_collector.reset(new OutputCollector(forest_out.get()));
+        forest_collector.reset(new OutputCollector(forest_out.get(), &cerr, config.GetBool("buffer")));
     } 
 
     // Get the class to trim the forest if necessary
@@ -248,7 +262,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
-        trace_collector.reset(new OutputCollector(trace_out.get()));
+        trace_collector.reset(new OutputCollector(trace_out.get(), &cerr, config.GetBool("buffer")));
     }
 
     // Create the thread pool

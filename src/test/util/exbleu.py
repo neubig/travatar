@@ -20,7 +20,8 @@ def phiprime(x):
     try:
         e = math.exp(x)
         e1 = math.exp(10000*x)
-        return ( e*(1+e1) - (e-1)*10000*e1 )/pow(1+e1, 2)
+        # return ( e*(1+e1) - (e-1)*10000*e1 )/pow(1+e1, 2)
+        return ( e - (e-1)*10000*(e1/(1+e1)) ) / (1+e1)
     except OverflowError:
         return 0.0
 
@@ -36,7 +37,7 @@ t = (5.25, 3.5, 2.0, 1.0, 5.75, 3.75, 2.25, 1.0, 6.0)
 P=(math.log(t[0])+math.log(t[1])+math.log(t[2])+math.log(t[3])-math.log(t[4])-math.log(t[5])-math.log(t[6])-math.log(t[7]))/4
 expP = math.exp(P)
 
-R = t[4]/t[0]
+R = t[8]/t[4]
 mR = -R
 B = phi(1-R)
 Bprime = phiprime(1-R)
@@ -74,7 +75,7 @@ t = (5.25, 3.5, 2.0, 1.0, 5.5, 3.5, 2.0, 1.0, 6.0)
 P=(math.log(t[0])+math.log(t[1])+math.log(t[2])+math.log(t[3])-math.log(t[4])-math.log(t[5])-math.log(t[6])-math.log(t[7]))/4
 expP = math.exp(P)
 
-R = t[4]/t[0]
+R = t[8]/t[4]
 mR = -R
 B = phi(1-R)
 Bprime = phiprime(1-R)
@@ -110,3 +111,16 @@ for k in range(3):
         print "%r %r: %r %r %r" % (k, kp, grads[k], (1 if (kp == k) else 0)-probs[kp], feats[kp])
 
 print "grads=%r\nfeats=%r\nscale=%r" % (grads, feats, scale)
+
+# Calculate for entropy regularization
+feats = [0.0, 0.0, 0.0]
+probs = [0.5, 0.25, 0.25]
+cross = [0.0, math.log(0.5)/2, math.log(0.5)/2]
+dgamma = 0.0
+gamma = 2.0
+
+for k in range(3):
+    for kprime in range(3):
+        feats[kprime] -= (math.log(probs[k], 2) + 1) * probs[k] * ((1 if k == kprime else 0)-probs[kprime]) * gamma
+        dgamma -= (math.log(probs[k], 2) + 1) * probs[k] * ((1 if k == kprime else 0)-probs[kprime]) * cross[kprime]
+print "Entropy: %r, Scale: %r" % (feats, dgamma)

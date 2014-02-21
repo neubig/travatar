@@ -7,6 +7,7 @@
 #include "test-io-util.h"
 #include "test-lookup-table.h"
 #include "test-graph-transformer.h"
+#include "test-lm-composer.h"
 #include "test-binarizer.h"
 #include "test-base.h"
 #include "test-weights.h"
@@ -37,6 +38,7 @@ int main() {
     tests.push_back(new TestTrimmer());
     tests.push_back(new TestHiero());
     tests.push_back(new TestLookupTableHiero());
+    tests.push_back(new TestLMComposer());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

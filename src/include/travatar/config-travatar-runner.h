@@ -30,6 +30,7 @@ public:
         AddConfigEntry("config_file", "", "The location of the configuration file");
         AddConfigEntry("all_unk", "false", "If this is true, translating the word as-is will be an option even when a rule exists");
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
+        AddConfigEntry("buffer", "true", "Whether to buffer the output. Turn off if you want file output in real time.");
         AddConfigEntry("chart_limit", "100", "The number of elements in any particular chart cell");
         AddConfigEntry("debug", "1", "What level of debugging output to print");
         AddConfigEntry("forest_out", "", "Forest output file location");
@@ -39,6 +40,7 @@ public:
         AddConfigEntry("nbest", "1", "The length of the n-best list");
         AddConfigEntry("nbest_out", "", "n-best output file location");
         AddConfigEntry("pop_limit", "2000", "The number of pops necessary");
+        AddConfigEntry("search", "inc", "The type of search (Cube Pruning (cp)/Incremental (inc))");
         AddConfigEntry("threads", "1", "The number of threads to use in translation");
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");

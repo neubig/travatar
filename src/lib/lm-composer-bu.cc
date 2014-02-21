@@ -32,10 +32,10 @@ public:
 
 }
 
-const ChartEntry & LMComposerBU::BuildChart(
+const ChartEntry & LMComposerBU::BuildChartCubePruning(
                     const HyperGraph & parse,
-                    vector<shared_ptr<ChartEntry> > & chart, 
-                    vector<ChartState> & states, 
+                    vector<shared_ptr<ChartEntry> > & chart,
+                    vector<ChartState> & states,
                     int id,
                     HyperGraph & rule_graph) const {
     // Save the nodes for easy access
@@ -44,10 +44,12 @@ const ChartEntry & LMComposerBU::BuildChart(
     if(chart[id].get() != NULL) return *chart[id];
     // cerr << "Building chart @ " << id << endl;
     chart[id].reset(new ChartEntry);
+    ChartEntry & my_chart = *chart[id].get();
     // The priority queue of values yet to be expanded
     priority_queue<pair<double, GenericString<int> > > hypo_queue;
     // The hypothesis combination map
     map<ChartState, HyperNode*> hypo_comb;
+    map<HyperNode*, ChartState> hypo_rev;
     // The set indicating already-expanded combinations
     unordered_set<GenericString<int>, GenericHash<GenericString<int> > > finished;
     // For each edge outgoing from this node, add its best hypothesis
@@ -60,14 +62,15 @@ const ChartEntry & LMComposerBU::BuildChart(
         double viterbi_score = my_edge->GetScore();
         for(int j = 1; j < (int)q_id.length(); j++) {
             q_id[j] = 0;
-            const ChartEntry & my_entry = BuildChart(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
+            const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
             viterbi_score += my_entry[0]->CalcViterbiScore();
         }
         hypo_queue.push(make_pair(viterbi_score, q_id));
     }
     // For each edge on the queue, process it
     int num_popped = 0;
-    WordId feature_id = Dict::WID(feature_name_);
+    WordId lm_feature_id = Dict::WID(lm_feature_name_);
+    WordId lm_unk_feature_id = Dict::WID(lm_unk_feature_name_);
     while(hypo_queue.size() != 0) {
         if(num_popped++ >= stack_pop_limit_) break;
         // Get the score, id string, and edge
@@ -82,12 +85,13 @@ const ChartEntry & LMComposerBU::BuildChart(
         next_edge->SetRuleStr(id_edge->GetRuleStr());
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(*lm_, my_state);
+        int unk = 0;
         BOOST_FOREACH(int trg_id, id_edge->GetTrgWords()) {
             if(trg_id < 0) {
                 int curr_id = -1 - trg_id;
                 // vector<HyperNode*> nodes;
                 // Get the chart for the particular node we're interested in
-                const ChartEntry & my_entry = BuildChart(parse, chart, states, id_edge->GetTail(curr_id)->GetId(), rule_graph);
+                const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, id_edge->GetTail(curr_id)->GetId(), rule_graph);
                 // From the node, get the appropriately ranked node
                 int edge_pos = id_str[curr_id+1];
                 HyperNode * chart_node = my_entry[edge_pos];
@@ -109,7 +113,9 @@ const ChartEntry & LMComposerBU::BuildChart(
             } else {
                 // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
                 // Re-index vocabulary
-                my_rule_score.Terminal(lm_->GetVocabulary().Index(Dict::WSym(trg_id)));
+                lm::WordIndex index = lm_->GetVocabulary().Index(Dict::WSym(trg_id));
+                if(index == 0) unk++;
+                my_rule_score.Terminal(index);
             }
         }
         double lm_score = my_rule_score.Finish();
@@ -120,29 +126,46 @@ const ChartEntry & LMComposerBU::BuildChart(
         if(it == hypo_comb.end()) {
             // Create a new copy of the current node
             next_node = new HyperNode(nodes[id]->GetSym(), -1, nodes[id]->GetSpan());
-            rule_graph.AddNode(next_node);
-            states.push_back(my_state);
+            // rule_graph.AddNode(next_node);
+            // states.push_back(my_state);
             hypo_comb.insert(make_pair(my_state, next_node));
-            chart[id]->push_back(next_node);
+            hypo_rev.insert(make_pair(next_node, my_state));
+            my_chart.push_back(next_node);
         } else {
             next_node = it->second;
         }
-        next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight_));
+        next_node->SetViterbiScore(max(next_node->GetViterbiScore(),top_score+lm_score*lm_weight_+unk*lm_unk_weight_));
         next_edge->SetHead(next_node);
         // Sort the tails in source order
         sort(next_edge->GetTails().begin(), next_edge->GetTails().end(), NodeSrcLess());
-        next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_);
+        next_edge->SetScore(id_edge->GetScore() + lm_score * lm_weight_ + unk*lm_unk_weight_);
         if(lm_score != 0.0)
-            next_edge->GetFeatures().insert(make_pair(feature_id, lm_score));
-        rule_graph.AddEdge(next_edge);
+            next_edge->GetFeatures().insert(make_pair(lm_feature_id, lm_score));
+        if(unk != 0)
+            next_edge->GetFeatures().insert(make_pair(lm_unk_feature_id, unk));
+        // rule_graph.AddEdge(next_edge);
         next_node->AddEdge(next_edge);
         // cerr << " HERE @ " << *next_node << ": " << top_score<<"+"<<lm_score<<"*"<<lm_weight<<" == " << top_score+lm_score*lm_weight << endl;
         // cerr << " Updated node: " << *next_node << endl;
     }
-    sort(chart[id]->begin(), chart[id]->end(), NodeScoreMore());
-    if(chart_limit_ > 0 && (int)chart[id]->size() > chart_limit_)
-        chart[id]->resize(chart_limit_);
-    return *chart[id];
+    sort(my_chart.begin(), my_chart.end(), NodeScoreMore());
+    // Destroy all edges/nodes over the chart limit
+    if(chart_limit_ > 0 && (int)my_chart.size() > chart_limit_) {
+        for(int i = chart_limit_; i < (int)my_chart.size(); i++) {
+            BOOST_FOREACH(HyperEdge * edge, my_chart[i]->GetEdges())
+                delete edge;
+            delete my_chart[i];
+        }
+        my_chart.resize(chart_limit_);
+    }
+    // Add the rest of the nodes to the chart
+    BOOST_FOREACH(HyperNode * node, my_chart) {
+        rule_graph.AddNode(node);
+        states.push_back(hypo_rev[node]);
+        BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
+            rule_graph.AddEdge(edge);
+    }
+    return my_chart;
 }
 
 // Intersect this rule_graph with a language model, using cube pruning to control
@@ -167,7 +190,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     if(parse.NumNodes() == 0) return ret;
     states.resize(1);
     // Build the chart
-    BuildChart(parse, chart, states, 0, *ret);
+    BuildChartCubePruning(parse, chart, states, 0, *ret);
     // Build the final nodes
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
@@ -180,7 +203,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
         double my_score = my_rule_score.Finish();
         edge->AddTail(node);
         if(my_score != 0.0) {
-            edge->AddFeature(Dict::WID(feature_name_), my_score);
+            edge->AddFeature(Dict::WID(lm_feature_name_), my_score);
             edge->SetScore(my_score * lm_weight_);
         }
         ret->AddEdge(edge);

@@ -14,6 +14,7 @@ AC_CONFIG_FILES([
     src/kenlm/Makefile
     src/kenlm/lm/Makefile
     src/kenlm/util/Makefile
+    src/kenlm/search/Makefile
     src/include/Makefile
     src/lib/Makefile
     src/bin/Makefile

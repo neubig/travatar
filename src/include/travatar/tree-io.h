@@ -30,6 +30,16 @@ public:
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
 };
 
+// Read in and write out trees in the same format as travatar rules
+class RuleTreeIO : public TreeIO {
+public:
+    virtual ~RuleTreeIO() { }
+    virtual HyperGraph * ReadTree(std::istream & in);
+    void WriteNode(const std::vector<WordId> & words,
+                   const HyperNode & node, std::ostream & out);
+    virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+};
+
 // Read in and write out only the words of trees
 class WordTreeIO : public TreeIO {
 public:

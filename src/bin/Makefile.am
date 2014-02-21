@@ -1,6 +1,6 @@
 include $(top_srcdir)/common.am
 AM_CXXFLAGS += -I$(srcdir)/../include
-LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../tercpp/libter.a ../marisa/libmarisa.la ../liblbfgs/liblbfgs.la -lboost_thread -lboost_regex -lboost_iostreams -lz -lrt
+LDADD=../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a ../kenlm/search/libklm_search.a ../tercpp/libter.a ../marisa/libmarisa.la ../liblbfgs/liblbfgs.la -lboost_thread -lboost_regex -lboost_iostreams -lz -lrt
 
 bin_PROGRAMS = travatar forest-extractor batch-tune tree-converter mt-evaluator mt-segmenter rescorer hiero-extractor
 

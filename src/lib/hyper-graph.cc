@@ -60,7 +60,7 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
         return false;
     if(trg_words_ != rhs.trg_words_)
         return false;
-    if(abs(score_ - rhs.score_) > abs(score_*1e-5))
+    if(abs(score_ - rhs.score_) > abs(score_*1e-4))
         return false;
     return true;
 }
