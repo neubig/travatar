@@ -64,10 +64,13 @@ while($line = <STDIN>) {
             push @currsrc, $myid;
         } else {
             $nonterm++;
-            $bad = 1 if(@currsrc and not exists $src{"@currsrc"});
+            if(@currsrc and not exists $src{"@currsrc"}) {
+                $bad = 1;
+                last;
+            }
             @currsrc = ();
         }
     }
-    $bad = 1 if (($term > $LEN) or ($nonterm > $NTLEN) or (@currsrc and not exists $src{"@currsrc"}));
+    $bad = 1 if ($bad or ($term > $LEN) or ($nonterm > $NTLEN) or (@currsrc and not exists $src{"@currsrc"}));
     if(!$bad) { print "$line\n"; }
 }
