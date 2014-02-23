@@ -65,6 +65,7 @@ while($line = <STDIN>) {
         } else {
             $nonterm++;
             $bad = 1 if(@currsrc and not exists $src{"@currsrc"});
+            @currsrc = ();
         }
     }
     $bad = 1 if (($term > $LEN) or ($nonterm > $NTLEN) or (@currsrc and not exists $src{"@currsrc"}));
