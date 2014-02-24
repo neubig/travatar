@@ -63,6 +63,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
 
+	// Transform every rule into edge and add it to hypergraph.
 	BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
 		std::deque<pair<int,int> > rule_spans = rule->GetAllSpans();
 		pair<int,int> front_span = rule_spans[0];
@@ -71,6 +72,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 
 		// switch case whether there is a -1 symbol in the front or back of the rule
 		if (front_span.first == -1 && back_span.second == -1) {
+			// head and tail are non terminal symbol, iterating for all possible values.
 			for (int i=0; i < front_span.second; ++i) {
 				for (int j=back_span.first+1; j <= (int)sent.size(); ++j) {
 					span_temp.clear();
@@ -85,6 +87,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 				}
 			}
 		} else if (front_span.first == -1) {
+			// iterating all possible values in head
 			for (int i=0; i < front_span.second; ++i) {
 				span_temp.clear();
 				span_temp.push_back(std::pair<int,int>(i,front_span.second));
@@ -96,6 +99,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 				ret->AddEdge(TransformRuleIntoEdge(&node_map, i, back_span.second, span_temp, rule));
 			}
 		} else if (back_span.second == -1) {
+			// iterating all possible values in tail
 			for (int j= back_span.first+1; j <= (int)sent.size(); ++j) {
 				span_temp.clear();
 				BOOST_FOREACH(int position, non_term_position) {
@@ -107,6 +111,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 				ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, j, span_temp, rule));
 			}
 		} else {
+			// nothing special, just single edge to be added
 			span_temp.clear();
 			BOOST_FOREACH(int position, non_term_position) {
 				span_temp.push_back(rule_spans[position]);
@@ -115,27 +120,32 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 		}
 	}
 
+	// Add all nodes constructed during adding edge into the hypergraph
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
-		HyperNode* node = it->second;
-		ret->AddNode(node);
-		++it;
+		ret->AddNode(it++->second);
 	}
 
 	return ret;
 }
 
+// Build a HyperEdge for a rule, also constructing node if head or tails node are not in the map.
+// Then attaching rule into the edge
 HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* node_map, 
 		int head_first, int head_second, vector<pair<int,int> > & tail_spans, TranslationRuleHiero* rule) 
 {
-	HyperNode* head = FindNode(node_map, head_first, head_second);
 	HyperEdge* hedge = new HyperEdge;
+
+	// First find the head.
+	HyperNode* head = FindNode(node_map, head_first, head_second);
+	
+	// Attaching Edge to the head
 	hedge->SetHead(head);
 	hedge->SetRule(rule, rule->GetFeatures());
 	head->AddEdge(hedge);
 	
+	// For each tail_spans, add them into the edge_tail.
 	pair<int,int> tail_span;
-	// For each following tail
 	BOOST_FOREACH(tail_span, tail_spans) {
 		HyperNode* tail = FindNode(node_map, tail_span.first, tail_span.second);
 		tail->SetSpan(tail_span);
@@ -144,12 +154,14 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 	return hedge;
 }
 
+// Get an HyperNode, indexed by its span in some map.
 HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end) {
 	pair<int,int> span = std::pair<int,int>(span_begin,span_end);
 	map<pair<int,int>, HyperNode*>::iterator it = map_ptr->find(span);
 	if (it != map_ptr->end()) {
 		return it->second;
 	} else {
+		// Fresh New Node!
 		HyperNode* ret = new HyperNode;
 		ret->SetSpan(std::pair<int,int>(span_begin,span_end));
 		map_ptr->insert(std::pair<std::pair<int,int>, HyperNode*> (span,ret));
