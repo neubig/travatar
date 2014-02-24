@@ -59,7 +59,7 @@ public:
 	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
 			std::vector<std::string> & target, SparseMap features);
 
-	virtual HyperGraph * BuildHyperGraph(string & input);
+	virtual HyperGraph * BuildHyperGraph(const string & input);
 
 	void AddRule(TranslationRuleHiero* rule);
 
@@ -71,11 +71,11 @@ protected:
  
 private:
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
-	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node, const Sentence & input, int start) const;
-	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end);
+	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
+	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end);
 
-	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, int head_first, 
-			int head_second, std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule);
+	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, const int head_first, 
+			const int head_second, const std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule);
 };
 
 

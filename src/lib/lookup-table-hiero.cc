@@ -56,7 +56,7 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 }
 
 
-HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
+HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
 	HyperGraph* ret = new HyperGraph;
 	Sentence sent = Dict::ParseWords(input);
 	vector<TranslationRuleHiero*> rules = FindRules(sent);
@@ -132,7 +132,8 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 // Build a HyperEdge for a rule, also constructing node if head or tails node are not in the map.
 // Then attaching rule into the edge
 HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* node_map, 
-		int head_first, int head_second, vector<pair<int,int> > & tail_spans, TranslationRuleHiero* rule) 
+		const int head_first, const int head_second, const vector<pair<int,int> > & tail_spans, 
+		TranslationRuleHiero* rule) 
 {
 	HyperEdge* hedge = new HyperEdge;
 
@@ -155,7 +156,9 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 }
 
 // Get an HyperNode, indexed by its span in some map.
-HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end) {
+HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, 
+		const int span_begin, const int span_end) 
+{
 	pair<int,int> span = std::pair<int,int>(span_begin,span_end);
 	map<pair<int,int>, HyperNode*>::iterator it = map_ptr->find(span);
 	if (it != map_ptr->end()) {
@@ -209,7 +212,9 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(const Sentence & 
 	return FindRules(root_node,input,0);
 }
 
-std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node, const Sentence & input, int start) const {
+std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node, 
+		const Sentence & input, int start) const 
+{
 	std::vector<TranslationRuleHiero*> result = std::vector<TranslationRuleHiero*>();
 
 	// For All Possible Phrase
