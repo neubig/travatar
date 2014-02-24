@@ -10,63 +10,67 @@ binmode STDERR, ":utf8";
 
 my $SRC = "";
 my $SRC_FORMAT = "penn";
-my $LEN = 0;
-my $NTLEN = 0;
+my $LEN = 1e6;
+my $NTLEN = 1e6;
+my $MAX_RULE_LEN = 1e6;
 GetOptions(
     "src=s" => \$SRC,
     "src-format=s" => \$SRC_FORMAT,
     "len=i" => \$LEN,
     "ntlen=i" => \$NTLEN,
+    "max-rule-len=s" => \$MAX_RULE_LEN
 );
-
-my %src;
-if($SRC) {
-    open FILE0, "<:utf8", $SRC or die "Couldn't open $SRC\n";
-    if($SRC_FORMAT eq "penn") {
-        while(<FILE0>) {
-            chomp;
-            while(/[^\(\)]+ ([^\(\)]+)/g) {
-                # print STDERR "HERE: $1\n";
-                $src{$1}++;
-            }
-        }
-    } elsif ($SRC_FORMAT eq "egret") {
-        while(<FILE0>) {
-            if(/^sentence /) {
-                $_ = <FILE0>;
-                chomp;
-                for(split(/ +/)) { $src{$_}++; }
-            }
-        }
-    }
-    close FILE0;
-}
 
 if(@ARGV != 0) {
     print STDERR "Usage: $0 < IN_TABLE > OUT_TABLE\n";
     exit 1;
 }
 
+my %src;
+if($SRC) {
+    open FILE0, "<:utf8", $SRC or die "Couldn't open $SRC\n";
+    while(<FILE0>) {
+        my @sent;
+        if($SRC_FORMAT eq "penn") {
+            chomp;
+            while(/[^\(\)]+ ([^\(\)]+)/g) {
+                push @sent, $1;
+            }
+        } elsif ($SRC_FORMAT eq "egret") {
+            next if($_ !~ /^sentence /);
+            $_ = <FILE0>;
+            chomp;
+            @sent = split(/ +/);
+        }
+        foreach my $i (0 .. $#sent) {
+            foreach my $j ($i .. min($#sent, $i+$MAX_RULE_LEN-1)) {
+                $src{join(" ", @sent[$i .. $j])}++;
+            }
+        }
+    }
+    close FILE0;
+}
 
 my $line;
 while($line = <STDIN>) {
     chomp $line;
     my @cols = split(/ \|\|\| /, $line);
     die "Wrong number of columns in $line" if @cols < 3;
-    my ($term, $nonterm, $bad);
-    while($cols[0] =~ / "([^ ]+)" /g) {
-        $term++;
-        if($SRC and (not exists $src{$1})) {
-            $bad = 1;
-            last;
-        }
-    }
-    $bad = 1 if ($LEN and $term > $LEN);
-    if(!$bad and $NTLEN) {
-        while($cols[0] =~ / x[0-9]+:/g) {
+    my ($term, $nonterm, $bad, @currsrc);
+    while($cols[0] =~ / ("([^ ]+)"|x\d+:[^ ]+) /g) {
+        my $myid = $2;
+        if($myid) {
+            $term++;
+            push @currsrc, $myid;
+        } else {
             $nonterm++;
+            if(@currsrc and not exists $src{"@currsrc"}) {
+                $bad = 1;
+                last;
+            }
+            @currsrc = ();
         }
-        $bad = 1 if $nonterm > $NTLEN;
     }
+    $bad = 1 if ($bad or ($term > $LEN) or ($nonterm > $NTLEN) or (@currsrc and not exists $src{"@currsrc"}));
     if(!$bad) { print "$line\n"; }
 }
