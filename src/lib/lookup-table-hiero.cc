@@ -60,47 +60,88 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
 	HyperGraph* ret = new HyperGraph;
 	Sentence sent = Dict::ParseWords(input);
 	vector<TranslationRuleHiero*> rules = FindRules(sent);
+	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
 
 	BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
 		std::deque<pair<int,int> > rule_spans = rule->GetAllSpans();
 		pair<int,int> front_span = rule_spans[0];
 		pair<int,int> back_span = rule_spans[(int)rule_spans.size()-1];
+		vector<int> non_term_position = rule->GetNonTermPositions();
 
 		// switch case whether there is a -1 symbol in the front or back of the rule
 		if (front_span.first == -1 && back_span.second == -1) {
 			for (int i=0; i < front_span.second; ++i) {
 				for (int j=back_span.first+1; j <= (int)sent.size(); ++j) {
-
+					span_temp.clear();
+					span_temp.push_back(std::pair<int,int>(i,front_span.second));
+					BOOST_FOREACH(int position, non_term_position) {
+						if (position != 0 && position != (int)rule_spans.size()-1) {
+							span_temp.push_back(rule_spans[position]);
+						}
+					}
+					span_temp.push_back(std::pair<int,int>(back_span.first,j));
+					ret->AddEdge(TransformRuleIntoEdge(&node_map, i, j, span_temp, rule));
 				}
 			}
 		} else if (front_span.first == -1) {
 			for (int i=0; i < front_span.second; ++i) {
-
+				span_temp.clear();
+				span_temp.push_back(std::pair<int,int>(i,front_span.second));
+				BOOST_FOREACH(int position, non_term_position) {
+					if (position != 0) {
+						span_temp.push_back(rule_spans[position]);
+					}
+				}
+				ret->AddEdge(TransformRuleIntoEdge(&node_map, i, back_span.second, span_temp, rule));
 			}
 		} else if (back_span.second == -1) {
 			for (int j= back_span.first+1; j <= (int)sent.size(); ++j) {
-
+				span_temp.clear();
+				BOOST_FOREACH(int position, non_term_position) {
+					if (position != (int) rule_spans.size()-1) {
+						span_temp.push_back(rule_spans[position]);
+					}
+				}
+				span_temp.push_back(std::pair<int,int>(back_span.first,j));
+				ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, j, span_temp, rule));
 			}
 		} else {
-			HyperNode* head = FindNode(&node_map, front_span.first, back_span.second);
-			HyperEdge* hedge = new HyperEdge;
-			hedge->SetHead(head);
-			hedge->SetRule(rule, rule->GetFeatures());
-
-			head->SetSpan(std::pair<int,int>(front_span.first,back_span.second));
-			head->AddEdge(hedge);
-			pair<int,int> rule_span;
-			// For each following tail
-			BOOST_FOREACH(rule_span, rule_spans) {
-				HyperNode* tail = FindNode(&node_map, rule_span.first, rule_span.second);
-				tail->SetSpan(rule_span);
-				hedge->AddTail(tail);
+			span_temp.clear();
+			BOOST_FOREACH(int position, non_term_position) {
+				span_temp.push_back(rule_spans[position]);
 			}
-			ret->AddEdge(hedge);
+			ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, back_span.second, span_temp, rule));
 		}
 	}
+
+	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
+	while(it != node_map.end()) {
+		HyperNode* node = it->second;
+		ret->AddNode(node);
+		++it;
+	}
+
 	return ret;
+}
+
+HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* node_map, 
+		int head_first, int head_second, vector<pair<int,int> > & tail_spans, TranslationRuleHiero* rule) 
+{
+	HyperNode* head = FindNode(node_map, head_first, head_second);
+	HyperEdge* hedge = new HyperEdge;
+	hedge->SetHead(head);
+	hedge->SetRule(rule, rule->GetFeatures());
+	head->AddEdge(hedge);
+	
+	pair<int,int> tail_span;
+	// For each following tail
+	BOOST_FOREACH(tail_span, tail_spans) {
+		HyperNode* tail = FindNode(node_map, tail_span.first, tail_span.second);
+		tail->SetSpan(tail_span);
+		hedge->AddTail(tail);
+	}
+	return hedge;
 }
 
 HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end) {
@@ -110,6 +151,7 @@ HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, i
 		return it->second;
 	} else {
 		HyperNode* ret = new HyperNode;
+		ret->SetSpan(std::pair<int,int>(span_begin,span_end));
 		map_ptr->insert(std::pair<std::pair<int,int>, HyperNode*> (span,ret));
 		return ret;
 	}
