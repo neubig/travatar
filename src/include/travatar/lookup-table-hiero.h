@@ -72,6 +72,7 @@ protected:
 private:
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node, const Sentence & input, int start) const;
+	virtual HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end);
 };
 
 
