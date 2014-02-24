@@ -57,9 +57,116 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 
 HyperGraph * LookupTableHiero::BuildHyperGraph(string & input) {
-	// TODO IMPLEMENTING HYPERGRAPH
-	THROW_ERROR("Build HyperGraph is not implemented yet.");
-	return new HyperGraph;
+	HyperGraph* ret = new HyperGraph;
+	Sentence sent = Dict::ParseWords(input);
+	vector<TranslationRuleHiero*> rules = FindRules(sent);
+	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
+	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
+
+	// Transform every rule into edge and add it to hypergraph.
+	BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
+		std::deque<pair<int,int> > rule_spans = rule->GetAllSpans();
+		pair<int,int> front_span = rule_spans[0];
+		pair<int,int> back_span = rule_spans[(int)rule_spans.size()-1];
+		vector<int> non_term_position = rule->GetNonTermPositions();
+
+		// switch case whether there is a -1 symbol in the front or back of the rule
+		if (front_span.first == -1 && back_span.second == -1) {
+			// head and tail are non terminal symbol, iterating for all possible values.
+			for (int i=0; i < front_span.second; ++i) {
+				for (int j=back_span.first+1; j <= (int)sent.size(); ++j) {
+					span_temp.clear();
+					span_temp.push_back(std::pair<int,int>(i,front_span.second));
+					BOOST_FOREACH(int position, non_term_position) {
+						if (position != 0 && position != (int)rule_spans.size()-1) {
+							span_temp.push_back(rule_spans[position]);
+						}
+					}
+					span_temp.push_back(std::pair<int,int>(back_span.first,j));
+					ret->AddEdge(TransformRuleIntoEdge(&node_map, i, j, span_temp, rule));
+				}
+			}
+		} else if (front_span.first == -1) {
+			// iterating all possible values in head
+			for (int i=0; i < front_span.second; ++i) {
+				span_temp.clear();
+				span_temp.push_back(std::pair<int,int>(i,front_span.second));
+				BOOST_FOREACH(int position, non_term_position) {
+					if (position != 0) {
+						span_temp.push_back(rule_spans[position]);
+					}
+				}
+				ret->AddEdge(TransformRuleIntoEdge(&node_map, i, back_span.second, span_temp, rule));
+			}
+		} else if (back_span.second == -1) {
+			// iterating all possible values in tail
+			for (int j= back_span.first+1; j <= (int)sent.size(); ++j) {
+				span_temp.clear();
+				BOOST_FOREACH(int position, non_term_position) {
+					if (position != (int) rule_spans.size()-1) {
+						span_temp.push_back(rule_spans[position]);
+					}
+				}
+				span_temp.push_back(std::pair<int,int>(back_span.first,j));
+				ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, j, span_temp, rule));
+			}
+		} else {
+			// nothing special, just single edge to be added
+			span_temp.clear();
+			BOOST_FOREACH(int position, non_term_position) {
+				span_temp.push_back(rule_spans[position]);
+			}
+			ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, back_span.second, span_temp, rule));
+		}
+	}
+
+	// Add all nodes constructed during adding edge into the hypergraph
+	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
+	while(it != node_map.end()) {
+		ret->AddNode(it++->second);
+	}
+
+	return ret;
+}
+
+// Build a HyperEdge for a rule, also constructing node if head or tails node are not in the map.
+// Then attaching rule into the edge
+HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* node_map, 
+		int head_first, int head_second, vector<pair<int,int> > & tail_spans, TranslationRuleHiero* rule) 
+{
+	HyperEdge* hedge = new HyperEdge;
+
+	// First find the head.
+	HyperNode* head = FindNode(node_map, head_first, head_second);
+	
+	// Attaching Edge to the head
+	hedge->SetHead(head);
+	hedge->SetRule(rule, rule->GetFeatures());
+	head->AddEdge(hedge);
+	
+	// For each tail_spans, add them into the edge_tail.
+	pair<int,int> tail_span;
+	BOOST_FOREACH(tail_span, tail_spans) {
+		HyperNode* tail = FindNode(node_map, tail_span.first, tail_span.second);
+		tail->SetSpan(tail_span);
+		hedge->AddTail(tail);
+	}
+	return hedge;
+}
+
+// Get an HyperNode, indexed by its span in some map.
+HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, int span_begin, int span_end) {
+	pair<int,int> span = std::pair<int,int>(span_begin,span_end);
+	map<pair<int,int>, HyperNode*>::iterator it = map_ptr->find(span);
+	if (it != map_ptr->end()) {
+		return it->second;
+	} else {
+		// Fresh New Node!
+		HyperNode* ret = new HyperNode;
+		ret->SetSpan(std::pair<int,int>(span_begin,span_end));
+		map_ptr->insert(std::pair<std::pair<int,int>, HyperNode*> (span,ret));
+		return ret;
+	}
 }
 
 void LookupTableHiero::AddRule(TranslationRuleHiero* rule) {
@@ -123,6 +230,7 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* 
 				// For every Translation rule in that node
 				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
 					Sentence src_sent = r->GetSourceSentence();
+
 					// Consider if the rule contains non terminal in the beginning or in the end.
 					// If either is true, then the corresponding phrase must not reach end of the sentence
 					// or not in the beginning of the sentence according to which condition it meets.
@@ -135,6 +243,9 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* 
 						if (src_sent[0] < 0) {
 							r-> AddNonTermSpanInFront(-1, i);
 						} 
+						for (int l=0; l<(int)temp_key.size();++l) {
+							r->AddNonTermSpanInEnd(l+i,l+i+1);
+						}
 						if (src_sent[src_sent.size()-1] < 0) {
 							r-> AddNonTermSpanInEnd(j+1,-1);
 						}
@@ -158,6 +269,9 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* 
 				// We have to include them also.
 				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
 					r->AddNonTermSpanInFront(j+1,j+skip);
+					for (int l=temp_key.size()-1; l>=0;--l) {
+						r->AddNonTermSpanInFront(l+i,l+i+1);
+					}	
 					result.push_back(r);
 				}
 			}

@@ -45,11 +45,13 @@ public:
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
     int GetNumberOfNonTerminals() { return n_term; }
-    std::deque<std::pair<int,int> > GetAllSpans() { return span_vector; }
+    std::deque<std::pair<int,int> > & GetAllSpans() { return span_vector; }
+    std::vector<int> & GetNonTermPositions() { return non_term_position; }
 protected:
     int n_term;
 	Sentence source_sent;
     std::deque<std::pair<int, int> > span_vector;
+    std::vector<int> non_term_position;
 };
 
 }

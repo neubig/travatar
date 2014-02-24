@@ -100,6 +100,14 @@ public:
         act_rules[0] = lookup.FindRules(Dict::ParseWords("I eat two"));
         act_rules[1] = lookup.FindRules(Dict::ParseWords("I eat and buy two delicious hamburgers"));
         act_rules[2] = lookup.FindRules(Dict::ParseWords("I eat two hamburgers"));
+
+        // Uncomment for DEBUG
+        //for (int i=0; i < 3; ++i) {
+        //    BOOST_FOREACH(TranslationRuleHiero* rule, act_rules[i]) {
+        //        cerr << rule->ToString() << endl;
+        //    }
+        //    cerr << "----------------------------------" << endl;
+        //}
         
         BOOST_FOREACH(int rule_number, exp1) {
             exp_rules[0].push_back(rules[rule_number]);
@@ -148,6 +156,19 @@ public:
     }
 
     bool TestBuildRules(LookupTableHiero & lookup) {
+        string inp = "I eat two hamburgers";
+        HyperGraph * graph = lookup.BuildHyperGraph(inp);
+
+        vector<HyperNode*> nodes = graph->GetNodes();
+        vector<HyperEdge*> edges = graph->GetEdges();
+
+        BOOST_FOREACH(HyperNode* node, nodes) {
+            cerr << *node << endl;
+        }
+
+        BOOST_FOREACH(HyperEdge* edge, edges) {
+            cerr << *edge << endl;
+        }
         return 1;
     }
 
