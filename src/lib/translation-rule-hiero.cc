@@ -8,7 +8,10 @@ using namespace std;
 using namespace travatar;
 
 void TranslationRuleHiero::AddSourceWord (WordId id) {
-	if (id < 0) ++n_term;
+	if (id < 0) {
+		++n_term;
+		non_term_position.push_back(source_sent.size());
+	}
 	source_sent.push_back(id);
 }
 
