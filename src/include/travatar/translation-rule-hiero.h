@@ -7,7 +7,6 @@
 #include <travatar/dict.h>
 #include <travatar/sparse-map.h>
 #include <travatar/translation-rule.h>
-#include <deque>
 
 using namespace std;
 
@@ -29,28 +28,13 @@ public:
             source_sent == rhs.source_sent;
     }
 
-    void ClearNonTermSpan() {
-        span_vector.clear();
-    }
-
-    // MUTATOR
-    void AddNonTermSpanInEnd(int begin, int end) {
-        span_vector.push_back(make_pair<int,int>(begin, end));
-    }
-
-    void AddNonTermSpanInFront(int begin, int end) {
-        span_vector.push_front(make_pair<int,int>(begin,end));
-    }
-    
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
     int GetNumberOfNonTerminals() { return n_term; }
-    std::deque<std::pair<int,int> > & GetAllSpans() { return span_vector; }
     std::vector<int> & GetNonTermPositions() { return non_term_position; }
 protected:
     int n_term;
 	Sentence source_sent;
-    std::deque<std::pair<int, int> > span_vector;
     std::vector<int> non_term_position;
 };
 

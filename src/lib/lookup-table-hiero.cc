@@ -12,7 +12,6 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-
 ///////////////////////////////////
 ///     LOOK UP TABLE HIERO      //
 ///////////////////////////////////
@@ -59,13 +58,15 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
 	HyperGraph* ret = new HyperGraph;
 	Sentence sent = Dict::ParseWords(input);
-	vector<TranslationRuleHiero*> rules = FindRules(sent);
+	vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > rules = FindRules(sent);
 	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
 
+	pair<TranslationRuleHiero*, HieroRuleSpans* > item;
 	// Transform every rule into edge and add it to hypergraph.
-	BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
-		std::deque<pair<int,int> > rule_spans = rule->GetAllSpans();
+	BOOST_FOREACH(item, rules) {
+		TranslationRuleHiero* rule = item.first;
+		std::deque<pair<int,int> > rule_spans = *(item.second);
 		pair<int,int> front_span = rule_spans[0];
 		pair<int,int> back_span = rule_spans[(int)rule_spans.size()-1];
 		vector<int> non_term_position = rule->GetNonTermPositions();
@@ -118,6 +119,8 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
 			}
 			ret->AddEdge(TransformRuleIntoEdge(&node_map, front_span.first, back_span.second, span_temp, rule));
 		}
+		// No need to use that span anymore
+		delete item.second;
 	}
 
 	// Add all nodes constructed during adding edge into the hypergraph
@@ -125,7 +128,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
 	while(it != node_map.end()) {
 		ret->AddNode(it++->second);
 	}
-
+	
 	return ret;
 }
 
@@ -208,14 +211,15 @@ std::string LookupTableHiero::ToString() {
 	return root_node->ToString();
 }
 
-std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(const Sentence & input) const {
+std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHiero::FindRules(const Sentence & input) const {
 	return FindRules(root_node,input,0);
 }
 
-std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* node, 
+std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHiero::FindRules(LookupNodeHiero* node, 
 		const Sentence & input, int start) const 
 {
-	std::vector<TranslationRuleHiero*> result = std::vector<TranslationRuleHiero*>();
+	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > >  result = 
+		std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > >();
 
 	// For All Possible Phrase
 	for (int i=start; i < (int)input.size(); ++i) {
@@ -244,17 +248,17 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* 
 
 					if (!start_nt_front && !reach_nt_end)
 					{
-						r->ClearNonTermSpan();
+						HieroRuleSpans* dq = new HieroRuleSpans;
 						if (src_sent[0] < 0) {
-							r-> AddNonTermSpanInFront(-1, i);
+							dq->push_front(pair<int,int>(-1, i));
 						} 
 						for (int l=0; l<(int)temp_key.size();++l) {
-							r->AddNonTermSpanInEnd(l+i,l+i+1);
+							dq->push_back(pair<int,int>(l+i,l+i+1));
 						}
 						if (src_sent[src_sent.size()-1] < 0) {
-							r-> AddNonTermSpanInEnd(j+1,-1);
+							dq->push_back(pair<int,int>(j+1,-1));
 						}
-						result.push_back(r);
+						result.push_back(pair<TranslationRuleHiero*, HieroRuleSpans*> (r,dq));
 					}
 				}
 
@@ -269,15 +273,16 @@ std::vector<TranslationRuleHiero*> LookupTableHiero::FindRules(LookupNodeHiero* 
 				}
 
 				// Find All rules in the child scanning from forward position
-				temp = FindRules(result_node, input, j+skip);
+				vector<pair<TranslationRuleHiero*, HieroRuleSpans* > >temp_result = FindRules(result_node, input, j+skip);
+				pair<TranslationRuleHiero*, HieroRuleSpans*> item;
 				// That rule in the child has a nonterminal symbol that is scanned in parent.
 				// We have to include them also.
-				BOOST_FOREACH(TranslationRuleHiero* r, temp) {
-					r->AddNonTermSpanInFront(j+1,j+skip);
+				BOOST_FOREACH(item, temp_result) {
+					item.second->push_front(pair<int,int>(j+1,j+skip));
 					for (int l=temp_key.size()-1; l>=0;--l) {
-						r->AddNonTermSpanInFront(l+i,l+i+1);
+						item.second->push_front(pair<int,int>(l+i,l+i+1));
 					}	
-					result.push_back(r);
+					result.push_back(item);
 				}
 			}
 		}

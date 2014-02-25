@@ -35,13 +35,13 @@ public:
 
     int TestLookup(LookupTableHiero & lookup) {
         Sentence c = Dict::ParseWords("I eat two");
-        vector<TranslationRuleHiero*> result1 = lookup.FindRules(c);
+        vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > result1 = lookup.FindRules(c);
         
         c = Dict::ParseWords("I eat and buy two delicious hamburgers");
-        vector<TranslationRuleHiero*> result2 = lookup.FindRules(c);
+        vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > result2 = lookup.FindRules(c);
         
         c = Dict::ParseWords("I eat two hamburgers");
-        vector<TranslationRuleHiero*> result3 = lookup.FindRules(c);
+        vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > result3 = lookup.FindRules(c);
 
         vector<int> act_match_cnt(3,0), exp_match_cnt(3,0);
         act_match_cnt[0] = (int)result1.size();
@@ -86,10 +86,10 @@ public:
         algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
         rules[10] = LookupTableHiero::BuildRule(rules[10], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
         
-        vector<vector<TranslationRuleHiero*> > act_rules(3);
+        vector<vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > > act_rules(3);
         vector<vector<TranslationRuleHiero*> > exp_rules(3);
         for (int i=0; i < 3 ; ++i) {
-            act_rules.push_back(vector<TranslationRuleHiero*>());
+            act_rules.push_back(vector<pair<TranslationRuleHiero*,HieroRuleSpans* > >());
             exp_rules.push_back(vector<TranslationRuleHiero*>());
         }
 
@@ -100,11 +100,6 @@ public:
         act_rules[0] = lookup.FindRules(Dict::ParseWords("I eat two"));
         act_rules[1] = lookup.FindRules(Dict::ParseWords("I eat and buy two delicious hamburgers"));
         act_rules[2] = lookup.FindRules(Dict::ParseWords("I eat two hamburgers"));
-
-        // DEBUG NOTE:
-        // span in [0] and [1] are not correct because [2] changes it in the process of finding rule.
-        // So the span in [0] and [1] is a span from [2].
-        // Don't be so confused why the spans are incorrect :-)
         
         BOOST_FOREACH(int rule_number, exp1) {
             exp_rules[0].push_back(rules[rule_number]);
@@ -121,14 +116,15 @@ public:
             delete rules[i];
         }
         return result;
+        return 1;
     }
 
-    bool CheckSet(vector<vector<TranslationRuleHiero*> > & actual, vector<vector<TranslationRuleHiero*> > & expected) {
+    bool CheckSet(vector<vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > > & actual, vector<vector<TranslationRuleHiero*> > & expected) {
         bool ret = true;
         for (int i=0; ret && i < (int)actual.size(); ++i) {
-            vector<TranslationRuleHiero*> sent_actual = actual[i];
+            vector<pair<TranslationRuleHiero*,HieroRuleSpans* > > sent_actual = actual[i];
             for (int j=0; ret && j < (int)sent_actual.size(); ++j) {
-                TranslationRuleHiero* rule = sent_actual[j];
+                TranslationRuleHiero* rule = sent_actual[j].first;
                 int count = 0;
                 ret = false;
                 vector<TranslationRuleHiero*>::iterator it = expected[i].begin();

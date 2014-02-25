@@ -8,11 +8,12 @@
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <generic-string.h>
+#include <deque>
 
 using namespace boost;
 using namespace std;
 
-
+typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 
 namespace travatar {
 class LookupNodeHiero {
@@ -45,6 +46,7 @@ private:
 };	
 
 class LookupTableHiero {
+typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 public:
 	LookupTableHiero() {
 		root_node = new LookupNodeHiero;
@@ -65,13 +67,13 @@ public:
 
 	virtual std::string ToString();
 
-	virtual std::vector<TranslationRuleHiero*> FindRules(const Sentence & input) const;
+	virtual std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(const Sentence & input) const;
 protected:
 	LookupNodeHiero* root_node ;
  
 private:
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
-	std::vector<TranslationRuleHiero*> FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
+	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
 	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end);
 
 	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, const int head_first, 
