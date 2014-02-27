@@ -87,7 +87,8 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
         }
         // For unmatched nodes, add an unknown rule for every edge in the parse
         if(my_size == 0 || match_all_unk_) {
-            BOOST_FOREACH(const HyperEdge * parse_edge, parse.GetNode(rev_node_map[next_node->GetId()])->GetEdges()) {
+            const HyperNode * parse_node = parse.GetNode(rev_node_map[next_node->GetId()]);
+            BOOST_FOREACH(const HyperEdge * parse_edge, parse_node->GetEdges()) {
                 HyperEdge * next_edge = new HyperEdge(next_node);
                 BOOST_FOREACH(const HyperNode * parse_node, parse_edge->GetTails())
                     if(!parse_node->IsTerminal())
@@ -98,6 +99,12 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
                     for(int i = 0; i < (int)trg.size(); i++)
                         trg[i] = -1 - i;
                     next_edge->SetTrgWords(trg);
+                } else {
+                    pair<int,int> span = parse_node->GetSpan();
+                    if(span.second - span.first != 1)
+                        THROW_ERROR("Multi-terminal edges are not supported.");
+                    vector<WordId> trg_words(1, parse.GetWord(span.first));
+                    next_edge->SetTrgWords(trg_words);
                 }
                 next_node->AddEdge(next_edge);
                 ret->AddEdge(next_edge);
