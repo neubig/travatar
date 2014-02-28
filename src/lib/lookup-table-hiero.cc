@@ -58,12 +58,15 @@ HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	return BuildHyperGraph(graph.GetWords());
 }
 
-
 HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	HyperGraph* ret = new HyperGraph;
 	vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > rules = FindRules(sent);
 	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
+
+	BOOST_FOREACH(WordId w_id, sent) {
+		ret->AddWord(w_id);
+	}
 
 	pair<TranslationRuleHiero*, HieroRuleSpans* > item;
 	// Transform every rule into edge and add it to hypergraph.

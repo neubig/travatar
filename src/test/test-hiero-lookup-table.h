@@ -231,6 +231,10 @@ public:
             expected_graph->AddNode(nd);
         }
 
+        BOOST_FOREACH(WordId w_id, c) {
+            expected_graph->AddWord(w_id);
+        }
+
         bool ret = graph->CheckEqual(*expected_graph);
         // Janitor Time
         delete graph;
