@@ -222,11 +222,17 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
     if(!tm_in)
         THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
-    if(config.GetString("tm_storage") == "hash")
-        tm_.reset(LookupTableHash::ReadFromRuleTable(tm_in));
-    else if(config.GetString("tm_storage") == "marisa")
-        tm_.reset(LookupTableMarisa::ReadFromRuleTable(tm_in));
-    tm_->SetMatchAllUnk(config.GetBool("all_unk"));
+    if(config.GetString("tm_storage") == "hash") {
+        LookupTableHash * hash_tm_ = LookupTableHash::ReadFromRuleTable(tm_in);
+        hash_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
+        tm_.reset(hash_tm_);
+    } else if(config.GetString("tm_storage") == "marisa") {
+        LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromRuleTable(tm_in);
+        marisa_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
+        tm_.reset(marisa_tm_);
+    } else {
+        THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));
+    }
 
     // Open the n-best output stream if it exists
     scoped_ptr<ostream> nbest_out;
