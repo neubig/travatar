@@ -55,7 +55,7 @@ public:
     bool HasBinarizer() const { return binarizer_.get() != NULL; }
     const GraphTransformer & GetBinarizer() const { return *binarizer_; }
     bool HasTM() const { return tm_.get() != NULL; }
-    const LookupTable & GetTM() const { return *tm_; }
+    const GraphTransformer & GetTM() const { return *tm_; }
     bool HasLM() const { return lm_.get() != NULL; }
     const GraphTransformer & GetLM() const { return *lm_; }
     bool HasTrimmer() const { return trimmer_.get() != NULL; }
@@ -71,7 +71,7 @@ public:
 
 private:
     boost::shared_ptr<GraphTransformer> binarizer_;
-    boost::shared_ptr<LookupTable> tm_;
+    boost::shared_ptr<GraphTransformer> tm_;
     boost::shared_ptr<GraphTransformer> lm_;
     boost::shared_ptr<GraphTransformer> trimmer_;
     boost::shared_ptr<Weights> weights_;
