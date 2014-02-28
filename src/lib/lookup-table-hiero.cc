@@ -54,10 +54,13 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 	return rule;
 }
 
+HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
+	return BuildHyperGraph(graph.GetWords());
+}
 
-HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
+
+HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	HyperGraph* ret = new HyperGraph;
-	Sentence sent = Dict::ParseWords(input);
 	vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > rules = FindRules(sent);
 	vector<pair<int,int> > span_temp = std::vector<pair<int,int> >();
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
@@ -136,7 +139,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const string & input) {
 // Then attaching rule into the edge
 HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* node_map, 
 		const int head_first, const int head_second, const vector<pair<int,int> > & tail_spans, 
-		TranslationRuleHiero* rule) 
+		TranslationRuleHiero* rule) const
 {
 	HyperEdge* hedge = new HyperEdge;
 
@@ -160,7 +163,7 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 
 // Get an HyperNode, indexed by its span in some map.
 HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, 
-		const int span_begin, const int span_end) 
+		const int span_begin, const int span_end) const
 {
 	pair<int,int> span = std::pair<int,int>(span_begin,span_end);
 	map<pair<int,int>, HyperNode*>::iterator it = map_ptr->find(span);

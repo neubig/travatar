@@ -7,6 +7,7 @@
 #include <travatar/translation-rule-hiero.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/graph-transformer.h>
 #include <generic-string.h>
 #include <deque>
 
@@ -31,7 +32,7 @@ public:
 			delete rule;
 		}
 	}
-
+	
 	virtual void AddEntry(GenericString<WordId> & key, LookupNodeHiero* rule);
 	virtual LookupNodeHiero* FindNode(GenericString<WordId> & key);
 	virtual void AddRule(TranslationRuleHiero* rule);
@@ -45,7 +46,7 @@ private:
 	std::string ToString(int indent);
 };	
 
-class LookupTableHiero {
+class LookupTableHiero : public GraphTransformer {
 typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 public:
 	LookupTableHiero() {
@@ -61,7 +62,8 @@ public:
 	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
 			std::vector<std::string> & target, SparseMap features);
 
-	virtual HyperGraph * BuildHyperGraph(const string & input);
+	virtual HyperGraph * BuildHyperGraph(const Sentence & input) const;
+	virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
 	void AddRule(TranslationRuleHiero* rule);
 
@@ -74,10 +76,10 @@ protected:
 private:
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
-	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end);
+	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
 
 	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, const int head_first, 
-			const int head_second, const std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule);
+			const int head_second, const std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule) const;
 };
 
 

@@ -150,8 +150,9 @@ public:
 
     bool TestBuildRules(LookupTableHiero & lookup) {
         string inp = "I eat two hamburgers";
+        Sentence c = Dict::ParseWords(inp);
 
-        HyperGraph* graph = lookup.BuildHyperGraph(inp);
+        HyperGraph* graph = lookup.BuildHyperGraph(c);
         HyperGraph* expected_graph = new HyperGraph;
 
         HyperNode* node[10];
