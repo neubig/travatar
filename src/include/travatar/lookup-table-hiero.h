@@ -34,16 +34,16 @@ public:
 	}
 	
 	virtual void AddEntry(GenericString<WordId> & key, LookupNodeHiero* rule);
-	virtual LookupNodeHiero* FindNode(GenericString<WordId> & key);
+	virtual LookupNodeHiero* FindNode(GenericString<WordId> & key) const;
 	virtual void AddRule(TranslationRuleHiero* rule);
-	virtual std::string ToString();
+	virtual std::string ToString() const;
 	std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
 	
 protected:
 	NodeMap lookup_map;
 	std::vector<TranslationRuleHiero*> rules;
 private:
-	std::string ToString(int indent);
+	std::string ToString(int indent) const;
 };	
 
 class LookupTableHiero : public GraphTransformer {
@@ -67,7 +67,7 @@ public:
 
 	void AddRule(TranslationRuleHiero* rule);
 
-	virtual std::string ToString();
+	virtual std::string ToString() const;
 
 	virtual std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(const Sentence & input) const;
 protected:

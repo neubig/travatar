@@ -213,7 +213,7 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 }
 
 
-std::string LookupTableHiero::ToString() {
+std::string LookupTableHiero::ToString() const {
 	return root_node->ToString();
 }
 
@@ -308,8 +308,8 @@ void LookupNodeHiero::AddRule(TranslationRuleHiero* rule) {
 }
 
 
-LookupNodeHiero* LookupNodeHiero::FindNode(GenericString<WordId> & key) {
-	NodeMap::iterator it = lookup_map.find(key); 
+LookupNodeHiero* LookupNodeHiero::FindNode(GenericString<WordId> & key) const {
+	NodeMap::const_iterator it = lookup_map.find(key); 
 	if (it != lookup_map.end()) {
 		return it->second;
 	} else {
@@ -317,11 +317,11 @@ LookupNodeHiero* LookupNodeHiero::FindNode(GenericString<WordId> & key) {
 	}
 }
 
-std::string LookupNodeHiero::ToString() {
+std::string LookupNodeHiero::ToString() const {
 	return ToString(0);
 }
 
-std::string LookupNodeHiero::ToString(int indent) {
+std::string LookupNodeHiero::ToString(int indent) const {
 	ostringstream str;
 	for (int i=0; i < indent; ++i) str << " ";
 	str << "===================================" << endl;
@@ -331,7 +331,7 @@ std::string LookupNodeHiero::ToString(int indent) {
 	}
 	for (int i=0; i < indent; ++i) str << " ";
 	str << "===================================" << endl;
-	NodeMap::iterator it = lookup_map.begin();
+	NodeMap::const_iterator it = lookup_map.begin();
 	while (it != lookup_map.end()) {
 		string t_str = it->second->ToString(indent+1);
 		str << t_str << endl;
