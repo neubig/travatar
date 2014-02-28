@@ -116,7 +116,6 @@ public:
             delete rules[i];
         }
         return result;
-        return 1;
     }
 
     bool CheckSet(vector<vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > > & actual, vector<vector<TranslationRuleHiero*> > & expected) {
