@@ -152,13 +152,25 @@ public:
         Sentence c = Dict::ParseWords(inp);
 
         HyperGraph* graph = lookup.BuildHyperGraph(c);
+
+        vector<HyperNode*> nodes = graph->GetNodes();
+        vector<HyperEdge*> edges = graph->GetEdges();
+
+        BOOST_FOREACH(HyperNode* n, nodes) {
+            cerr << *n << endl;
+        }
+
+        BOOST_FOREACH(HyperEdge* e, edges) {
+            cerr << *e << endl;
+        }
+
         HyperGraph* expected_graph = new HyperGraph;
 
         HyperNode* node[10];
-        HyperEdge* edge[15];
+        HyperEdge* edge[26];
 
         for (int i=0; i < 10; ++i) node[i] = new HyperNode;
-        for (int j=0; j < 15; ++j) edge[j] = new HyperEdge;
+        for (int j=0; j < 26; ++j) edge[j] = new HyperEdge;
 
         TranslationRuleHiero* rules[11];
         for (int i=0; i < 11; ++i) {
@@ -189,6 +201,8 @@ public:
         algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
         rules[10] = LookupTableHiero::BuildRule(rules[10], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
 
+        TranslationRuleHiero* glue_rule = lookup.GetGlueRule();
+
         // Draw it. You will have an idea after you see the drawing.
         edge[0]->SetHead(node[1]); edge[0]->AddTail(node[4]); edge[0]->SetRule(rules[0], rules[0]->GetFeatures());
         edge[1]->SetHead(node[2]); edge[1]->AddTail(node[5]); edge[1]->SetRule(rules[0], rules[0]->GetFeatures());
@@ -205,22 +219,74 @@ public:
         edge[12]->SetHead(node[8]); edge[12]->AddTail(node[9]); edge[12]->SetRule(rules[8], rules[8]->GetFeatures());
         edge[13]->SetHead(node[7]); edge[13]->SetRule(rules[9], rules[9]->GetFeatures());
         edge[14]->SetHead(node[9]); edge[14]->SetRule(rules[10], rules[10]->GetFeatures());
+        edge[15]->SetHead(node[1]); edge[15]->AddTail(node[0]); edge[15]->AddTail(node[4]); edge[15]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[16]->SetHead(node[2]); edge[16]->AddTail(node[0]); edge[16]->AddTail(node[5]); edge[16]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[17]->SetHead(node[5]); edge[17]->AddTail(node[4]); edge[17]->AddTail(node[7]); edge[17]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[18]->SetHead(node[2]); edge[18]->AddTail(node[1]); edge[18]->AddTail(node[7]); edge[18]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[19]->SetHead(node[3]); edge[19]->AddTail(node[0]); edge[19]->AddTail(node[6]); edge[19]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[20]->SetHead(node[6]); edge[20]->AddTail(node[4]); edge[20]->AddTail(node[8]); edge[20]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[21]->SetHead(node[8]); edge[21]->AddTail(node[7]); edge[21]->AddTail(node[9]); edge[21]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[22]->SetHead(node[6]); edge[22]->AddTail(node[5]); edge[22]->AddTail(node[9]); edge[22]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[23]->SetHead(node[3]); edge[23]->AddTail(node[1]); edge[23]->AddTail(node[8]); edge[23]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[24]->SetHead(node[8]); edge[24]->AddTail(node[7]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[25]->SetHead(node[3]); edge[25]->AddTail(node[2]); edge[25]->AddTail(node[9]); edge[25]->SetRule(glue_rule, glue_rule->GetFeatures());
 
-        node[0]->SetSpan(pair<int,int>(0,1)); node[0]->AddEdge(edge[3]);
-        node[1]->SetSpan(pair<int,int>(0,2)); node[1]->AddEdge(edge[0]);
-        node[2]->SetSpan(pair<int,int>(0,3)); node[2]->AddEdge(edge[1]); 
-        node[2]->AddEdge(edge[6]);
-        node[3]->SetSpan(pair<int,int>(0,4)); node[3]->AddEdge(edge[2]); 
-        node[3]->AddEdge(edge[4]); 
-        node[3]->AddEdge(edge[5]); 
-        node[3]->AddEdge(edge[7]);
-        node[4]->SetSpan(pair<int,int>(1,2)); node[4]->AddEdge(edge[10]);
-        node[5]->SetSpan(pair<int,int>(1,3)); node[5]->AddEdge(edge[8]);
-        node[6]->SetSpan(pair<int,int>(1,4)); node[6]->AddEdge(edge[9]);
-        node[6]->AddEdge(edge[11]);
-        node[7]->SetSpan(pair<int,int>(2,3)); node[7]->AddEdge(edge[13]);
-        node[8]->SetSpan(pair<int,int>(2,4)); node[8]->AddEdge(edge[12]);
-        node[9]->SetSpan(pair<int,int>(3,4)); node[9]->AddEdge(edge[14]);
+        node[0]->SetSpan(pair<int,int>(0,1)); 
+        {
+            node[0]->AddEdge(edge[3]);
+        }
+        node[1]->SetSpan(pair<int,int>(0,2)); 
+        {
+            node[1]->AddEdge(edge[0]); 
+            node[1]->AddEdge(edge[15]);
+        }
+        node[2]->SetSpan(pair<int,int>(0,3)); 
+        {
+            node[2]->AddEdge(edge[1]); 
+            node[2]->AddEdge(edge[6]); 
+            node[2]->AddEdge(edge[16]); 
+            node[2]->AddEdge(edge[18]);
+        }
+        node[3]->SetSpan(pair<int,int>(0,4)); 
+        {
+            node[3]->AddEdge(edge[2]); 
+            node[3]->AddEdge(edge[4]); 
+            node[3]->AddEdge(edge[5]); 
+            node[3]->AddEdge(edge[7]); 
+            node[3]->AddEdge(edge[19]); 
+            node[3]->AddEdge(edge[23]); 
+            node[3]->AddEdge(edge[25]);
+        }
+        node[4]->SetSpan(pair<int,int>(1,2)); 
+        {
+            node[4]->AddEdge(edge[10]);
+        }
+        node[5]->SetSpan(pair<int,int>(1,3)); 
+        {
+            node[5]->AddEdge(edge[8]);
+            node[5]->AddEdge(edge[17]);
+        }
+        node[6]->SetSpan(pair<int,int>(1,4)); 
+        {
+            node[6]->AddEdge(edge[9]); 
+            node[6]->AddEdge(edge[11]);
+            node[6]->AddEdge(edge[20]);
+            node[6]->AddEdge(edge[22]);
+        }
+        node[7]->SetSpan(pair<int,int>(2,3)); 
+        {
+            node[7]->AddEdge(edge[13]);
+        }
+        node[8]->SetSpan(pair<int,int>(2,4)); 
+        {
+            node[8]->AddEdge(edge[12]);
+            node[8]->AddEdge(edge[21]);
+            node[8]->AddEdge(edge[24]);
+        }
+        node[9]->SetSpan(pair<int,int>(3,4)); 
+        {
+            node[9]->AddEdge(edge[14]);
+        }
 
         BOOST_FOREACH(HyperEdge* ed, edge) {
             expected_graph->AddEdge(ed);   

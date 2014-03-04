@@ -129,6 +129,11 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 		delete item.second;
 	}
 
+	// ADDING GLUE RULE 
+	for (int i=2; i <= (int)sent.size(); ++i) {
+		AddGlueRule(0,i,ret,&node_map,&span_temp);
+	}
+
 	// Add all nodes constructed during adding edge into the hypergraph
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
@@ -136,6 +141,22 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	}
 	
 	return ret;
+}
+
+void LookupTableHiero::AddGlueRule(int start, int end, HyperGraph* ret, 
+	map<pair<int,int>, HyperNode*>* node_map, vector<pair<int,int> >* span_temp) const 
+{
+	if (start+1 < end) {		
+		for (int i=start+1; i < end; ++i) {
+			// creating tail
+			span_temp->clear();
+			span_temp->push_back(pair<int,int>(start,i));
+			span_temp->push_back(pair<int,int>(i,end));
+
+			ret->AddEdge(TransformRuleIntoEdge(node_map, start,end, *span_temp, glue_rule));
+			AddGlueRule(i, end, ret, node_map, span_temp);
+		}
+	}
 }
 
 // Build a HyperEdge for a rule, also constructing node if head or tails node are not in the map.

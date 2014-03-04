@@ -51,10 +51,19 @@ typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 public:
 	LookupTableHiero() {
 		root_node = new LookupNodeHiero;
+		glue_rule = new TranslationRuleHiero();
+		SparseMap features = Dict::ParseFeatures("glue=0.5");
+        glue_rule->SetFeatures(features);
+        glue_rule->AddSourceWord(-1);
+        glue_rule->AddSourceWord(-2);
+        glue_rule->AddTrgWord(-1);
+        glue_rule->AddTrgWord(-2);
+        glue_rule->SetSrcStr("x0 x1");
 	}
 
 	virtual ~LookupTableHiero() { 
 		delete root_node;
+		delete glue_rule;
 	}
 	
 	static LookupTableHiero * ReadFromRuleTable(std::istream & in);
@@ -65,15 +74,19 @@ public:
 	virtual HyperGraph * BuildHyperGraph(const Sentence & input) const;
 	virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
-	void AddRule(TranslationRuleHiero* rule);
+	virtual void AddRule(TranslationRuleHiero* rule);
+	
+	TranslationRuleHiero* GetGlueRule() { return glue_rule; }
 
 	virtual std::string ToString() const;
 
 	virtual std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(const Sentence & input) const;
 protected:
-	LookupNodeHiero* root_node ;
+	LookupNodeHiero* root_node;
+	TranslationRuleHiero* glue_rule;
  
 private:
+	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, std::vector<std::pair<int,int> >* span_temp) const;
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
 	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
