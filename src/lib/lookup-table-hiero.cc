@@ -57,16 +57,18 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	HyperGraph* _graph = BuildHyperGraph(graph.GetWords());
-	//vector<HyperNode*> _nodes = _graph->GetNodes();
-	//vector<HyperEdge*> _edges = _graph->GetEdges();
-	//cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
-	//BOOST_FOREACH(HyperNode* node, _nodes) {
-	//	cerr << *node << endl;
-	//}
+	/*
+	vector<HyperNode*> _nodes = _graph->GetNodes();
+	vector<HyperEdge*> _edges = _graph->GetEdges();
+	cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
+	BOOST_FOREACH(HyperNode* node, _nodes) {
+		cerr << *node << endl;
+	}
 
-	//BOOST_FOREACH(HyperEdge* edge, _edges) {
-	//	cerr << *edge << endl;
-	//}
+	BOOST_FOREACH(HyperEdge* edge, _edges) {
+		cerr << *edge << endl;
+	}
+	*/
 	return _graph;
 }
 
@@ -155,10 +157,21 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 		AddGlueRule(0,i,ret,&node_map,&span_temp,&edge_set);
 	}
 
-	// Add all nodes constructed during adding edge into the hypergraph
+	// Add all nodes constructed during adding edge into the hypergraph and add unknown edge to
+	// node that doesn't have edge
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
-		ret->AddNode(it++->second);
+		HyperNode* node = it++->second;
+		// Add Unknown edge to node
+		if ((int)(node->GetEdges().size()) == 0) {
+			pair<int,int> span = node->GetSpan();
+			HyperEdge* unknown_edge = new HyperEdge;
+			unknown_edge->SetHead(node);
+			unknown_edge->SetRule(GetUnknownRule());
+			node->AddEdge(unknown_edge);
+			ret->AddEdge(unknown_edge);
+		}
+		ret->AddNode(node);
 	}
 	
 	return ret;
