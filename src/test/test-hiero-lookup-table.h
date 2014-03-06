@@ -156,21 +156,17 @@ public:
         vector<HyperNode*> nodes = graph->GetNodes();
         vector<HyperEdge*> edges = graph->GetEdges();
 
-        BOOST_FOREACH(HyperNode* n, nodes) {
-            cerr << *n << endl;
-        }
+        // /* DEBUG */ { BOOST_FOREACH(HyperNode* n, nodes)  cerr << *n << endl; }
 
-        BOOST_FOREACH(HyperEdge* e, edges) {
-            cerr << *e << endl;
-        }
+        // /* DEBUG */ { BOOST_FOREACH(HyperEdge* e, edges) cerr << *e << endl; }
 
         HyperGraph* expected_graph = new HyperGraph;
 
         HyperNode* node[10];
-        HyperEdge* edge[26];
+        HyperEdge* edge[25];
 
         for (int i=0; i < 10; ++i) node[i] = new HyperNode;
-        for (int j=0; j < 26; ++j) edge[j] = new HyperEdge;
+        for (int j=0; j < 25; ++j) edge[j] = new HyperEdge;
 
         TranslationRuleHiero* rules[11];
         for (int i=0; i < 11; ++i) {
@@ -228,9 +224,8 @@ public:
         edge[21]->SetHead(node[8]); edge[21]->AddTail(node[7]); edge[21]->AddTail(node[9]); edge[21]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[22]->SetHead(node[6]); edge[22]->AddTail(node[5]); edge[22]->AddTail(node[9]); edge[22]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[23]->SetHead(node[3]); edge[23]->AddTail(node[1]); edge[23]->AddTail(node[8]); edge[23]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[24]->SetHead(node[8]); edge[24]->AddTail(node[7]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[25]->SetHead(node[3]); edge[25]->AddTail(node[2]); edge[25]->AddTail(node[9]); edge[25]->SetRule(glue_rule, glue_rule->GetFeatures());
-
+        edge[24]->SetHead(node[3]); edge[24]->AddTail(node[2]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
+       
         node[0]->SetSpan(pair<int,int>(0,1)); 
         {
             node[0]->AddEdge(edge[3]);
@@ -255,7 +250,7 @@ public:
             node[3]->AddEdge(edge[7]); 
             node[3]->AddEdge(edge[19]); 
             node[3]->AddEdge(edge[23]); 
-            node[3]->AddEdge(edge[25]);
+            node[3]->AddEdge(edge[24]);
         }
         node[4]->SetSpan(pair<int,int>(1,2)); 
         {
@@ -281,7 +276,6 @@ public:
         {
             node[8]->AddEdge(edge[12]);
             node[8]->AddEdge(edge[21]);
-            node[8]->AddEdge(edge[24]);
         }
         node[9]->SetSpan(pair<int,int>(3,4)); 
         {

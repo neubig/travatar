@@ -86,10 +86,14 @@ protected:
 	TranslationRuleHiero* glue_rule;
  
 private:
-	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, std::vector<std::pair<int,int> >* span_temp) const;
+	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
+			std::vector<std::pair<int,int> >* span_temp, std::set<GenericString<WordId> >* edge_set) const;
+
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
 	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
+
+	GenericString<WordId> TransformSpanToKey(const int xbegin, const int xend, const std::vector<std::pair<int,int> > & tail_spans) const;
 
 	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, const int head_first, 
 			const int head_second, const std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule) const;
