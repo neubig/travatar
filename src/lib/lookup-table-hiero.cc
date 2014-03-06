@@ -56,21 +56,17 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 }
 
 HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
-	cerr << "INPUT: " << Dict::PrintWords(graph.GetWords()) << endl;
 	HyperGraph* _graph = BuildHyperGraph(graph.GetWords());
-	vector<HyperNode*> _nodes = _graph->GetNodes();
-	vector<HyperEdge*> _edges = _graph->GetEdges();
+	//vector<HyperNode*> _nodes = _graph->GetNodes();
+	//vector<HyperEdge*> _edges = _graph->GetEdges();
+	//cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
+	//BOOST_FOREACH(HyperNode* node, _nodes) {
+	//	cerr << *node << endl;
+	//}
 
-	cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
-
-	BOOST_FOREACH(HyperNode* node, _nodes) {
-		cerr << *node << endl;
-	}
-
-	BOOST_FOREACH(HyperEdge* edge, _edges) {
-		cerr << *edge << endl;
-	}
-
+	//BOOST_FOREACH(HyperEdge* edge, _edges) {
+	//	cerr << *edge << endl;
+	//}
 	return _graph;
 }
 
