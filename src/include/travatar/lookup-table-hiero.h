@@ -100,7 +100,7 @@ private:
 			std::vector<std::pair<int,int> >* span_temp, std::set<GenericString<WordId> >* edge_set) const;
 
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
-	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start) const;
+	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start, int depth) const;
 	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
 
 	GenericString<WordId> TransformSpanToKey(const int xbegin, const int xend, const std::vector<std::pair<int,int> > & tail_spans) const;

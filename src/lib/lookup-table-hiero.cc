@@ -57,18 +57,15 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	HyperGraph* _graph = BuildHyperGraph(graph.GetWords());
-	/*
-	vector<HyperNode*> _nodes = _graph->GetNodes();
+	/*vector<HyperNode*> _nodes = _graph->GetNodes();
 	vector<HyperEdge*> _edges = _graph->GetEdges();
 	cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
 	BOOST_FOREACH(HyperNode* node, _nodes) {
 		cerr << *node << endl;
 	}
-
 	BOOST_FOREACH(HyperEdge* edge, _edges) {
 		cerr << *edge << endl;
-	}
-	*/
+	}*/
 	return _graph;
 }
 
@@ -79,8 +76,12 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	map<pair<int,int>, HyperNode*> node_map = map<pair<int,int>, HyperNode*>();
 	set<GenericString<WordId> > edge_set = set<GenericString<WordId> >(); 
 
-	BOOST_FOREACH(WordId w_id, sent) {
-		ret->AddWord(w_id);
+	for (int i=0; i < (int) sent.size(); ++i) {
+		HyperNode* word_node = new HyperNode;
+		pair<int,int> node_span = pair<int,int>(i,i+1);
+		word_node->SetSpan(node_span);
+		node_map[node_span] = word_node;
+		ret->AddWord(sent[i]);
 	}
 
 	pair<TranslationRuleHiero*, HieroRuleSpans* > item;
@@ -165,11 +166,13 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 		// Add Unknown edge to node
 		if ((int)(node->GetEdges().size()) == 0) {
 			pair<int,int> span = node->GetSpan();
-			HyperEdge* unknown_edge = new HyperEdge;
-			unknown_edge->SetHead(node);
-			unknown_edge->SetRule(GetUnknownRule());
-			node->AddEdge(unknown_edge);
-			ret->AddEdge(unknown_edge);
+			if (span.second - span.first == 1) {
+				HyperEdge* unknown_edge = new HyperEdge;
+				unknown_edge->SetHead(node);
+				unknown_edge->SetRule(GetUnknownRule());
+				node->AddEdge(unknown_edge);
+				ret->AddEdge(unknown_edge);
+			}
 		}
 		ret->AddNode(node);
 	}
@@ -240,6 +243,8 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 HyperNode* LookupTableHiero::FindNode(map<pair<int,int>, HyperNode*>* map_ptr, 
 		const int span_begin, const int span_end) const
 {
+	if (span_begin < 0 || span_end < 0) 
+		THROW_ERROR("Invalid span range in constructing HyperGraph.");
 	pair<int,int> span = std::pair<int,int>(span_begin,span_end);
 	map<pair<int,int>, HyperNode*>::iterator it = map_ptr->find(span);
 	if (it != map_ptr->end()) {
@@ -290,11 +295,11 @@ std::string LookupTableHiero::ToString() const {
 }
 
 std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHiero::FindRules(const Sentence & input) const {
-	return FindRules(root_node,input,0);
+	return FindRules(root_node,input,0, 0);
 }
 
 std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHiero::FindRules(LookupNodeHiero* node, 
-		const Sentence & input, int start) const 
+		const Sentence & input, int start, int depth) const 
 {
 	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > >  result = 
 		std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > >();
@@ -327,9 +332,9 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 					if (!start_nt_front && !reach_nt_end)
 					{
 						HieroRuleSpans* dq = new HieroRuleSpans;
-						if (src_sent[0] < 0) {
-							dq->push_front(pair<int,int>(-1, i));
-						} 
+						if (depth == 0 && src_sent[0] < 0) {
+							dq->push_back(pair<int,int>(-1,i));
+						}
 						for (int l=0; l<(int)temp_key.size();++l) {
 							dq->push_back(pair<int,int>(l+i,l+i+1));
 						}
@@ -343,15 +348,17 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 				// Recursively finding node and skipping the non-terminal, starting with fresh terminal symbol .
 				int skip = 1;
 				GenericString<WordId> now_key = GenericString<WordId>(input[j+skip]);
+
 				// Scan as many terminals as possible
+				std::vector<WordId> now_key_sent = std::vector<WordId>();
 				while (result_node->FindNode(now_key) == NULL && j+skip < (int) input.size()) {
-					temp_key.clear();
-					temp_key.push_back(input[j+ ++skip]);
-					now_key = GenericString<WordId>(temp_key);
+					now_key_sent.clear();
+					now_key_sent.push_back(input[j+ ++skip]);
+					now_key = GenericString<WordId>(now_key_sent);
 				}
 
 				// Find All rules in the child scanning from forward position
-				vector<pair<TranslationRuleHiero*, HieroRuleSpans* > >temp_result = FindRules(result_node, input, j+skip);
+				vector<pair<TranslationRuleHiero*, HieroRuleSpans* > >temp_result = FindRules(result_node, input, j+skip, depth+1);
 				pair<TranslationRuleHiero*, HieroRuleSpans*> item;
 				// That rule in the child has a nonterminal symbol that is scanned in parent.
 				// We have to include them also.
@@ -360,6 +367,9 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 					for (int l=temp_key.size()-1; l>=0;--l) {
 						item.second->push_front(pair<int,int>(l+i,l+i+1));
 					}	
+					if (depth == 0 && item.first->GetSourceSentence()[0] < 0) {
+						item.second->push_front(pair<int,int>(-1,i));
+					}
 					result.push_back(item);
 				}
 			}
