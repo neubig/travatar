@@ -67,7 +67,6 @@ HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	// BOOST_FOREACH(HyperEdge* edge, _edges) {
 	//	cerr << *edge << endl;
 	// }
-	//
 	return _graph;
 }
 
@@ -175,7 +174,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 			if (span.second - span.first == 1) {
 				HyperEdge* unknown_edge = new HyperEdge;
 				unknown_edge->SetHead(node);
-				unknown_edge->SetRule(GetUnknownRule());
+				unknown_edge->SetRule(GetUnknownRule(sent[span.first]));
 				node->AddEdge(unknown_edge);
 				ret->AddEdge(unknown_edge);
 			}
@@ -268,7 +267,6 @@ void LookupTableHiero::AddRule(TranslationRuleHiero* rule) {
 	LookupTableHiero::AddRule(0,root_node, rule);
 }
 
-
 void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule) {
 	Sentence source = rule->GetSourceSentence();
 	std::vector<WordId> key_id = std::vector<WordId>();
@@ -294,7 +292,6 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 		child_node->AddRule(rule);
 	}
 }
-
 
 std::string LookupTableHiero::ToString() const {
 	return root_node->ToString();
@@ -382,6 +379,17 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 		}
 	}
 	return result;
+}
+
+TranslationRuleHiero* LookupTableHiero::GetUnknownRule(WordId unknown_word) const 
+{
+	TranslationRuleHiero* unknown_rule = new TranslationRuleHiero();
+    SparseMap features = Dict::ParseFeatures("unk=1");
+    unknown_rule->SetFeatures(features);
+    unknown_rule->AddSourceWord(unknown_word);
+    unknown_rule->AddTrgWord(unknown_word);
+    unknown_rule->SetSrcStr(Dict::WSym(unknown_word));
+    return unknown_rule;
 }
 
 ///////////////////////////////////
