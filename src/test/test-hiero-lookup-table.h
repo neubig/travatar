@@ -200,14 +200,14 @@ public:
         TranslationRuleHiero* glue_rule = lookup.GetGlueRule();
 
         // Draw it. You will have an idea after you see the drawing.
-        edge[0]->SetHead(node[1]); edge[0]->AddTail(node[4]); edge[0]->SetRule(rules[0], rules[0]->GetFeatures());
-        edge[1]->SetHead(node[2]); edge[1]->AddTail(node[5]); edge[1]->SetRule(rules[0], rules[0]->GetFeatures());
-        edge[2]->SetHead(node[3]); edge[2]->AddTail(node[6]); edge[2]->SetRule(rules[0], rules[0]->GetFeatures());
-        edge[3]->SetHead(node[0]); edge[3]->SetRule(rules[2], rules[2]->GetFeatures());
-        edge[4]->SetHead(node[3]); edge[4]->AddTail(node[4]); edge[4]->AddTail(node[9]); edge[4]->SetRule(rules[3], rules[3]->GetFeatures());
-        edge[5]->SetHead(node[3]); edge[5]->AddTail(node[4]); edge[5]->SetRule(rules[1], rules[1]->GetFeatures());
-        edge[6]->SetHead(node[2]); edge[6]->AddTail(node[0]); edge[6]->AddTail(node[7]); edge[6]->SetRule(rules[5], rules[5]->GetFeatures());
-        edge[7]->SetHead(node[3]); edge[7]->AddTail(node[0]); edge[7]->AddTail(node[8]);edge[7]->SetRule(rules[5], rules[5]->GetFeatures());
+        edge[0]->SetHead(node[2]); edge[0]->AddTail(node[4]); edge[0]->SetRule(rules[0], rules[0]->GetFeatures());
+        edge[1]->SetHead(node[3]); edge[1]->AddTail(node[5]); edge[1]->SetRule(rules[0], rules[0]->GetFeatures());
+        edge[2]->SetHead(node[0]); edge[2]->AddTail(node[6]); edge[2]->SetRule(rules[0], rules[0]->GetFeatures());
+        edge[3]->SetHead(node[1]); edge[3]->SetRule(rules[2], rules[2]->GetFeatures());
+        edge[4]->SetHead(node[0]); edge[4]->AddTail(node[4]); edge[4]->AddTail(node[9]); edge[4]->SetRule(rules[3], rules[3]->GetFeatures());
+        edge[5]->SetHead(node[0]); edge[5]->AddTail(node[4]); edge[5]->SetRule(rules[1], rules[1]->GetFeatures());
+        edge[6]->SetHead(node[3]); edge[6]->AddTail(node[1]); edge[6]->AddTail(node[7]); edge[6]->SetRule(rules[5], rules[5]->GetFeatures());
+        edge[7]->SetHead(node[0]); edge[7]->AddTail(node[1]); edge[7]->AddTail(node[8]);edge[7]->SetRule(rules[5], rules[5]->GetFeatures());
         edge[8]->SetHead(node[5]); edge[8]->AddTail(node[7]); edge[8]->SetRule(rules[6], rules[6]->GetFeatures());
         edge[9]->SetHead(node[6]); edge[9]->AddTail(node[8]); edge[9]->SetRule(rules[6], rules[6]->GetFeatures());
         edge[10]->SetHead(node[4]); edge[10]->SetRule(rules[7], rules[7]->GetFeatures());
@@ -215,42 +215,42 @@ public:
         edge[12]->SetHead(node[8]); edge[12]->AddTail(node[9]); edge[12]->SetRule(rules[8], rules[8]->GetFeatures());
         edge[13]->SetHead(node[7]); edge[13]->SetRule(rules[9], rules[9]->GetFeatures());
         edge[14]->SetHead(node[9]); edge[14]->SetRule(rules[10], rules[10]->GetFeatures());
-        edge[15]->SetHead(node[1]); edge[15]->AddTail(node[0]); edge[15]->AddTail(node[4]); edge[15]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[16]->SetHead(node[2]); edge[16]->AddTail(node[0]); edge[16]->AddTail(node[5]); edge[16]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[15]->SetHead(node[2]); edge[15]->AddTail(node[1]); edge[15]->AddTail(node[4]); edge[15]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[16]->SetHead(node[3]); edge[16]->AddTail(node[1]); edge[16]->AddTail(node[5]); edge[16]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[17]->SetHead(node[5]); edge[17]->AddTail(node[4]); edge[17]->AddTail(node[7]); edge[17]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[18]->SetHead(node[2]); edge[18]->AddTail(node[1]); edge[18]->AddTail(node[7]); edge[18]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[19]->SetHead(node[3]); edge[19]->AddTail(node[0]); edge[19]->AddTail(node[6]); edge[19]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[18]->SetHead(node[3]); edge[18]->AddTail(node[2]); edge[18]->AddTail(node[7]); edge[18]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[19]->SetHead(node[0]); edge[19]->AddTail(node[1]); edge[19]->AddTail(node[6]); edge[19]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[20]->SetHead(node[6]); edge[20]->AddTail(node[4]); edge[20]->AddTail(node[8]); edge[20]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[21]->SetHead(node[8]); edge[21]->AddTail(node[7]); edge[21]->AddTail(node[9]); edge[21]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[22]->SetHead(node[6]); edge[22]->AddTail(node[5]); edge[22]->AddTail(node[9]); edge[22]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[23]->SetHead(node[3]); edge[23]->AddTail(node[1]); edge[23]->AddTail(node[8]); edge[23]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[24]->SetHead(node[3]); edge[24]->AddTail(node[2]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[23]->SetHead(node[0]); edge[23]->AddTail(node[2]); edge[23]->AddTail(node[8]); edge[23]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[24]->SetHead(node[0]); edge[24]->AddTail(node[3]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
        
-        node[0]->SetSpan(pair<int,int>(0,1)); 
+        node[0]->SetSpan(pair<int,int>(0,4)); 
         {
-            node[0]->AddEdge(edge[3]);
+            node[0]->AddEdge(edge[2]); 
+            node[0]->AddEdge(edge[4]); 
+            node[0]->AddEdge(edge[5]); 
+            node[0]->AddEdge(edge[7]); 
+            node[0]->AddEdge(edge[19]); 
+            node[0]->AddEdge(edge[23]); 
+            node[0]->AddEdge(edge[24]);
         }
-        node[1]->SetSpan(pair<int,int>(0,2)); 
+        node[1]->SetSpan(pair<int,int>(0,1)); 
         {
-            node[1]->AddEdge(edge[0]); 
-            node[1]->AddEdge(edge[15]);
+            node[1]->AddEdge(edge[3]);
         }
-        node[2]->SetSpan(pair<int,int>(0,3)); 
+        node[2]->SetSpan(pair<int,int>(0,2)); 
         {
-            node[2]->AddEdge(edge[1]); 
-            node[2]->AddEdge(edge[6]); 
-            node[2]->AddEdge(edge[16]); 
-            node[2]->AddEdge(edge[18]);
+            node[2]->AddEdge(edge[0]); 
+            node[2]->AddEdge(edge[15]);
         }
-        node[3]->SetSpan(pair<int,int>(0,4)); 
+        node[3]->SetSpan(pair<int,int>(0,3)); 
         {
-            node[3]->AddEdge(edge[2]); 
-            node[3]->AddEdge(edge[4]); 
-            node[3]->AddEdge(edge[5]); 
-            node[3]->AddEdge(edge[7]); 
-            node[3]->AddEdge(edge[19]); 
-            node[3]->AddEdge(edge[23]); 
-            node[3]->AddEdge(edge[24]);
+            node[3]->AddEdge(edge[1]); 
+            node[3]->AddEdge(edge[6]); 
+            node[3]->AddEdge(edge[16]); 
+            node[3]->AddEdge(edge[18]);
         }
         node[4]->SetSpan(pair<int,int>(1,2)); 
         {
