@@ -59,13 +59,6 @@ public:
         glue_rule->AddTrgWord(-1);
         glue_rule->AddTrgWord(-2);
         glue_rule->SetSrcStr("x0 x1");
-
-        unknown_rule = new TranslationRuleHiero();
-        features = Dict::ParseFeatures("unk=1");
-        unknown_rule->SetFeatures(features);
-        unknown_rule->AddSourceWord(Dict::WID("<unk>"));
-        unknown_rule->AddTrgWord(Dict::WID("unk"));
-        unknown_rule->SetSrcStr("UNK");
 	}
 
 	virtual ~LookupTableHiero() { 
@@ -89,11 +82,10 @@ public:
 
 	virtual std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(const Sentence & input) const;
 
-	TranslationRuleHiero* GetUnknownRule() const { return unknown_rule; }
+	TranslationRuleHiero* GetUnknownRule(WordId unknown_word) const;
 protected:
 	LookupNodeHiero* root_node;
 	TranslationRuleHiero* glue_rule;
-	TranslationRuleHiero* unknown_rule;
  
 private:
 	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
