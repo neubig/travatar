@@ -57,15 +57,17 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	HyperGraph* _graph = BuildHyperGraph(graph.GetWords());
-	/*vector<HyperNode*> _nodes = _graph->GetNodes();
-	vector<HyperEdge*> _edges = _graph->GetEdges();
-	cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
-	BOOST_FOREACH(HyperNode* node, _nodes) {
-		cerr << *node << endl;
-	}
-	BOOST_FOREACH(HyperEdge* edge, _edges) {
-		cerr << *edge << endl;
-	}*/
+	// DEBUG
+	// vector<HyperNode*> _nodes = _graph->GetNodes();
+	// vector<HyperEdge*> _edges = _graph->GetEdges();
+	// cerr << "SIZE: " << _nodes.size() << " " << _edges.size() << endl;
+	// BOOST_FOREACH(HyperNode* node, _nodes) {
+	// 	cerr << *node << endl;
+	// }
+	// BOOST_FOREACH(HyperEdge* edge, _edges) {
+	//	cerr << *edge << endl;
+	// }
+	//
 	return _graph;
 }
 
@@ -160,6 +162,10 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 
 	// Add all nodes constructed during adding edge into the hypergraph and add unknown edge to
 	// node that doesn't have edge
+	map<pair<int,int>, HyperNode*>::iterator big_span_node = node_map.find(pair<int,int>(0,(int)sent.size()));
+	ret->AddNode(big_span_node->second);
+	node_map.erase(big_span_node);
+
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
 		HyperNode* node = it++->second;
