@@ -313,6 +313,8 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 			for (int k=i; k<=j; ++k) temp_key.push_back(input[k]);
 			GenericString<WordId> key_substr = GenericString<WordId>(temp_key);
 
+			cerr << Dict::PrintWords(temp_key) << endl;
+
 			// Find node corresponds to the key
 			LookupNodeHiero* result_node = node->FindNode(key_substr);
 
