@@ -161,9 +161,13 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 
 	// Add all nodes constructed during adding edge into the hypergraph and add unknown edge to
 	// node that doesn't have edge
-	map<pair<int,int>, HyperNode*>::iterator big_span_node = node_map.find(pair<int,int>(0,(int)sent.size()));
-	ret->AddNode(big_span_node->second);
-	node_map.erase(big_span_node);
+
+	// First place the root node in the first (and if there is only one node doesn't have to do this)
+	if (node_map.size() != 1) {
+		map<pair<int,int>, HyperNode*>::iterator big_span_node = node_map.find(pair<int,int>(0,(int)sent.size()));
+		ret->AddNode(big_span_node->second);
+		node_map.erase(big_span_node);
+	}
 
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
