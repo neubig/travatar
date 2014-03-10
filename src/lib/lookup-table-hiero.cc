@@ -30,6 +30,7 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
     	rule = BuildRule(rule, source_word, target_word, features);
     	ret->AddRule(rule);
+    	rule = NULL;
     }
     return ret;
 }
@@ -82,6 +83,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 		pair<int,int> node_span = pair<int,int>(i,i+1);
 		word_node->SetSpan(node_span);
 		node_map[node_span] = word_node;
+		word_node = NULL;
 		ret->AddWord(sent[i]);
 	}
 
@@ -110,6 +112,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 					HyperEdge* edge = TransformRuleIntoEdge(&node_map, i, j, span_temp, rule);
 					edge_set.insert(TransformSpanToKey(i,j,span_temp));
 					ret->AddEdge(edge);
+					edge = NULL;
 				}
 			}
 		} else if (front_span.first == -1) {
@@ -125,6 +128,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 				HyperEdge* edge = TransformRuleIntoEdge(&node_map, i, back_span.second, span_temp, rule);
 				edge_set.insert(TransformSpanToKey(i,back_span.second,span_temp));
 				ret->AddEdge(edge);
+				edge = NULL;
 			}
 		} else if (back_span.second == -1) {
 			// iterating all possible values in tail
@@ -139,6 +143,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 				HyperEdge* edge =TransformRuleIntoEdge(&node_map, front_span.first, j, span_temp, rule);
 				edge_set.insert(TransformSpanToKey(front_span.first,j,span_temp));
 				ret->AddEdge(edge);
+				edge = NULL;
 			}
 		} else {
 			// nothing special, just single edge to be added
@@ -149,8 +154,10 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 			HyperEdge* edge = TransformRuleIntoEdge(&node_map, front_span.first, back_span.second, span_temp, rule);
 			edge_set.insert(TransformSpanToKey(front_span.first,back_span.second,span_temp));
 			ret->AddEdge(edge);
+			edge = NULL;
 		}
 		// No need to use that span anymore
+		rule = NULL;
 		delete item.second;
 	}
 
@@ -171,21 +178,24 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 
 	map<pair<int,int>, HyperNode*>::iterator it = node_map.begin();
 	while(it != node_map.end()) {
-		HyperNode* node = it++->second;
+		HyperNode* node = (it++->second);
 		// Add Unknown edge to node
 		if ((int)(node->GetEdges().size()) == 0) {
 			pair<int,int> span = node->GetSpan();
 			if (span.second - span.first == 1) {
 				HyperEdge* unknown_edge = new HyperEdge;
+				TranslationRuleHiero* unk_rule_ptr = GetUnknownRule(sent[span.first]);
 				unknown_edge->SetHead(node);
-				unknown_edge->SetRule(GetUnknownRule(sent[span.first]));
+				unknown_edge->SetRule(unk_rule_ptr);
+				delete unk_rule_ptr;
 				node->AddEdge(unknown_edge);
 				ret->AddEdge(unknown_edge);
+				unknown_edge = NULL;
 			}
 		}
 		ret->AddNode(node);
+		node = NULL;
 	}
-	
 	return ret;
 }
 
@@ -244,7 +254,9 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 		HyperNode* tail = FindNode(node_map, tail_span.first, tail_span.second);
 		tail->SetSpan(tail_span);
 		hedge->AddTail(tail);
+		tail = NULL;
 	}
+	head = NULL;
 	return hedge;
 }
 
@@ -295,6 +307,7 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 	} else {
 		child_node->AddRule(rule);
 	}
+	child_node = NULL;
 }
 
 std::string LookupTableHiero::ToString() const {
@@ -349,6 +362,7 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 							dq->push_back(pair<int,int>(j+1,-1));
 						}
 						result.push_back(pair<TranslationRuleHiero*, HieroRuleSpans*> (r,dq));
+						dq = NULL;
 					}
 				}
 
@@ -379,6 +393,7 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 					}
 					result.push_back(item);
 				}
+				result_node = NULL;
 			}
 		}
 	}
