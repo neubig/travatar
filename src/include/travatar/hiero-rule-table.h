@@ -143,6 +143,9 @@ struct HieroRuleManager {
 		if (rule.IsNonTerminalSideBySide()) {
 			return 1;
 		}
+		if (rule.GetNumberOfNonTerm(HIERO_TARGET) != rule.GetNumberOfNonTerm(HIERO_SOURCE)) {
+			return 1;
+		}
 		return 0;
 	}
 

@@ -22,6 +22,14 @@ void TranslationRuleHiero::SetFeatures(SparseMap & features_) {
 	}
 }
 
+bool TranslationRuleHiero::CheckNTSourceTargetEqual() {
+	int trg_nt = 0;
+	BOOST_FOREACH(WordId id, trg_words_) {
+		if (id < 0) ++trg_nt;
+	}
+	return trg_nt == n_term;
+}
+
 string TranslationRuleHiero::ToString() {
 	std::ostringstream ss;
 	for (int i=0; i < (int)source_sent.size(); ++i) {

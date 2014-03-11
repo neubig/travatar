@@ -29,7 +29,11 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
         SparseMap features = Dict::ParseFeatures(columns[2]);
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
     	rule = BuildRule(rule, source_word, target_word, features);
-    	ret->AddRule(rule);
+    	if (rule->CheckNTSourceTargetEqual()) {
+    		ret->AddRule(rule);
+    	} else {
+    		cerr << "Ignoring rule " << rule->ToString() << " because #NT in source != #NT in target." << endl;
+    	}
     	rule = NULL;
     }
     return ret;

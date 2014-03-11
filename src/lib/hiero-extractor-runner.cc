@@ -70,7 +70,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
                 cout << r.ToString() << " ||| " << score << endl;
             }
         }
-        if (++line % 100 == 0) {
+        if (++line % 1000 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
     }

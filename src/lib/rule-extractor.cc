@@ -403,12 +403,12 @@ std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment
     int rule_max_len = HieroExtractor::GetMaxRuleLen();
 
     // if there are multiple initial phrase pairs containing the same set of alignments, only the 
-    // smallest is kept. That is, unaligned words are not allowed at the edgees of pharses
-    map<int, int> mp = map<int,int>();
+    // smallest is kept. That is, unaligned words are not allowed at the edges of phrases
+    map<pair<int,int>, int> mp = map<pair<int,int>,int>();
     BOOST_FOREACH(PhrasePair pp, pairs) {
         pair<int,int> src = pp.first;
         pair<int,int> trg = pp.second;
-        int index = src.first * 10000 + src.second;
+        pair<int,int> index = make_pair(src.first,src.second);
         int len = trg.second-trg.first;
 
         if (mp.find(index)==mp.end() || mp[index] > len) {
@@ -419,7 +419,7 @@ std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment
     BOOST_FOREACH(PhrasePair pp, pairs) {
         pair<int,int> src = pp.first;
         pair<int,int> trg = pp.second;
-        int index = src.first * 10000 + src.second;
+        pair<int,int> index = make_pair(src.first,src.second);
         int len = trg.second-trg.first;
         if (len == mp[index]) {
             filtered_pairs.push_back(pp);
