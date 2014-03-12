@@ -19,16 +19,18 @@ using namespace boost;
 LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
 	string line;
     LookupTableHiero * ret = new LookupTableHiero;
+    
     while(getline(in, line)) {
         vector<string> columns, source_word, target_word;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
-        if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
+        if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line << " [" << columns.size() << "]"); }
 
         algorithm::split(source_word, columns[0], is_any_of(" "));
         algorithm::split(target_word, columns[1], is_any_of(" "));
         SparseMap features = Dict::ParseFeatures(columns[2]);
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
-    	rule = BuildRule(rule, source_word, target_word, features);
+        rule = BuildRule(rule, source_word, target_word, features);
+        
     	if (rule->CheckNTSourceTargetEqual()) {
     		ret->AddRule(rule);
     	} else {
@@ -288,7 +290,8 @@ void LookupTableHiero::AddRule(TranslationRuleHiero* rule) {
 }
 
 void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule) {
-	Sentence source = rule->GetSourceSentence();
+	int prev_position = position;
+    Sentence source = rule->GetSourceSentence();
 	std::vector<WordId> key_id = std::vector<WordId>();
 
 	// Skip all non-terminal symbol
@@ -306,11 +309,13 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 		target_node->AddEntry(key, child_node);
 	} 
 	
-	if (position+1 < (int) source.size()) {
-		AddRule(position, child_node, rule);
-	} else {
-		child_node->AddRule(rule);
-	}
+    if (prev_position != position) {
+	    if (position+1 < (int) source.size()) {
+		    AddRule(position, child_node, rule);
+	    } else {
+		    child_node->AddRule(rule);
+	    }
+    }
 	child_node = NULL;
 }
 

@@ -99,6 +99,10 @@ public:
 		return (source_nt_position.size() + target_nt_position.size()) / 2;
 	}
 
+    bool IsRuleBalanced() const {
+        return source_nt_position.size() == target_nt_position.size();
+    }
+
 	int GetNumberOfWords(int type = -1) const {
 		switch (type) {
 			case HIERO_SOURCE:
@@ -143,7 +147,7 @@ struct HieroRuleManager {
 		if (rule.IsNonTerminalSideBySide()) {
 			return 1;
 		}
-		if (rule.GetNumberOfNonTerm(HIERO_TARGET) != rule.GetNumberOfNonTerm(HIERO_SOURCE)) {
+		if (!rule.IsRuleBalanced()) {
 			return 1;
 		}
 		return 0;
