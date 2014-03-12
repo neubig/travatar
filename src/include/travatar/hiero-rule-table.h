@@ -148,7 +148,7 @@ struct HieroRuleManager {
 			return 1;
 		}
 		if (!rule.IsRuleBalanced()) {
-			return 1;
+			THROW_ERROR("The number of NT in source and target is not balance in rule: " + rule.ToString());
 		}
 		return 0;
 	}

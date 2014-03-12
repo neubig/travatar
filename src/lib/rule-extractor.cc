@@ -380,6 +380,12 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     return oss.str();
 }
 
+string PrintPhrasePairH(PhrasePair pp) {
+    ostringstream oss;
+    oss << "[(" << pp.first.first << "," << pp.first.second << ")(" << pp.second.first << "," << pp.second.second << ")]";
+    return oss.str();
+} 
+
 //////////////////////////////////////////
 //        HIERO RULE EXTRACTOR          //
 //////////////////////////////////////////
@@ -439,7 +445,7 @@ std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment
                 if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
                     for (int kk=jj+1; (unsigned) kk < pairs.size(); ++kk) {
                         // that are in the span of INITIAL phrase, and NOT overlapping each other
-                        if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
+                        if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && InPhrase(pairs[jj],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                         {
                             HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
                             if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
@@ -686,6 +692,7 @@ HieroRule HieroExtractor::ParsePhraseTranslationRule(const Sentence & source, co
 }
 
 int HieroExtractor::InPhrase(const PhrasePair & p1, const PhrasePair & p2) {
-    return p1.first.first >= p2.first.first && p1.first.second <= p2.first.second;
+    return p1.first.first >= p2.first.first && p1.first.second <= p2.first.second && 
+            p1.second.first >= p2.second.first && p1.second.second <= p2.second.second;
 }
 
