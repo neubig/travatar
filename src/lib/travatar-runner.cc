@@ -235,6 +235,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tm_.reset(marisa_tm_);
     } else if (config.GetString("tm_storage") == "hiero") {
         LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
+        hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
         tm_.reset(hiero_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));

@@ -86,8 +86,8 @@ public:
 
 	TranslationRuleHiero* GetUnknownRule(WordId unknown_word) const;
 
-	void SetSpanLength(int length) { span_length = length; }
-	int GetSpanLength() { return span_length; } 
+	void SetSpanLimit(int length) { span_length = length; }
+	int GetSpanLimit() { return span_length; } 
 protected:
 	LookupNodeHiero* root_node;
 	TranslationRuleHiero* glue_rule;
