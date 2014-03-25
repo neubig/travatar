@@ -199,6 +199,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 				TranslationRuleHiero* unk_rule_ptr = GetUnknownRule(sent[span.first]);
 				unknown_edge->SetHead(node);
 				unknown_edge->SetRule(unk_rule_ptr);
+				unknown_edge->SetRuleStr(unk_rule_ptr->ToString());
 				delete unk_rule_ptr;
 				node->AddEdge(unknown_edge);
 				ret->AddEdge(unknown_edge);
@@ -259,6 +260,7 @@ HyperEdge* LookupTableHiero::TransformRuleIntoEdge(map<pair<int,int>, HyperNode*
 	// Attaching Edge to the head
 	hedge->SetHead(head);
 	hedge->SetRule(rule, rule->GetFeatures());
+	hedge->SetRuleStr(rule->ToString());
 	head->AddEdge(hedge);
 	
 	// For each tail_spans, add them into the edge_tail.
@@ -400,7 +402,7 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 				// That rule in the child has a nonterminal symbol that is scanned in parent.
 				// We have to include them also.
 				BOOST_FOREACH(item, temp_result) {
-					item.second->push_front(pair<int,int>(j+1,j+skip));
+					item.second->push_front(pair<int,int>(j+1,(*(item.second))[0].first));
 					for (int l=temp_key.size()-1; l>=0;--l) {
 						item.second->push_front(pair<int,int>(l+i,l+i+1));
 					}	
@@ -410,6 +412,8 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 					result.push_back(item);
 				}
 				result_node = NULL;
+			} else {
+				break;
 			}
 		}
 	}
