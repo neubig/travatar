@@ -59,6 +59,8 @@ public:
         glue_rule->AddTrgWord(-1);
         glue_rule->AddTrgWord(-2);
         glue_rule->SetSrcStr("x0 x1");
+
+        span_length = 20;
 	}
 
 	virtual ~LookupTableHiero() { 
@@ -83,10 +85,13 @@ public:
 	virtual std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(const Sentence & input) const;
 
 	TranslationRuleHiero* GetUnknownRule(WordId unknown_word) const;
+
+	void SetSpanLength(int length) { span_length = length; }
+	int GetSpanLength() { return span_length; } 
 protected:
 	LookupNodeHiero* root_node;
 	TranslationRuleHiero* glue_rule;
- 
+ 	int span_length;
 private:
 	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
 			std::vector<std::pair<int,int> >* span_temp, std::set<GenericString<WordId> >* edge_set) const;

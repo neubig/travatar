@@ -163,10 +163,10 @@ public:
         HyperGraph* expected_graph = new HyperGraph;
 
         HyperNode* node[10];
-        HyperEdge* edge[25];
+        HyperEdge* edge[21];
 
         for (int i=0; i < 10; ++i) node[i] = new HyperNode;
-        for (int j=0; j < 25; ++j) edge[j] = new HyperEdge;
+        for (int j=0; j < 21; ++j) edge[j] = new HyperEdge;
 
         TranslationRuleHiero* rules[11];
         for (int i=0; i < 11; ++i) {
@@ -217,14 +217,10 @@ public:
         edge[14]->SetHead(node[9]); edge[14]->SetRule(rules[10], rules[10]->GetFeatures());
         edge[15]->SetHead(node[2]); edge[15]->AddTail(node[1]); edge[15]->AddTail(node[4]); edge[15]->SetRule(glue_rule, glue_rule->GetFeatures());
         edge[16]->SetHead(node[3]); edge[16]->AddTail(node[1]); edge[16]->AddTail(node[5]); edge[16]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[17]->SetHead(node[5]); edge[17]->AddTail(node[4]); edge[17]->AddTail(node[7]); edge[17]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[18]->SetHead(node[3]); edge[18]->AddTail(node[2]); edge[18]->AddTail(node[7]); edge[18]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[19]->SetHead(node[0]); edge[19]->AddTail(node[1]); edge[19]->AddTail(node[6]); edge[19]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[20]->SetHead(node[6]); edge[20]->AddTail(node[4]); edge[20]->AddTail(node[8]); edge[20]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[21]->SetHead(node[8]); edge[21]->AddTail(node[7]); edge[21]->AddTail(node[9]); edge[21]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[22]->SetHead(node[6]); edge[22]->AddTail(node[5]); edge[22]->AddTail(node[9]); edge[22]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[23]->SetHead(node[0]); edge[23]->AddTail(node[2]); edge[23]->AddTail(node[8]); edge[23]->SetRule(glue_rule, glue_rule->GetFeatures());
-        edge[24]->SetHead(node[0]); edge[24]->AddTail(node[3]); edge[24]->AddTail(node[9]); edge[24]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[17]->SetHead(node[3]); edge[17]->AddTail(node[2]); edge[17]->AddTail(node[7]); edge[17]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[18]->SetHead(node[0]); edge[18]->AddTail(node[1]); edge[18]->AddTail(node[6]); edge[18]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[19]->SetHead(node[0]); edge[19]->AddTail(node[2]); edge[19]->AddTail(node[8]); edge[19]->SetRule(glue_rule, glue_rule->GetFeatures());
+        edge[20]->SetHead(node[0]); edge[20]->AddTail(node[3]); edge[20]->AddTail(node[9]); edge[20]->SetRule(glue_rule, glue_rule->GetFeatures());
        
         node[0]->SetSpan(pair<int,int>(0,4)); 
         {
@@ -232,9 +228,9 @@ public:
             node[0]->AddEdge(edge[4]); 
             node[0]->AddEdge(edge[5]); 
             node[0]->AddEdge(edge[7]); 
+            node[0]->AddEdge(edge[18]); 
             node[0]->AddEdge(edge[19]); 
-            node[0]->AddEdge(edge[23]); 
-            node[0]->AddEdge(edge[24]);
+            node[0]->AddEdge(edge[20]);
         }
         node[1]->SetSpan(pair<int,int>(0,1)); 
         {
@@ -250,7 +246,7 @@ public:
             node[3]->AddEdge(edge[1]); 
             node[3]->AddEdge(edge[6]); 
             node[3]->AddEdge(edge[16]); 
-            node[3]->AddEdge(edge[18]);
+            node[3]->AddEdge(edge[17]);
         }
         node[4]->SetSpan(pair<int,int>(1,2)); 
         {
@@ -259,14 +255,11 @@ public:
         node[5]->SetSpan(pair<int,int>(1,3)); 
         {
             node[5]->AddEdge(edge[8]);
-            node[5]->AddEdge(edge[17]);
         }
         node[6]->SetSpan(pair<int,int>(1,4)); 
         {
             node[6]->AddEdge(edge[9]); 
             node[6]->AddEdge(edge[11]);
-            node[6]->AddEdge(edge[20]);
-            node[6]->AddEdge(edge[22]);
         }
         node[7]->SetSpan(pair<int,int>(2,3)); 
         {
@@ -275,7 +268,6 @@ public:
         node[8]->SetSpan(pair<int,int>(2,4)); 
         {
             node[8]->AddEdge(edge[12]);
-            node[8]->AddEdge(edge[21]);
         }
         node[9]->SetSpan(pair<int,int>(3,4)); 
         {
