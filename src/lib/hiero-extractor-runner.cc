@@ -41,12 +41,12 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     string src_line,trg_line, align_line;
    
     // Glue Rules
-    std::vector<vector<HieroRule> > rules;
-    BOOST_FOREACH(HieroRule r , HieroRuleManager::GlueRules()) {
-        cout << r.ToString() << " ||| " << "1" << endl;
-    }
+    //BOOST_FOREACH(HieroRule r , HieroRuleManager::GlueRules()) {
+    //    cout << r.ToString() << " ||| " << "1" << endl;
+    //}
 
     // Rule Extraction Algorithm
+    std::vector<vector<HieroRule> > rules;
     long long int line = 0;
     while(true) {
 		int has_src = getline(src_in,src_line) ? 1 : 0;
@@ -70,7 +70,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
                 cout << r.ToString() << " ||| " << score << endl;
             }
         }
-        if (++line % 100 == 0) {
+        if (++line % 1000 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
     }

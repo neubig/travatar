@@ -8,7 +8,10 @@ using namespace std;
 using namespace travatar;
 
 void TranslationRuleHiero::AddSourceWord (WordId id) {
-	if (id < 0) ++n_term;
+	if (id < 0) {
+		++n_term;
+		non_term_position.push_back(source_sent.size());
+	}
 	source_sent.push_back(id);
 }
 
@@ -17,6 +20,14 @@ void TranslationRuleHiero::SetFeatures(SparseMap & features_) {
 	BOOST_FOREACH(ptr, features_) {
 		AddFeature(ptr.first, ptr.second);
 	}
+}
+
+bool TranslationRuleHiero::CheckNTSourceTargetEqual() {
+	int trg_nt = 0;
+	BOOST_FOREACH(WordId id, trg_words_) {
+		if (id < 0) ++trg_nt;
+	}
+	return trg_nt == n_term;
 }
 
 string TranslationRuleHiero::ToString() {
@@ -36,11 +47,5 @@ string TranslationRuleHiero::ToString() {
 		else 
 			ss << "x" << (-trg_words_[i])-1;
 	}
-	ss << " [";
-	std::pair<int,int> prs;
-	BOOST_FOREACH(prs, span_vector) {
-		ss << "(" << prs.first << "," << prs.second << ")";
-	}
-	ss << "]"; 
 	return ss.str();
 }
