@@ -150,6 +150,25 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
            CheckVector(words_, rhs.words_);
 }
 
+// Check to make sure two hypergraphs are equal
+int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
+    if(!(edges_.size() == rhs.edges_.size() &&
+         nodes_.size() == rhs.nodes_.size() &&
+         CheckVector(words_, rhs.words_))) {
+        cerr << "edges: " << edges_.size() << " == " << rhs.edges_.size() << endl;
+        cerr << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
+        return 0;
+    }
+    vector<double> l_scores(nodes_.size()), r_scores(nodes_.size());
+    for(int i = 0; i < (int)nodes_.size(); i++) {
+        l_scores[i] = nodes_[i]->GetViterbiScore();
+        r_scores[i] = rhs.nodes_[i]->GetViterbiScore();
+    }
+    sort(l_scores.begin(), l_scores.end());
+    sort(r_scores.begin(), r_scores.end());
+    return CheckAlmostVector(l_scores, r_scores);
+}
+
 const set<int> & HyperNode::CalculateTrgSpan(
         const vector<set<int> > & word_spans) {
     // Memoized recursion

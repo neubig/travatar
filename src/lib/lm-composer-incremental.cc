@@ -112,6 +112,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
     const vector<HyperNode*> & nodes = parse.GetNodes();
     // For the edges coming from this node, add them to the EdgeGenerator
     search::EdgeGenerator edges;
+    int num_edges = 0;
     BOOST_FOREACH(const HyperEdge * edge, nodes[id]->GetEdges()) {
         // Create the words
         std::vector<lm::WordIndex> words;
@@ -125,7 +126,12 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
             if(wid < 0) {
                 words.push_back(lm::kMaxWordIndex);
                 int tid = -1 - wid;
-                children.push_back(CalculateVertex(parse, vertices, context, best, edge->GetTail(tid)->GetId()));
+                Vertex* vertex = CalculateVertex(parse, vertices, context, best, edge->GetTail(tid)->GetId());
+                children.push_back(vertex);
+                if(vertex->Empty()) {
+                    below_score = -FLT_MAX;
+                    break;
+                }
                 below_score += children.back()->Bound();
             // Add terminal
             } else {
@@ -135,6 +141,9 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
                 ++terminals;
             }
         }
+
+        if(below_score == -FLT_MAX)
+            continue;
         
         // Allocate the edge 
         search::PartialEdge pedge(edges.AllocateEdge(children.size()));
@@ -153,11 +162,14 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
         note.vp = edge;
         pedge.SetNote(note);
         edges.AddEdge(pedge);
+        num_edges++;
     }
 
     vertices[id] = new search::Vertex;
-    search::VertexGenerator<search::Forest> vertex_gen(context, *vertices[id], best);
-    edges.Search(context, vertex_gen);
+    if(!edges.Empty()) {
+        search::VertexGenerator<search::Forest> vertex_gen(context, *vertices[id], best);
+        edges.Search(context, vertex_gen);
+    }
     return vertices[id];
 }
 
