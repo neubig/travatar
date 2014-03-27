@@ -63,9 +63,16 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         for(int j = 1; j < (int)q_id.length(); j++) {
             q_id[j] = 0;
             const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
-            viterbi_score += my_entry[0]->CalcViterbiScore();
+            // For empty nodes, break
+            if(my_entry.size() == 0) {
+                viterbi_score = -DBL_MAX;
+                break;
+            } else {
+                viterbi_score += my_entry[0]->CalcViterbiScore();
+            }
         }
-        hypo_queue.push(make_pair(viterbi_score, q_id));
+        if(viterbi_score != -DBL_MAX)
+            hypo_queue.push(make_pair(viterbi_score, q_id));
     }
     // For each edge on the queue, process it
     int num_popped = 0;

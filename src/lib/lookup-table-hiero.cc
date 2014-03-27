@@ -304,10 +304,10 @@ void LookupTableHiero::AddRule(int position, LookupNodeHiero* target_node, Trans
 	std::vector<WordId> key_id = std::vector<WordId>();
 
 	// Skip all non-terminal symbol
-	while (source[position] < 0 && position < (int) source.size()) ++position;
+	while (position < (int) source.size() && source[position] < 0) ++position;
 	
 	// Scanning all terminal symbols as key
-	while (source[position] > 0 && position < (int) source.size()) {
+	while (position < (int) source.size() && source[position] > 0) {
 		key_id.push_back(source[position++]);
 	}
 
@@ -385,16 +385,13 @@ std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > LookupTableHier
 				}
 
 				// Recursively finding node and skipping the non-terminal, starting with fresh terminal symbol .
-				int skip = 1;
-				GenericString<WordId> now_key = GenericString<WordId>(input[j+skip]);
-
-				// Scan as many terminals as possible
-				std::vector<WordId> now_key_sent = std::vector<WordId>();
-				while (result_node->FindNode(now_key) == NULL && j+skip < (int) input.size()) {
-					now_key_sent.clear();
-					now_key_sent.push_back(input[j+ ++skip]);
-					now_key = GenericString<WordId>(now_key_sent);
-				}
+				int skip;
+				GenericString<WordId> now_key = GenericString<WordId>(1);
+                for(skip = 1; j+skip < (int)input.size(); skip++) {
+                    now_key[0] = input[j+skip];
+                    if(result_node->FindNode(now_key) == NULL)
+                        break;
+                }
 
 				// Find All rules in the child scanning from forward position
 				vector<pair<TranslationRuleHiero*, HieroRuleSpans* > >temp_result = FindRules(result_node, input, j+skip, depth+1);

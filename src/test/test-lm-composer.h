@@ -26,6 +26,7 @@ public:
         HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
         HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
         HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
+        HyperNode * n3 = new HyperNode; n3->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n3);
         // Rules for n0
         rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
         HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
@@ -44,6 +45,9 @@ public:
         HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
         rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
         HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
+        // A rule with an empty node. This should just be ignored.
+        rule_01bad.reset(new TranslationRule); rule_01bad->AddTrgWord(-1); rule_01bad->AddTrgWord(-2);
+        HyperEdge * e7 = new HyperEdge(n0); rule_graph_->AddEdge(e7); e7->AddTail(n1); e7->AddTail(n3); e7->SetScore(-0.3); e7->SetRule(rule_01bad.get()); n0->AddEdge(e7);
         }
 
         // Create the n-gram model
@@ -264,7 +268,7 @@ public:
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-        return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+        return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
 
     }
 
@@ -496,7 +500,7 @@ public:
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(5);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-        return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+        return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
 
     }
 
@@ -517,7 +521,7 @@ private:
     // boost::scoped_ptr<HyperGraph> rule_graph_, unary_graph_;
     string file_name_;
     boost::shared_ptr<HyperGraph> rule_graph_;
-    boost::shared_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
+    boost::shared_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10, rule_01bad;
     boost::shared_ptr<HyperGraph> exp_graph;
 
 };
