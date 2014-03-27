@@ -115,7 +115,7 @@ sub print_counts {
         # Find the counts/probabilities
         my $lfreq = ($cnt > 0) ? log($cnt) : -99;
         my $lprob = $lfreq-$lsum;
-        printf "$src ||| $trg ||| p=1 lfreq=%f ${PREFIX}p=%f$extra_feat", $lfreq, $lprob;
+        print "$src ||| $trg ||| ".sprintf("p=1 lfreq=%f ${PREFIX}p=%f$extra_feat", $lfreq, $lprob);
         printf " ${PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
         print " w=".scalar(@trgarr) if (@trgarr);
         print " ||| $cnt $sum";
