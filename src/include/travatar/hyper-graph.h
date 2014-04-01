@@ -331,6 +331,12 @@ public:
     //  (print an error and return zero if not)
     int CheckEqual(const HyperGraph & rhs) const;
 
+    // Check if hypergraphs are maybe equal
+    //  This is insensitive to ordering of nodes, and useful for lightly
+    //  testing algorithms that use hashing that may change across
+    //  architectures
+    int CheckMaybeEqual(const HyperGraph & rhs) const;
+
     // Adders. Add the value, and set its ID appropriately
     // HyperGraph will take control of the added value
     void AddNode(HyperNode * node);

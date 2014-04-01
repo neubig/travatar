@@ -10,6 +10,7 @@
 #include <travatar/trimmer-nbest.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
+#include <travatar/lookup-table-hiero.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
@@ -190,6 +191,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tree_io = shared_ptr<TreeIO>(new EgretTreeIO);
     else if(config.GetString("in_format") == "moses")
         tree_io = shared_ptr<TreeIO>(new MosesXMLTreeIO);
+    else if(config.GetString("in_format") == "word") 
+        tree_io = shared_ptr<TreeIO>(new WordTreeIO);
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
@@ -230,6 +233,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromRuleTable(tm_in);
         marisa_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
         tm_.reset(marisa_tm_);
+    } else if (config.GetString("tm_storage") == "hiero") {
+        LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
+        hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        tm_.reset(hiero_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));
     }

@@ -144,8 +144,8 @@ public:
         HyperEdge* np1_edge = new HyperEdge(np1_node); np1_edge->AddTail(prp2_node); np1_node->AddEdge(np1_edge); exp_rule_graph.AddEdge(np1_edge); np1_edge->SetRule(act_rules[3]);
         HyperEdge* prp2_edge = new HyperEdge(prp2_node); prp2_node->AddEdge(prp2_edge); exp_rule_graph.AddEdge(prp2_edge); prp2_edge->SetRule(act_rules[4]);
         HyperEdge* vp4_edge = new HyperEdge(vp4_node); vp4_edge->AddTail(vb9_node); vp4_node->AddEdge(vp4_edge); exp_rule_graph.AddEdge(vp4_edge); vp4_edge->SetRule(act_rules[5]);  vp4_edge->AddFeature(Dict::WID("parse"), 2.0);
-        HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup_hash->GetUnknownRule()); aux5_edge->AddFeature(Dict::WID("parse"), 1.0); // Unknown edge
-        HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup_hash->GetUnknownRule());  rb7_edge->AddFeature(Dict::WID("parse"), 1.0); // Unknown edge
+        HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup_hash->GetUnknownRule()); aux5_edge->AddFeature(Dict::WID("parse"), 1.0); aux5_edge->GetTrgWords()[0] = Dict::WID("does"); // Unknown edge
+        HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup_hash->GetUnknownRule());  rb7_edge->AddFeature(Dict::WID("parse"), 1.0); rb7_edge->GetTrgWords()[0] = Dict::WID("not"); // Unknown edge
         HyperEdge* vb9_edge = new HyperEdge(vb9_node); vb9_node->AddEdge(vb9_edge); exp_rule_graph.AddEdge(vb9_edge); vb9_edge->SetRule(act_rules[6]);
         return exp_rule_graph.CheckEqual(*act_rule_graph);
     }
