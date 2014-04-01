@@ -7,6 +7,8 @@
 #include <sstream>
 #include <utility>
 #include <tr1/unordered_map>
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
 
 namespace travatar {
 
@@ -24,11 +26,12 @@ protected:
     Map map_;
     Vocab vocab_;
     Ids reuse_;
+    boost::mutex mutex_;
 
 public:
-    SymbolSet() : map_(), vocab_(), reuse_() { }
+    SymbolSet() : map_(), vocab_(), reuse_(), mutex_() { }
     SymbolSet(const SymbolSet & ss) : 
-                map_(ss.map_), vocab_(ss.vocab_), reuse_(ss.reuse_) {
+                map_(ss.map_), vocab_(ss.vocab_), reuse_(ss.reuse_), mutex_() {
         for(typename Vocab::iterator it = vocab_.begin(); 
                                                 it != vocab_.end(); it++) 
             if(*it)
@@ -46,6 +49,7 @@ public:
         return *SafeAccess(vocab_, id);
     }
     T GetId(const std::string & sym, bool add = false) {
+        boost::mutex::scoped_lock lock(mutex_);
         typename Map::const_iterator it = map_.find(sym);
         if(it != map_.end())
             return it->second;
@@ -70,6 +74,7 @@ public:
     size_t capacity() const { return vocab_.size(); }
     size_t hashCapacity() const { return map_.size(); }
     void removeId(const T id) {
+        boost::mutex::scoped_lock lock(mutex_);
         map_.erase(*vocab_[id]);
         delete vocab_[id];
         vocab_[id] = 0;
@@ -77,6 +82,7 @@ public:
     }
     
     void ToStream(std::ostream & out) {
+        boost::mutex::scoped_lock lock(mutex_);
         out << vocab_.size() << std::endl;
         for(int i = 0; i < (int)vocab_.size(); i++)
             out << *vocab_[i] << std::endl;

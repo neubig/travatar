@@ -23,7 +23,7 @@ if(@ARGV != 0) {
 }
 
 sub can_be_null {
-    return $_[0] =~ /^(prp|dt|助|語尾)/i;
+    return $_[0] =~ /^(pn|prp|dt|助|語尾)/i;
 }
 
 while(<STDIN>) {
