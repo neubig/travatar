@@ -2,7 +2,6 @@
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <boost/algorithm/string.hpp>
-#include <travatar/tree-io.h>
 #include <boost/algorithm/string/regex.hpp>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/sentence.h>

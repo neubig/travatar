@@ -1,9 +1,7 @@
 #include <travatar/translation-rule-hiero.h>
-#include <travatar/lookup-table-hash.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <boost/algorithm/string.hpp>
-#include <travatar/tree-io.h>
 #include <boost/algorithm/string/regex.hpp>
 #include <travatar/lookup-table-hiero.h>
 #include <travatar/sentence.h>
