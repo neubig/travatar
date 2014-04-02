@@ -28,12 +28,7 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
         SparseMap features = Dict::ParseFeatures(columns[2]);
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
         rule = BuildRule(rule, source_word, target_word, features);
-        
-    	if (rule->CheckNTSourceTargetEqual()) {
-    		ret->AddRule(rule);
-    	} else {
-    		cerr << "Ignoring rule " << rule->ToString() << " because #NT in source != #NT in target." << endl;
-    	}
+    	ret->AddRule(rule);
     	rule = NULL;
     }
     return ret;
@@ -43,8 +38,11 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 		vector<string> & target, SparseMap features) 
 {
 	ostringstream source_string;
+	int source_nt_count = 0;
+    int target_nt_count = 0;
 	for (int i=0; i < (int) source.size(); ++i) {
 		int id = Dict::QuotedWID(source[i]);
+		if (id < 0) ++source_nt_count;
 		rule->AddSourceWord(id);
 
 		if (i) source_string << " ";
@@ -53,8 +51,17 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 
 	for (int i=0; i < (int) target.size(); ++i) {
 		int id = Dict::QuotedWID(target[i]);
+		if (id < 0) ++target_nt_count;
 		rule->AddTrgWord(id);
 	}
+
+    if (source_nt_count != target_nt_count) {
+        cerr << rule->ToString() << endl;
+        cerr << "Source: " << source_nt_count << endl;
+        cerr << "Target: " << target_nt_count << endl;
+        THROW_ERROR("Invalid rule, NT in source side != NT in target side");
+    }
+
 	rule->SetSrcStr(source_string.str());
 	rule->SetFeatures(features);
 	return rule;
