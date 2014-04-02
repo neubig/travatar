@@ -159,18 +159,26 @@ HyperGraph * LookupTableFSM::BuildHyperGraph(HyperGraph* ret, LookupTableFSM::No
 			rule_span_next.push_back(make_pair(last_scan+1,position+1));
 
 			BuildHyperGraph(ret, node_map, edge_set, input, x_node, position+1, position, rule_span_next, false);
-			BuildHyperGraph(ret, node_map, edge_set, input, node, position+1, last_scan, spans, only_x);
+			BuildHyperGraph(ret, node_map, edge_set, input, node, position+1, last_scan, spans, false);
 
 			BOOST_FOREACH(TranslationRuleHiero* rule, x_node->GetTranslationRules()) {
-				if (NTInSpanLimit(rule, rule_span_next)) {
-					// DEBUG { cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, rule_span_next) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; } 
+				if (rule->GetSourceSentence()[0] < 0) {
+					int limit = ((int)rule_span_next.size() > 1) ? rule_span_next[1].first : (int)input.size();
+					for (int i=0; i < limit; ++i) {
+						if (limit - i < span_length) {
+							LookupTableFSM::HieroRuleSpans nt_front_rs = LookupTableFSM::HieroRuleSpans();
+							nt_front_rs.push_back(make_pair(i,limit));
+							for (int j=1; j < (int)rule_span_next.size(); ++j) 
+								nt_front_rs.push_back(rule_span_next[j]);
+							// { /* DEBUG */  cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, nt_front_rs) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; }
+							ret->AddEdge(TransformRuleIntoEdge(rule,nt_front_rs,node_map,edge_set));
+						}	
+					}
+				} else if (NTInSpanLimit(rule, rule_span_next)) {
+					// { /* DEBUG */  cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, rule_span_next) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; } 
 					ret->AddEdge(TransformRuleIntoEdge(rule, rule_span_next,node_map,edge_set));
 				}
 			}
-			
-			if ((last_scan == -1 && position == 0) || only_x) {
-				BuildHyperGraph(ret, node_map, edge_set, input, node, position+1, last_scan+1, spans, true);
-			} 
 		}
 
 		if (!only_x) {
@@ -183,8 +191,20 @@ HyperGraph * LookupTableFSM::BuildHyperGraph(HyperGraph* ret, LookupTableFSM::No
 				BuildHyperGraph(ret, node_map, edge_set, input, next_node, position+1, position, rule_span_next, false);
 				
 				BOOST_FOREACH(TranslationRuleHiero* rule, next_node->GetTranslationRules()) {
-					if (NTInSpanLimit(rule, rule_span_next)) {
-						// DEBUG { cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, rule_span_next) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; } 
+					if (rule->GetSourceSentence()[0] < 0) {
+						int limit = ((int)rule_span_next.size() > 1) ? rule_span_next[1].first : (int)input.size();
+						for (int i=0; i < limit; ++i) {
+							if (limit - i < span_length) {
+								LookupTableFSM::HieroRuleSpans nt_front_rs = LookupTableFSM::HieroRuleSpans();
+								nt_front_rs.push_back(make_pair(i,limit));
+								for (int j=1; j < (int)rule_span_next.size(); ++j) 
+									nt_front_rs.push_back(rule_span_next[j]);
+								// { /* DEBUG */ cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, nt_front_rs) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; }
+								ret->AddEdge(TransformRuleIntoEdge(rule,nt_front_rs,node_map,edge_set));
+							}	
+						}
+					} else if (NTInSpanLimit(rule, rule_span_next)) {
+						// { /* DEBUG */  cerr << rule->ToString() << "\t"; BOOST_FOREACH(temp_pair, rule_span_next) cerr << "(" << temp_pair.first << "," << temp_pair.second << ")"; cerr << endl; } 
 						ret->AddEdge(TransformRuleIntoEdge(rule, rule_span_next,node_map,edge_set));
 					}
 				}
