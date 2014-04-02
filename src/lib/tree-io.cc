@@ -273,13 +273,20 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     if(!getline(in,line)) return NULL;
     if(line.substr(0,8) != "sentence") THROW_ERROR("Missing sentence line: " << endl);
     // Create the sentence and root node
-    if(!getline(in,line)) THROW_ERROR("Egret file ended prematurely");
-    ret->SetWords(Dict::ParseWords(line));
+    string wordstring;
+    if(!getline(in,wordstring)) THROW_ERROR("Egret file ended prematurely");
+    ret->SetWords(Dict::ParseWords(wordstring));
     // Get the lines one by one and reverse
     vector<string> lines;
     while(getline(in, line) && line != "")
         lines.push_back(line);
-    if(lines.size() == 0) { getline(in,line); }
+    // If we have a failed parse, return the source words
+    if(lines.size() == 0) {
+        getline(in,line);
+        WordTreeIO wtio;
+        istringstream iss(wordstring);
+        return wtio.ReadTree(iss);
+    }
     // For each line
     BOOST_REVERSE_FOREACH(const std::string & line, lines) {
         istringstream iss(line);
