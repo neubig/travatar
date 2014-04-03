@@ -27,7 +27,7 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
         algorithm::split(target_word, columns[1], is_any_of(" "));
         SparseMap features = Dict::ParseFeatures(columns[2]);
     	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
-        rule = BuildRule(rule, source_word, target_word, features);
+        BuildRule(rule, source_word, target_word, features);
     	ret->AddRule(rule);
     	rule = NULL;
     }
@@ -54,14 +54,12 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 		if (id < 0) ++target_nt_count;
 		rule->AddTrgWord(id);
 	}
-
     if (source_nt_count != target_nt_count) {
         cerr << rule->ToString() << endl;
         cerr << "Source: " << source_nt_count << endl;
         cerr << "Target: " << target_nt_count << endl;
         THROW_ERROR("Invalid rule, NT in source side != NT in target side");
     }
-
 	rule->SetSrcStr(source_string.str());
 	rule->SetFeatures(features);
 	return rule;

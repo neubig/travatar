@@ -56,8 +56,8 @@ TranslationRuleHiero * LookupTableFSM::BuildRule(TranslationRuleHiero * rule, ve
 	}
 	if (source_nt_count != target_nt_count) {
         cerr << rule->ToString() << endl;
-        cerr << "SOURCE: " << source_nt_count << endl;
-        cerr << "TARGET: " << target_nt_count << endl;
+        cerr << "Source: " << source_nt_count << endl;
+        cerr << "Target: " << target_nt_count << endl;
 		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
 	} 
 	rule->SetSrcStr(source_string.str());
