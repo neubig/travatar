@@ -55,10 +55,12 @@ my $SCORE_OPTIONS = "";
 my $SMOOTH = "none";
 
 # Rule extraction options (Hiero)
+
 my $INITIAL_PHRASE_LEN = "10";
 my $RULE_MAX_LEN = "5";
 
 # Model files
+my $TM_STORAGE = "marisa";
 my $TM_FILE = "";
 my $GZIP_TM = "true"; # Whether to gzip the rule table
 my $LM_FILE = "";
@@ -120,6 +122,11 @@ for($SRC_FILE, $TRG_FILE, $TRAVATAR_DIR, $SRC_WORDS, $TRG_WORDS, $ALIGN_FILE, $L
     die "Must specify an LM file using -lm_file, or choose to not use an LM by setting -no_lm true";
 ((-e $WORK_DIR) or not safesystem("mkdir $WORK_DIR")) and
     die "Working directory $WORK_DIR already exists or could not be created";
+
+if ($TRANSLATION_METHOD eq "hiero") {
+    $SRC_FORMAT = "word";
+    $TM_STORAGE = "fsm";
+}
 
 # Steps:
 # 1 -> Prepare Data
@@ -224,9 +231,11 @@ if(not $TM_FILE) {
     if ($TRANSLATION_METHOD eq "t2s") {
         my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
         safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
-    } else {
+    } elsif ($TRANSLATION_METHOD eq "hiero") {
         my $EXTRACT_OPTIONS = "-initial_phrase_len $INITIAL_PHRASE_LEN -rule_max_len $RULE_MAX_LEN";
         safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
+    } else {
+        die "Unrecognized method: $TRANSLATION_METHOD\n";
     }
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
@@ -256,6 +265,11 @@ if(not $CONFIG_FILE) {
     print TINI "[tm_file]\n$TM_FILE\n\n";
     print TINI "[lm_file]\n$LM_FILE\n\n" if ($NO_LM ne "true");
     print TINI "[binarize]\n$BINARIZE\n\n";
+    if ($TRANSLATION_METHOD eq "hiero") {
+        print TINI "[in_format]\n$SRC_FORMAT\n\n";
+        print TINI "[tm_storage]\n$TM_STORAGE\n\n";
+    }
+
     # Default values for the weights
     my $weights = "egfp=0.05\negfl=0.05\nfgep=0.05\nfgel=0.05\nlm=0.3\nw=0.3\np=-0.15\nunk=0\nlfreq=0.05\nparse=1\n";
     print TINI "[weight_vals]\n$weights\n";
