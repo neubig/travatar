@@ -7,10 +7,12 @@
 using namespace std;
 using namespace travatar;
 
-void TranslationRuleHiero::AddSourceWord (WordId id) {
+void TranslationRuleHiero::AddSourceWord (WordId id, WordId label) {
 	if (id < 0) {
-		++n_term;
 		non_term_position.push_back(source_sent.size());
+		if (label != 0) {
+			non_term_label.push_back(label);
+		}
 	}
 	source_sent.push_back(id);
 }
