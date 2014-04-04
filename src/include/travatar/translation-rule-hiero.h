@@ -28,8 +28,6 @@ public:
             source_sent == rhs.source_sent;
     }
 
-    bool CheckNTSourceTargetEqual();
-
     // ACCESSOR
     Sentence & GetSourceSentence() { return source_sent; }
     int GetNumberOfNonTerminals() { return n_term; }

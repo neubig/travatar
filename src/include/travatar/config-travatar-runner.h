@@ -44,7 +44,7 @@ public:
         AddConfigEntry("search", "inc", "The type of search (Cube Pruning (cp)/Incremental (inc))");
         AddConfigEntry("threads", "1", "The number of threads to use in translation");
         AddConfigEntry("tm_file", "", "Translation model file location");
-        AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash)");
+        AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash/hiero/fsm)");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
 

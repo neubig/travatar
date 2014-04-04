@@ -11,6 +11,7 @@
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/lookup-table-hiero.h>
+#include <travatar/lookup-table-fsm.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
@@ -237,6 +238,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
         hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
         tm_.reset(hiero_tm_);
+    }  else if (config.GetString("tm_storage") == "fsm") {
+        LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromRuleTable(tm_in);
+        fsm_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));
     }
