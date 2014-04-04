@@ -47,7 +47,8 @@ public:
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash/hiero/fsm)");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
-
+        AddConfigEntry("default_symbol", "x", "Default symbol in the rule-table");
+        AddConfigEntry("root_symbol", "x", "Root symbol in the rule-table");
 #ifdef ONLINE_TRAINING_ON
         AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
         AddConfigEntry("tune_ref_files", "", "The reference files to be used for tuning");
