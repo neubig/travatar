@@ -392,7 +392,7 @@ string PrintPhrasePairH(PhrasePair pp) {
 
 // Public 
 std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment & align, const Sentence & source, 
-        const Sentence & target) 
+        const Sentence & target) const
 {
     vector<vector<HieroRule> >ret = vector<vector<HieroRule> >();
     PhrasePairs filtered_pairs = PhrasePairs();
@@ -477,7 +477,7 @@ std::vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment
 // The implementation of phrase extraction algorithm.
 // The algorithm to extract all consistent phrase pairs from a word-aligned sentence pair
 PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentence & source, 
-        const Sentence & target) 
+        const Sentence & target) const
 {
     std::vector<std::set<int> > s2t = align.GetSrcAlignments();
     std::vector<std::set<int> > t2s = std::vector<std::set<int> >();
@@ -535,7 +535,7 @@ PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentenc
 }
 
 // Private Member
-string HieroExtractor::AppendString(const Sentence & s, int begin, int end) {
+string HieroExtractor::AppendString(const Sentence & s, const int begin, const int end) const {
     string ret = string("");
     for (int i=begin; i<=(int)end; ++i) {
         ret += Dict::WSym(s[i]);
@@ -547,7 +547,7 @@ string HieroExtractor::AppendString(const Sentence & s, int begin, int end) {
 }
 
 string HieroExtractor::PrintPhrasePair(const PhrasePair & pp, const Sentence & source, 
-    const Sentence & target) 
+    const Sentence & target) const
 {
     return AppendString(source, pp.first.first, pp.first.second) + string(" -> ") 
         + AppendString(target, pp.second.first, pp.second.second);
@@ -561,7 +561,7 @@ void HieroExtractor::PrintPhrasePairs(const PhrasePairs & pairs, const Sentence 
     }
 }
 
-int HieroExtractor::MapMaxKey(const std::map<int,int> & map) {
+int HieroExtractor::MapMaxKey(const std::map<int,int> & map) const {
     int max = 0;
     pair<int,int> item;
     BOOST_FOREACH(item, map) {
@@ -570,7 +570,7 @@ int HieroExtractor::MapMaxKey(const std::map<int,int> & map) {
     return max;
 }
 
-int HieroExtractor::MapMinKey(const std::map<int,int> & map) {
+int HieroExtractor::MapMinKey(const std::map<int,int> & map) const {
     int min = 0;
     int is_first = 1;
     pair<int,int> item;
@@ -584,7 +584,7 @@ int HieroExtractor::MapMinKey(const std::map<int,int> & map) {
 }
 
 int HieroExtractor::QuasiConsecutive(int small, int large, const map<int,int> & tp, 
-        const vector<set<int> > & t2s) 
+        const vector<set<int> > & t2s) const
 {
     for (int i=small; i <= large; ++i) {
         if (t2s[i].size() != 0 && tp.find(i) == tp.end()) {
@@ -594,7 +594,7 @@ int HieroExtractor::QuasiConsecutive(int small, int large, const map<int,int> & 
     return 1;
 }
 
-int HieroExtractor::IsTerritoryOverlapping(const pair<int,int> & a, const pair<int,int> & b) {
+int HieroExtractor::IsTerritoryOverlapping(const pair<int,int> & a, const pair<int,int> & b) const {
     return 
         (a.first >= b.first && a.second <= b.second) || // a in b
         (b.first >= a.first && b.second <= a.second) || // b in a
@@ -602,14 +602,14 @@ int HieroExtractor::IsTerritoryOverlapping(const pair<int,int> & a, const pair<i
         (b.first <= a.first && b.second >= a.first);    // b preceeds a AND they are overlapping
 }
 
-int HieroExtractor::IsPhraseOverlapping(const PhrasePair & pair1, const PhrasePair & pair2) {
+int HieroExtractor::IsPhraseOverlapping(const PhrasePair & pair1, const PhrasePair & pair2) const {
     return IsTerritoryOverlapping(pair1.first, pair2.first) || IsTerritoryOverlapping(pair1.second,pair2.second);
 }
 
 void HieroExtractor::ParseRuleWith2NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair1, 
         const std::pair<int,int> & pair2, 
         const std::pair<int,int> & pair_span, 
-        HieroRule & target, int type) 
+        HieroRule & target, const int type) const
 {
     target.SetType(type);
     int x0 = 0;
@@ -644,7 +644,7 @@ void HieroExtractor::ParseRuleWith2NonTerminals(const Sentence & sentence, const
 }
 
 HieroRule HieroExtractor::ParseBinaryPhraseRule(const Sentence & source, const Sentence & target, const PhrasePair & pair1, 
-        const PhrasePair & pair2, const PhrasePair & pair_span) 
+        const PhrasePair & pair2, const PhrasePair & pair_span) const
 {
     HieroRule _rule = HieroRule();
     ParseRuleWith2NonTerminals(source,pair1.first,pair2.first,pair_span.first,_rule,HIERO_SOURCE);
@@ -653,7 +653,7 @@ HieroRule HieroExtractor::ParseBinaryPhraseRule(const Sentence & source, const S
 }
 
 void HieroExtractor::ParseRuleWith1NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair, 
-        const std::pair<int,int> & pair_span, HieroRule & target, int type) 
+        const std::pair<int,int> & pair_span, HieroRule & target, const int type) const
 {
     target.SetType(type);
     int x = 0;
@@ -672,7 +672,7 @@ void HieroExtractor::ParseRuleWith1NonTerminals(const Sentence & sentence, const
 }
 
 HieroRule HieroExtractor::ParseUnaryPhraseRule(const Sentence & source, const Sentence & target, 
-        const PhrasePair & pair, const PhrasePair & pair_span) 
+        const PhrasePair & pair, const PhrasePair & pair_span) const
 {
     HieroRule _rule = HieroRule();
     ParseRuleWith1NonTerminals(source,pair.first,pair_span.first,_rule,HIERO_SOURCE);
@@ -681,7 +681,7 @@ HieroRule HieroExtractor::ParseUnaryPhraseRule(const Sentence & source, const Se
 }
 
 HieroRule HieroExtractor::ParsePhraseTranslationRule(const Sentence & source, const Sentence & target, 
-        const PhrasePair & pair) 
+        const PhrasePair & pair) const
 {
     HieroRule _rule = HieroRule();
     _rule.SetType(HIERO_SOURCE);
@@ -691,7 +691,7 @@ HieroRule HieroExtractor::ParsePhraseTranslationRule(const Sentence & source, co
     return _rule;
 }
 
-int HieroExtractor::InPhrase(const PhrasePair & p1, const PhrasePair & p2) {
+int HieroExtractor::InPhrase(const PhrasePair & p1, const PhrasePair & p2) const {
     return p1.first.first >= p2.first.first && p1.first.second <= p2.first.second && 
             p1.second.first >= p2.second.first && p1.second.second <= p2.second.second;
 }
