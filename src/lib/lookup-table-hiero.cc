@@ -40,7 +40,9 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 	ostringstream source_string;
 	int source_nt_count = 0;
     int target_nt_count = 0;
-	for (int i=0; i < (int) source.size(); ++i) {
+    int i;
+	for (i=0; i < (int) source.size(); ++i) {
+		if (source[i] == "@") break;
 		int id = Dict::QuotedWID(source[i]);
 		if (id < 0) ++source_nt_count;
 		rule->AddSourceWord(id);
@@ -49,7 +51,8 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 		source_string << source[i];
 	}
 
-	for (int i=0; i < (int) target.size(); ++i) {
+	for (i=0; i < (int) target.size(); ++i) {
+		if (target[i] == "@") break;
 		int id = Dict::QuotedWID(target[i]);
 		if (id < 0) ++target_nt_count;
 		rule->AddTrgWord(id);

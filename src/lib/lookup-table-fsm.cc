@@ -40,35 +40,49 @@ TranslationRuleHiero * LookupTableFSM::BuildRule(TranslationRuleHiero * rule, ve
 	ostringstream source_string;
 	int source_nt_count = 0;
     int target_nt_count = 0;
-	for (int i=0; i < (int) source.size(); ++i) {
+    int i;
+	for (i=0; i < (int) source.size(); ++i) {
+		if (source[i] == "@") break;
 		int id = Dict::QuotedWID(source[i]);
 		if (id < 0) {
 			++source_nt_count;
-			// TODO: CHANGE THIS ACCORDING TO RULE READING
-			rule->AddSourceWord(id,Dict::WID("x"));
+			int k = source[i].size()-1;
+			while (source[i][k-1] != ':' && k > 1) --k;
+			rule->AddSourceWord(id,Dict::WID(source[i].substr(k,source[i].size()-k)));
 		} else {
 			rule->AddSourceWord(id);
 		}
-
 		if (i) source_string << " ";
 		source_string << source[i];
 	}
 
-	for (int i=0; i < (int) target.size(); ++i) {
+	for (i=0; i < (int) target.size(); ++i) {
+		if (target[i] == "@") break;
 		int id = Dict::QuotedWID(target[i]);
 		if (id < 0) ++target_nt_count; 
 		rule->AddTrgWord(id);
 	}
+	
+	rule->SetSrcStr(source_string.str());
+	rule->SetFeatures(features);
+	rule->SetLabel(Dict::WID(target[i+1]));
+
 	if (source_nt_count != target_nt_count) {
         cerr << rule->ToString() << endl;
         cerr << "Source: " << source_nt_count << endl;
         cerr << "Target: " << target_nt_count << endl;
 		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
-	} 
-	rule->SetSrcStr(source_string.str());
-	rule->SetFeatures(features);
-	// TODO: CHANGE THIS ACCORDING TO RULE READING
-	rule->SetLabel(Dict::WID("x"));
+	} else if (source_nt_count == 1 && (int)source.size() == 1 + 2) { // 1 + @ [ROOT]
+		int k = source[0].size() - 1;
+		while (source[0][k-1] != ':' && k > 1) --k;
+		string label = source[0].substr(k,source[0].size()-k);
+		// Case of Unary rule, that makes loop in the hypergraph
+		if (label == target[i+1]) {
+			cerr << rule->ToString() << endl;
+			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
+		}
+	}
+
 	return rule;
 }
 
@@ -114,7 +128,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	LookupTableFSM::NodeMap node_map = LookupTableFSM::NodeMap();
 	LookupTableFSM::EdgeSet edge_set = LookupTableFSM::EdgeSet(); 
 	_graph = BuildHyperGraph(_graph, node_map, edge_set, sent, root_node, 0, -1, span);
-
 	bool checkup_unknown[sent.size()];
 	vector<LookupTableFSM::TailSpanKey > temp_spans;
 	for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) {
@@ -132,7 +145,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 			}
 		}
 	}
-
 	// Adding Unknown Edge and Adding word
 	for (int i=0; i < (int) sent.size(); ++i) {
 		// word i in the sentence is unknown!
@@ -147,13 +159,13 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 		_graph->AddWord(sent[i]);
 	}
 
+	
 	// DEBUG NOTE: FOR A WHILE, GLUE RULE WILL BE DEACTIVATED
 	// ADDING GLUE RULE 
 	// vector<pair<int,int> > span_temp;
 	// for (int i=2; i <= (int)sent.size(); ++i) {
 	// 	AddGlueRule(0,i,_graph,&node_map,&span_temp,&edge_set);
 	// }
-
 	// First place the root node in the first (and if there is only one node, then don't have to do this)
 	if (node_map.size() != 1) {
 		LookupTableFSM::NodeKey key = make_pair(GetRootSymbol(),make_pair(0,(int)sent.size()));
@@ -161,10 +173,9 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 		_graph->AddNode(big_span_node->second);
 		node_map.erase(big_span_node);
 	}
-
 	for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) 
 		_graph->AddNode(it->second);
-	
+
 	return _graph;
 }
 
@@ -339,6 +350,7 @@ HyperNode* LookupTableFSM::FindNode(LookupTableFSM::NodeMap* map_ptr,
 		// Fresh New Node!
 		HyperNode* ret = new HyperNode;
 		ret->SetSpan(make_pair(span_begin,span_end));
+		ret->SetSym(label);
 		map_ptr->insert(make_pair(key,ret));
 		return ret;
 	}
