@@ -26,20 +26,24 @@ void TranslationRuleHiero::SetFeatures(SparseMap & features_) {
 
 string TranslationRuleHiero::ToString() {
 	std::ostringstream ss;
-	for (int i=0; i < (int)source_sent.size(); ++i) {
+	for (int i=0, j=0; i < (int)source_sent.size(); ++i) {
 		if (i) ss << " ";
-		if(source_sent[i] > 0) 
-			ss << Dict::WSym(source_sent[i]);
-		else 
+		if(source_sent[i] > 0) {
+			ss << "\"" << Dict::WSym(source_sent[i]) << "\"";
+		} else {
 			ss << "x" << (-source_sent[i])-1;
+			ss << ":" << Dict::WSym(GetChildNTLabel(j++));
+		}
 	}
 	ss << " ||| ";
 	for (int i=0; i < (int)trg_words_.size(); ++i) {
 		if (i) ss << " ";
-		if (trg_words_[i] > 0)
-			ss << Dict::WSym(trg_words_[i]);
-		else 
+		if (trg_words_[i] > 0){
+			ss << "\"" << Dict::WSym(trg_words_[i]) << "\"";
+		} else {
 			ss << "x" << (-trg_words_[i])-1;
+		}
 	}
+	ss << " @ " << Dict::WSym(GetLabel());
 	return ss.str();
 }
