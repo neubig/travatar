@@ -47,20 +47,11 @@ class LookupTableFSM : public GraphTransformer {
 typedef vector<pair<int,int> > HieroRuleSpans;
 typedef pair<WordId, pair<int,int> > NodeKey;
 typedef map<NodeKey, HyperNode*> NodeMap;
-typedef GenericString<int> EdgeKey;
-typedef set<EdgeKey > EdgeSet;
+typedef vector<HyperEdge* > EdgeList;
 typedef pair<int, pair<int,int> > TailSpanKey;
 public:
 	LookupTableFSM() {
 		root_node = new LookupNodeFSM;
-		glue_rule = new TranslationRuleHiero();
-		SparseMap features = Dict::ParseFeatures("glue=0.5");
-        glue_rule->SetFeatures(features);
-        glue_rule->AddSourceWord(-1);
-        glue_rule->AddSourceWord(-2);
-        glue_rule->AddTrgWord(-1);
-        glue_rule->AddTrgWord(-2);
-        glue_rule->SetSrcStr("x0 x1");
         span_length = 20;
         default_symbol = Dict::WID("x");
         root_symbol = Dict::WID("x");
@@ -83,8 +74,7 @@ public:
 	virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
 	// ACCESSOR
-	TranslationRuleHiero* GetUnknownRule(WordId unknown_word) const;
-	TranslationRuleHiero* GetGlueRule() { return glue_rule; }
+	TranslationRuleHiero* GetUnknownRule(WordId unknown_word, WordId symbol) const;
 	int GetSpanLimit() const { return span_length; } 
 	WordId GetRootSymbol() const { return root_symbol; } 
 	WordId GetDefaultSymbol() const { return default_symbol; }
@@ -104,10 +94,11 @@ private:
 	// DEBUG NOTE: FOR A WHILE, GLUE RULE WILL BE DEACTIVATED
 	// void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
 	// 		std::vector<std::pair<int,int> >* span_temp, std::set<GenericString<WordId> >* edge_set) const;
-	EdgeKey TransformSpanToKey(const int xbegin, const int xend, const std::vector<std::pair<int,int> > & tail_spans) const;
 
-	HyperGraph * BuildHyperGraph(HyperGraph* ret, NodeMap & node_map, EdgeSet & edge_set,
+	void BuildHyperGraphComponent(NodeMap & node_map, EdgeList & edge_set,
 		const Sentence & input, LookupNodeFSM* node, int position, int last_scan, HieroRuleSpans & spans) const;
+
+	void CleanUnreachableNode(EdgeList & edge_list, NodeMap & node_map) const;
 
 	HieroRuleSpans* GetSpanCopy(const LookupTableFSM::HieroRuleSpans spans) const;
 	HyperNode* FindNode(NodeMap* map_ptr, const int span_begin, const int span_end, const WordId) const;
@@ -116,7 +107,7 @@ private:
 	HyperEdge* TransformRuleIntoEdge(NodeMap* map, const int head_first, 
 			const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule) const;
 
-	HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, NodeMap & node_map, EdgeSet & edge_set) const;
+	HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, NodeMap & node_map) const;
 
 	bool NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSpans & spans) const;
 };
