@@ -38,7 +38,7 @@ int main() {
     tests.push_back(new TestTune());
     tests.push_back(new TestTrimmer());
     tests.push_back(new TestHiero());
-    //tests.push_back(new TestLookupTableHiero());
+    tests.push_back(new TestLookupTableHiero());
     tests.push_back(new TestLMComposer());
     //tests.push_back(new TestLookupTableFSM());
     // Run all the tests
