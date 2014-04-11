@@ -59,7 +59,7 @@ public:
         glue_rule->AddTrgWord(-1);
         glue_rule->AddTrgWord(-2);
         glue_rule->SetSrcStr("x0 x1");
-
+        delete_unknown = false;
         span_length = 20;
 	}
 
@@ -87,11 +87,14 @@ public:
 	TranslationRuleHiero* GetUnknownRule(WordId unknown_word) const;
 
 	void SetSpanLimit(int length) { span_length = length; }
-	int GetSpanLimit() { return span_length; } 
+	void SetDeleteUnknown(bool del) { delete_unknown = del; }
+	int GetSpanLimit() const { return span_length; } 
+	bool GetDeleteUnknown() const { return delete_unknown; }
 protected:
 	LookupNodeHiero* root_node;
 	TranslationRuleHiero* glue_rule;
  	int span_length;
+ 	bool delete_unknown;
 private:
 	void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
 			std::vector<std::pair<int,int> >* span_temp, std::set<GenericString<WordId> >* edge_set) const;

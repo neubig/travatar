@@ -53,13 +53,13 @@ public:
 	LookupTableFSM() {
 		root_node = new LookupNodeFSM;
         span_length = 20;
+        delete_unknown = false;
         default_symbol = Dict::WID("x");
         root_symbol = Dict::WID("x");
 	}
 
 	virtual ~LookupTableFSM() { 
 		delete root_node;
-		delete glue_rule;
 	}
 	
 	static LookupTableFSM * ReadFromRuleTable(std::istream & in);
@@ -78,17 +78,19 @@ public:
 	int GetSpanLimit() const { return span_length; } 
 	WordId GetRootSymbol() const { return root_symbol; } 
 	WordId GetDefaultSymbol() const { return default_symbol; }
+	bool GetDeleteUnknown() const { return delete_unknown; }
  
 	// MUTATOR
 	void SetSpanLimit(int length) { span_length = length; }
 	void SetRootSymbol(WordId symbol) { root_symbol = symbol; }
 	void SetDefaultSymbol(WordId symbol) { default_symbol = symbol; }
+	void SetDeleteUnknown(bool del) { delete_unknown = del; }
 
 protected:
 	WordId root_symbol;
 	WordId default_symbol;
 	LookupNodeFSM* root_node;
-	TranslationRuleHiero* glue_rule;
+	bool delete_unknown;
  	int span_length;
 private:
 	// DEBUG NOTE: FOR A WHILE, GLUE RULE WILL BE DEACTIVATED

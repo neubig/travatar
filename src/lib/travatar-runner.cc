@@ -237,12 +237,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     } else if (config.GetString("tm_storage") == "hiero") {
         LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
         hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        hiero_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         tm_.reset(hiero_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
         LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromRuleTable(tm_in);
         fsm_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
         fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
         fsm_tm_->SetDefaultSymbol(Dict::WID(config.GetString("default_symbol")));
+        fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));

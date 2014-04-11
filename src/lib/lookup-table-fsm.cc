@@ -131,18 +131,20 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 
 	bool checkup_unknown[sent.size()];
 	vector<LookupTableFSM::TailSpanKey > temp_spans;
-	for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) {
-		HyperNode* node = it->second;
-		pair<int,int> node_span = node->GetSpan();
-		if ((node_span.second - node_span.first) == 1) {
-			int i = node_span.first;
-			checkup_unknown[i] = true;
-			if ((int)node->GetEdges().size() == 0) {
-				TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i],(it->first).first);
-				HyperEdge* unk_edge = TransformRuleIntoEdge(&node_map,i,i+1,temp_spans,unk_rule);
-				_graph->AddEdge(unk_edge);
-				unk_edge = NULL;
-				delete unk_rule;
+	if (!GetDeleteUnknown()) {
+		for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) {
+			HyperNode* node = it->second;
+			pair<int,int> node_span = node->GetSpan();
+			if ((node_span.second - node_span.first) == 1) {
+				int i = node_span.first;
+				checkup_unknown[i] = true;
+				if ((int)node->GetEdges().size() == 0) {
+					TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i],(it->first).first);
+					HyperEdge* unk_edge = TransformRuleIntoEdge(&node_map,i,i+1,temp_spans,unk_rule);
+					_graph->AddEdge(unk_edge);
+					unk_edge = NULL;
+					delete unk_rule;
+				}
 			}
 		}
 	}
@@ -150,7 +152,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	// Adding Unknown Edge and Adding word
 	for (int i=0; i < (int) sent.size(); ++i) {
 		// word i in the sentence is unknown!
-		if (!checkup_unknown[i]) {
+		if (!GetDeleteUnknown() && !checkup_unknown[i]) {
 			pair<int,int> word_span = make_pair(i,i+1);
 			TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i],GetDefaultSymbol());
 			HyperEdge* unk_edge = TransformRuleIntoEdge(&node_map,i,i+1,temp_spans,unk_rule);

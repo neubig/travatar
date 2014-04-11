@@ -198,7 +198,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	while(it != node_map.end()) {
 		HyperNode* node = (it++->second);
 		// Add Unknown edge to node
-		if ((int)(node->GetEdges().size()) == 0) {
+		if (!GetDeleteUnknown() && (int)(node->GetEdges().size()) == 0) {
 			pair<int,int> span = node->GetSpan();
 			if (span.second - span.first == 1) {
 				HyperEdge* unknown_edge = new HyperEdge;

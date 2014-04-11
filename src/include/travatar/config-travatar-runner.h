@@ -35,7 +35,6 @@ public:
         AddConfigEntry("debug", "1", "What level of debugging output to print");
         AddConfigEntry("forest_out", "", "Forest output file location");
         AddConfigEntry("forest_nbest_trim", "0", "Trim the forest so it only includes edges in the n-best");
-        AddConfigEntry("hiero_span_limit","20", "The span limit of non terminal symbol in hiero");
         AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");
         AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("nbest", "1", "The length of the n-best list");
@@ -47,8 +46,10 @@ public:
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash/hiero/fsm)");
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
-        AddConfigEntry("default_symbol", "x", "Default symbol in the rule-table");
-        AddConfigEntry("root_symbol", "x", "Root symbol in the rule-table");
+        AddConfigEntry("default_symbol", "x", "Default symbol in the rule-table (fsm)");
+        AddConfigEntry("delete_unknown", "false", "Delete unknown source word");
+        AddConfigEntry("hiero_span_limit","20", "The span limit of non terminal symbol in hiero translation");
+        AddConfigEntry("root_symbol", "x", "Root symbol in the rule-table (fsm)");
 #ifdef ONLINE_TRAINING_ON
         AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
         AddConfigEntry("tune_ref_files", "", "The reference files to be used for tuning");
