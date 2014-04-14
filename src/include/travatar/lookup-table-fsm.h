@@ -34,11 +34,11 @@ public:
 	virtual LookupNodeFSM* FindNode(WordId key) const;
 	virtual void AddRule(TranslationRuleHiero* rule);
 	virtual std::string ToString() const;
-	std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
-	
+	virtual std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
 protected:
 	NodeMap lookup_map;
 	std::vector<TranslationRuleHiero*> rules;
+	std::set<WordId> labels;
 private:
 	std::string ToString(int indent) const;
 };	
@@ -54,8 +54,8 @@ public:
 		root_node = new LookupNodeFSM;
         span_length = 20;
         delete_unknown = false;
-        default_symbol = Dict::WID("x");
-        root_symbol = Dict::WID("x");
+        default_symbol = Dict::WID("X");
+        root_symbol = Dict::WID("X");
 	}
 
 	virtual ~LookupTableFSM() { 

@@ -82,7 +82,6 @@ TranslationRuleHiero * LookupTableFSM::BuildRule(TranslationRuleHiero * rule, ve
 			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
 		}
 	}
-
 	return rule;
 }
 
@@ -97,8 +96,9 @@ void LookupTableFSM::AddRule(int position, LookupNodeFSM* target_node, Translati
     Sentence rule_sent = rule->GetSourceSentence();
     WordId key = rule_sent[position];
 
-    // Generalize all non terminal symbols into X
-    if (key < 0) key = -1;
+    if (key < 0) {
+        key = -1;
+    }
 
     LookupNodeFSM* next_node = target_node->FindNode(key);
     if (next_node == NULL) {
