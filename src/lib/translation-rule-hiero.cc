@@ -32,7 +32,7 @@ string TranslationRuleHiero::ToString() {
 			ss << "\"" << Dict::WSym(source_sent[i]) << "\"";
 		} else {
 			ss << "x" << (-source_sent[i])-1;
-			ss << ":" << Dict::WSym(GetChildNTLabel(j++));
+			if (non_term_label.size() != 0) ss << ":" << Dict::WSym(GetChildNTLabel(j++));
 		}
 	}
 	ss << " ||| ";
@@ -44,6 +44,6 @@ string TranslationRuleHiero::ToString() {
 			ss << "x" << (-trg_words_[i])-1;
 		}
 	}
-	ss << " @ " << Dict::WSym(GetLabel());
+	if (label_ != -1) ss << " @ " << Dict::WSym(GetLabel());
 	return ss.str();
 }

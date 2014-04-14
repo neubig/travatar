@@ -13,7 +13,7 @@ using namespace std;
 namespace travatar {
 class TranslationRuleHiero : public TranslationRule {
 public: 
-	TranslationRuleHiero() { }
+	TranslationRuleHiero() { label_ = -1; }
 
 	void AddSourceWord (WordId id, WordId label=0);
 
@@ -33,9 +33,7 @@ public:
     Sentence & GetSourceSentence() { return source_sent; }
     std::vector<int> & GetNonTermPositions() { return non_term_position; }
     WordId GetLabel() { return label_; }
-    WordId GetChildNTLabel(int position) { 
-        return non_term_label[position]; 
-    }
+    WordId GetChildNTLabel(int position) { return non_term_label[position]; }
 protected:
     WordId label_;
 	Sentence source_sent;

@@ -44,9 +44,14 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 	for (i=0; i < (int) source.size(); ++i) {
 		if (source[i] == "@") break;
 		int id = Dict::QuotedWID(source[i]);
-		if (id < 0) ++source_nt_count;
-		rule->AddSourceWord(id);
-
+		if (id < 0) {
+			++source_nt_count;
+			int k = source[i].size()-1;
+			while (source[i][k-1] != ':' && k > 1) --k;
+			rule->AddSourceWord(id,Dict::WID(source[i].substr(k,source[i].size()-k)));
+		} else {
+			rule->AddSourceWord(id);
+		}
 		if (i) source_string << " ";
 		source_string << source[i];
 	}
@@ -54,17 +59,29 @@ TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, 
 	for (i=0; i < (int) target.size(); ++i) {
 		if (target[i] == "@") break;
 		int id = Dict::QuotedWID(target[i]);
-		if (id < 0) ++target_nt_count;
+		if (id < 0) ++target_nt_count; 
 		rule->AddTrgWord(id);
 	}
-    if (source_nt_count != target_nt_count) {
+	
+	rule->SetSrcStr(source_string.str());
+	rule->SetFeatures(features);
+	rule->SetLabel(Dict::WID(target[i+1]));
+
+	if (source_nt_count != target_nt_count) {
         cerr << rule->ToString() << endl;
         cerr << "Source: " << source_nt_count << endl;
         cerr << "Target: " << target_nt_count << endl;
-        THROW_ERROR("Invalid rule, NT in source side != NT in target side");
-    }
-	rule->SetSrcStr(source_string.str());
-	rule->SetFeatures(features);
+		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
+	} else if (source_nt_count == 1 && (int)source.size() == 1 + 2) { // 1 + @ [ROOT]
+		int k = source[0].size() - 1;
+		while (source[0][k-1] != ':' && k > 1) --k;
+		string label = source[0].substr(k,source[0].size()-k);
+		// Case of Unary rule, that makes loop in the hypergraph
+		if (label == target[i+1]) {
+			cerr << rule->ToString() << endl;
+			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
+		}
+	}
 	return rule;
 }
 
@@ -198,7 +215,7 @@ HyperGraph * LookupTableHiero::BuildHyperGraph(const Sentence & sent) const {
 	while(it != node_map.end()) {
 		HyperNode* node = (it++->second);
 		// Add Unknown edge to node
-		if ((int)(node->GetEdges().size()) == 0) {
+		if (!GetDeleteUnknown() && (int)(node->GetEdges().size()) == 0) {
 			pair<int,int> span = node->GetSpan();
 			if (span.second - span.first == 1) {
 				HyperEdge* unknown_edge = new HyperEdge;
