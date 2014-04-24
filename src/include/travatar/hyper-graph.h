@@ -31,8 +31,8 @@ protected:
     std::vector<HyperNode*> tails_;
     double score_;
     std::string rule_str_;
-    std::vector<WordId> trg_words_;
-    std::vector<WordId> trg_syms_;
+    Sentence trg_words_;
+    Sentence trg_syms_;
     SparseMap features_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
@@ -74,16 +74,16 @@ public:
     // Set the translation rule, including the features in the edges covered by the rule
     void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
     const std::string & GetRuleStr() const { return rule_str_; }
-    const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
-    const std::vector<WordId> & GetTrgSyms() const { return trg_syms_; }
+    const Sentence & GetTrgWords() const { return trg_words_; }
+    const Sentence & GetTrgSyms() const { return trg_syms_; }
     const SparseMap & GetFeatures() const { return features_; }
     std::string & GetRuleStr() { return rule_str_; }
-    std::vector<WordId> & GetTrgWords() { return trg_words_; }
-    std::vector<WordId> & GetTrgSyms() { return trg_syms_; }
+    Sentence & GetTrgWords() { return trg_words_; }
+    Sentence & GetTrgSyms() { return trg_syms_; }
     SparseMap & GetFeatures() { return features_; }
     void SetRuleStr(const std::string & str) { rule_str_ = str; }
-    void SetTrgWords(const std::vector<WordId> & trg) { trg_words_ = trg; }
-    void SetTrgSyms(const std::vector<WordId> & trg) { trg_syms_ = trg; }
+    void SetTrgWords(const Sentence & trg) { trg_words_ = trg; }
+    void SetTrgSyms(const Sentence & trg) { trg_syms_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }
     void AddTrgWord(int idx) { trg_words_.push_back(idx); }
@@ -254,10 +254,10 @@ public:
     void SetLoss(double loss) { loss_ = loss; }
     double GetLoss() { return loss_; }
 
-    std::vector<WordId> CalcTranslation(const std::vector<WordId> & src_words) { 
+    Sentence CalcTranslation(const Sentence & src_words) { 
         int idx = 0; return CalcTranslation(idx, src_words);
     }
-    std::vector<WordId> CalcTranslation(int & idx, const std::vector<WordId> & src_words);
+    Sentence CalcTranslation(int & idx, const Sentence & src_words);
 
     // Calculate the features for this path by simply adding up all the features
     SparseMap CalcFeatures();
@@ -268,9 +268,9 @@ public:
     HyperEdge* GetEdge(int i) { return edges_[i]; }
     int NumEdges() const { return edges_.size(); }
     WordId GetWord(int i) const { return words_[i]; }
-    const std::vector<WordId> & GetWords() const { return words_; }
-    std::vector<WordId> & GetWords() { return words_; }
-    void SetWords(const std::vector<WordId> & words) { words_ = words; }
+    const Sentence & GetWords() const { return words_; }
+    Sentence & GetWords() { return words_; }
+    void SetWords(const Sentence & words) { words_ = words; }
     SparseMap GetFeatures() {
         SparseMap ret;
         BOOST_FOREACH(const HyperEdge* edge, edges_)
@@ -286,7 +286,7 @@ protected:
     // The edges contrained in this translation
     std::vector<HyperEdge*> edges_;
     // The actual translation itself in words
-    std::vector<WordId> words_;
+    Sentence words_;
     // The model score of the translation
     double score_;
     // The loss of the translation
@@ -304,7 +304,7 @@ class HyperGraph {
 protected:
     std::vector<HyperNode*> nodes_;
     std::vector<HyperEdge*> edges_;
-    std::vector<WordId> words_;
+    Sentence words_;
 public:
 
     HyperGraph() { };
@@ -319,7 +319,7 @@ public:
     void ScoreEdges(const Weights & weights);
 
     // Get the n-best paths through the graph
-    NbestList GetNbest(int n, const std::vector<WordId> & src_words);
+    NbestList GetNbest(int n, const Sentence & src_words);
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {
@@ -367,9 +367,9 @@ public:
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
     int NumEdges() const { return edges_.size(); }
     WordId GetWord(int i) const { return words_[i]; }
-    const std::vector<WordId> & GetWords() const { return words_; }
-    std::vector<WordId> & GetWords() { return words_; }
-    void SetWords(const std::vector<WordId> & words) { words_ = words; }
+    const Sentence & GetWords() const { return words_; }
+    Sentence & GetWords() { return words_; }
+    void SetWords(const Sentence & words) { words_ = words; }
 
 };
 
