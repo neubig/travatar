@@ -16,17 +16,17 @@ public:
     TestLookupTableHiero() {
         // Load the rules
         ostringstream rule_oss;
-        rule_oss << "\"I\" x0 ||| \"watashi\" \"wa\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"eat\" \"two\" x0 ||| \"futatsu\" \"no\" x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"two\" x0 ||| \"futatsu\" \"no\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "x0 \"eat\" x1 ||| x0 \"wa\" x1 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"eat\" x0 ||| x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"I\" x0 \"two\" \"hamburgers\" ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"I\" x0 \"two\" x1 ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"I\" ||| \"watashi\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl;
-        rule_oss << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1 \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
+        rule_oss << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl;
 
         istringstream rule_iss_hash(rule_oss.str());
 
@@ -63,27 +63,27 @@ public:
 
         // Transform into Hiero rule
         vector<string> word, target;
-        algorithm::split(word, "\"I\" x0", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" x0:X @ X", is_any_of(" "));
         rules[0] = (LookupTableHiero::BuildRule(rules[0], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718")));
-        algorithm::split(word, "\"I\" x0 \"two\" \"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X \"two\" \"hamburgers\" @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X", is_any_of(" "));
         rules[1] = LookupTableHiero::BuildRule(rules[1], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"I\"", is_any_of(" ")); algorithm::split(target, "\"watashi\"", is_any_of(" "));
+        algorithm::split(word, "\"I\" @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" @ X", is_any_of(" "));
         rules[2] = LookupTableHiero::BuildRule(rules[2], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"I\" x0 \"two\" x1", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X \"two\" x1:X @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X", is_any_of(" "));
         rules[3] = LookupTableHiero::BuildRule(rules[3], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\" \"two\" x0", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" \"two\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[4] = LookupTableHiero::BuildRule(rules[4], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "x0 \"eat\" x1", is_any_of(" ")); algorithm::split(target, "x0 \"wa\" x1 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "x0:X \"eat\" x1:X @ X", is_any_of(" ")); algorithm::split(target, "x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[5] = LookupTableHiero::BuildRule(rules[5], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\" x0", is_any_of(" ")); algorithm::split(target, "x0 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "x0:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[6] = LookupTableHiero::BuildRule(rules[6], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\"", is_any_of(" ")); algorithm::split(target, "\"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" @ X", is_any_of(" ")); algorithm::split(target, "\"taberu\" @ X", is_any_of(" "));
         rules[7] = LookupTableHiero::BuildRule(rules[7], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"two\" x0", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0", is_any_of(" "));
+        algorithm::split(word, "\"two\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0:X @ X", is_any_of(" "));
         rules[8] = LookupTableHiero::BuildRule(rules[8], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"two\"", is_any_of(" ")); algorithm::split(target, "\"futatsu\"", is_any_of(" "));
+        algorithm::split(word, "\"two\" @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" @ X", is_any_of(" "));
         rules[9] = LookupTableHiero::BuildRule(rules[9], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
+        algorithm::split(word, "\"hamburgers\" @ X", is_any_of(" ")); algorithm::split(target, "\"hanbaga\" @ X", is_any_of(" "));
         rules[10] = LookupTableHiero::BuildRule(rules[10], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
         
         vector<vector<pair<TranslationRuleHiero*, HieroRuleSpans* > > > act_rules(3);
@@ -101,6 +101,7 @@ public:
         act_rules[1] = lookup.FindRules(Dict::ParseWords("I eat and buy two delicious hamburgers"));
         act_rules[2] = lookup.FindRules(Dict::ParseWords("I eat two hamburgers"));
         
+
         BOOST_FOREACH(int rule_number, exp1) {
             exp_rules[0].push_back(rules[rule_number]);
         }
@@ -174,27 +175,27 @@ public:
         }
         // Transform into Hiero rule
         vector<string> word, target;
-        algorithm::split(word, "\"I\" x0", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" x0:X @ X", is_any_of(" "));
         rules[0] = (LookupTableHiero::BuildRule(rules[0], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718")));
-        algorithm::split(word, "\"I\" x0 \"two\" \"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X \"two\" \"hamburgers\" @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X", is_any_of(" "));
         rules[1] = LookupTableHiero::BuildRule(rules[1], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"I\"", is_any_of(" ")); algorithm::split(target, "\"watashi\"", is_any_of(" "));
+        algorithm::split(word, "\"I\" @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" @ X", is_any_of(" "));
         rules[2] = LookupTableHiero::BuildRule(rules[2], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"I\" x0 \"two\" x1", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0", is_any_of(" "));
+        algorithm::split(word, "\"I\" x0:X \"two\" x1:X @ X", is_any_of(" ")); algorithm::split(target, "\"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X", is_any_of(" "));
         rules[3] = LookupTableHiero::BuildRule(rules[3], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\" \"two\" x0", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" \"two\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[4] = LookupTableHiero::BuildRule(rules[4], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "x0 \"eat\" x1", is_any_of(" ")); algorithm::split(target, "x0 \"wa\" x1 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "x0:X \"eat\" x1:X @ X", is_any_of(" ")); algorithm::split(target, "x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[5] = LookupTableHiero::BuildRule(rules[5], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\" x0", is_any_of(" ")); algorithm::split(target, "x0 \"wo\" \"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "x0:X \"wo\" \"taberu\" @ X", is_any_of(" "));
         rules[6] = LookupTableHiero::BuildRule(rules[6], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"eat\"", is_any_of(" ")); algorithm::split(target, "\"taberu\"", is_any_of(" "));
+        algorithm::split(word, "\"eat\" @ X", is_any_of(" ")); algorithm::split(target, "\"taberu\" @ X", is_any_of(" "));
         rules[7] = LookupTableHiero::BuildRule(rules[7], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"two\" x0", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0", is_any_of(" "));
+        algorithm::split(word, "\"two\" x0:X @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" \"no\" x0:X @ X", is_any_of(" "));
         rules[8] = LookupTableHiero::BuildRule(rules[8], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"two\"", is_any_of(" ")); algorithm::split(target, "\"futatsu\"", is_any_of(" "));
+        algorithm::split(word, "\"two\" @ X", is_any_of(" ")); algorithm::split(target, "\"futatsu\" @ X", is_any_of(" "));
         rules[9] = LookupTableHiero::BuildRule(rules[9], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
-        algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
+        algorithm::split(word, "\"hamburgers\" @ X", is_any_of(" ")); algorithm::split(target, "\"hanbaga\" @ X", is_any_of(" "));
         rules[10] = LookupTableHiero::BuildRule(rules[10], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
 
         TranslationRuleHiero* glue_rule = lookup.GetGlueRule();

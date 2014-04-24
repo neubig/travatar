@@ -74,24 +74,24 @@ public:
 	string ToString() const {
 		std::ostringstream ss;
 		for (int i=0; (unsigned)i < source_words.size(); ++i) {
-			if (i > 0) ss << " ";
+			if (i) ss << " ";
 			if (source_nt_position.find(i) == source_nt_position.end()) {
 				ss << "\"" << Dict::WSym(source_words[i])<< "\"";
 			} else {
-				ss << Dict::WSym(source_words[i]);
+				ss << Dict::WSym(source_words[i]) << ":X";
 			}
-			
 		}
-		ss << " |||";
+		ss << " @ X";
+		ss << " ||| ";
 		for (int i=0; (unsigned)i < target_words.size(); ++i) {
-			ss << " ";
+			if (i) ss << " ";
 			if (target_nt_position.find(i) == target_nt_position.end()) {
 				ss << "\""<<Dict::WSym(target_words[i])<<"\"";
 			} else {
-				ss <<Dict::WSym(target_words[i]);
+				ss <<Dict::WSym(target_words[i]) << ":X";
 			}
-			
 		}
+		ss << " @ X";
 		return ss.str();
 	}
 

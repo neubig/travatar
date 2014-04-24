@@ -93,28 +93,28 @@ public:
             _exp.push_back(set<string>());
         }
 
-        _exp[0].insert("\"I\" ||| \"watashi\"");
-        _exp[0].insert("\"I\" \"eat\" \"rice\" ||| \"watashi\" \"wa\" \"gohan\" \"o\" \"tabemasu\"");
-        _exp[0].insert("x0 \"eat\" x1 ||| x0 \"wa\" x1 \"o\" \"tabemasu\"");
-        _exp[0].insert("x0 \"eat\" \"rice\" ||| x0 \"wa\" \"gohan\" \"o\" \"tabemasu\"");
-        _exp[0].insert("\"I\" x0 \"rice\" ||| \"watashi\" \"wa\" \"gohan\" \"o\" x0");
-        _exp[0].insert("\"I\" x0 ||| \"watashi\" \"wa\" x0");
-        _exp[0].insert("\"I\" \"eat\" x0 ||| \"watashi\" \"wa\" x0 \"o\" \"tabemasu\"");
-        _exp[0].insert("\"eat\" ||| \"tabemasu\"");
-        _exp[0].insert("\"eat\" \"rice\" ||| \"gohan\" \"o\" \"tabemasu\"");
-        _exp[0].insert("x0 \"rice\" ||| \"gohan\" \"o\" x0");
-        _exp[0].insert("\"eat\" x0 ||| x0 \"o\" \"tabemasu\"");
-        _exp[0].insert("\"rice\" ||| \"gohan\"");
+        _exp[0].insert("\"I\" @ X ||| \"watashi\" @ X");
+        _exp[0].insert("\"I\" \"eat\" \"rice\" @ X ||| \"watashi\" \"wa\" \"gohan\" \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("x0:X \"eat\" \"rice\" @ X ||| x0:X \"wa\" \"gohan\" \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("\"I\" x0:X \"rice\" @ X ||| \"watashi\" \"wa\" \"gohan\" \"o\" x0:X @ X");
+        _exp[0].insert("\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X");
+        _exp[0].insert("\"I\" \"eat\" x0:X @ X ||| \"watashi\" \"wa\" x0:X \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("\"eat\" @ X ||| \"tabemasu\" @ X");
+        _exp[0].insert("\"eat\" \"rice\" @ X ||| \"gohan\" \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("x0:X \"rice\" @ X ||| \"gohan\" \"o\" x0:X @ X");
+        _exp[0].insert("\"eat\" x0:X @ X ||| x0:X \"o\" \"tabemasu\" @ X");
+        _exp[0].insert("\"rice\" @ X ||| \"gohan\" @ X");
         
-        _exp[1].insert("\"the\" \"hotel\" ||| \"hoteru\"");
-        _exp[1].insert("\"the\" \"hotel\" \"front\" \"desk\" ||| \"hoteru\" \"no\" \"uketsuke\"");
-        _exp[1].insert("x0 \"front\" \"desk\" ||| x0 \"no\" \"uketsuke\"");
-        _exp[1].insert("\"the\" x0 \"front\" \"desk\" ||| x0 \"no\" \"uketsuke\"");
-        _exp[1].insert("\"the\" \"hotel\" x0 ||| \"hoteru\" \"no\" x0");
-        _exp[1].insert("\"hotel\" ||| \"hoteru\"");
-        _exp[1].insert("\"hotel\" \"front\" \"desk\" ||| \"hoteru\" \"no\" \"uketsuke\"");
-        _exp[1].insert("\"hotel\" x0 ||| \"hoteru\" \"no\" x0");
-        _exp[1].insert("\"front\" \"desk\" ||| \"uketsuke\"");
+        _exp[1].insert("\"the\" \"hotel\" @ X ||| \"hoteru\" @ X");
+        _exp[1].insert("\"the\" \"hotel\" \"front\" \"desk\" @ X ||| \"hoteru\" \"no\" \"uketsuke\" @ X");
+        _exp[1].insert("x0:X \"front\" \"desk\" @ X ||| x0:X \"no\" \"uketsuke\" @ X");
+        _exp[1].insert("\"the\" x0:X \"front\" \"desk\" @ X ||| x0:X \"no\" \"uketsuke\" @ X");
+        _exp[1].insert("\"the\" \"hotel\" x0:X @ X ||| \"hoteru\" \"no\" x0:X @ X");
+        _exp[1].insert("\"hotel\" @ X ||| \"hoteru\" @ X");
+        _exp[1].insert("\"hotel\" \"front\" \"desk\" @ X ||| \"hoteru\" \"no\" \"uketsuke\" @ X");
+        _exp[1].insert("\"hotel\" x0:X @ X ||| \"hoteru\" \"no\" x0:X @ X");
+        _exp[1].insert("\"front\" \"desk\" @ X ||| \"uketsuke\" @ X");
 
         // TESTING
         for (int i=0; i < HIERO_NUMBER_OF_TEST; ++i) {

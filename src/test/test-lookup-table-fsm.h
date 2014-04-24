@@ -99,7 +99,7 @@ public:
         algorithm::split(word, "\"hamburgers\"", is_any_of(" ")); algorithm::split(target, "\"hanbaga\"", is_any_of(" "));
         rules[10] = LookupTableHiero::BuildRule(rules[10], word, target, Dict::ParseFeatures("Pegf=0.02 ppen=2.718"));
 
-        TranslationRuleHiero* glue_rule = lookup.GetGlueRule();
+        TranslationRuleHiero* glue_rule = NULL;
 
         // Draw it. You will have an idea after you see the drawing.
         edge[0]->SetHead(node[0]); 

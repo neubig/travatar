@@ -40,9 +40,10 @@ SparseMap Dict::ParseFeatures(const std::string & str) {
 
 // Get the quoted word ID
 WordId Dict::QuotedWID(const std::string & str) {
-    // For x0 -> -1, x1 -> -2, etc.
+    // For x0 -> -1, x1 -> -2, etc. 
     if(str[0] == 'x') {
-        return -1-atoi(str.substr(1).c_str());
+        char sec_digit = str[2];
+        return -1-atoi((sec_digit >= '0' && sec_digit <= '9') ? str.substr(1,2).c_str() : str.substr(1).c_str());
     // Otherwise, string must be quoted
     } else if (str[0] == '"' && str.length() > 2 && str[str.length()-1] == '"') {
         return wids_.GetId(str.substr(1,str.length()-2), add_);

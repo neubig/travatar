@@ -7,10 +7,12 @@
 using namespace std;
 using namespace travatar;
 
-void TranslationRuleHiero::AddSourceWord (WordId id) {
+void TranslationRuleHiero::AddSourceWord (WordId id, WordId label) {
 	if (id < 0) {
-		++n_term;
 		non_term_position.push_back(source_sent.size());
+		if (label != 0) {
+			non_term_label.push_back(label);
+		}
 	}
 	source_sent.push_back(id);
 }
@@ -24,20 +26,24 @@ void TranslationRuleHiero::SetFeatures(SparseMap & features_) {
 
 string TranslationRuleHiero::ToString() {
 	std::ostringstream ss;
-	for (int i=0; i < (int)source_sent.size(); ++i) {
+	for (int i=0, j=0; i < (int)source_sent.size(); ++i) {
 		if (i) ss << " ";
-		if(source_sent[i] > 0) 
-			ss << Dict::WSym(source_sent[i]);
-		else 
+		if(source_sent[i] >= 0) {
+			ss << "\"" << Dict::WSym(source_sent[i]) << "\"";
+		} else {
 			ss << "x" << (-source_sent[i])-1;
+			if (non_term_label.size() != 0) ss << ":" << Dict::WSym(GetChildNTLabel(j++));
+		}
 	}
 	ss << " ||| ";
 	for (int i=0; i < (int)trg_words_.size(); ++i) {
 		if (i) ss << " ";
-		if (trg_words_[i] > 0)
-			ss << Dict::WSym(trg_words_[i]);
-		else 
+		if (trg_words_[i] >= 0){
+			ss << "\"" << Dict::WSym(trg_words_[i]) << "\"";
+		} else {
 			ss << "x" << (-trg_words_[i])-1;
+		}
 	}
+	if (label_ != -1) ss << " @ " << Dict::WSym(GetLabel());
 	return ss.str();
 }

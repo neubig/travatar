@@ -52,8 +52,11 @@ void TravatarRunnerTask::Run() {
     }
 
     // Calculate the n-best list
-    PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
-    NbestList nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
+    NbestList nbest_list;
+    if(rule_graph->NumNodes() > 0) {
+        PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
+        nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
+    }
 
     // Print the best answer. This will generally be the answer with the highest score
     // but we could also change it with something like MBR
@@ -237,10 +240,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     } else if (config.GetString("tm_storage") == "hiero") {
         LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
         hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        hiero_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         tm_.reset(hiero_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
         LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromRuleTable(tm_in);
         fsm_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
+        fsm_tm_->SetDefaultSymbol(Dict::WID(config.GetString("default_symbol")));
+        fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));

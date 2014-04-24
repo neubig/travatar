@@ -40,7 +40,7 @@ int main() {
     tests.push_back(new TestHiero());
     tests.push_back(new TestLookupTableHiero());
     tests.push_back(new TestLMComposer());
-    tests.push_back(new TestLookupTableFSM());
+    //tests.push_back(new TestLookupTableFSM());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
