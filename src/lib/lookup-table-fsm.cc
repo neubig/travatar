@@ -167,11 +167,25 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	if (node_map.size() != 1) {
 		LookupTableFSM::NodeKey key = make_pair(GetRootSymbol(),make_pair(0,(int)sent.size()));
 		LookupTableFSM::NodeMap::iterator big_span_node = node_map.find(key);
-		_graph->AddNode(big_span_node->second);
-		node_map.erase(big_span_node);
+		if (big_span_node != node_map.end()) {
+			_graph->AddNode(big_span_node->second);
+			node_map.erase(big_span_node);
+		} else {
+			big_span_node = node_map.begin();
+			while (big_span_node != node_map.end()) {
+				pair<int,int> key = (big_span_node->first).second;
+				if (key.second - key.first == (int)sent.size()) {
+					_graph->AddNode(big_span_node->second);
+					node_map.erase(big_span_node);
+					break;
+				}
+				++big_span_node;
+			}
+		}
 	}
 	BOOST_FOREACH (HyperEdge* edges, edge_list) 
-		_graph->AddEdge(edges);
+		if (edges != NULL)
+			_graph->AddEdge(edges);
 
 	for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) 
 		_graph->AddNode(it->second);
@@ -271,11 +285,12 @@ void LookupTableFSM::CleanUnreachableNode(LookupTableFSM::EdgeList & input, Look
 				++it;
 			}
 			node_edge = NULL;
-		}
+		}	
 	} while (removed);
 	for (int i=input.size()-1; i >= 0 ; --i) {
 		if (input[i]->GetHead()->GetEdges().size() == 0) {
-			input.erase(input.begin()+i);
+			delete input[i];
+			input[i] = NULL;
 		}
 	}
 }
