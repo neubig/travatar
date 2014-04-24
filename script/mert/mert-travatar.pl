@@ -10,6 +10,9 @@ binmode STDERR, ":utf8";
 
 my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS, $NO_FILTER_RT);
 
+# Exclusive command only for tuning geoquery parser
+my ($GEOTUNE_COMMAND);
+
 my $MERT_SOLVER = "batch-tune"; # Can be set to "moses" to use Moses's MERT solver
 my $EVAL = "bleu"; # The evaluation measure to use
 my $TUNE_OPTIONS = ""; # Other options to pass to batch-tune
@@ -38,7 +41,8 @@ GetOptions(
     "in-format=s" => \$IN_FORMAT,
     "eval=s" => \$EVAL,
     "threads=i" => \$THREADS,
-    "no-filter-rt!" => \$NO_FILTER_RT
+    "no-filter-rt!" => \$NO_FILTER_RT,
+    "geotune-command=s" => \$GEOTUNE_COMMAND,
     # "=s" => \$,
     # "=s" => \$,
     # "=s" => \$,
@@ -51,7 +55,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
     die "Must specify travatar-config, src, ref, travatar-dir, tm, and working-dir";
 }
 ($MERT_SOLVER eq "moses") or ($MERT_SOLVER eq "batch-tune") or die "Bad MERT solver: $MERT_SOLVER";
-($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or die "Bad candidate type: $CAND_TYPE";
+($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or ($CAND_TYPE eq "nbestgeo") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
 ($EVAL =~ /^(bleu|ribes|interp|ter)/) or die "Bad evaluation measure $EVAL";
 ($DECODER_OPTIONS =~ /in_format/) and die "Travatar's in_format should not be specified through -decoder-options, but through the -in-format option of mert-travatar.pl";
@@ -69,7 +73,7 @@ if($NO_FILTER_RT) {
 } else {
     safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rt.pl -src $SRC -src-format $IN_FORMAT\"") or die "Couldn't filter";
 }
-    
+
 # Find the weights contained in the model
 my %init_weights = load_weights($TRAVATAR_CONFIG);
 my $weight_cnt = keys %init_weights;
@@ -88,7 +92,7 @@ foreach $iter (1 .. $MAX_ITERS) {
     $next = "$WORKING_DIR/run".($iter+1);
     # Candidate options
     my $CAND_OPTIONS;
-    if($CAND_TYPE eq "nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
+    if($CAND_TYPE =~ "^nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
     elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
     safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
@@ -114,7 +118,15 @@ foreach $iter (1 .. $MAX_ITERS) {
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
-        }
+        } elsif ($CAND_TYPE eq "nbestgeo") {
+            my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
+            safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");
+            safesystem("$GEOTUNE_COMMAND -prefix $WORKING_DIR/run$iter -ref $REF -output $WORKING_DIR/run$iter.stats");
+            $nbests = join(",", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter));
+            my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $nbests -stat_in $stats -eval \"ribes\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+
+		}
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
     my %wprev = load_weights("$prev.ini");
