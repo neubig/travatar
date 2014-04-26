@@ -465,13 +465,13 @@ public:
             rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent, &trg1_spans));
         shared_ptr<HyperEdge> e01(RuleComposer::ComposeEdge(*frags_act->GetEdge(0), *frags_act->GetEdge(1), 0));
         rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent, &trg1_spans));
-        rule_exp.push_back("ROOT ( x0:S ) ||| x0 @ ROOT ROOT ||| 1");
-        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 @ ROOT NP VP ||| 1");
-        rule_exp.push_back("NP ( x0:PRP ) ||| x0 @ NP NP ||| 1");
+        rule_exp.push_back("ROOT ( x0:S ) ||| x0:ROOT @ ROOT ||| 1");
+        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0:NP x1:VP @ ROOT ||| 1");
+        rule_exp.push_back("NP ( x0:PRP ) ||| x0:NP @ NP ||| 1");
         rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ NP ||| 1");
-        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" @ VP VB ||| 1");
+        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0:VB \"pas\" @ VP ||| 1");
         rule_exp.push_back("VB ( \"go\" ) ||| \"va\" @ VB ||| 1");
-        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 @ ROOT NP VP ||| 1");
+        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0:NP x1:VP @ ROOT ||| 1");
         sort(rule_exp.begin(), rule_exp.end());
         sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);

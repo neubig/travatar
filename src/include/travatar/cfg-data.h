@@ -30,10 +30,6 @@ public:
         return words == rhs.words && label == rhs.label && syms == rhs.syms;
     }
 
-    void Print(std::ostream & out) const {
-        THROW_ERROR("Data printing not implemented yet.");
-    }
-
     std::vector<int> GetNontermPositions() {
         std::vector<int> ret;
         for(int i = 0; i < (int)words.size(); i++)
@@ -42,7 +38,27 @@ public:
         return ret;
     }
 
+    void Print(std::ostream & out) const {
+        out << "{\"label\": " << label;
+        if(words.size()) {
+            out << ", \"words\": [";
+            for(int j = 0; j < (int)words.size(); j++)
+                out << words[j] << (j == (int)words.size()-1 ? "]" : ", ");
+        }
+        if(syms.size()) {
+            out << ", \"syms\": [";
+            for(int j = 0; j < (int)syms.size(); j++)
+                out << syms[j] << (j == (int)syms.size()-1 ? "]" : ", ");
+        }
+        out << "}";
+    }
+
 };
+
+inline std::ostream & operator<<(std::ostream & out, const CfgData & data) {
+    data.Print(out);
+    return out;
+}
 
 typedef std::vector<CfgData> CfgDataVector;
 

@@ -155,12 +155,12 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
             data.words.push_back(Dict::WID(str_match[0]));
         // Read a non-terminal
         } else if(regex_match(buff, str_match, nonterm_regex)) {
-            int id = lexical_cast<int>(str_match[0]);
+            int id = lexical_cast<int>(str_match[1]);
             data.words.push_back(-1 - id);
-            if(str_match[1].length() > 0) {
+            if(str_match[2].length() > 0) {
                 if(id >= (int)data.syms.size())
                     data.syms.resize(id+1, -1);
-                data.syms[id] = Dict::WID(((string)str_match[1]).substr(1));
+                data.syms[id] = Dict::WID(((string)str_match[2]).substr(1));
             }
         // Everything else is bad
         } else {

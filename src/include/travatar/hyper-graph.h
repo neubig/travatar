@@ -83,7 +83,11 @@ public:
     void SetTrgData(const CfgDataVector & trg) { trg_data_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }
-    void AddTrgWord(int idx, int factor = 0) { trg_data_[factor].words.push_back(idx); }
+    void AddTrgWord(int idx, int factor = 0) {
+        if((int)trg_data_.size() <= factor)
+            trg_data_.resize(factor+1);
+        trg_data_[factor].words.push_back(idx);
+    }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;

@@ -41,9 +41,21 @@ public:
     CfgDataVector & GetTrgData() { return trg_data_; }
     SparseMap & GetFeatures() { return features_; }
 
-    void AddTrgWord(WordId word, int factor = 0) { trg_data_[factor].words.push_back(word); }
-    void AddTrgSym(WordId sym, int factor = 0) { trg_data_[factor].syms.push_back(sym); }
-    void SetTrgLabel(WordId lab, int factor = 0) { trg_data_[factor].label = lab; }
+    void AddTrgWord(WordId word, int factor = 0) {
+        if(factor <= (int)trg_data_.size())
+            trg_data_.resize(factor+1);
+        trg_data_[factor].words.push_back(word);
+    }
+    void AddTrgSym(WordId sym, int factor = 0) {
+        if(factor <= (int)trg_data_.size())
+            trg_data_.resize(factor+1);
+        trg_data_[factor].syms.push_back(sym);
+    }
+    void SetTrgLabel(WordId lab, int factor = 0) {
+        if(factor <= (int)trg_data_.size())
+            trg_data_.resize(factor+1);
+        trg_data_[factor].label = lab;
+    }
 
 protected:
     std::string src_str_;

@@ -207,13 +207,20 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
                 edge->AddFeature(Dict::WID(t.first), t.second.get<double>(""));
         } catch (ptree_bad_path e) { }
         try {
-            THROW_ERROR("json parsing of data to be implemented.");
-            // BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg")) {
-            //     int val = t.second.get("", INT_MAX);
-            //     if(val == INT_MAX)
-            //         val = Dict::WID(t.second.get<string>(""));
-            //     edge->GetTrgWords().push_back(val);
-            // }
+            BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg")) {
+                CfgData trg_data;
+                // Get the words
+                try {
+                    BOOST_FOREACH(ptree::value_type &x, t.second.get_child("words")) {
+                        int val = x.second.get("", INT_MAX);
+                        if(val == INT_MAX)
+                            val = Dict::WID(x.second.get<string>(""));
+                        trg_data.words.push_back(val);
+                    }
+                } catch (ptree_bad_path e) { }
+                // TODO: Get the symbols, head symbol
+                edge->GetTrgData().push_back(trg_data);
+            }
         } catch (ptree_bad_path e) { }
         edge->SetScore(v.second.get<double>("score", 0.0));
         ret->AddEdge(edge);

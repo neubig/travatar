@@ -76,19 +76,8 @@ void HyperEdge::Print(std::ostream & out) const {
     }
     if(trg_data_.size()) {
         out << ", \"trg\": [";
-        for(int j = 0; j < (int)trg_data_.size(); j++) {
-            const Sentence & trg_words = trg_data_[j].words;
-            for(int i = 0; i < (int)trg_words.size(); i++) {
-                // Handle pseudo-symbols
-                if(trg_words[i] < 0)
-                    out << trg_words[i];
-                // Handle regular words
-                else
-                    out << '"' << Dict::EscapeString(Dict::WSym(trg_words[i])) << '"';
-                out << ((i == (int)trg_words.size()-1) ? "]" : ", ");
-            }
-            out << ((j == (int)trg_data_.size()-1) ? "]" : ", ");
-        }
+        for(int j = 0; j < (int)trg_data_.size(); j++)
+            out << trg_data_[j] << (j == (int)trg_data_.size()-1 ? "]" : ", ");
     }
     if(features_.size())
         out << ", \"features\": " << features_;
@@ -334,6 +323,8 @@ CfgData HyperPath::CalcTranslation(int factor, int & idx) {
         child_trans.push_back(CalcTranslation(factor, idx));
     }
     CfgData ret;
+    if(factor >= (int)edges_[my_id]->GetTrgData().size())
+        return ret;
     BOOST_FOREACH(int wid, edges_[my_id]->GetTrgData()[factor].words) {
         // // Special handling of unknowns
         // if(wid == Dict::WID("<unk>")) {
