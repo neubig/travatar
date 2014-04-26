@@ -196,7 +196,6 @@ var parentref = new Object();
 			trghtml = self.__gen(i, trg, "trg", descset, parentref)
 			htmlset.append((i, srchtml, trghtml, descset, parentref))
 
-		print("%s-0.html" % fileprefix)
 		fp = open("%s-0.html" % fileprefix, "w")
 		print(self.html_header, file=fp)
 		for (i, src, trg, descset, parentref), ref in zip(htmlset, self.reflst):
@@ -280,7 +279,6 @@ def main():
 
 	if reffile:
 		reffile.close()
-	print(args.out_prefix)
 	htmlbuilder.output(args.out_prefix, args.limit)
 
 	return
