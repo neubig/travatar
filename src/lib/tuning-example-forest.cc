@@ -69,7 +69,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     forest_->ResetViterbiScores();
     Weights wval(weights);
     forest_->ScoreEdges(wval);
-    NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
+    NbestList nbest_list = forest_->GetNbest(1);
     const Sentence & sent = nbest_list[0]->GetTrgData()[factor_].words;
     curr_score_ = measure_->CalculateCachedStats(ref_, sent, id_)->ConvertToScore() * mult_;
     // Find the potential gain
@@ -123,7 +123,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     forest_->ResetViterbiScores();
     Weights wval(weights);
     forest_->ScoreEdges(wval);
-    NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
+    NbestList nbest_list = forest_->GetNbest(1);
     Sentence sent = nbest_list[0]->GetTrgData()[factor_].words;
     EvalStatsPtr curr_stats = measure_->CalculateCachedStats(ref_, sent, id_);
     curr_stats->TimesEquals(mult_);

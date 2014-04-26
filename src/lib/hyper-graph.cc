@@ -233,7 +233,7 @@ public:
     }
 };
 
-vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<WordId> & src_words) {
+vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
     set<shared_ptr<HyperPath>, PathScoreMore> paths;
     shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);

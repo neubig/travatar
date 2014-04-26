@@ -77,7 +77,7 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     rescored_graph.ScoreEdges(empty_weights);
     shared_ptr<HyperGraph> lm_graph(bu.TransformGraph(rescored_graph));
     // Create n-best list
-    NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT, rescored_graph.GetWords());
+    NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT);
     // Find the sentence in the n-best list with the highest score
     Sentence ret; 
     double best_score = 0;

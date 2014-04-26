@@ -327,7 +327,7 @@ public:
     void ScoreEdges(const Weights & weights);
 
     // Get the n-best paths through the graph
-    NbestList GetNbest(int n, const Sentence & src_words);
+    NbestList GetNbest(int n);
 
     // Calculate the frontier for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {

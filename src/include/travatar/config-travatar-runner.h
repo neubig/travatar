@@ -45,6 +45,7 @@ public:
         AddConfigEntry("tm_file", "", "Translation model file location");
         AddConfigEntry("tm_storage", "marisa", "Method of storing the rule table (marisa/hash/hiero/fsm)");
         AddConfigEntry("trace_out", "", "trace output file location");
+        AddConfigEntry("trg_factors", "1", "The number of types of output to produce");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
         AddConfigEntry("default_symbol", "x", "Default symbol in the rule-table (fsm)");
         AddConfigEntry("delete_unknown", "false", "Delete unknown source word");

@@ -21,6 +21,7 @@ my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
 my $IN_FORMAT = "penn"; # The format of the input
 my $NBEST = 200;
+my $TRG_FACTORS = 1;
 my $THREADS = 1; # The number of threads to use
 GetOptions(
     # Necessary
@@ -42,6 +43,7 @@ GetOptions(
     "eval=s" => \$EVAL,
     "threads=i" => \$THREADS,
     "no-filter-rt!" => \$NO_FILTER_RT,
+    "trg-factors=i" => \$TRG_FACTORS,
     "geotune-command=s" => \$GEOTUNE_COMMAND,
     # "=s" => \$,
     # "=s" => \$,
@@ -58,7 +60,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
 ($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or ($CAND_TYPE eq "nbestgeo") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
 ($EVAL =~ /^(bleu|ribes|interp|ter)/) or die "Bad evaluation measure $EVAL";
-($DECODER_OPTIONS =~ /in_format/) and die "Travatar's in_format should not be specified through -decoder-options, but through the -in-format option of mert-travatar.pl";
+($DECODER_OPTIONS =~ /(in_format|trg_factors)/) and die "Travatar's $1 should not be specified through -decoder-options, but through the option of mert-travatar.pl";
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 
 if(@ARGV != 0) {
@@ -95,7 +97,7 @@ foreach $iter (1 .. $MAX_ITERS) {
     if($CAND_TYPE =~ "^nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
     elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
-    safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {

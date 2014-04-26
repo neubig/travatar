@@ -86,7 +86,7 @@ std::string Dict::PrintWords(const Sentence & ids) {
 std::string Dict::PrintWords(const CfgDataVector & data) {
     std::ostringstream oss;
     for(int i = 0; i < (int)data.size(); i++) {
-        if(i != 0) oss << " !!! ";
+        if(i != 0) oss << " |COL| ";
         oss << Dict::PrintWords(data[i].words);
     }
     return oss.str();
@@ -108,7 +108,7 @@ std::string Dict::PrintAnnotatedWords(const CfgData & data) {
 std::string Dict::PrintAnnotatedVector(const CfgDataVector & data) {
     std::ostringstream oss;
     for(int i = 0; i < (int)data.size(); i++) {
-        if(i != 0) oss << " !!! ";
+        if(i != 0) oss << " |COL| ";
         oss << Dict::PrintAnnotatedWords(data[i]);
     }
     return oss.str();
@@ -164,7 +164,7 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
 CfgDataVector Dict::ParseAnnotatedVector(const std::string & str) {
     CfgDataVector ret;
     vector<string> columns;
-    algorithm::split_regex(columns, str, regex(" !!! "));
+    algorithm::split_regex(columns, str, regex(" \\|COL\\| "));
     BOOST_FOREACH(const std::string & col, columns) {
         ret.push_back(ParseAnnotatedWords(col));
     }
