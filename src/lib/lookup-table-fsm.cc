@@ -289,7 +289,7 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(LookupTableFSM::NodeMap* node_m
 	head->AddEdge(hedge);
 	LookupTableFSM::TailSpanKey tail_span;
 	BOOST_FOREACH(tail_span, tail_spans) {
-		HyperNode* tail = FindNode(node_map, tail_span.second.first, tail_span.second.second, rule->GetSrcData().syms[tail_span.first]);
+		HyperNode* tail = FindNode(node_map, tail_span.second.first, tail_span.second.second, rule->GetSrcData().GetSym(tail_span.first));
 		tail->SetSpan(tail_span.second);
 		hedge->AddTail(tail);
 		tail = NULL;

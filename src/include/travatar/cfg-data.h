@@ -38,19 +38,10 @@ public:
         return ret;
     }
 
-    void Print(std::ostream & out) const {
-        out << "{\"label\": " << label;
-        if(words.size()) {
-            out << ", \"words\": [";
-            for(int j = 0; j < (int)words.size(); j++)
-                out << words[j] << (j == (int)words.size()-1 ? "]" : ", ");
-        }
-        if(syms.size()) {
-            out << ", \"syms\": [";
-            for(int j = 0; j < (int)syms.size(); j++)
-                out << syms[j] << (j == (int)syms.size()-1 ? "]" : ", ");
-        }
-        out << "}";
+    void Print(std::ostream & out) const;
+
+    WordId GetSym(int id) {
+        return (id < (int)syms.size() ? syms[id] : -1);
     }
 
 };

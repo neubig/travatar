@@ -111,17 +111,15 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
 
 // Output for a hypernode in JSON format
 void HyperNode::Print(std::ostream & out) const {
-    out << "{\"sym\": ";
-    if(sym_==-1)
-        out << "null";
-    else 
-        out << "\""<<Dict::WSymEscaped(sym_)<<"\"";
-    out << ", \"span\": "<<src_span_<<", \"id\": "<<id_;
-    if(edges_.size()) {
-        out << ", \"edges\": [";
-        for(int i = 0; i < (int)edges_.size(); i++)
-            out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
-    }
+    out << "{\"id\": "<<id_;
+    if(sym_ != -1)
+        out << ", \"sym\": " << Dict::WSymEscaped(sym_);
+    out << ", \"span\": "<<src_span_;
+    // if(edges_.size()) {
+    //     out << ", \"edges\": [";
+    //     for(int i = 0; i < (int)edges_.size(); i++)
+    //         out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
+    // }
     if(trg_span_.size() > 0) {
         out << ", \"trg_span\": [";
         int num = 0;

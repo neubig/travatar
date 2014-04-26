@@ -40,21 +40,6 @@ SparseMap Dict::ParseFeatures(const std::string & str) {
     return ParseFeatures(iss);
 }
 
-// // Get the quoted word ID
-// WordId Dict::WIDAnnotated(const std::string & str) {
-//     // For x0 -> -1, x1 -> -2, etc. 
-//     if(str[0] == 'x') {
-//         char sec_digit = str[2];
-//         return -1-atoi((sec_digit >= '0' && sec_digit <= '9') ? str.substr(1,2).c_str() : str.substr(1).c_str());
-//     // Otherwise, string must be quoted
-//     } else if (str[0] == '"' && str.length() > 2 && str[str.length()-1] == '"') {
-//         return wids_.GetId(str.substr(1,str.length()-2), add_);
-//     } else {
-//         THROW_ERROR("Bad quoted string at " << str);
-//         return INT_MIN;
-//     }
-// }
-
 const std::string & Dict::WSym(WordId id) {
     return wids_.GetSymbol(id);
 }
@@ -64,10 +49,16 @@ WordId Dict::WID(const std::string & str) {
 }
 
 std::string Dict::WSymEscaped(WordId id) {
-    std::string ret = wids_.GetSymbol(id);
-    boost::replace_all(ret, "\\", "\\\\");
-    boost::replace_all(ret, "\"", "\\\"");
-    return ret;
+    ostringstream oss;
+    if(id < 0) {
+        oss << id;
+    } else {
+        std::string ret = wids_.GetSymbol(id);
+        boost::replace_all(ret, "\\", "\\\\");
+        boost::replace_all(ret, "\"", "\\\"");
+        oss << '"' << ret << '"';
+    }
+    return oss.str();
 }
 
 std::string Dict::WSymAnnotated(WordId id, const Sentence & syms) {
@@ -152,7 +143,7 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
             break;
         // Read a terminal
         } else if(regex_match(buff, str_match, term_regex)) {
-            data.words.push_back(Dict::WID(str_match[0]));
+            data.words.push_back(Dict::WID(str_match[1]));
         // Read a non-terminal
         } else if(regex_match(buff, str_match, nonterm_regex)) {
             int id = lexical_cast<int>(str_match[1]);

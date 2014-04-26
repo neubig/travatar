@@ -212,7 +212,7 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
                 // Get the words
                 try {
                     BOOST_FOREACH(ptree::value_type &x, t.second.get_child("words")) {
-                        int val = x.second.get("", INT_MAX);
+                        int val = x.second.get<int>("", INT_MAX);
                         if(val == INT_MAX)
                             val = Dict::WID(x.second.get<string>(""));
                         trg_data.words.push_back(val);
@@ -245,7 +245,7 @@ void JSONTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     const vector<int> & words = tree.GetWords();
     for(int i = 0; i < (int)words.size(); i++) {
         if(i != 0) out << ", ";
-        out << "\"" << Dict::WSymEscaped(words[i]) << "\"";
+        out << Dict::WSymEscaped(words[i]);
     }
     out << "]}";
 }

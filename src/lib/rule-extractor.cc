@@ -314,9 +314,9 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     vector<int> trg_cover(trg_end-trg_begin, -1), src_cover(src_end-src_begin, -1);
     const vector<HyperNode*> & tails = rule.GetTails();
     map<int,int> tail_map;
-    // Tail labels
+    // Labels
     vector<WordId> tail_labs;
-    if(trg_labs) tail_labs.push_back(GetSpanLabel(*trg_labs, make_pair(trg_begin, trg_end)));
+    int head_lab = (trg_labs ? GetSpanLabel(*trg_labs, make_pair(trg_begin, trg_end)) : -1);
     // Handle all tails
     for(int i = 0; i < (int)tails.size(); i++) {
         tail_map[tails[i]->GetId()] = i;
@@ -368,14 +368,13 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
             oss << " \"" << Dict::WSym(trg_sent[i+trg_begin]) << "\"";
         else if (last != trg_cover[i]) {
             oss << " x" << trg_cover[i];
+            if((int)tail_labs.size() > trg_cover[i] && tail_labs[trg_cover[i]] != -1)
+                oss << ":" << Dict::WSym(tail_labs[trg_cover[i]]);
             last = trg_cover[i];
         }
     }
-    if(tail_labs.size() != 0) {
-        oss << " @";
-        BOOST_FOREACH(WordId wid, tail_labs)
-            oss << ' ' << (wid == -1 ? Dict::INVALID_SPAN_SYMBOL : Dict::WSym(wid));
-    }
+    if(head_lab != -1)
+        oss << " @ " << Dict::WSym(head_lab);
     oss << " ||| " << exp(rule.GetScore());
     return oss.str();
 }
