@@ -322,7 +322,7 @@ public:
         exp_trans[2] = "y a b";
         exp_trans[3] = "t a b";
         for(int i = 0; i < 4; i++)
-            act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(rule_graph_->GetWords()));
+            act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(0).words);
         return CheckVector(exp_trans, act_trans);
     }
 

@@ -15,11 +15,11 @@ class Weights {
 
 public:
 
-    Weights() {
+    Weights(int factor = 0) : factor_(factor_) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
-    Weights(const SparseMap & current) :
-        current_(current) {
+    Weights(const SparseMap & current, int factor = 0) :
+        current_(current), factor_(factor) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
@@ -88,6 +88,7 @@ protected:
     SparseMap current_;
     typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;
     RangeMap ranges_;
+    int factor_;
 
 };
 

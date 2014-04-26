@@ -11,6 +11,7 @@
 #include <travatar/nbest-list.h>
 #include <travatar/sentence.h>
 #include <travatar/util.h>
+#include <travatar/cfg-data.h>
 
 namespace travatar {
 
@@ -31,8 +32,7 @@ protected:
     std::vector<HyperNode*> tails_;
     double score_;
     std::string rule_str_;
-    Sentence trg_words_;
-    Sentence trg_syms_;
+    CfgDataVector trg_data_;
     SparseMap features_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
@@ -74,19 +74,16 @@ public:
     // Set the translation rule, including the features in the edges covered by the rule
     void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
     const std::string & GetRuleStr() const { return rule_str_; }
-    const Sentence & GetTrgWords() const { return trg_words_; }
-    const Sentence & GetTrgSyms() const { return trg_syms_; }
+    const CfgDataVector & GetTrgData() const { return trg_data_; }
     const SparseMap & GetFeatures() const { return features_; }
     std::string & GetRuleStr() { return rule_str_; }
-    Sentence & GetTrgWords() { return trg_words_; }
-    Sentence & GetTrgSyms() { return trg_syms_; }
+    CfgDataVector & GetTrgData() { return trg_data_; }
     SparseMap & GetFeatures() { return features_; }
     void SetRuleStr(const std::string & str) { rule_str_ = str; }
-    void SetTrgWords(const Sentence & trg) { trg_words_ = trg; }
-    void SetTrgSyms(const Sentence & trg) { trg_syms_ = trg; }
+    void SetTrgData(const CfgDataVector & trg) { trg_data_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }
-    void AddTrgWord(int idx) { trg_words_.push_back(idx); }
+    void AddTrgWord(int idx, int factor = 0) { trg_data_[factor].words.push_back(idx); }
 
     // Operators
     bool operator==(const HyperEdge & rhs) const;
@@ -254,10 +251,18 @@ public:
     void SetLoss(double loss) { loss_ = loss; }
     double GetLoss() { return loss_; }
 
-    Sentence CalcTranslation(const Sentence & src_words) { 
-        int idx = 0; return CalcTranslation(idx, src_words);
+    CfgDataVector CalcTranslations() {
+        if(edges_.size() == 0)
+            THROW_ERROR("Cannot calculate a translation for a path with no edges");
+        CfgDataVector ret(GlobalVars::trg_factors);
+        for(int i = 0; i < GlobalVars::trg_factors; i++)
+            ret[i] = CalcTranslation(i);
+        return ret;
     }
-    Sentence CalcTranslation(int & idx, const Sentence & src_words);
+    CfgData CalcTranslation(int factor) {
+        int idx = 0; return CalcTranslation(factor, idx);
+    }
+    CfgData CalcTranslation(int factor, int & idx);
 
     // Calculate the features for this path by simply adding up all the features
     SparseMap CalcFeatures();
@@ -267,10 +272,9 @@ public:
     const HyperEdge* GetEdge(int i) const { return edges_[i]; }
     HyperEdge* GetEdge(int i) { return edges_[i]; }
     int NumEdges() const { return edges_.size(); }
-    WordId GetWord(int i) const { return words_[i]; }
-    const Sentence & GetWords() const { return words_; }
-    Sentence & GetWords() { return words_; }
-    void SetWords(const Sentence & words) { words_ = words; }
+    const CfgDataVector & GetTrgData() const { return data_; }
+    CfgDataVector & GetTrgData() { return data_; }
+    void SetTrgData(const CfgDataVector & data) { data_ = data; }
     SparseMap GetFeatures() {
         SparseMap ret;
         BOOST_FOREACH(const HyperEdge* edge, edges_)
@@ -285,8 +289,8 @@ public:
 protected:
     // The edges contrained in this translation
     std::vector<HyperEdge*> edges_;
-    // The actual translation itself in words
-    Sentence words_;
+    // The actual translations themselves
+    CfgDataVector data_;
     // The model score of the translation
     double score_;
     // The loss of the translation

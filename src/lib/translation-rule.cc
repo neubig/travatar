@@ -8,15 +8,12 @@ using namespace travatar;
 
 void TranslationRule::Print(std::ostream & out) const {
     out << "{\"src\": \""<<src_str_ << "\"";
-    if(trg_words_.size()) {
-        out << ", \"trg_words\": [";
-        for(int i = 0; i < (int)trg_words_.size(); i++)
-            out << trg_words_[i] << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
-    }
-    if(trg_syms_.size()) {
-        out << ", \"trg_syms\": [";
-        for(int i = 0; i < (int)trg_syms_.size(); i++)
-            out << trg_syms_[i] << ((i == (int)trg_syms_.size()-1) ? "]" : ", ");
+    if(trg_data_.size()) {
+        out << ", \"trg_data\": [";
+        for(int i = 0; i < (int)trg_data_.size(); i++) {
+            trg_data_[i].Print(out);
+            out << ((i == (int)trg_data_.size()-1) ? "]" : ", ");
+        }
     }
     if(features_.size()) {
         int pos = 0;

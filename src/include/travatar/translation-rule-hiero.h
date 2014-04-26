@@ -8,37 +8,31 @@
 #include <travatar/sparse-map.h>
 #include <travatar/translation-rule.h>
 
-using namespace std;
-
 namespace travatar {
 class TranslationRuleHiero : public TranslationRule {
 public: 
-	TranslationRuleHiero() { label_ = -1; }
 
-	void AddSourceWord (WordId id, WordId label=0);
+    TranslationRuleHiero(const std::string & src_str = "",
+                    const CfgDataVector & trg_data = CfgDataVector(),
+                    const SparseMap & features = SparseMap(),
+                    const CfgData & src_data = Sentence()
+                    ) : TranslationRule(src_str, trg_data, features),
+                        src_data_(src_data) { }
 
-    void SetFeatures(SparseMap & features);
-    void SetSrcStr(std::string src_str) { src_str_ = src_str; }
-    void SetLabel(WordId label) { label_ = label; }
-    string ToString();
+    std::string ToString();
 
     virtual bool operator==(const TranslationRuleHiero & rhs) const {
         return
-            trg_words_ == rhs.trg_words_ &&
+            trg_data_ == rhs.trg_data_ &&
             features_ == rhs.features_ &&
-            source_sent == rhs.source_sent;
+            src_data_ == rhs.src_data_;
     }
 
     // ACCESSOR
-    Sentence & GetSourceSentence() { return source_sent; }
-    std::vector<int> & GetNonTermPositions() { return non_term_position; }
-    WordId GetLabel() { return label_; }
-    WordId GetChildNTLabel(int position) { return non_term_label[position]; }
+    CfgData & GetSrcData() { return src_data_; }
+
 protected:
-    WordId label_;
-	Sentence source_sent;
-    std::vector<int> non_term_position;
-    std::vector<WordId> non_term_label;
+	CfgData src_data_;
 };
 
 }

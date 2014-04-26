@@ -39,14 +39,14 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         double edge_score = add.GetScore();
         // Add the new tails in *source* order 
         vector<HyperNode*> tails;
-        std::vector<WordId> wids;
+        Sentence wids;
         GenericString<WordId> node_id;
         if(old_edge) {
-            wids = old_edge->GetTrgWords();
+            wids = old_edge->GetTrgData()[factor_].words;
             node_id = GenericString<WordId>(old_edge->GetTails().size()+1);
             node_id[old_edge->GetTails().size()] = old_edge->GetId();
         } else{
-            wids = vector<WordId>(1,-1);
+            wids = Sentence(1,-1);
             node_id = GenericString<WordId>(1);
         }
         BOOST_FOREACH(WordId wid, wids) {
@@ -73,7 +73,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
             lm_unk = lm_unks_[old_edge->GetId()];
         } else {
             edge = new HyperEdge;
-            edge->SetTrgWords(vector<WordId>(1,-1));
+            edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1,-1))));
         }
         node_memo.insert(make_pair(node_id, edge));
         edge->SetHead(node);
@@ -121,7 +121,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
         float below_score = 0.0;
         int unk = 0;
         // Iterate over all output words in the target edge
-        BOOST_FOREACH(WordId wid, edge->GetTrgWords()) {
+        BOOST_FOREACH(WordId wid, edge->GetTrgData()[factor_].words) {
             // Add non-terminal
             if(wid < 0) {
                 words.push_back(lm::kMaxWordIndex);
@@ -216,7 +216,7 @@ HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) con
     search::NBestConfig nconfig(edge_limit_);
     search::Config config(lm_weight_, stack_pop_limit_, nconfig);
     search::Context<lm::ngram::Model> context(config, *lm_);
-    search::Forest best(lm_weight_, lm_unk_weight_);
+    search::Forest best(lm_weight_, lm_unk_weight_, factor_);
 
     // Create the search graph
     vector<search::Vertex*> vertices(parse.NumNodes() + 1);

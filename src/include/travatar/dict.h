@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <travatar/sentence.h>
+#include <travatar/cfg-data.h>
 #include <travatar/sparse-map.h>
 
 namespace travatar {
@@ -24,7 +25,7 @@ struct Dict {
     static WordId WID(const std::string & str);
 
     // Get the quoted word ID
-    static WordId QuotedWID(const std::string & str);
+    static WordId WIDAnnotated(const std::string & str);
 
     // Get the word symbol
     static const std::string & WSym(WordId id);
@@ -33,13 +34,15 @@ struct Dict {
     static std::string WSymEscaped(WordId id);
 
     // Get the
-    static std::string WAnnotatedSym(WordId id);
+    static std::string WSymAnnotated(WordId id, const Sentence & syms);
 
     // Print words
     static std::string PrintWords(const Sentence & ids);
+    static std::string PrintWords(const CfgDataVector & data);
 
     // Print annotated words
-    static std::string PrintAnnotatedWords(const Sentence & ids, const Sentence & syms);
+    static std::string PrintAnnotatedWords(const CfgData & data);
+    static std::string PrintAnnotatedVector(const CfgDataVector & data);
 
     // Feature functions
     static std::string PrintFeatures(const SparseMap & feats);
@@ -49,8 +52,9 @@ struct Dict {
     // Get the word ID
     static Sentence ParseWords(const std::string & str);
     
-    // Get the word ID
-    static void ParseQuotedWords(const std::string & str, Sentence & ids, Sentence & syms);
+    // Get the word IDs
+    static CfgData ParseAnnotatedWords(const std::string & str);
+    static CfgDataVector ParseAnnotatedVector(const std::string & str);
 
     // Escape a string
     static std::string EscapeString(const std::string & str);

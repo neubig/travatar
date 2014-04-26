@@ -14,86 +14,41 @@ using namespace boost;
 ///////////////////////////////////
 ///     LOOK UP TABLE FSM        //
 ///////////////////////////////////
-LookupTableFSM * LookupTableFSM::ReadFromRuleTable(std::istream & in) {
+LookupTableFSM * LookupTableFSM::ReadFromRuleTable(istream & in) {
 	string line;
     LookupTableFSM * ret = new LookupTableFSM;
-    
     while(getline(in, line)) {
         vector<string> columns, source_word, target_word;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
-        if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line << " [" << columns.size() << "]"); }
-
-        algorithm::split(source_word, columns[0], is_any_of(" "));
-        algorithm::split(target_word, columns[1], is_any_of(" "));
-        SparseMap features = Dict::ParseFeatures(columns[2]);
-    	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
-        BuildRule(rule, source_word, target_word, features);
-        ret->AddRule(rule);
-    	rule = NULL;
+        if(columns.size() < 3)
+            THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
+        CfgData src_data = Dict::ParseAnnotatedWords(columns[0]);
+    	TranslationRuleHiero * rule = new TranslationRuleHiero(
+            columns[0],
+            Dict::ParseAnnotatedVector(columns[1]),
+            Dict::ParseFeatures(columns[2]),
+            src_data
+        ); 
+        // Sanity check
+        BOOST_FOREACH(const CfgData & trg_data, rule->GetTrgData())
+            if(trg_data.syms.size() != src_data.syms.size())
+                THROW_ERROR("Mismatched number of non-terminals in rule table: " << endl << line);
+        if(src_data.words.size() == 0)
+            THROW_ERROR("Empty sources in a rule are not allowed: " << endl << line);
+        if(src_data.syms.size() == 1 && src_data.words.size() == 1 && src_data.syms[0] == src_data.label)
+            THROW_ERROR("Unary rules with identical labels for parent and child are not allowed: " << endl << line);
+        // Add the rule
+    	ret->AddRule(rule);
     }
     return ret;
 }
 
-TranslationRuleHiero * LookupTableFSM::BuildRule(TranslationRuleHiero * rule, vector<string> & source, 
-		vector<string> & target, SparseMap features) 
-{
-	ostringstream source_string;
-	int source_nt_count = 0;
-    int target_nt_count = 0;
-    int i;
-	for (i=0; i < (int) source.size(); ++i) {
-		if (source[i] == "@") break;
-		int id = Dict::QuotedWID(source[i]);
-		if (id < 0) {
-			++source_nt_count;
-			int k = source[i].size()-1;
-			while (source[i][k-1] != ':' && k > 1) --k;
-			rule->AddSourceWord(id,Dict::WID(source[i].substr(k,source[i].size()-k)));
-		} else {
-			rule->AddSourceWord(id);
-		}
-		if (i) source_string << " ";
-		source_string << source[i];
-	}
-
-	for (i=0; i < (int) target.size(); ++i) {
-		if (target[i] == "@") break;
-		int id = Dict::QuotedWID(target[i]);
-		if (id < 0) ++target_nt_count; 
-		rule->AddTrgWord(id);
-	}
-	
-	rule->SetSrcStr(source_string.str());
-	rule->SetFeatures(features);
-	rule->SetLabel(Dict::WID(target[i+1]));
-
-	if (source_nt_count != target_nt_count) {
-        cerr << rule->ToString() << endl;
-        cerr << "Source: " << source_nt_count << endl;
-        cerr << "Target: " << target_nt_count << endl;
-		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
-	} else if (source_nt_count == 1 && (int)source.size() == 1 + 2) { // 1 + @ [ROOT]
-		int k = source[0].size() - 1;
-		while (source[0][k-1] != ':' && k > 1) --k;
-		string label = source[0].substr(k,source[0].size()-k);
-		// Case of Unary rule, that makes loop in the hypergraph
-		if (label == target[i+1]) {
-			cerr << rule->ToString() << endl;
-			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
-		}
-	}
-	return rule;
-}
-
 void LookupTableFSM::AddRule(TranslationRuleHiero* rule) {
-	if (rule->GetSourceSentence().size() < 0) {
-		THROW_ERROR("Error when reading rule on lookup-table-fsm. Rule string cannot be empty.");
-	} 
-	LookupTableFSM::AddRule(0,root_node, rule);
+	LookupTableFSM::AddRule(0, root_node_, rule);
 }
 
 void LookupTableFSM::AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule) {
-    Sentence rule_sent = rule->GetSourceSentence();
+    Sentence rule_sent = rule->GetSrcData().words;
     WordId key = rule_sent[position];
 
     if (key < 0) {
@@ -127,7 +82,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	LookupTableFSM::HieroRuleSpans span = LookupTableFSM::HieroRuleSpans();
 	LookupTableFSM::NodeMap node_map = LookupTableFSM::NodeMap();
 	LookupTableFSM::EdgeList edge_list = LookupTableFSM::EdgeList(); 
-	BuildHyperGraphComponent(node_map, edge_list, sent, root_node, 0, -1, span);
+	BuildHyperGraphComponent(node_map, edge_list, sent, root_node_, 0, -1, span);
 	bool checkup_unknown[sent.size()];
 	vector<LookupTableFSM::TailSpanKey > temp_spans;
 	if (!GetDeleteUnknown()) {
@@ -151,7 +106,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	for (int i=0; i < (int) sent.size(); ++i) {
 		// word i in the sentence is unknown!
 		if (!GetDeleteUnknown() && !checkup_unknown[i]) {
-			pair<int,int> word_span = make_pair(i,i+1);
 			TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i],GetDefaultSymbol());
 			HyperEdge* unk_edge = TransformRuleIntoEdge(&node_map,i,i+1,temp_spans,unk_rule);
 			_graph->AddEdge(unk_edge);
@@ -209,10 +163,10 @@ void LookupTableFSM::BuildHyperGraphComponent(LookupTableFSM::NodeMap & node_map
 			BuildHyperGraphComponent(node_map, edge_list, input, node, position+1, last_scan, spans);
 
 			BOOST_FOREACH(TranslationRuleHiero* rule, x_node->GetTranslationRules()) {
-				if (rule->GetSourceSentence()[0] < 0) {
+				if (rule->GetSrcData().words[0] < 0) {
 					int limit = ((int)rule_span_next.size() > 1) ? rule_span_next[1].first : (int)input.size();
 					for (int i=0; i < limit; ++i) {
-						if (limit - i <= span_length) {
+						if (limit - i <= span_length_) {
 							LookupTableFSM::HieroRuleSpans nt_front_rs = LookupTableFSM::HieroRuleSpans();
 							nt_front_rs.push_back(make_pair(i,limit));
 							for (int j=1; j < (int)rule_span_next.size(); ++j) 
@@ -237,10 +191,10 @@ void LookupTableFSM::BuildHyperGraphComponent(LookupTableFSM::NodeMap & node_map
 			BuildHyperGraphComponent(node_map, edge_list, input, next_node, position+1, position, rule_span_next);
 			
 			BOOST_FOREACH(TranslationRuleHiero* rule, next_node->GetTranslationRules()) {
-				if (rule->GetSourceSentence()[0] < 0) {
+				if (rule->GetSrcData().words[0] < 0) {
 					int limit = ((int)rule_span_next.size() > 1) ? rule_span_next[1].first : (int)input.size();
 					for (int i=0; i < limit; ++i) {
-						if (limit - i <= span_length) {
+						if (limit - i <= span_length_) {
 							LookupTableFSM::HieroRuleSpans nt_front_rs = LookupTableFSM::HieroRuleSpans();
 							nt_front_rs.push_back(make_pair(i,limit));
 							for (int j=1; j < (int)rule_span_next.size(); ++j) 
@@ -298,12 +252,12 @@ void LookupTableFSM::CleanUnreachableNode(LookupTableFSM::EdgeList & input, Look
 
 bool LookupTableFSM::NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSpans & spans) const {
 	bool ret = true;
-	if (rule->GetSourceSentence()[0] < 0) {
-		ret = (spans[0].second - spans[0].first) <= span_length;
+	if (rule->GetSrcData().words[0] < 0) {
+		ret = (spans[0].second - spans[0].first) <= span_length_;
 	}
-	if (ret && rule->GetSourceSentence()[(int)spans.size()-1]) {
+	if (ret && rule->GetSrcData().words[(int)spans.size()-1]) {
 		pair<int,int> back_span = spans[(int)spans.size()-1];
-		ret = (back_span.second - back_span.first) <= span_length;
+		ret = (back_span.second - back_span.first) <= span_length_;
 	}
 	return ret;
 }
@@ -311,8 +265,8 @@ bool LookupTableFSM::NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSp
 HyperEdge* LookupTableFSM::TransformRuleIntoEdge(TranslationRuleHiero* rule, const LookupTableFSM::HieroRuleSpans & rule_span,
 	LookupTableFSM::NodeMap & node_map) const
 {
-	std::vector<int> non_term_position = rule->GetNonTermPositions();
-	std::vector<LookupTableFSM::TailSpanKey > span_temp;
+	vector<int> non_term_position = rule->GetSrcData().GetNontermPositions();
+	vector<LookupTableFSM::TailSpanKey > span_temp;
 	for (int i=0 ; i < (int)non_term_position.size(); ++i) {
 		span_temp.push_back(make_pair(i,rule_span[non_term_position[i]]));
 	}
@@ -328,14 +282,14 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(LookupTableFSM::NodeMap* node_m
 		TranslationRuleHiero* rule) const
 {
 	HyperEdge* hedge = new HyperEdge;
-	HyperNode* head = FindNode(node_map, head_first, head_second, rule->GetLabel());
+	HyperNode* head = FindNode(node_map, head_first, head_second, rule->GetSrcData().label);
 	hedge->SetHead(head);
 	hedge->SetRule(rule, rule->GetFeatures());
 	hedge->SetRuleStr(rule->ToString());
 	head->AddEdge(hedge);
 	LookupTableFSM::TailSpanKey tail_span;
 	BOOST_FOREACH(tail_span, tail_spans) {
-		HyperNode* tail = FindNode(node_map, tail_span.second.first, tail_span.second.second, rule->GetChildNTLabel(tail_span.first));
+		HyperNode* tail = FindNode(node_map, tail_span.second.first, tail_span.second.second, rule->GetSrcData().syms[tail_span.first]);
 		tail->SetSpan(tail_span.second);
 		hedge->AddTail(tail);
 		tail = NULL;
@@ -369,20 +323,18 @@ HyperNode* LookupTableFSM::FindNode(LookupTableFSM::NodeMap* map_ptr,
 	}
 }
 
-std::string LookupTableFSM::ToString() const {
-	return root_node->ToString();
+string LookupTableFSM::ToString() const {
+	return root_node_->ToString();
 }
 
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId label) const 
 {
-	TranslationRuleHiero* unknown_rule = new TranslationRuleHiero();
-    SparseMap features = Dict::ParseFeatures("unk=1");
-    unknown_rule->SetFeatures(features);
-    unknown_rule->AddSourceWord(unknown_word);
-    unknown_rule->AddTrgWord(unknown_word);
-    unknown_rule->SetSrcStr(Dict::WSym(unknown_word));
-    unknown_rule->SetLabel(label);
-    return unknown_rule;
+	return new TranslationRuleHiero(
+        "UNK",
+        CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, unknown_word), label)),
+        Dict::ParseFeatures("unk=1"),
+        CfgData(Sentence(1, unknown_word), label)
+    );
 }
 
 ///////////////////////////////////
@@ -405,11 +357,11 @@ LookupNodeFSM* LookupNodeFSM::FindNode(WordId key) const {
 	}
 }
 
-std::string LookupNodeFSM::ToString() const {
+string LookupNodeFSM::ToString() const {
 	return ToString(0);
 }
 
-std::string LookupNodeFSM::ToString(int indent) const {
+string LookupNodeFSM::ToString(int indent) const {
 	ostringstream str;
 	for (int i=0; i < indent; ++i) str << " ";
 	str << "===================================" << endl;

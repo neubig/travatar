@@ -92,21 +92,25 @@ HyperEdge * RuleComposer::ComposeEdge(const HyperEdge & parent,
     vector<int> trg_words;
     int child_tails = child.GetTails().size();
     int trg_placeholder = -1 - tail_id;
-    BOOST_FOREACH(int trg, parent.GetTrgWords()) {
-        if(trg >= 0 || trg > trg_placeholder) {
-            trg_words.push_back(trg);
-        } else if (trg == trg_placeholder) {
-            BOOST_FOREACH(int ctrg, child.GetTrgWords()) {
-                if(ctrg >= 0)
-                    trg_words.push_back(ctrg);
-                else
-                    trg_words.push_back(ctrg-tail_id);
+    CfgDataVector trg_data(GlobalVars::trg_factors);
+    // TODO: This cannot handle symbols yet
+    for(int i = 0; i < GlobalVars::trg_factors; i++) {
+        BOOST_FOREACH(WordId trg, parent.GetTrgData()[i].words) {
+            if(trg >= 0 || trg > trg_placeholder) {
+                trg_data[i].words.push_back(trg);
+            } else if (trg == trg_placeholder) {
+                BOOST_FOREACH(int ctrg, child.GetTrgData()[i].words) {
+                    if(ctrg >= 0)
+                        trg_data[i].words.push_back(ctrg);
+                    else
+                        trg_data[i].words.push_back(ctrg-tail_id);
+                }
+            } else {
+                trg_data[i].words.push_back(trg - child_tails + 1);
             }
-        } else {
-            trg_words.push_back(trg - child_tails + 1);
         }
     }
-    composed->SetTrgWords(trg_words);
+    composed->SetTrgData(trg_data);
     // insert the edges at the appropriate place (the first time any edge starts
     // after them)
     vector<HyperEdge*> fragments;

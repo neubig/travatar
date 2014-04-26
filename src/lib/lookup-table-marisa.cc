@@ -38,9 +38,9 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
         algorithm::split_regex(columns, line, threebars);
         if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
         vector<WordId> trg_words, trg_syms;
-        Dict::ParseQuotedWords(columns[1], trg_words, trg_syms);
+        CfgDataVector trg_data = Dict::ParseAnnotatedVector(columns[1]);
         SparseMap features = Dict::ParseFeatures(columns[2]);
-        TranslationRule* rule = new TranslationRule(columns[0], trg_words, trg_syms, features);
+        TranslationRule* rule = new TranslationRule(columns[0], trg_data, features);
         if(rules.size() == 0 || columns[0] != rules[rules.size()-1][0]->GetSrcStr()) {
             keyset.push_back(rule->GetSrcStr().c_str());
             rules.push_back(vector<TranslationRule*>());

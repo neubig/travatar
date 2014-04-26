@@ -15,9 +15,7 @@ class TestTune : public TestBase {
 public:
 
     Sentence GetQuotedWords(const std::string & str) {
-        Sentence words, syms;
-        Dict::ParseQuotedWords(str, words, syms);
-        return words;
+        return Dict::ParseAnnotatedWords(str).words;
     }
 
     TestTune() {
@@ -51,16 +49,16 @@ public:
         HyperNode* n1 = new HyperNode(Dict::WID("B"), -1, make_pair(0,1)); forest->AddNode(n1);
         // And two edges between each node
         SparseMap f01; f01[valid] = 1; f01[slopeid] = -1;
-        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("x0 \"a\""));
+        HyperEdge* e01 = new HyperEdge(n0); e01->GetTrgData()[0].words = (GetQuotedWords("x0 \"a\""));
         e01->SetFeatures(f01); e01->AddTail(n1); n0->AddEdge(e01); forest->AddEdge(e01);
         SparseMap f02; f02[valid] = 3; f02[slopeid] =  1;
-        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(GetQuotedWords("\"b\" x0"));
+        HyperEdge* e02 = new HyperEdge(n0); e02->GetTrgData()[0].words = (GetQuotedWords("\"b\" x0"));
         e02->SetFeatures(f02); e02->AddTail(n1); n0->AddEdge(e02); forest->AddEdge(e02);
         SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
-        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(GetQuotedWords("\"c\""));
+        HyperEdge* e11 = new HyperEdge(n1); e11->GetTrgData()[0].words = (GetQuotedWords("\"c\""));
         e11->SetFeatures(f11);                   n1->AddEdge(e11); forest->AddEdge(e11);
         SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
-        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(GetQuotedWords("\"d\""));
+        HyperEdge* e12 = new HyperEdge(n1); e12->GetTrgData()[0].words = (GetQuotedWords("\"d\""));
         e12->SetFeatures(f12);                   n1->AddEdge(e12); forest->AddEdge(e12);         
         }
 
@@ -86,28 +84,28 @@ public:
         // And edges for each node
         if(use_c) {
             SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
-            HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("x0 x1"));
+            HyperEdge* e01 = new HyperEdge(n0); e01->GetTrgData()[0].words = (GetQuotedWords("x0 x1"));
             e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); ret->AddEdge(e01);
         }
         if(use_d) {
             SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
-            HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(GetQuotedWords("x1 x0"));
+            HyperEdge* e02 = new HyperEdge(n0); e02->GetTrgData()[0].words = (GetQuotedWords("x1 x0"));
             e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); ret->AddEdge(e02);
         }
         SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
-        HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgWords(GetQuotedWords("\"c\""));
+        HyperEdge* e11 = new HyperEdge(n1); e11->GetTrgData()[0].words = (GetQuotedWords("\"c\""));
         e11->SetFeatures(f11); n1->AddEdge(e11); ret->AddEdge(e11);
         SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
-        HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgWords(GetQuotedWords("\"d\""));
+        HyperEdge* e12 = new HyperEdge(n1); e12->GetTrgData()[0].words = (GetQuotedWords("\"d\""));
         e12->SetFeatures(f12); n1->AddEdge(e12); ret->AddEdge(e12);         
         if(use_c) {
             SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
-            HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgWords(GetQuotedWords("\"a\""));
+            HyperEdge* e21 = new HyperEdge(n2); e21->GetTrgData()[0].words = (GetQuotedWords("\"a\""));
             e21->SetFeatures(f21); n2->AddEdge(e21); ret->AddEdge(e21);
         }
         if(use_d) {
             SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
-            HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgWords(GetQuotedWords("\"b\""));
+            HyperEdge* e31 = new HyperEdge(n3); e31->GetTrgData()[0].words = (GetQuotedWords("\"b\""));
             e31->SetFeatures(f31); n3->AddEdge(e31); ret->AddEdge(e31);
         }
         return ret;
@@ -243,9 +241,9 @@ public:
         rule_graph->SetWords(exp_sent);
         HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); rule_graph->AddNode(n0);
         SparseMap f01; f01[valid] = -10; f01[slopeid] = 1;
-        HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgWords(GetQuotedWords("\"<unk>\""));
+        HyperEdge* e01 = new HyperEdge(n0); e01->GetTrgData()[0].words = (GetQuotedWords("\"<unk>\""));
         e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
-        HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgWords(GetQuotedWords("\"hello\""));
+        HyperEdge* e02 = new HyperEdge(n0); e02->GetTrgData()[0].words = (GetQuotedWords("\"hello\""));
         n0->AddEdge(e02); rule_graph->AddEdge(e02);
         TuningExampleForest tef(&bleu, exp_sent, 2, 1);
         tef.AddHypothesis(rule_graph);

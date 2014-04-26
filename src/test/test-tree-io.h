@@ -71,8 +71,8 @@ public:
         HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); graph_exp.AddEdge(edge7);
         HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); graph_exp.AddEdge(edge8);
         HyperEdge* edge9 = new HyperEdge(node8); node8->AddEdge(edge9); graph_exp.AddEdge(edge9);
-        edge9->GetTrgWords().push_back(Dict::WID("\\\""));
-        edge9->GetTrgWords().push_back(-1);
+        edge9->GetTrgData()[0].words.push_back(Dict::WID("\\\""));
+        edge9->GetTrgData()[0].words.push_back(-1);
         graph_exp.SetWords(Dict::ParseWords("running water"));
         }
  

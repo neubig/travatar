@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <travatar/sentence.h>
+#include <travatar/cfg-data.h>
 #include <travatar/sparse-map.h>
 
 namespace travatar {
@@ -12,23 +13,19 @@ class TranslationRule {
 
 public:
     TranslationRule(const std::string & src_str = "",
-                    const std::vector<WordId> & trg_words = std::vector<WordId>(),
-                    const std::vector<WordId> & trg_syms = std::vector<WordId>(),
+                    const CfgDataVector & trg_data = CfgDataVector(),
                     const SparseMap & features = SparseMap()) :
-        src_str_(src_str), trg_words_(trg_words), trg_syms_(trg_syms), features_(features) { }
+        src_str_(src_str), trg_data_(trg_data), features_(features) { }
 
     virtual ~TranslationRule() {} 
 
-    void AddTrgWord(int id) { trg_words_.push_back(id); }
-    void AddTrgSym(int id) { trg_syms_.push_back(id); }
     void AddFeature(int id, double feat);
     void AddFeature(const std::string & str, double feat);
     
     virtual bool operator==(const TranslationRule & rhs) const {
         return
             src_str_ == rhs.src_str_ &&
-            trg_words_ == rhs.trg_words_ &&
-            trg_syms_ == rhs.trg_syms_ &&
+            trg_data_ == rhs.trg_data_ &&
             features_ == rhs.features_;
     }
     bool operator!=(const TranslationRule & rhs) const {
@@ -38,18 +35,19 @@ public:
     void Print(std::ostream & out) const;
 
     const std::string & GetSrcStr() const { return src_str_; }
-    const std::vector<WordId> & GetTrgWords() const { return trg_words_; }
-    const std::vector<WordId> & GetTrgSyms() const { return trg_syms_; }
+    const CfgDataVector & GetTrgData() const { return trg_data_; }
     const SparseMap & GetFeatures() const { return features_; }
     std::string & GetSrcStr() { return src_str_; }
-    std::vector<WordId> & GetTrgWords() { return trg_words_; }
-    std::vector<WordId> & GetTrgSyms() { return trg_syms_; }
+    CfgDataVector & GetTrgData() { return trg_data_; }
     SparseMap & GetFeatures() { return features_; }
+
+    void AddTrgWord(WordId word, int factor = 0) { trg_data_[factor].words.push_back(word); }
+    void AddTrgSym(WordId sym, int factor = 0) { trg_data_[factor].syms.push_back(sym); }
+    void SetTrgLabel(WordId lab, int factor = 0) { trg_data_[factor].label = lab; }
 
 protected:
     std::string src_str_;
-    std::vector<WordId> trg_words_;
-    std::vector<WordId> trg_syms_;
+    CfgDataVector trg_data_;
     SparseMap features_;
 
 };

@@ -19,10 +19,12 @@ protected:
     lm::ngram::Model * lm_;
     // The weight assigned to this particular LM
     double lm_weight_, lm_unk_weight_;
+    // The factor to use
+    int factor_;
 
 public:
-    LMComposer() : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(NULL), lm_weight_(1), lm_unk_weight_(1) { }
-    LMComposer(lm::ngram::Model * lm) : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(lm), lm_weight_(1), lm_unk_weight_(1) { }
+    LMComposer() : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(NULL), lm_weight_(1), lm_unk_weight_(1), factor_(0) { }
+    LMComposer(lm::ngram::Model * lm, int factor = 0) : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(lm), lm_weight_(1), lm_unk_weight_(1), factor_(factor) { }
 
     virtual ~LMComposer() {
         if(lm_) delete lm_;

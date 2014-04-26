@@ -168,7 +168,7 @@ void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<WordId>*
     }
     size_t ant_size = ant_trans.size();
     assert(ant_size == (int)cur->edge->GetTails().size());
-    BOOST_FOREACH(WordId id, cur->edge->GetTrgWords()) {
+    BOOST_FOREACH(WordId id, cur->edge->GetTrgData()[factor].words) {
         if(id == unk_id) {
             pair<int,int> span = cur->edge->GetHead()->GetSpan();
             if(span.second-span.first != 1) THROW_ERROR("Bad span in unknown rule: " << span);

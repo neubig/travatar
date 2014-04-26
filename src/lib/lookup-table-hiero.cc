@@ -21,69 +21,73 @@ LookupTableHiero * LookupTableHiero::ReadFromRuleTable(std::istream & in) {
     while(getline(in, line)) {
         vector<string> columns, source_word, target_word;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
-        if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line << " [" << columns.size() << "]"); }
-
-        algorithm::split(source_word, columns[0], is_any_of(" "));
-        algorithm::split(target_word, columns[1], is_any_of(" "));
-        SparseMap features = Dict::ParseFeatures(columns[2]);
-    	TranslationRuleHiero * rule = new TranslationRuleHiero(); 
-        BuildRule(rule, source_word, target_word, features);
+        if(columns.size() < 3)
+            THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
+    	TranslationRuleHiero * rule = new TranslationRuleHiero(
+            columns[0],
+            Dict::ParseAnnotatedVector(columns[1]),
+            Dict::ParseFeatures(columns[2]),
+            Dict::ParseAnnotatedWords(columns[0])
+        ); 
+        // Sanity check
+        BOOST_FOREACH(const CfgData & trg_data, rule->GetTrgData())
+            if(trg_data.syms.size() != rule->GetSrcData().syms.size())
+                THROW_ERROR("Mismatched number of non-terminals in rule table: " << endl << line);
     	ret->AddRule(rule);
-    	rule = NULL;
     }
     return ret;
 }
 
-TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, vector<string> & source, 
-		vector<string> & target, SparseMap features) 
-{
-	ostringstream source_string;
-	int source_nt_count = 0;
-    int target_nt_count = 0;
-    int i;
-	for (i=0; i < (int) source.size(); ++i) {
-		if (source[i] == "@") break;
-		int id = Dict::QuotedWID(source[i]);
-		if (id < 0) {
-			++source_nt_count;
-			int k = source[i].size()-1;
-			while (source[i][k-1] != ':' && k > 1) --k;
-			rule->AddSourceWord(id,Dict::WID(source[i].substr(k,source[i].size()-k)));
-		} else {
-			rule->AddSourceWord(id);
-		}
-		if (i) source_string << " ";
-		source_string << source[i];
-	}
-
-	for (i=0; i < (int) target.size(); ++i) {
-		if (target[i] == "@") break;
-		int id = Dict::QuotedWID(target[i]);
-		if (id < 0) ++target_nt_count; 
-		rule->AddTrgWord(id);
-	}
-	
-	rule->SetSrcStr(source_string.str());
-	rule->SetFeatures(features);
-	rule->SetLabel(Dict::WID(target[i+1]));
-
-	if (source_nt_count != target_nt_count) {
-        cerr << rule->ToString() << endl;
-        cerr << "Source: " << source_nt_count << endl;
-        cerr << "Target: " << target_nt_count << endl;
-		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
-	} else if (source_nt_count == 1 && (int)source.size() == 1 + 2) { // 1 + @ [ROOT]
-		int k = source[0].size() - 1;
-		while (source[0][k-1] != ':' && k > 1) --k;
-		string label = source[0].substr(k,source[0].size()-k);
-		// Case of Unary rule, that makes loop in the hypergraph
-		if (label == target[i+1]) {
-			cerr << rule->ToString() << endl;
-			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
-		}
-	}
-	return rule;
-}
+// TranslationRuleHiero * LookupTableHiero::BuildRule(TranslationRuleHiero * rule, vector<string> & source, 
+// 		vector<string> & target, SparseMap features) 
+// {
+// 	ostringstream source_string;
+// 	int source_nt_count = 0;
+//     int target_nt_count = 0;
+//     int i;
+// 	for (i=0; i < (int) source.size(); ++i) {
+// 		if (source[i] == "@") break;
+// 		int id = Dict::QuotedWID(source[i]);
+// 		if (id < 0) {
+// 			++source_nt_count;
+// 			int k = source[i].size()-1;
+// 			while (source[i][k-1] != ':' && k > 1) --k;
+// 			rule->AddSourceWord(id,Dict::WID(source[i].substr(k,source[i].size()-k)));
+// 		} else {
+// 			rule->AddSourceWord(id);
+// 		}
+// 		if (i) source_string << " ";
+// 		source_string << source[i];
+// 	}
+// 
+// 	for (i=0; i < (int) target.size(); ++i) {
+// 		if (target[i] == "@") break;
+// 		int id = Dict::QuotedWID(target[i]);
+// 		if (id < 0) ++target_nt_count; 
+// 		rule->AddTrgWord(id);
+// 	}
+// 	
+// 	rule->SetSrcStr(source_string.str());
+// 	rule->SetFeatures(features);
+// 	rule->SetLabel(Dict::WID(target[i+1]));
+// 
+// 	if (source_nt_count != target_nt_count) {
+//         cerr << rule->ToString() << endl;
+//         cerr << "Source: " << source_nt_count << endl;
+//         cerr << "Target: " << target_nt_count << endl;
+// 		THROW_ERROR("Invalid rule. NT in source side != NT in target side");
+// 	} else if (source_nt_count == 1 && (int)source.size() == 1 + 2) { // 1 + @ [ROOT]
+// 		int k = source[0].size() - 1;
+// 		while (source[0][k-1] != ':' && k > 1) --k;
+// 		string label = source[0].substr(k,source[0].size()-k);
+// 		// Case of Unary rule, that makes loop in the hypergraph
+// 		if (label == target[i+1]) {
+// 			cerr << rule->ToString() << endl;
+// 			THROW_ERROR("Invalid rule. Travatar does not allow unary rule with same label (it will create loop in hypergraph).");
+// 		}
+// 	}
+// 	return rule;
+// }
 
 HyperGraph * LookupTableHiero::TransformGraph(const HyperGraph & graph) const {
 	HyperGraph* _graph = BuildHyperGraph(graph.GetWords());
