@@ -61,7 +61,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
         while((int)tgm.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
+            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest(tune_factor_)));
         }
         ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, stats);
     }
@@ -85,7 +85,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
                 shared_ptr<TuningExample>(
                     new TuningExampleForest(
                         eval_.get(),
-                        ref, id, norm)));
+                        ref, id, norm, tune_factor_)));
         }
         ((TuningExampleForest&)tgm.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
         id++;
@@ -260,8 +260,8 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         int id = atoi(columns[0].c_str());
-        Sentence hyp = Dict::ParseWords(columns[1]);
-        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyp, id);
+        std::vector<Sentence> hyps = Dict::ParseWordVector(columns[1]);
+        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyps[tune_factor_], id);
         stat_out << stats->WriteStats() << endl;
     }
 }
@@ -269,8 +269,10 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
 // Run the model
 void BatchTuneRunner::Run(const ConfigBatchTune & config) {
 
-    // Set the debugging level
+    // Set the debugging level and number of factors
     GlobalVars::debug = config.GetInt("debug");
+    GlobalVars::trg_factors = config.GetInt("trg_factors");
+    tune_factor_ = config.GetInt("tune_factor");
 
     // Open the references
     ifstream ref_in(config.GetMainArg(0).c_str());

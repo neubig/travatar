@@ -51,6 +51,7 @@ struct Dict {
 
     // Get the word ID
     static Sentence ParseWords(const std::string & str);
+    static std::vector<Sentence> ParseWordVector(const std::string & str);
     
     // Get the word IDs
     static CfgData ParseAnnotatedWords(const std::string & str);

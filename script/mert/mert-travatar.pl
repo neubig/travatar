@@ -21,7 +21,8 @@ my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
 my $IN_FORMAT = "penn"; # The format of the input
 my $NBEST = 200;
-my $TRG_FACTORS = 1;
+my $TRG_FACTORS = 1; # The number of target factors
+my $TUNE_FACTOR = 0; # Which factor to use in tuning
 my $THREADS = 1; # The number of threads to use
 GetOptions(
     # Necessary
@@ -44,6 +45,7 @@ GetOptions(
     "threads=i" => \$THREADS,
     "no-filter-rt!" => \$NO_FILTER_RT,
     "trg-factors=i" => \$TRG_FACTORS,
+    "tune-factor=i" => \$TUNE_FACTOR,
     "geotune-command=s" => \$GEOTUNE_COMMAND,
     # "=s" => \$,
     # "=s" => \$,
@@ -113,13 +115,13 @@ foreach $iter (1 .. $MAX_ITERS) {
         if($CAND_TYPE eq "nbest") {
             my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
             safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $WORKING_DIR/run$iter.uniq -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -tune-factor $TUNE_FACTOR -threads $THREADS -nbest $WORKING_DIR/run$iter.uniq -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
             $nbests = join(",", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter));
             my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $nbests -stat_in $stats -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -tune-factor $TUNE_FACTOR -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif ($CAND_TYPE eq "nbestgeo") {
             my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
             safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");

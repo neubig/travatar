@@ -124,6 +124,16 @@ Sentence Dict::ParseWords(const std::string & str) {
     return ret;
 }
 
+std::vector<Sentence> Dict::ParseWordVector(const std::string & str) {
+    std::vector<Sentence> ret;
+    vector<string> columns;
+    algorithm::split_regex(columns, str, regex(" \\|COL\\| "));
+    BOOST_FOREACH(const std::string & col, columns) {
+        ret.push_back(ParseWords(col));
+    }
+    return ret;
+}
+
 CfgData Dict::ParseAnnotatedWords(const std::string & str) {
     regex term_regex("^\"(.+)\"$");
     regex nonterm_regex("^x(\\d+)(:.+)?$");

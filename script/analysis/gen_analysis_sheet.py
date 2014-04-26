@@ -56,8 +56,10 @@ class TraceParser():
 			if string == "\"<unk>\"":
 				gentree.items = self.src[start:end]
 				tree = ""
+			elif string[0] == "\"" and string[-1] == "\"":
+				tree = " ".join("%s" % s for s in split_skip_quot(string))
 			else:
-				tree = " ".join("%s:UNK" % s for s in split_skip_quot(string))
+				tree = "unk ( "+" ".join(map(lambda x: "%s:unk" % x, string.split()))+" )"
 
 		for item in split_skip_quot(tree):
 			if item == "(":
@@ -78,7 +80,7 @@ class TraceParser():
 			elif len(item) >= 2 and item[0] == item[-1] == "\"":
 				gentree.items.append(item[1:-1])
 			else:
-				print("syntax error at rule %d" % i, file=sys.stderr)
+				print("syntax error in tree at rule %d" % i, file=sys.stderr)
 				return None
 
 		if string == "\"<unk>\"":
@@ -94,11 +96,11 @@ class TraceParser():
 			elif len(item) >= 2 and item[0] == item[-1] == "\"":
 				genstr.items.append(item[1:-1])
 			else:
-				print("syntax error at rule %d" % i, file=sys.stderr)
+				print("syntax error in string at rule %d" % i, file=sys.stderr)
 				return None
 
 		if brk != 0:
-			print("syntax error at rule %d" % i, file=sys.stderr)
+			print("syntax error at brk of rule %d" % i, file=sys.stderr)
 			return None
 
 		return j, gentree, genstr
@@ -194,6 +196,7 @@ var parentref = new Object();
 			trghtml = self.__gen(i, trg, "trg", descset, parentref)
 			htmlset.append((i, srchtml, trghtml, descset, parentref))
 
+		print("%s-0.html" % fileprefix)
 		fp = open("%s-0.html" % fileprefix, "w")
 		print(self.html_header, file=fp)
 		for (i, src, trg, descset, parentref), ref in zip(htmlset, self.reflst):
@@ -226,7 +229,7 @@ def main():
 	parser.add_argument("src", help="Sources of translations")
 	parser.add_argument("out_prefix", help="Prefix of generated HTML file(s)")
 	parser.add_argument("--ref", "-r", dest="ref", default=None, help="References of translations")
-	parser.add_argument("--limit", "-l", dest="limit", help="Number of sentences contained in each HTML", default=0, type=int)
+	parser.add_argument("--limit", "-l", dest="limit", help="Number of sentences contained in each HTML", default=100, type=int)
 
 	args = parser.parse_args()
 
@@ -277,6 +280,7 @@ def main():
 
 	if reffile:
 		reffile.close()
+	print(args.out_prefix)
 	htmlbuilder.output(args.out_prefix, args.limit)
 
 	return
