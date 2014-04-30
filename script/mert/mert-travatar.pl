@@ -21,6 +21,8 @@ my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
 my $IN_FORMAT = "penn"; # The format of the input
 my $NBEST = 200;
+my $TRG_FACTORS = 1; # The number of target factors
+my $TUNE_FACTOR = 0; # Which factor to use in tuning
 my $THREADS = 1; # The number of threads to use
 GetOptions(
     # Necessary
@@ -42,6 +44,8 @@ GetOptions(
     "eval=s" => \$EVAL,
     "threads=i" => \$THREADS,
     "no-filter-rt!" => \$NO_FILTER_RT,
+    "trg-factors=i" => \$TRG_FACTORS,
+    "tune-factor=i" => \$TUNE_FACTOR,
     "geotune-command=s" => \$GEOTUNE_COMMAND,
     # "=s" => \$,
     # "=s" => \$,
@@ -58,7 +62,7 @@ if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or 
 ($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or ($CAND_TYPE eq "nbestgeo") or die "Bad candidate type: $CAND_TYPE";
 ($MERT_SOLVER eq "moses") and (not $MOSES_DIR) and "Must specify -moses-dir when using the Moses MERT solver.";
 ($EVAL =~ /^(bleu|ribes|interp|ter)/) or die "Bad evaluation measure $EVAL";
-($DECODER_OPTIONS =~ /in_format/) and die "Travatar's in_format should not be specified through -decoder-options, but through the -in-format option of mert-travatar.pl";
+($DECODER_OPTIONS =~ /(in_format|trg_factors)/) and die "Travatar's $1 should not be specified through -decoder-options, but through the option of mert-travatar.pl";
 $TRAVATAR = "$TRAVATAR_DIR/src/bin/travatar" if not $TRAVATAR;
 
 if(@ARGV != 0) {
@@ -95,7 +99,7 @@ foreach $iter (1 .. $MAX_ITERS) {
     if($CAND_TYPE =~ "^nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
     elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
-    safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {
@@ -111,13 +115,13 @@ foreach $iter (1 .. $MAX_ITERS) {
         if($CAND_TYPE eq "nbest") {
             my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
             safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $WORKING_DIR/run$iter.uniq -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -tune_factor $TUNE_FACTOR -trg_factors $TRG_FACTORS -threads $THREADS -nbest $WORKING_DIR/run$iter.uniq -stat_out $WORKING_DIR/run$iter.stats -eval \"$EVAL\" $REF 2> $prev.stats.log") or die "batch-tune stats extraction failed";
             $nbests = join(",", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter));
             my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $nbests -stat_in $stats -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif($CAND_TYPE eq "forest") {
             my $forests = join(",", map { "$WORKING_DIR/run$_.forest" } (1 .. $iter));
-            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
+            safesystem("$TRAVATAR_DIR/src/bin/batch-tune -tune_factor $TUNE_FACTOR -trg_factors $TRG_FACTORS -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif ($CAND_TYPE eq "nbestgeo") {
             my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
             safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");

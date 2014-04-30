@@ -100,6 +100,7 @@ namespace travatar {
 class GlobalVars {
 public:
     static int debug;
+    static int trg_factors;
 };
 
 #define PRINT_DEBUG(msg, lev) do {            \

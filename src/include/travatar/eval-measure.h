@@ -181,7 +181,7 @@ public:
     // TODO: This is totally a hack, doing very ugly things like writing a file to
     //       a specific place on disk, not accounting for sentence brevity, etc.
     //       This needs to be fixed.
-    virtual Sentence CalculateOracle(const HyperGraph & graph, const Sentence & ref);
+    virtual Sentence CalculateOracle(const HyperGraph & graph, const Sentence & ref, int factor = 0);
 
     // Clear the cache
     virtual void ClearCache() { }

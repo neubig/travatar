@@ -17,8 +17,8 @@ class Forest {
 public:
 
     // Constructor
-    Forest(double lm_weight, double lm_unk_weight) : hg(new travatar::HyperGraph),
-                lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight) {
+    Forest(double lm_weight, double lm_unk_weight, int factor) : hg(new travatar::HyperGraph),
+                lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight), factor_(factor) {
         hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
     }
 
@@ -57,6 +57,7 @@ public:
     double lm_weight_, lm_unk_weight_;
     std::vector<int> lm_unks_;
     util::Pool pool_;
+    int factor_;
 };
 
 } // namespace search

@@ -208,10 +208,18 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
         } catch (ptree_bad_path e) { }
         try {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg")) {
-                int val = t.second.get("", INT_MAX);
-                if(val == INT_MAX)
-                    val = Dict::WID(t.second.get<string>(""));
-                edge->GetTrgWords().push_back(val);
+                CfgData trg_data;
+                // Get the words
+                try {
+                    BOOST_FOREACH(ptree::value_type &x, t.second.get_child("words")) {
+                        int val = x.second.get<int>("", INT_MAX);
+                        if(val == INT_MAX)
+                            val = Dict::WID(x.second.get<string>(""));
+                        trg_data.words.push_back(val);
+                    }
+                } catch (ptree_bad_path e) { }
+                // TODO: Get the symbols, head symbol
+                edge->GetTrgData().push_back(trg_data);
             }
         } catch (ptree_bad_path e) { }
         edge->SetScore(v.second.get<double>("score", 0.0));
@@ -237,7 +245,7 @@ void JSONTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     const vector<int> & words = tree.GetWords();
     for(int i = 0; i < (int)words.size(); i++) {
         if(i != 0) out << ", ";
-        out << "\"" << Dict::WSymEscaped(words[i]) << "\"";
+        out << Dict::WSymEscaped(words[i]);
     }
     out << "]}";
 }

@@ -109,7 +109,7 @@ class HieroExtractor {
 public:
     HieroExtractor() : max_initial_phrase_len_(10), max_rule_len_(5) { }
 
-    std::vector<vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target) const;
+    std::vector<std::vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target) const;
     std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target) const;
     PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target) const;
 
@@ -127,17 +127,17 @@ private:
 
     int MapMaxKey(const std::map<int,int> & map) const;
     int MapMinKey(const std::map<int,int> & map) const;
-    int QuasiConsecutive(int small, int large, const std::map<int,int> & tp, const std::vector<set<int> > & t2s) const;
-    int IsTerritoryOverlapping(const pair<int,int> & a, const pair<int,int> & b) const;
+    int QuasiConsecutive(int small, int large, const std::map<int,int> & tp, const std::vector<std::set<int> > & t2s) const;
+    int IsTerritoryOverlapping(const std::pair<int,int> & a, const std::pair<int,int> & b) const;
     int IsPhraseOverlapping(const PhrasePair & pair1, const PhrasePair & pair2) const;
 
-    void ParseRuleWith2NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair1, const std::pair<int,int> & pair2, 
+    void ParseRuleWith2Nonterminals(const Sentence & sentence, const std::pair<int,int> & pair1, const std::pair<int,int> & pair2, 
                                     const std::pair<int,int> & pair_span, HieroRule & target, const int type) const;
 
     HieroRule ParseBinaryPhraseRule(const Sentence & source, const Sentence & target, const PhrasePair & pair1, 
                                     const PhrasePair & pair2, const PhrasePair & pair_span) const;
 
-    void ParseRuleWith1NonTerminals(const Sentence & sentence, const std::pair<int,int> & pair, 
+    void ParseRuleWith1Nonterminals(const Sentence & sentence, const std::pair<int,int> & pair, 
                                     const std::pair<int,int> & pair_span, HieroRule & target, const int type) const;
 
     HieroRule ParseUnaryPhraseRule(const Sentence & source, const Sentence & target, 

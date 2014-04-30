@@ -88,12 +88,12 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         // Find the chart state and LM probability
         HyperEdge * next_edge = new HyperEdge;
         next_edge->SetFeatures(id_edge->GetFeatures());
-        next_edge->SetTrgWords(id_edge->GetTrgWords());
+        next_edge->SetTrgData(id_edge->GetTrgData());
         next_edge->SetRuleStr(id_edge->GetRuleStr());
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(*lm_, my_state);
         int unk = 0;
-        BOOST_FOREACH(int trg_id, id_edge->GetTrgWords()) {
+        BOOST_FOREACH(int trg_id, id_edge->GetTrgData()[factor_].words) {
             if(trg_id < 0) {
                 int curr_id = -1 - trg_id;
                 // vector<HyperNode*> nodes;
@@ -201,7 +201,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     // Build the final nodes
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
-        edge->AddTrgWord(-1);
+        edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
         ChartState my_state;
         RuleScore<lm::ngram::Model> my_rule_score(*lm_, my_state);
         my_rule_score.BeginSentence();

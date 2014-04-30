@@ -30,7 +30,8 @@ void TuningExampleForest::AddHypothesis(const shared_ptr<HyperGraph> & hg) {
     int id = forest_->Append(*hg);
     HyperNode *root = forest_->GetNode(0), *child = forest_->GetNode(id);
     HyperEdge *edge = new HyperEdge(root);
-    edge->AddTail(child); edge->AddTrgWord(-1);
+    edge->AddTail(child); 
+    edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1,-1))));
     root->AddEdge(edge); forest_->AddEdge(edge);
 }
 
@@ -68,8 +69,8 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     forest_->ResetViterbiScores();
     Weights wval(weights);
     forest_->ScoreEdges(wval);
-    NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
-    Sentence sent = nbest_list[0]->GetWords();
+    NbestList nbest_list = forest_->GetNbest(1);
+    const Sentence & sent = nbest_list[0]->GetTrgData()[factor_].words;
     curr_score_ = measure_->CalculateCachedStats(ref_, sent, id_)->ConvertToScore() * mult_;
     // Find the potential gain
     oracle_score_ = max(oracle_score_, curr_score_);
@@ -122,8 +123,8 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     forest_->ResetViterbiScores();
     Weights wval(weights);
     forest_->ScoreEdges(wval);
-    NbestList nbest_list = forest_->GetNbest(1, forest_->GetWords());
-    Sentence sent = nbest_list[0]->GetWords();
+    NbestList nbest_list = forest_->GetNbest(1);
+    Sentence sent = nbest_list[0]->GetTrgData()[factor_].words;
     EvalStatsPtr curr_stats = measure_->CalculateCachedStats(ref_, sent, id_);
     curr_stats->TimesEquals(mult_);
     // If we are not active, return the simple convex hull

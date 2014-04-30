@@ -13,6 +13,8 @@ class TuningExampleNbest : public TuningExample {
 
 public:
 
+    TuningExampleNbest(int factor = 0) : TuningExample(factor) { } 
+
     virtual ~TuningExampleNbest() { }
 
     // Calculate the gain that could be achieved by each feature

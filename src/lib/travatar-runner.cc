@@ -55,15 +55,16 @@ void TravatarRunnerTask::Run() {
     NbestList nbest_list;
     if(rule_graph->NumNodes() > 0) {
         PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
-        nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), tree_graph_->GetWords());
+        nbest_list = rule_graph->GetNbest(runner_->GetNbestCount());
     }
 
     // Print the best answer. This will generally be the answer with the highest score
     // but we could also change it with something like MBR
     int best_answer = 0;
     ostringstream out;
-    if((int)nbest_list.size() > best_answer)
-        out << Dict::PrintWords(nbest_list[best_answer]->GetWords());
+    if((int)nbest_list.size() > best_answer) {
+        out << Dict::PrintWords(nbest_list[best_answer]->GetTrgData());
+    }
     out << endl;
     collector_->Write(sent_, out.str(), "");
 
@@ -73,7 +74,7 @@ void TravatarRunnerTask::Run() {
         BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
             nbest_out
                 << sent_
-                << " ||| " << Dict::PrintWords(path->GetWords())
+                << " ||| " << Dict::PrintWords(path->GetTrgData())
                 << " ||| " << path->GetScore()
                 << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
         }
@@ -88,7 +89,7 @@ void TravatarRunnerTask::Run() {
                 << sent_
                 << " ||| " << edge->GetHead()->GetSpan()
                 << " ||| " << edge->GetRuleStr() 
-                << " ||| " << Dict::PrintAnnotatedWords(edge->GetTrgWords(), edge->GetTrgSyms())
+                << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
                 << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                 << endl;
         }
@@ -120,6 +121,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load all the variables
     GlobalVars::debug = config.GetInt("debug");
+    GlobalVars::trg_factors = config.GetInt("trg_factors");
     nbest_count_ = config.GetInt("nbest");
     threads_ = config.GetInt("threads");
 
@@ -237,11 +239,6 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromRuleTable(tm_in);
         marisa_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
         tm_.reset(marisa_tm_);
-    } else if (config.GetString("tm_storage") == "hiero") {
-        LookupTableHiero * hiero_tm_ = LookupTableHiero::ReadFromRuleTable(tm_in);
-        hiero_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
-        hiero_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
-        tm_.reset(hiero_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
         LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromRuleTable(tm_in);
         fsm_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));

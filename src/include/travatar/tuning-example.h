@@ -21,6 +21,8 @@ class TuningExample {
 
 public:
 
+    TuningExample(int factor = 0) : factor_(factor) { }
+
     virtual ~TuningExample() { }
 
     // Calculate the potential gain provided for this particular example
@@ -43,6 +45,11 @@ public:
     // Find the best hypothesis from an example pair.
     virtual const ExamplePair & CalculateModelHypothesis(
                                     Weights & weights) const = 0;
+
+protected:
+
+    // The target factor to be evaluated
+    int factor_;
 
 };
 

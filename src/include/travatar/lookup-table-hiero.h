@@ -1,3 +1,5 @@
+// TODO: Delete this? To be superseded by lookup-table-fsm
+
 #ifndef LOOKUP_TABLE_HIERO_H__
 #define LOOKUP_TABLE_HIERO_H__
 
@@ -11,12 +13,10 @@
 #include <generic-string.h>
 #include <deque>
 
-using namespace boost;
-using namespace std;
-
 typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 
 namespace travatar {
+
 class LookupNodeHiero {
 typedef std::map<GenericString<WordId>, LookupNodeHiero*> NodeMap;
 public:
@@ -51,14 +51,14 @@ typedef std::deque<std::pair<int,int> > HieroRuleSpans;
 public:
 	LookupTableHiero() {
 		root_node = new LookupNodeHiero;
-		glue_rule = new TranslationRuleHiero();
+        Sentence trg_sent(2); trg_sent[0] = -1; trg_sent[1] = -2;
 		SparseMap features = Dict::ParseFeatures("glue=0.5");
-        glue_rule->SetFeatures(features);
-        glue_rule->AddSourceWord(-1);
-        glue_rule->AddSourceWord(-2);
-        glue_rule->AddTrgWord(-1);
-        glue_rule->AddTrgWord(-2);
-        glue_rule->SetSrcStr("x0 x1");
+		glue_rule = new TranslationRuleHiero(
+            "x0 x1",
+            CfgDataVector(GlobalVars::trg_factors, CfgData(trg_sent)),
+            features,
+            trg_sent
+        );
         delete_unknown = false;
         span_length = 20;
 	}
@@ -101,11 +101,11 @@ private:
 
 	void AddRule(int position, LookupNodeHiero* target_node, TranslationRuleHiero* rule);
 	std::vector<std::pair<TranslationRuleHiero*, HieroRuleSpans* > > FindRules(LookupNodeHiero* node, const Sentence & input, const int start, int depth) const;
-	HyperNode* FindNode(map<pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
+	HyperNode* FindNode(std::map<std::pair<int,int>, HyperNode*>* map_ptr, const int span_begin, const int span_end) const;
 
 	GenericString<WordId> TransformSpanToKey(const int xbegin, const int xend, const std::vector<std::pair<int,int> > & tail_spans) const;
 
-	HyperEdge* TransformRuleIntoEdge(map<pair<int,int>, HyperNode*>* map, const int head_first, 
+	HyperEdge* TransformRuleIntoEdge(std::map<std::pair<int,int>, HyperNode*>* map, const int head_first, 
 			const int head_second, const std::vector<std::pair<int,int> > & tail_spans, TranslationRuleHiero* rule) const;
 };
 

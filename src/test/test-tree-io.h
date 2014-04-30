@@ -46,7 +46,7 @@ public:
         e_edge->AddTail(z_node);
         e_node->AddEdge(e_edge); tree_exp.AddEdge(e_edge);
 
-        graph_str = "{\"words\": [\"running\", \"water\"], \"nodes\": [ {\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2], \"trg_span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]} ], \"edges\": [ {\"id\": 0, \"head\": 0, \"tails\": [1], \"score\": 1.0, \"features\": {\"parse\": 1.0}}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 8, \"trg\": [\"\\\\\\\"\", -1]} ]}\nAAA";
+        graph_str = "{\"nodes\": [{\"id\": 0, \"sym\": \"ROOT\", \"span\": [0, 2], \"trg_span\": [0, 2]}, {\"id\": 1, \"sym\": \"VP\", \"span\": [0, 2]}, {\"id\": 2, \"sym\": \"NP\", \"span\": [0, 2]}, {\"id\": 3, \"sym\": \"JJ\", \"span\": [0, 1]}, {\"id\": 4, \"sym\": \"VP\", \"span\": [0, 1]}, {\"id\": 5, \"sym\": \"VPG\", \"span\": [0, 1]}, {\"id\": 6, \"sym\": \"running\", \"span\": [0, 1]}, {\"id\": 7, \"sym\": \"NP\", \"span\": [1, 2]}, {\"id\": 8, \"sym\": \"NN\", \"span\": [1, 2]}, {\"id\": 9, \"sym\": \"water\", \"span\": [1, 2]}], \"edges\": [{\"id\": 0, \"head\": 0, \"tails\": [1], \"features\": {\"parse\": 1.5}, \"score\": 1.5}, {\"id\": 1, \"head\": 0, \"tails\": [2]}, {\"id\": 2, \"head\": 1, \"tails\": [4, 7]}, {\"id\": 3, \"head\": 2, \"tails\": [3, 8]}, {\"id\": 4, \"head\": 3, \"tails\": [6]}, {\"id\": 5, \"head\": 4, \"tails\": [5]}, {\"id\": 6, \"head\": 5, \"tails\": [6]}, {\"id\": 7, \"head\": 7, \"tails\": [8]}, {\"id\": 8, \"head\": 8, \"tails\": [9]}, {\"id\": 9, \"head\": 8, \"trg\": [{\"label\": -1, \"words\": [\"\\\\\\\"\", -1]}]}], \"words\": [\"running\", \"water\"]}";
 
         // Create the words
         {
@@ -61,7 +61,7 @@ public:
         HyperNode* node7 = new HyperNode(Dict::WID("NP"), -1,      make_pair(1,2)); graph_exp.AddNode(node7);
         HyperNode* node8 = new HyperNode(Dict::WID("NN"), -1,      make_pair(1,2)); graph_exp.AddNode(node8);
         HyperNode* node9 = new HyperNode(Dict::WID("water"), -1,   make_pair(1,2)); graph_exp.AddNode(node9);
-        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); graph_exp.AddEdge(edge0); edge0->SetScore(1.0); edge0->AddFeature(Dict::WID("parse"), 1.0);
+        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); graph_exp.AddEdge(edge0); edge0->SetScore(1.5); edge0->AddFeature(Dict::WID("parse"), 1.5);
         HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); graph_exp.AddEdge(edge1);
         HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); graph_exp.AddEdge(edge2);
         HyperEdge* edge3 = new HyperEdge(node2); edge3->AddTail(node3); edge3->AddTail(node8); node2->AddEdge(edge3); graph_exp.AddEdge(edge3);
@@ -71,8 +71,8 @@ public:
         HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); graph_exp.AddEdge(edge7);
         HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); graph_exp.AddEdge(edge8);
         HyperEdge* edge9 = new HyperEdge(node8); node8->AddEdge(edge9); graph_exp.AddEdge(edge9);
-        edge9->GetTrgWords().push_back(Dict::WID("\\\""));
-        edge9->GetTrgWords().push_back(-1);
+        Sentence e9words; e9words.push_back(Dict::WID("\\\"")); e9words.push_back(-1);
+        edge9->SetTrgData(CfgDataVector(1, CfgData(e9words)));
         graph_exp.SetWords(Dict::ParseWords("running water"));
         }
  
@@ -175,7 +175,8 @@ public:
 
     int TestReadJSON() {
         // Use this tree
-        istringstream instr(graph_str);
+        string graph_plus_garbage = graph_str + "\nAAA";
+        istringstream instr(graph_plus_garbage);
         JSONTreeIO io;
         boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(instr));
         // Check to make sure that the remaining values still remain
@@ -190,12 +191,23 @@ public:
         stringstream strm;
         JSONTreeIO io;
         io.WriteTree(graph_exp, strm);
+        string str_act;
+        getline(strm, str_act);
+        // Check that both values are equal
+        return CheckEqual(graph_str, str_act);
+    }
+
+    int TestRoundtripJSON() {
+        // Use this tree
+        stringstream strm;
+        JSONTreeIO io;
+        io.WriteTree(graph_exp, strm);
         boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));
         // Check that both values are equal
         return graph_exp.CheckEqual(*hg_act);
     }
 
-    int TestWriteJSONQuote() {
+    int TestRoundtripJSONQuote() {
         // Use this tree
         stringstream strm;
         JSONTreeIO io;
@@ -258,7 +270,8 @@ public:
         done++; cout << "TestWriteRule()" << endl; if(TestWriteRule()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteEgret()" << endl; if(TestWriteEgret()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteJSON()" << endl; if(TestWriteJSON()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestWriteJSONQuote()" << endl; if(TestWriteJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRoundtripJSON()" << endl; if(TestRoundtripJSON()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRoundtripJSONQuote()" << endl; if(TestRoundtripJSONQuote()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestWriteMosesXML()" << endl; if(TestWriteMosesXML()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestTreeIO Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

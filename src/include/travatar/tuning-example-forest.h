@@ -22,7 +22,9 @@ public:
     TuningExampleForest(EvalMeasure * measure,
                         const Sentence & ref,
                         int id,
-                        double mult) : 
+                        double mult,
+                        int factor = 0) :
+                            TuningExample(factor),
                             measure_(measure),
                             ref_(ref), oracle_score_(mult),
                             curr_score_(-DBL_MAX), id_(id), mult_(mult) {

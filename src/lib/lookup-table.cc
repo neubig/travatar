@@ -10,7 +10,7 @@ using namespace boost;
 using namespace std;
 
 LookupTable::LookupTable() : 
-    unk_rule_("UNK", std::vector<WordId>(1,Dict::WID("<unk>")), std::vector<WordId>(1,Dict::WID("unk")), Dict::ParseFeatures("unk=1")), match_all_unk_(false) { }
+    unk_rule_("UNK", CfgDataVector(), Dict::ParseFeatures("unk=1")), match_all_unk_(false) { }
 
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(
@@ -98,13 +98,13 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
                     vector<int> trg(next_edge->GetTails().size());
                     for(int i = 0; i < (int)trg.size(); i++)
                         trg[i] = -1 - i;
-                    next_edge->SetTrgWords(trg);
+                    next_edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, trg));
                 } else {
                     pair<int,int> span = parse_node->GetSpan();
                     if(span.second - span.first != 1)
                         THROW_ERROR("Multi-terminal edges are not supported.");
                     vector<WordId> trg_words(1, parse.GetWord(span.first));
-                    next_edge->SetTrgWords(trg_words);
+                    next_edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, trg_words));
                 }
                 next_node->AddEdge(next_edge);
                 ret->AddEdge(next_edge);

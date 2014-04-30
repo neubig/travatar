@@ -32,7 +32,7 @@ void Weights::Adjust(const Sentence & src,
     std::vector<std::pair<double,double> > scores;
     std::vector<SparseMap*> features;
     BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest) {
-        Sentence my_hyp = path->CalcTranslation(src);
+        Sentence my_hyp = path->CalcTranslation(factor_).words;
         std::pair<double,double> score(path->GetScore(), -DBL_MAX);
         BOOST_FOREACH(const Sentence & ref, refs)
             score.second = std::max(

@@ -22,13 +22,13 @@ namespace travatar {
 class HyperEdge;
 
 struct MertLine {
-  MertLine() : x(), m(), b(), edge() {}
+  MertLine() : x(), m(), b(), edge(), factor() {}
   MertLine(double _m, double _b) :
-    x(-DBL_MAX), m(_m), b(_b), edge() {}
+    x(-DBL_MAX), m(_m), b(_b), edge(), factor() {}
   MertLine(double _x, double _m, double _b, const boost::shared_ptr<MertLine>& p1_, const boost::shared_ptr<MertLine>& p2_) :
-    x(_x), m(_m), b(_b), p1(p1_), p2(p2_), edge() {}
+    x(_x), m(_m), b(_b), p1(p1_), p2(p2_), edge(), factor() {}
   MertLine(double _m, double _b, const HyperEdge& edge) :
-    x(-DBL_MAX), m(_m), b(_b), edge(&edge) {}
+    x(-DBL_MAX), m(_m), b(_b), edge(&edge), factor() {}
 
   double x;                   // x intersection with previous segment in env, or -inf if none
   double m;                   // this line's slope
@@ -41,8 +41,10 @@ struct MertLine {
 
   // only MertLines created from an edge using the MertHullWeightFunction
   // have rules
-  // TRulePtr rule;
   const HyperEdge* edge;
+
+  // The factor to use, default zero
+  int factor;
 
   // recursively recover the Viterbi translation that will result from setting
   // the weights to origin + axis * x, where x is any value from this->x up

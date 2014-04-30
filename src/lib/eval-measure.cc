@@ -24,7 +24,7 @@ using namespace boost;
 #define POP_LIMIT 500
 
 // Find the oracle sentence for this evaluation measure
-Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence & ref) {
+Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence & ref, int factor) {
     Sentence bord_ref;
     // Create the bordered sentence
     bord_ref.push_back(Dict::WID("<s>"));
@@ -77,12 +77,12 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     rescored_graph.ScoreEdges(empty_weights);
     shared_ptr<HyperGraph> lm_graph(bu.TransformGraph(rescored_graph));
     // Create n-best list
-    NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT, rescored_graph.GetWords());
+    NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT);
     // Find the sentence in the n-best list with the highest score
     Sentence ret; 
     double best_score = 0;
     BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
-        Sentence curr = path->GetWords();
+        Sentence curr = path->GetTrgData()[factor].words;
         double score = this->CalculateStats(ref, curr)->ConvertToScore();
         if(score > best_score) {
             ret = curr;

@@ -2,7 +2,7 @@
 
 // This file is originally from Moses with the following copyright information:
 /***********************************************************************
-travatar - factored phrase-based language decoder
+Moses - factored phrase-based language decoder
 Copyright (C) 2006 University of Edinburgh
 
 This library is free software; you can redistribute it and/or

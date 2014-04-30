@@ -82,7 +82,7 @@ public:
         HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
         rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
         HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
+        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("t"));
         HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
     }
 
@@ -279,7 +279,7 @@ public:
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(2)); exp_nbest[0]->AddEdge(rule_graph_->GetEdge(4)); exp_nbest[0]->SetScore(-0.6);
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(3)); exp_nbest[1]->AddEdge(rule_graph_->GetEdge(4)); exp_nbest[1]->SetScore(-0.8);
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(0)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(2)); exp_nbest[2]->AddEdge(rule_graph_->GetEdge(5)); exp_nbest[2]->SetScore(-0.9);
-        act_nbest = rule_graph_->GetNbest(3, rule_graph_->GetWords());
+        act_nbest = rule_graph_->GetNbest(3);
         return CheckPtrVector(exp_nbest, act_nbest);
     }
 
@@ -304,7 +304,7 @@ public:
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(2)); exp_nbest[1]->AddEdge(tied_graph->GetEdge(5)); exp_nbest[1]->SetScore(0);
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(2)); exp_nbest[2]->AddEdge(tied_graph->GetEdge(6)); exp_nbest[2]->SetScore(0);
         exp_nbest.push_back(shared_ptr<HyperPath>(new HyperPath)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(0)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(3)); exp_nbest[3]->AddEdge(tied_graph->GetEdge(4)); exp_nbest[3]->SetScore(0);
-        act_nbest = tied_graph->GetNbest(4, tied_graph->GetWords());
+        act_nbest = tied_graph->GetNbest(4);
         return CheckPtrVector(exp_nbest, act_nbest);
     }
 
@@ -322,7 +322,7 @@ public:
         exp_trans[2] = "y a b";
         exp_trans[3] = "t a b";
         for(int i = 0; i < 4; i++)
-            act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(rule_graph_->GetWords()));
+            act_trans[i] = Dict::PrintWords(paths[i]->CalcTranslation(0).words);
         return CheckVector(exp_trans, act_trans);
     }
 

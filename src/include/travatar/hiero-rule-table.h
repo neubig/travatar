@@ -8,14 +8,10 @@
 #include <travatar/dict.h>
 #include <travatar/util.h>
 
-using namespace travatar;
-using namespace std;
-using namespace boost;
-
 #define HIERO_SOURCE 0
 #define HIERO_TARGET 1
 
-namespace travatar{
+namespace travatar {
 
 class HieroRule {
 public:
@@ -53,13 +49,13 @@ public:
 		type = _type;
 	}
 
-	string GetNonTermX(int number) const {
+	std::string GetNontermX(int number) const {
 		std::ostringstream ss;
 		ss << "x" << number << "";
 		return ss.str();
 	}
 
-	void AddNonTermX(int number) {
+	void AddNontermX(int number) {
 		if (type == HIERO_SOURCE) {
 			if (nt_side_side >= 0) {
 				nt_side_side = 1;
@@ -67,11 +63,11 @@ public:
 				nt_side_side = 0;
 			}
 		}
-		WordId id = Dict::WID(GetNonTermX(number));
+		WordId id = Dict::WID(GetNontermX(number));
 		AddWord(id,1);
 	}
 
-	string ToString() const {
+	std::string ToString() const {
 		std::ostringstream ss;
 		for (int i=0; (unsigned)i < source_words.size(); ++i) {
 			if (i) ss << " ";
@@ -95,7 +91,7 @@ public:
 		return ss.str();
 	}
 
-	int GetNumberOfNonTerm(int type = -1) const {
+	int GetNumberOfNonterm(int type = -1) const {
 		return (source_nt_position.size() + target_nt_position.size()) / 2;
 	}
 
@@ -115,7 +111,7 @@ public:
 		return -1;
 	}
 
-	int IsNonTerminalSideBySide() {
+	int IsNonterminalSideBySide() {
 		return nt_side_side == 1;
 	}
 
@@ -132,19 +128,19 @@ private:
 	Sentence target_words;
 	int type;
 	int nt_side_side;
-	set<int> source_nt_position;
-	set<int> target_nt_position;
+	std::set<int> source_nt_position;
+	std::set<int> target_nt_position;
 };
 
 struct HieroRuleManager {
 
 	static int IsFiltered(HieroRule & rule) {
-		int nterm = rule.GetNumberOfNonTerm();
+		int nterm = rule.GetNumberOfNonterm();
 		// RULE CONTAINS ALL NON TERMINAL FILTER
 		if (rule.GetNumberOfWords(HIERO_TARGET) == nterm || rule.GetNumberOfWords(HIERO_SOURCE) == nterm) {
 			return 1;
 		}
-		if (rule.IsNonTerminalSideBySide()) {
+		if (rule.IsNonterminalSideBySide()) {
 			return 1;
 		}
 		if (!rule.IsRuleBalanced()) {
@@ -153,7 +149,7 @@ struct HieroRuleManager {
 		return 0;
 	}
 
-	static void AddRule(vector<HieroRule> & target, HieroRule & rule) {
+	static void AddRule(std::vector<HieroRule> & target, HieroRule & rule) {
 		if (!IsFiltered(rule)) {
 			target.push_back(rule);
 		}
@@ -162,9 +158,9 @@ struct HieroRuleManager {
 	static std::vector<HieroRule> GlueRules() {
 		HieroRule rule = HieroRule();
 		rule.SetType(HIERO_SOURCE);
-		rule.AddNonTermX(1);
+		rule.AddNontermX(1);
 		rule.SetType(HIERO_TARGET);
-		rule.AddNonTermX(1);
+		rule.AddNontermX(1);
 		std::vector<HieroRule> ret = std::vector<HieroRule>();
 		ret.push_back(rule);
 		return ret;

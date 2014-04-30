@@ -58,8 +58,9 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
           return false;
     if(features_ != rhs.features_)
         return false;
-    if(trg_words_ != rhs.trg_words_)
-        return false;
+    for(int i = 0; i < (int)trg_data_.size(); i++)
+        if(trg_data_ != rhs.trg_data_)
+            return false;
     if(abs(score_ - rhs.score_) > abs(score_*1e-4))
         return false;
     return true;
@@ -73,17 +74,10 @@ void HyperEdge::Print(std::ostream & out) const {
         for(int i = 0; i < (int)tails_.size(); i++)
             out << tails_[i]->GetId() << ((i == (int)tails_.size()-1) ? "]" : ", ");
     }
-    if(trg_words_.size()) {
+    if(trg_data_.size()) {
         out << ", \"trg\": [";
-        for(int i = 0; i < (int)trg_words_.size(); i++) {
-            // Handle pseudo-symbols
-            if(trg_words_[i] < 0)
-                out << trg_words_[i];
-            // Handle regular words
-            else
-                out << '"' << Dict::EscapeString(Dict::WSym(trg_words_[i])) << '"';
-            out << ((i == (int)trg_words_.size()-1) ? "]" : ", ");
-        }
+        for(int j = 0; j < (int)trg_data_.size(); j++)
+            out << trg_data_[j] << (j == (int)trg_data_.size()-1 ? "]" : ", ");
     }
     if(features_.size())
         out << ", \"features\": " << features_;
@@ -117,17 +111,15 @@ bool HyperNode::operator==(const HyperNode & rhs) const {
 
 // Output for a hypernode in JSON format
 void HyperNode::Print(std::ostream & out) const {
-    out << "{\"sym\": ";
-    if(sym_==-1)
-        out << "null";
-    else 
-        out << "\""<<Dict::WSymEscaped(sym_)<<"\"";
-    out << ", \"span\": "<<src_span_<<", \"id\": "<<id_;
-    if(edges_.size()) {
-        out << ", \"edges\": [";
-        for(int i = 0; i < (int)edges_.size(); i++)
-            out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
-    }
+    out << "{\"id\": "<<id_;
+    if(sym_ != -1)
+        out << ", \"sym\": " << Dict::WSymEscaped(sym_);
+    out << ", \"span\": "<<src_span_;
+    // if(edges_.size()) {
+    //     out << ", \"edges\": [";
+    //     for(int i = 0; i < (int)edges_.size(); i++)
+    //         out << edges_[i]->GetId() << ((i == (int)edges_.size()-1) ? "]" : ", ");
+    // }
     if(trg_span_.size() > 0) {
         out << ", \"trg_span\": [";
         int num = 0;
@@ -241,7 +233,7 @@ public:
     }
 };
 
-vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<WordId> & src_words) {
+vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
     set<shared_ptr<HyperPath>, PathScoreMore> paths;
     shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
@@ -255,7 +247,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, const std::vector<Wor
         // cerr << " Processing " << *curr_path << endl;
         HyperNode * node = curr_path->PopNode();
         if(node == NULL) {
-            curr_path->SetWords(curr_path->CalcTranslation(src_words));
+            curr_path->SetTrgData(curr_path->CalcTranslations());
             ret.push_back(curr_path);
         } else {
             curr_path->AddScore(-1*node->CalcViterbiScore());
@@ -320,34 +312,38 @@ SparseMap HyperPath::CalcFeatures() {
 }
 
 // Calculate the translation of the path
-vector<WordId> HyperPath::CalcTranslation(int & idx, const std::vector<WordId> & src_words) {
-    vector<vector<WordId> > child_trans;
+CfgData HyperPath::CalcTranslation(int factor, int & idx) {
+    vector<CfgData> child_trans;
     int my_id = idx++;
     BOOST_FOREACH(HyperNode * tail, SafeAccess(edges_, my_id)->GetTails()) {
         if(tail != edges_[idx]->GetHead())
             THROW_ERROR("Unmatching hyper-nodes " << *tail);
-        child_trans.push_back(CalcTranslation(idx, src_words));
+        child_trans.push_back(CalcTranslation(factor, idx));
     }
-    vector<WordId> ret;
-    BOOST_FOREACH(int wid, edges_[my_id]->GetTrgWords()) {
-        // Special handling of unknowns
-        if(wid == Dict::WID("<unk>")) {
-            // For terminals, map all source words into the target
-            if(edges_[my_id]->GetTails().size() == 0) {
-                pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
-                for(int i = span.first; i < span.second; i++)
-                    ret.push_back(src_words.size() == 0 ? wid : SafeAccess(src_words, i));
-            // For non-terminals, map in order
-            } else {
-                BOOST_FOREACH(const vector<int> & vec, child_trans)
-                    BOOST_FOREACH(int next_wid, vec)
-                        ret.push_back(next_wid);
-            }
-        } else if(wid >= 0) {
-            ret.push_back(wid);
+    CfgData ret;
+    if(factor >= (int)edges_[my_id]->GetTrgData().size())
+        return ret;
+    BOOST_FOREACH(int wid, edges_[my_id]->GetTrgData()[factor].words) {
+        // // Special handling of unknowns
+        // if(wid == Dict::WID("<unk>")) {
+        //     // For terminals, map all source words into the target
+        //     if(edges_[my_id]->GetTails().size() == 0) {
+        //         pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
+        //         for(int i = span.first; i < span.second; i++)
+        //             ret.push_back(src_words.size() == 0 ? wid : SafeAccess(src_words, i));
+        //     // For non-terminals, map in order
+        //     } else {
+        //         BOOST_FOREACH(const vector<int> & vec, child_trans)
+        //             BOOST_FOREACH(int next_wid, vec)
+        //                 ret.push_back(next_wid);
+        //     }
+        // } else
+        if(wid >= 0) {
+            ret.words.push_back(wid);
         } else {
-            BOOST_FOREACH(int next_wid, child_trans[-1 - wid])
-                ret.push_back(next_wid);
+            ret.AppendChild(child_trans[-1 - wid]);
+            // BOOST_FOREACH(int next_wid, child_trans[-1 - wid])
+            //     ret.words.push_back(next_wid);
         }
     }
     return ret;
@@ -392,7 +388,7 @@ inline string PrintContext(const Left & context) {
 void HyperEdge::SetRule(const TranslationRule * rule, const SparseMap & orig_features) {
     rule_str_ = rule->GetSrcStr();
     features_ = rule->GetFeatures() + orig_features;
-    trg_words_ = rule->GetTrgWords();
+    trg_data_ = rule->GetTrgData();
 }
 
 double HyperNode::GetInsideProb(vector<double> & inside) {

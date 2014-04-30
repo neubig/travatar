@@ -10,9 +10,6 @@
 #include <travatar/graph-transformer.h>
 #include <generic-string.h>
 
-using namespace boost;
-using namespace std;
-
 namespace travatar {
 class LookupNodeFSM {
 typedef std::map<WordId, LookupNodeFSM*> NodeMap;
@@ -44,22 +41,22 @@ private:
 };	
 
 class LookupTableFSM : public GraphTransformer {
-typedef vector<pair<int,int> > HieroRuleSpans;
-typedef pair<WordId, pair<int,int> > NodeKey;
-typedef map<NodeKey, HyperNode*> NodeMap;
-typedef vector<HyperEdge* > EdgeList;
-typedef pair<int, pair<int,int> > TailSpanKey;
+typedef std::vector<std::pair<int,int> > HieroRuleSpans;
+typedef std::pair<WordId, std::pair<int,int> > NodeKey;
+typedef std::map<NodeKey, HyperNode*> NodeMap;
+typedef std::vector<HyperEdge* > EdgeList;
+typedef std::pair<int, std::pair<int,int> > TailSpanKey;
 public:
 	LookupTableFSM() {
-		root_node = new LookupNodeFSM;
-        span_length = 20;
-        delete_unknown = false;
-        default_symbol = Dict::WID("X");
-        root_symbol = Dict::WID("X");
+		root_node_ = new LookupNodeFSM;
+        span_length_ = 20;
+        delete_unknown_ = false;
+        default_symbol_ = Dict::WID("X");
+        root_symbol_ = Dict::WID("X");
 	}
 
 	virtual ~LookupTableFSM() { 
-		delete root_node;
+		delete root_node_;
 	}
 	
 	static LookupTableFSM * ReadFromRuleTable(std::istream & in);
@@ -75,23 +72,23 @@ public:
 
 	// ACCESSOR
 	TranslationRuleHiero* GetUnknownRule(WordId unknown_word, WordId symbol) const;
-	int GetSpanLimit() const { return span_length; } 
-	WordId GetRootSymbol() const { return root_symbol; } 
-	WordId GetDefaultSymbol() const { return default_symbol; }
-	bool GetDeleteUnknown() const { return delete_unknown; }
+	int GetSpanLimit() const { return span_length_; } 
+	WordId GetRootSymbol() const { return root_symbol_; } 
+	WordId GetDefaultSymbol() const { return default_symbol_; }
+	bool GetDeleteUnknown() const { return delete_unknown_; }
  
 	// MUTATOR
-	void SetSpanLimit(int length) { span_length = length; }
-	void SetRootSymbol(WordId symbol) { root_symbol = symbol; }
-	void SetDefaultSymbol(WordId symbol) { default_symbol = symbol; }
-	void SetDeleteUnknown(bool del) { delete_unknown = del; }
+	void SetSpanLimit(int length) { span_length_ = length; }
+	void SetRootSymbol(WordId symbol) { root_symbol_ = symbol; }
+	void SetDefaultSymbol(WordId symbol) { default_symbol_ = symbol; }
+	void SetDeleteUnknown(bool del) { delete_unknown_ = del; }
 
 protected:
-	WordId root_symbol;
-	WordId default_symbol;
-	LookupNodeFSM* root_node;
-	bool delete_unknown;
- 	int span_length;
+	WordId root_symbol_;
+	WordId default_symbol_;
+	LookupNodeFSM* root_node_;
+	bool delete_unknown_;
+ 	int span_length_;
 private:
 	// DEBUG NOTE: FOR A WHILE, GLUE RULE WILL BE DEACTIVATED
 	// void AddGlueRule(int start, int end, HyperGraph* ret, std::map<std::pair<int,int>, HyperNode*>* node_map, 
