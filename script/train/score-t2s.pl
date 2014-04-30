@@ -129,16 +129,22 @@ my (@counts, $curr_id);
 while(<STDIN>) {
     chomp;
     my @arr = split(/ \|\|\| /);
-    if(@counts and ($arr[0] ne $curr_id)) {
-        print_counts($curr_id, \@counts);
-        @counts = ();
-    }
-    $curr_id = $arr[0];
-    # Add to the count
-    if(@counts and ($counts[-1]->[0] eq $arr[1])) {
-        $counts[-1]->[1] += $arr[2];
+    if (scalar(@arr) == 3) {
+        if(@counts and ($arr[0] ne $curr_id)) {
+            print_counts($curr_id, \@counts);
+            @counts = ();
+        }
+        $curr_id = $arr[0];
+        # Add to the count
+        if(@counts and ($counts[-1]->[0] eq $arr[1])) {
+            $counts[-1]->[1] += $arr[2];
+        } else {
+            push @counts, [$arr[1], $arr[2]];
+        }
+    } elsif (scalar(@arr) == 4) {
+        print "$arr[0] ||| $arr[1] ||| $arr[3] ||| 1 1\n";
     } else {
-        push @counts, [$arr[1], $arr[2]];
+        warn "Strange rule, ignored: ".join(" ",@arr); 
     }
 }
 print_counts($curr_id, \@counts);

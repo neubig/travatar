@@ -39,11 +39,10 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     if(!alg_in) THROW_ERROR("Could not find align file: " << argv[2]);
     
     string src_line,trg_line, align_line;
-   
-    // Glue Rules
-    //BOOST_FOREACH(HieroRule r , HieroRuleManager::GlueRules()) {
-    //    cout << r.ToString() << " ||| " << "1" << endl;
-    //}
+
+    // GLUE RULES
+    cout << "x0:S x1:X @ S ||| x0:S x1:X @ S ||| 1 ||| glue=1" << endl;
+    cout << "x0:X @ S ||| x0:X @ S ||| 1 ||| glue=1" << endl;
 
     // Rule Extraction Algorithm
     std::vector<vector<HieroRule> > rules;
@@ -70,6 +69,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
                 cout << r.ToString() << " ||| " << score << endl;
             }
         }
+
         if (++line % 1000 == 0) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
