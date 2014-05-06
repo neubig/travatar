@@ -151,6 +151,11 @@ If you take a look at <tt>data/kyoto-train.tok.en</tt> you should see that the w
 Next, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
+<pre>
+java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-dev.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-dev.tok.en
+java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-test.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-test.tok.en
+</pre>
+
 <p>
 Next, we tokenize Japanese with KyTea.
 We add <tt>-notags</tt> and <tt>-wsconst D</tt> to suppress the output of POS tags and prevent segmentation of numbers.
@@ -164,6 +169,11 @@ usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-train.ja &gt
 You can also check to see that the Japanese has been properly segmented into words.
 Again, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
+
+<pre>
+usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-dev.ja &gt; data/kyoto-dev.tok.ja
+usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-test.ja &gt; data/kyoto-test.tok.ja
+</pre>
 
 <h3>Cleaning the Training Data</h3>
 
@@ -205,6 +215,14 @@ java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-p
 <p>
 And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
+
+<pre>
+java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
+</pre>
+
+<pre>
+java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
+</pre>
 
 <p>
 There are a couple things that should be noted about parsing.
@@ -260,6 +278,14 @@ travatar/script/tree/lowercase.pl &lt; data/kyoto-head.tok.ja &gt; data/kyoto-he
 
 <p>
 And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
+
+<pre>
+travatar/script/tree/lowercase.pl &lt; data/kyoto-dev.parse.en &gt; data/kyoto-dev.parselow.en
+travatar/script/tree/lowercase.pl &lt; data/kyoto-dev.tok.ja &gt; data/kyoto-dev.toklow.ja
+travatar/script/tree/lowercase.pl &lt; data/kyoto-test.parse.en &gt; data/kyoto-test.parselow.en
+travatar/script/tree/lowercase.pl &lt; data/kyoto-test.tok.ja &gt; data/kyoto-test.toklow.ja
+</pre>
+
 Once this data is prepared, we run the following training script.
 Note that this takes our parsed English, tokenized Japanese, and language model as input.
 We specify the directories for GIZA++ and Travatar, and also our working directory, where the model will be stored.
