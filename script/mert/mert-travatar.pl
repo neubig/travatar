@@ -124,13 +124,12 @@ foreach $iter (1 .. $MAX_ITERS) {
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -tune_factor $TUNE_FACTOR -trg_factors $TRG_FACTORS -threads $THREADS -forest $forests -eval \"$EVAL\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
         } elsif ($CAND_TYPE eq "nbestgeo") {
             my $nbests = join(" ", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter-1));
-            safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq");
-            safesystem("$GEOTUNE_COMMAND -prefix $WORKING_DIR/run$iter -ref $REF -output $WORKING_DIR/run$iter.stats");
+            safesystem("$TRAVATAR_DIR/script/mert/nbest-uniq.pl $nbests < $WORKING_DIR/run$iter.nbest > $WORKING_DIR/run$iter.uniq") or die;
+            safesystem("$GEOTUNE_COMMAND -prefix $WORKING_DIR/run$iter -ref $REF -output $WORKING_DIR/run$iter.stats -tune-factor $TUNE_FACTOR") or die;
             $nbests = join(",", map { "$WORKING_DIR/run$_.uniq" } (1 .. $iter));
             my $stats = join(",", map { "$WORKING_DIR/run$_.stats" } (1 .. $iter));
             safesystem("$TRAVATAR_DIR/src/bin/batch-tune -threads $THREADS -nbest $nbests -stat_in $stats -eval \"ribes\" -weight_in $prev.weights $TUNE_OPTIONS $REF > $next.weights 2> $prev.tune.log") or die "batch-tune failed";
-
-		}
+        }
         safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -weights $next.weights $prev.ini > $next.ini") or die "couldn't make init opt";
     }
     my %wprev = load_weights("$prev.ini");
