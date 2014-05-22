@@ -78,18 +78,18 @@ travatar/src/bin/travatar --help
 </pre>
 
 <p>
-For the Stanford parser, you must have Java installed on your machine, but as long as you have Java you just need to unzip the archive:
+For the Stanford parser, you must have Java installed on your machine, but as long as you have Java you just need to unzip the archive. The tutorial will use the 2014-01-04 version, but other versions should work fine as well.
 </p>
 
 <pre>
 unzip stanford-parser*.zip
 </pre>
 
-<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.3, change the version number):</p>
+<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.6, change the version number):</p>
 
 <pre>
-tar -xzf kytea-0.4.3.tar.gz
-cd kytea-0.4.3
+tar -xzf kytea-0.4.6.tar.gz
+cd kytea-0.4.6
 ./configure --prefix=$HOME/travatar-tutorial/usr
 make
 make install
@@ -138,17 +138,23 @@ mkdir data
 <p>
 The first thing we need to do is tokenize our data (in other words, divide it into words).
 For English, or other languages, there is a tokenizer included in the Stanford parser toolkit.
-Let's run it on the English training data as follows (we need the 'sed' command because the tokenizer sometimes fails to replace brackets in special cases):
+Let's run it on the English training data as follows (we need the 'sed' command because the tokenizer sometimes fails to replace brackets in special cases).
+Note that you might have to change the path of the Stanford parser if it is not the 2014-01-04 version.
 </p>
 
 <pre>
-java -cp stanford-parser-2012-11-12/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-train.tok.en
+java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-train.tok.en
 </pre>
 
 <p>
 If you take a look at <tt>data/kyoto-train.tok.en</tt> you should see that the words have been tokenized.
 Next, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
+
+<pre>
+java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-dev.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-dev.tok.en
+java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-test.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-test.tok.en
+</pre>
 
 <p>
 Next, we tokenize Japanese with KyTea.
@@ -164,6 +170,11 @@ You can also check to see that the Japanese has been properly segmented into wor
 Again, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
+<pre>
+usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-dev.ja &gt; data/kyoto-dev.tok.ja
+usr/bin/kytea -notags -wsconst D &lt; kftt-data-1.0/data/orig/kyoto-test.ja &gt; data/kyoto-test.tok.ja
+</pre>
+
 <h3>Cleaning the Training Data</h3>
 
 <p>
@@ -173,7 +184,7 @@ To get rid of these sentences from the training data, we use a script included w
 </p>
 
 <pre>
-travatar/script/train/clean-corpus.pl data/kyoto-train.tok.en data/kyoto-train.tok.ja data/kyoto-clean.tok.en data/kyoto-clean.tok.ja
+travatar/script/train/clean-corpus.pl -max_len 60 data/kyoto-train.tok.en data/kyoto-train.tok.ja data/kyoto-clean.tok.en data/kyoto-clean.tok.ja
 </pre>
 
 <p>
@@ -195,22 +206,28 @@ If you want to do the tutorial with the full data set, just substitute <tt>kyoto
 
 <p>
 Next, we will use the Stanford parser to parse the source side English sentences.
-This can be done with the following command.
 </p>
 
 <pre>
-java -mx2000m -cp stanford-parser-2012-11-12/stanford-parser.jar:stanford-parser-2012-11-12/stanford-parser-2.0.4-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
+java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
 </pre>
 
 <p>
 And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
+<pre>
+java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
+</pre>
+
+<pre>
+java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
+</pre>
+
 <p>
 There are a couple things that should be noted about parsing.
 The first is that it takes a long time to parse many sentences, which can be solved to some extent by using multiple cores or multiple machines.
-The second is that while the Stanford parser is robust and easy to use, there are other parsers that can achieve better accuracy than the Stanford parser.
-These are highly recommended if you want to improve Travatar's translation accuracy, as changing parsers can result in a very significant gain of up to several BLEU points.
+The second is that while the Stanford parser is robust and easy to use, there are other parsers that may achieve better accuracy than the Stanford parser, resulting in better translation accuracy.
 Both of these issues are discussed in more detail on the <a href="parsing.html">parsing page</a>.
 </p>
 
@@ -261,6 +278,14 @@ travatar/script/tree/lowercase.pl &lt; data/kyoto-head.tok.ja &gt; data/kyoto-he
 
 <p>
 And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
+
+<pre>
+travatar/script/tree/lowercase.pl &lt; data/kyoto-dev.parse.en &gt; data/kyoto-dev.parselow.en
+travatar/script/tree/lowercase.pl &lt; data/kyoto-dev.tok.ja &gt; data/kyoto-dev.toklow.ja
+travatar/script/tree/lowercase.pl &lt; data/kyoto-test.parse.en &gt; data/kyoto-test.parselow.en
+travatar/script/tree/lowercase.pl &lt; data/kyoto-test.tok.ja &gt; data/kyoto-test.toklow.ja
+</pre>
+
 Once this data is prepared, we run the following training script.
 Note that this takes our parsed English, tokenized Japanese, and language model as input.
 We specify the directories for GIZA++ and Travatar, and also our working directory, where the model will be stored.

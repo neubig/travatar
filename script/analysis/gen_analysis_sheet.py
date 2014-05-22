@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import re
 from collections import defaultdict
 from xml.sax.saxutils import escape
 
@@ -37,6 +38,7 @@ class Node():
 class TraceParser():
 	def __init__(self):
 		self.rules = []
+		self.nonterm_reg = re.compile("^(x\\d+):(.*)$")
 
 	def addRule(self, start, end, tree, string):
 		self.rules.append((start, end, tree, string))
@@ -46,6 +48,7 @@ class TraceParser():
 		end = self.rules[i][1]
 		tree = self.rules[i][2]
 		string = self.rules[i][3]
+		print(self.rules[i])
 		gentree = Node(i, tree)
 		genstr = Node(i, string)
 		vals = {}
@@ -66,10 +69,12 @@ class TraceParser():
 				brk += 1
 			elif item == ")":
 				brk -= 1
-			elif item[0] != "\"" and item[-1] != "\"":
-				spl = item.split(":")
-				if len(spl) == 2:
-					k = spl[0]
+			elif len(item) >= 2 and item[0] == item[-1] == "\"":
+				gentree.items.append(item[1:-1])
+			else:
+				reg_res = self.nonterm_reg.match(item)
+				if reg_res:
+					k = reg_res.group(1)
 					j += 1
 					result = self.__parse(j)
 					if not result:
@@ -77,11 +82,6 @@ class TraceParser():
 					j, t, s = result
 					gentree.items.append(t)
 					vals[k] = s
-			elif len(item) >= 2 and item[0] == item[-1] == "\"":
-				gentree.items.append(item[1:-1])
-			else:
-				print("syntax error in tree at rule %d" % i, file=sys.stderr)
-				return None
 
 		if string == "\"<unk>\"":
 			genstr.items = gentree.items[:]
