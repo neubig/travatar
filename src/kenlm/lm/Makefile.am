@@ -8,7 +8,7 @@ build_binary_SOURCES = build_binary_main.cc
 build_binary_LDADD = libklm.a ../util/libklm_util.a -lz -lrt
 
 lmplz_SOURCES = builder/lmplz_main.cc
-lmplz_LDADD = libklm.a ../util/libklm_util.a -lz -lboost_program_options -lboost_thread -lrt
+lmplz_LDADD = libklm.a ../util/libklm_util.a -lz -lboost_program_options -lboost_thread -lboost_system -lpthread -lrt
 
 #noinst_PROGRAMS = \
 #  ngram_test
