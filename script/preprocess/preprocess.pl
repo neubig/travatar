@@ -77,6 +77,10 @@ my $EGRET_TRG_MODEL;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
 my $SPLIT_WORDS_SRC;
 my $SPLIT_WORDS_TRG;
+my $TRUECASE_SRC;
+my $TRUECASE_TRG;
+my $TRUECASE_SRC_MODEL;
+my $TRUECASE_TRG_MODEL;
 # How to split words, choose "interleave" for efficiency
 # when using a corpus that may consist of different blocks
 # with widely different sentence lengths (such as when you
@@ -139,6 +143,10 @@ GetOptions(
     "stanford-jars=s" => \$STANFORD_JARS,
     "threads=s" => \$THREADS,
     "travatar-dir=s" => \$TRAVATAR_DIR,
+    "truecase-src-model=s" => \$TRUECASE_SRC_MODEL,
+    "truecase-trg-model=s" => \$TRUECASE_TRG_MODEL,
+    "truecase-src" => \$TRUECASE_SRC,
+    "truecase-trg" => \$TRUECASE_TRG,
     "trg=s" => \$TRG,
 );
 $STANFORD_DIR = "$PROGRAM_DIR/stanford-parser" if not $STANFORD_DIR;
@@ -152,6 +160,11 @@ $EDA_WEIGHT = "$EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat" if not $EDA_WEIGHT;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
 $NILE_DIR = "$PROGRAM_DIR/nile" if not $NILE_DIR;
 my %EGRET_DEFAULT_MODEL = ( "en" => "$EGRET_DIR/eng_grammar",  "zh" => "$EGRET_DIR/chn_grammar" );
+
+### Sanity check
+foreach my $f ($NILE_MODEL, $EGRET_SRC_MODEL, $EGRET_TRG_MODEL, $TRUECASE_SRC_MODEL, $TRUECASE_TRG_MODEL) {
+    die "Model file $f specified but not found" if($f and not -e $f);
+}
 
 if(not $TRAVATAR_DIR) {
     $TRAVATAR_DIR = abs_path($0);
@@ -359,6 +372,22 @@ sub run_forest_parsing {
 }
 run_forest_parsing($SRC, $SPLIT_WORDS_SRC, 1) if $FOREST_SRC;
 run_forest_parsing($TRG, $SPLIT_WORDS_TRG, 0) if $FOREST_TRG;
+
+##### Truecasing ######
+
+sub run_tree_parsing {
+    my $lang = shift;
+    my $model = shift;
+    run_parallel("$PREF/tree", "$PREF/high", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
+    if(not $model) {
+        safesystem("mkdir -p $PREF/train") or die;
+        $model = "$PREF/train/$lang.truecaser";
+        safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
+    }
+    run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
+}
+run_truecase($SRC, $TRUECASE_SRC_MODEL) if $TRUECASE_SRC;
+run_truecase($TRG, $TRUECASE_TRG_MODEL) if $TRUECASE_TRG;
 
 ###### Alignment ######
 
