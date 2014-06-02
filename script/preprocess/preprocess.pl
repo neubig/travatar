@@ -374,9 +374,11 @@ sub run_truecase {
     my $model = shift;
     run_parallel("$PREF/tree", "$PREF/high", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
     if(not $model) {
-        safesystem("mkdir -p $PREF/train") or die;
         $model = "$PREF/train/$lang.truecaser";
-        safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
+        if(not -e $model) {
+            safesystem("mkdir -p $PREF/train") or die;
+            safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
+        }
     }
     run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
 }

@@ -86,18 +86,10 @@ sub split_xml {
   my $i = 0;
   $MARKUP[0] = "";
   while($line =~ /\S/) {
-    if ($line =~ /^\s*(<\S[^>]*>)(.*)$/) {
-      $MARKUP[$i] .= $1." ";
-      $line = $2;
-    }
-    elsif ($line =~ /^\s*([^\s<>]+)(.*)$/) {
-      $WORD[$i++] = $1;
-      $MARKUP[$i] = "";
-      $line = $2;
-    }
-    else {
-      die("ERROR: huh? $line\n");
-    }
+    $line =~ /^ *([^ ]+)(.*)$/;
+    $WORD[$i++] = $1;
+    $MARKUP[$i] = "";
+    $line = $2;
   }
   chop($MARKUP[$#MARKUP]);
   return (\@WORD,\@MARKUP);
