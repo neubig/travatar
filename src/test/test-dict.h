@@ -19,14 +19,27 @@ public:
         vector<string> strs_act;
         BOOST_FOREACH(WordId wid, ids)
             strs_act.push_back(Dict::WSym(wid));
-        // Create the vector
-        strs_HERE
+        vector<string> strs_exp(4);
+        strs_exp[0] = "a";
+        strs_exp[1] = "b";
+        strs_exp[2] = "a";
+        strs_exp[3] = "c";
         return CheckVector(strs_exp, strs_act);
+    }
+
+    int TestParseFeatures() {
+        // Parse the vector
+        SparseMap feat_act = Dict::ParseFeatures("a=1.5 b=2");
+        SparseMap feat_exp;
+        feat_exp[Dict::WID("a")] = 1.5;
+        feat_exp[Dict::WID("b")] = 2;
+        return CheckMap(feat_exp, feat_act);
     }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestParseWords()" << endl; if(TestParseWords()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestParseFeatures()" << endl; if(TestParseFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestDict Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
