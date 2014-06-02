@@ -50,7 +50,7 @@ if($FORMAT eq "penn") {
         my $sketchy = &get_egret(\*FILE1);
         die "Found sentence in suspicious file, but not correct: $sketchy\n" if $sketchy and not $correct;
         last if not $correct;
-        my @arr = split(/\n/, $sketchy);
+        my @arr = ($sketchy ? split(/\n/, $sketchy) : ());
         print STDERR "".scalar(@arr)." $MAX_FOREST\n" if @arr > $MAX_FOREST;
         if($sketchy and ((not $MAX_FOREST) or (@arr <= $MAX_FOREST))) {
             print $sketchy;
@@ -64,7 +64,7 @@ if($FORMAT eq "penn") {
 
 sub get_egret {
     my $handle = shift;
-    my ($ret, $buf);
+    my ($ret, $buf) = ("", "");
     if(defined($buf = <$handle>)) {
         $buf =~ /^sentence/ or die "Bad forest header: $buf";
         $ret .= $buf;

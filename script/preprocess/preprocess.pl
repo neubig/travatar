@@ -233,6 +233,8 @@ sub run_tree_parsing {
     my $split_words = shift;
     my $is_src = shift;
     my $EGRET_MODEL = ($is_src ? $EGRET_SRC_MODEL : $EGRET_TRG_MODEL);
+    my $SPLIT_CMD = "";
+    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
     if($lang =~ /^(en|zh)$/) {
         if($lang eq "en") {
             # EN Parsing with Stanford Parser
@@ -258,8 +260,6 @@ sub run_tree_parsing {
         -e "$PREF/tree" or mkdir "$PREF/tree";
         foreach my $i ("", map{".$_"} @suffixes) {
             if(not -e "$PREF/tree/$lang$i") {
-                my $SPLIT_CMD = "";
-                $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
                 safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
                 die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != file_len("$PREF/tree/$lang$i"));
             }
@@ -275,8 +275,6 @@ sub run_tree_parsing {
             -e "$PREF/tree" or mkdir "$PREF/tree";
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
-                    my $SPLIT_CMD = "";
-                    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/edacfg/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
                     die "Combining trees failed on $lang$i" if(file_len("$PREF/edacfg/$lang$i") != file_len("$PREF/tree/$lang$i"));
                 }
@@ -288,8 +286,6 @@ sub run_tree_parsing {
         my $model;
         if($lang eq "fr") { $model = "frenchFactored"; }
         elsif($lang eq "de") { $model = "germanPCFG"; }
-        my $SPLIT_CMD = "";
-        $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
         if($EGRET_MODEL) {
             # Parsing with Stanford Parser
             run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
@@ -301,8 +297,6 @@ sub run_tree_parsing {
             -e "$PREF/tree" or mkdir "$PREF/tree";
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
-                    my $SPLIT_CMD = "";
-                    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
                     die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != file_len("$PREF/tree/$lang$i"));
                 }
@@ -325,6 +319,8 @@ sub run_forest_parsing {
     my $lang = shift;
     my $split_words = shift;
     my $is_src = shift;
+    my $SPLIT_CMD = "";
+    $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\" -input_format egret -output_format egret" if $split_words;
 
     # Find the model
     my $EGRET_MODEL = ($is_src ? $EGRET_SRC_MODEL : $EGRET_TRG_MODEL);
@@ -348,8 +344,6 @@ sub run_forest_parsing {
     # ZH Combine Stanford and Egret (for now this is not parallel)
     -e "$PREF/for" or mkdir "$PREF/for";
     foreach my $i ("", map{".$_"} @suffixes) {
-        my $SPLIT_CMD = "";
-        $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\" -input_format egret -output_format egret" if $split_words;
         safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/treefor/$lang$i $PREF/egretfor/$lang$i $SPLIT_CMD > $PREF/for/$lang$i") if not -e "$PREF/for/$lang$i";
         die "Combining forests failed on en$i" if(file_len("$PREF/for/$lang$i") == 0);
     }
