@@ -369,7 +369,7 @@ run_forest_parsing($TRG, $SPLIT_WORDS_TRG, 0) if $FOREST_TRG;
 
 ##### Truecasing ######
 
-sub run_tree_parsing {
+sub run_truecase {
     my $lang = shift;
     my $model = shift;
     run_parallel("$PREF/tree", "$PREF/high", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
