@@ -17,8 +17,18 @@ for(@ARGV) {
    push @handles, $fh;
 }
 
+my (%curr, %next);
+
+sub print_save {
+    for(@_) {
+        my @arr = split(/ \|\|\| /);
+        $arr[3] = join(" ", sort(split(/ /, $arr[3])));
+        my $id = "$arr[0] ||| $arr[1] ||| $arr[3]";
+        print "$_\n" if not $curr{$id}++;
+    }
+}
+
 my $last = 0;
-my (%next);
 my @save;
 while(<STDIN>) {
     chomp;
@@ -26,7 +36,7 @@ while(<STDIN>) {
     my $curr_line = $_;
     if($1 != $last) {
         my $next = $1;
-        my %curr = %next;
+        %curr = %next;
         %next = ();
         for(@handles) {
             while(my $val = <$_>) {
@@ -42,15 +52,11 @@ while(<STDIN>) {
                 }
             }
         }
-        for(@save) {
-            my @arr = split(/ \|\|\| /);
-            $arr[3] = join(" ", sort(split(/ /, $arr[3])));
-            my $id = "$arr[0] ||| $arr[1] ||| $arr[3]";
-            print "$_\n" if not $curr{$id}++;
-        }
+        print_save(@save);
         @save = ($curr_line);
         $last = $next;
     } else {
         push @save, $_;
     }
 }
+print_save(@save);

@@ -50,12 +50,12 @@ public:
         return *SafeAccess(vocab_, id);
     }
     T GetId(const std::string & sym, bool add = false) {
-        boost::upgrade_lock< boost::shared_mutex > lock(mutex_);
+        // boost::upgrade_lock< boost::shared_mutex > lock(mutex_);
         typename Map::const_iterator it = map_.find(sym);
         if(it != map_.end())
             return it->second;
         else if(add) {
-            boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+            // boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
             T id;
             if(reuse_.size() != 0) {
                 id = reuse_.back(); reuse_.pop_back();
