@@ -85,7 +85,7 @@ sub split_xml {
   my (@WORD,@MARKUP);
   my $i = 0;
   $MARKUP[0] = "";
-  while($line =~ /\S/) {
+  while($line =~ /[^ ]/) {
     $line =~ /^ *([^ ]+)(.*)$/;
     $WORD[$i++] = $1;
     $MARKUP[$i] = "";

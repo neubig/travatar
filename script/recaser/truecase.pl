@@ -39,9 +39,7 @@ while(<STDIN>) {
     print " " if $i;
     print $$MARKUP[$i];
 
-    $$WORD[$i] =~ /^([^\|]+)(.*)/;
-    my $word = $1;
-    my $otherfactors = $2;
+    my $word = $$WORD[$i];
 
     if ($sentence_start && defined($BEST{lc($word)})) {
       print $BEST{lc($word)}; # truecase sentence start
@@ -55,7 +53,6 @@ while(<STDIN>) {
     else {
       print $word; # unknown, nothing to do
     }
-    print $otherfactors;
 
     if    ( defined($SENTENCE_END{ $word }))           { $sentence_start = 1; }
     elsif (!defined($DELAYED_SENTENCE_START{ $word })) { $sentence_start = 0; }
