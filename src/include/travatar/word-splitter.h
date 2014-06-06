@@ -24,6 +24,14 @@ public:
         ignore_.insert(Dict::WID("-RRB-"));
         ignore_.insert(Dict::WID("-lrb-"));
         ignore_.insert(Dict::WID("-rrb-"));
+        ignore_.insert(Dict::WID("-LSB-"));
+        ignore_.insert(Dict::WID("-RSB-"));
+        ignore_.insert(Dict::WID("-lsb-"));
+        ignore_.insert(Dict::WID("-rsb-"));
+        ignore_.insert(Dict::WID("-LCB-"));
+        ignore_.insert(Dict::WID("-RCB-"));
+        ignore_.insert(Dict::WID("-lcb-"));
+        ignore_.insert(Dict::WID("-rcb-"));
     }
 
     virtual ~WordSplitter() { }
