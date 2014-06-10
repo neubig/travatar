@@ -9,9 +9,9 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my $ARG = "";
+my $LANG = "en";
 GetOptions(
-"arg=s" => \$ARG,
+"lang=s" => \$LANG,
 );
 
 if(@ARGV != 0) {
@@ -20,19 +20,20 @@ if(@ARGV != 0) {
 }
 while(<STDIN>) {
     chomp;
-    my @arr = map { my @v = map { $_ = ucfirst($_) if $capital{$_}; $_ } split(/ /, $_); ucfirst("@v") } split(/\t/);
-    $_ = join("\t", @arr);
-    s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。])/$1$2/g;
-    s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。])/$1$2/g;
+    s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
+    s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
     s/ ([,\.\?:。、])/$1/g;
     s/`` /"/g;
     s/ ''/"/g;
-    s/ (n't|'ve|'s|'d|'m|'ll)/$1/g;
+    s/ (n't|'ve|'s|'d|'m|'ll)/$1/gi;
     s/ -rrb-/)/gi;
     s/-lrb- /(/gi;
     s/ -rsb-/[/gi;
     s/-lsb- /]/gi;
     s/ -rcb-/{/gi;
     s/-lcb- /}/gi;
+    if($LANG !~ /^(zh|ja)$/) {
+        $_ = ucfirst($_);
+    }
     print "$_\n";
 }
