@@ -20,18 +20,22 @@ if(@ARGV != 0) {
 }
 while(<STDIN>) {
     chomp;
+    # Units
+    s/([0-9]) (℃|w|t|°) /$1$2 /g;
     s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
     s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
-    s/ ([,\.\?:。、])/$1/g;
+    s/ ([,\.\?:。、%])/$1/g;
+    s/ (-) /$1/g;
+    s/ \\\/ /\//g;
     s/`` /"/g;
     s/ ''/"/g;
     s/ (n't|'ve|'s|'d|'m|'ll)/$1/gi;
     s/ -rrb-/)/gi;
     s/-lrb- /(/gi;
-    s/ -rsb-/[/gi;
-    s/-lsb- /]/gi;
-    s/ -rcb-/{/gi;
-    s/-lcb- /}/gi;
+    s/ -rsb-/]/gi;
+    s/-lsb- /[/gi;
+    s/ -rcb-/}/gi;
+    s/-lcb- /{/gi;
     if($LANG !~ /^(zh|ja)$/) {
         $_ = ucfirst($_);
     }
