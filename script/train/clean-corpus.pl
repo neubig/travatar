@@ -43,11 +43,10 @@ my $id = 0;
 while(1) {
     my @instrs = map { my $str = <$_>; $str } @inhandles;
     my $defcnt = sum(map { defined($_) ? 1 : 0 } @instrs);
-    print "@instrs\n";
-    print "$defcnt != ".@instrs."\n";
     last if $defcnt == 0;
     die "Uneven number of lines" if $defcnt != @inhandles;
-    my $okcnt = map { chomp; my $cnt = split(/ +/); (($cnt >= $MIN_LEN) and ($cnt <= $MAX_LEN)) ? 1 : 0 } @instrs;
+    my @cnts = map { chomp; my $cnt = split(/ +/); $cnt } @instrs;
+    my $okcnt = sum(map { (($_ >= $MIN_LEN) and ($_ <= $MAX_LEN)) ? 1 : 0 } @cnts);
     $id++;
     if($okcnt == @inhandles) {
         for(0 .. $#instrs) {
