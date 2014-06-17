@@ -56,8 +56,8 @@ my $SMOOTH = "none";
 
 # Rule extraction options (Hiero)
 
-my $INITIAL_PHRASE_LEN = "10";
-my $RULE_MAX_LEN = "5";
+my $MAX_INITIAL_PHRASE = "10";
+my $MAX_TERMINALS = "5";
 
 # Model files
 my $TM_STORAGE = "marisa";
@@ -100,8 +100,8 @@ GetOptions(
     "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
     "no_lm=s" => \$NO_LM, # Indicates that no LM will be used
     "method=s" => \$TRANSLATION_METHOD, # The translation method that is used for travatar (t2s or hiero)
-    "initial_phrase=s" => \$INITIAL_PHRASE_LEN, # The maximum length of initial phrase in hiero extraction
-    "hiero_rule_len=s" => \$RULE_MAX_LEN, # The maximum length of hiero rules that are extracted from hiero extraction
+    "initial_phrase=s" => \$MAX_INITIAL_PHRASE, # The maximum length of initial phrase in hiero extraction
+    "hiero_rule_len=s" => \$MAX_TERMINALS, # The maximum length of hiero rules that are extracted from hiero extraction
 );
 if(@ARGV != 0) {
     print STDERR "Usage: $0 --work_dir=work --src_file=src.txt --trg_file=trg.txt\n";
@@ -232,7 +232,7 @@ if(not $TM_FILE) {
         my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
         safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     } elsif ($TRANSLATION_METHOD eq "hiero") {
-        my $EXTRACT_OPTIONS = "-initial_phrase_len $INITIAL_PHRASE_LEN -rule_max_len $RULE_MAX_LEN";
+        my $EXTRACT_OPTIONS = "-max_initial_phrase $MAX_INITIAL_PHRASE -max_terminals $MAX_TERMINALS";
         safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE | gzip -c > $EXTRACT_FILE") or die;
     } else {
         die "Unrecognized method: $TRANSLATION_METHOD\n";

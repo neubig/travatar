@@ -41,6 +41,10 @@ if($SRC) {
             $_ = <FILE0>;
             chomp;
             @sent = split(/ +/);
+        } elsif ($SRC_FORMAT eq "word") {
+            @sent = split(/ +/);
+        } else {
+            die "Illegal source format: $SRC_FORMAT";
         }
         foreach my $i (0 .. $#sent) {
             foreach my $j ($i .. min($#sent, $i+$MAX_RULE_LEN-1)) {
