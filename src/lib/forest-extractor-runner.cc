@@ -2,7 +2,7 @@
 #include <fstream>
 #include <travatar/util.h>
 #include <travatar/tree-io.h>
-#include <travatar/rule-extractor.h>
+#include <travatar/forest-extractor.h>
 #include <travatar/forest-extractor-runner.h>
 #include <travatar/config-forest-extractor-runner.h>
 #include <travatar/binarizer.h>

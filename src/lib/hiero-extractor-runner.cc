@@ -2,7 +2,7 @@
 #include <fstream>
 #include <travatar/util.h>
 #include <travatar/tree-io.h>
-#include <travatar/rule-extractor.h>
+#include <travatar/hiero-extractor.h>
 #include <travatar/hiero-extractor-runner.h>
 #include <travatar/config-hiero-extractor-runner.h>
 #include <travatar/binarizer.h>

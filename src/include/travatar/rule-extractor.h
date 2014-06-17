@@ -5,7 +5,6 @@
 #include <list>
 #include <map>
 #include <travatar/sentence.h>
-#include <travatar/hiero-rule-table.h>
 
 namespace travatar {
 
@@ -16,8 +15,6 @@ class Alignment;
 
 typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
 typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
-typedef std::pair< std::pair<int,int>, std::pair<int,int> > PhrasePair;
-typedef std::vector< PhrasePair > PhrasePairs;
 
 // A virtual class to overload that converts a source parse, a target sentence
 // and an alignment into a forest of matched rules
@@ -46,109 +43,6 @@ private:
                           std::ostream & oss) const;
 
 };
-
-// A rule extractor using forest based rule extraction
-//  "Forest-based Translation Rule Extraction"
-//  Haitao Mi and Liang Huang
-class ForestExtractor : public RuleExtractor{
-public:
-
-    ForestExtractor() : max_attach_(1), max_nonterm_(5) { }
-
-    // Extract the very minimal set of rules (no nulls, etc)
-    virtual HyperGraph * ExtractMinimalRules(
-        HyperGraph & src_parse, 
-        const Alignment & align) const;
-
-    // Attach null-aligned target words to the very top node
-    // that they can be attached to
-    HyperGraph * AttachNullsTop(const HyperGraph & rule_graph,
-                                const Alignment & align,
-                                int trg_len);
-
-    // Attach null-aligned target words to all possible nodes that
-    // they can be attached to
-    HyperGraph * AttachNullsExhaustive(const HyperGraph & rule_graph,
-                                       const Alignment & align,
-                                       int trg_len);
-
-    // For expanding all nulls exhaustively
-    typedef std::vector<std::pair<std::set<int>, HyperNode*> > SpanNodeVector;
-
-    // Used memoized recursion to get the expanded nodes for each old node
-    const SpanNodeVector & GetExpandedNodes(
-                            const std::vector<bool> & nulls,
-                            const HyperNode & old_node,
-                            std::vector<SpanNodeVector> & expanded,
-                            int my_attach);
-
-    SpanNodeVector ExpandNode(
-                const std::vector<bool> & nulls,
-                const HyperNode & old_node,
-                int my_attach) const;
-
-    void SetMaxAttach(int max_attach) { max_attach_ = max_attach; }
-    void SetMaxNonterm(int max_nonterm) { max_nonterm_ = max_nonterm; }
-
-protected:
-
-    int max_attach_;
-    int max_nonterm_;
-
-    void AttachNullsTop(std::vector<bool> & nulls,
-                        HyperNode & node);
-    void AttachNullsExhaustive(std::vector<bool> & nulls,
-                               HyperNode & node);
-
-};
-
-
-class HieroExtractor {
-    int max_initial_phrase_len_; 
-    int max_rule_len_;
-public:
-    HieroExtractor() : max_initial_phrase_len_(10), max_rule_len_(5) { }
-
-    std::vector<std::vector<HieroRule> > ExtractHieroRule(const Alignment & align, const Sentence & source, const Sentence & target) const;
-    std::string PrintPhrasePair(const PhrasePair & pp, const Sentence & source, const Sentence & target) const;
-    PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target) const;
-
-    // MUTATOR
-    void SetMaxInitalPhrase(const int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
-    void SetMaxRuleLen(const int max_rule_len) {max_rule_len_ = max_rule_len; }
-    
-    // ACCESSOR 
-    int GetMaxInitialPhrase() const { return max_initial_phrase_len_; }
-    int GetMaxRuleLen() const { return max_rule_len_; }
-private:
-    std::string AppendString(const Sentence & s, const int begin, const int end) const;
-    
-    void PrintPhrasePairs(const PhrasePairs & pairs, const Sentence & source, const Sentence & target);
-
-    int MapMaxKey(const std::map<int,int> & map) const;
-    int MapMinKey(const std::map<int,int> & map) const;
-    int QuasiConsecutive(int small, int large, const std::map<int,int> & tp, const std::vector<std::set<int> > & t2s) const;
-    int IsTerritoryOverlapping(const std::pair<int,int> & a, const std::pair<int,int> & b) const;
-    int IsPhraseOverlapping(const PhrasePair & pair1, const PhrasePair & pair2) const;
-
-    void ParseRuleWith2Nonterminals(const Sentence & sentence, const std::pair<int,int> & pair1, const std::pair<int,int> & pair2, 
-                                    const std::pair<int,int> & pair_span, HieroRule & target, const int type) const;
-
-    HieroRule ParseBinaryPhraseRule(const Sentence & source, const Sentence & target, const PhrasePair & pair1, 
-                                    const PhrasePair & pair2, const PhrasePair & pair_span) const;
-
-    void ParseRuleWith1Nonterminals(const Sentence & sentence, const std::pair<int,int> & pair, 
-                                    const std::pair<int,int> & pair_span, HieroRule & target, const int type) const;
-
-    HieroRule ParseUnaryPhraseRule(const Sentence & source, const Sentence & target, 
-                                    const PhrasePair & pair, const PhrasePair & pair_span) const;
-
-    HieroRule ParsePhraseTranslationRule(const Sentence & source, const Sentence & target, 
-                                        const PhrasePair & pair) const;
-
-    int InPhrase(const PhrasePair & p1, const PhrasePair & p2) const;
-};
-
 
 }
 
