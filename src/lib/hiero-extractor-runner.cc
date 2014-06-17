@@ -26,8 +26,8 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
 
     // Create the rule extractor
     HieroExtractor extractor;
-    extractor.SetMaxInitialPhrase(config.GetInt("initial_phrase_len"));
-    extractor.SetMaxRuleLen(config.GetInt("rule_max_len"));
+    extractor.SetMaxInitialPhrase(config.GetInt("max_initial_phrase"));
+    extractor.SetMaxTerminals(config.GetInt("max_terminals"));
     
     // Open the files
     const vector<string> & argv = config.GetMainArgs();
@@ -78,10 +78,10 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
 
 void HieroExtractorRunner::IsSane(const ConfigHieroExtractorRunner & config) 
 {
-    if (config.GetInt("initial_phrase_len") < 0) {
-        THROW_ERROR("initial_phrase_len must be greater than 0.");
+    if (config.GetInt("max_initial_phrase") <= 0) {
+        THROW_ERROR("max_initial_phrase must be greater than 0.");
     } 
-    if (config.GetInt("rule_max_len") < 0) {
-        THROW_ERROR("rule_max_len must be greater than 0.");
+    if (config.GetInt("max_terminals") <= 0) {
+        THROW_ERROR("max_terminals must be greater than 0.");
     }
 }
