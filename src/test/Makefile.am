@@ -6,7 +6,7 @@ AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. -DPKGD
 noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
 
-nobase_include_HEADERS = test-alignment.h test-base.h test-binarizer.h test-dict.h test-eval-measure.h test-graph-transformer.h test-hyper-graph.h test-io-util.h test-lookup-table.h test-rule-extractor.h test-travatar-runner.h test-tree-io.h test-trimmer.h test-tune.h test-weights.h test-hiero.h test-hiero-lookup-table.h test-lookup-table-fsm.h
+nobase_include_HEADERS = test-alignment.h test-base.h test-binarizer.h test-dict.h test-eval-measure.h test-graph-transformer.h test-hyper-graph.h test-io-util.h test-lookup-table.h test-rule-extractor.h test-travatar-runner.h test-tree-io.h test-trimmer.h test-tune.h test-weights.h test-hiero.h test-lookup-table-fsm.h
 
 test_travatar_SOURCES = test-travatar.cc ${TRAVATARH}
 test_travatar_LDADD = ../lib/libtravatar.la ../kenlm/lm/libklm.a ../kenlm/util/libklm_util.a  ../kenlm/search/libklm_search.a ../tercpp/libter.a ../marisa/libmarisa.la ../liblbfgs/liblbfgs.la -lboost_thread -lboost_regex -lboost_iostreams -lboost_system -lz -lrt

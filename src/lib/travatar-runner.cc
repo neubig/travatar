@@ -10,7 +10,6 @@
 #include <travatar/trimmer-nbest.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
-#include <travatar/lookup-table-hiero.h>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
