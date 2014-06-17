@@ -25,7 +25,7 @@ public:
     PhrasePairs ExtractPhrase(const Alignment & align, const Sentence & source, const Sentence & target) const;
 
     // MUTATOR
-    void SetMaxInitalPhrase(const int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
+    void SetMaxInitialPhrase(const int max_initial_phrase_len) { max_initial_phrase_len_ = max_initial_phrase_len; }
     void SetMaxRuleLen(const int max_rule_len) {max_rule_len_ = max_rule_len; }
     
     // ACCESSOR 

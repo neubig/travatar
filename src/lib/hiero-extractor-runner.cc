@@ -26,7 +26,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
 
     // Create the rule extractor
     HieroExtractor extractor;
-    extractor.SetMaxInitalPhrase(config.GetInt("initial_phrase_len"));
+    extractor.SetMaxInitialPhrase(config.GetInt("initial_phrase_len"));
     extractor.SetMaxRuleLen(config.GetInt("rule_max_len"));
     
     // Open the files

@@ -61,41 +61,35 @@ vector<vector<HieroRule> > HieroExtractor::ExtractHieroRule(const Alignment & al
     pairs = filtered_pairs;
     // Rule extraction algorithm for 1 + 2 Nonterminal Symbol. If we use Higher, algorithm is too complex
     for (int ii=0; (unsigned) ii < pairs.size(); ++ii) {
-        // initial phrases are limited to a length of INITIAL_PHRASE_LIMIT (10) words on either side
-        if (pairs[ii].first.second - pairs[ii].first.first < HieroExtractor::GetMaxInitialPhrase() || 
-                pairs[ii].second.second - pairs[ii].second.first < HieroExtractor::GetMaxInitialPhrase()) 
-        {
-            vector<HieroRule> _extracted = vector<HieroRule>();
-            _extracted.push_back(ParsePhraseTranslationRule(source,target,pairs[ii]));
-            // Find pairs of 2 rules
-            for (int jj=0; (unsigned) jj < pairs.size(); ++jj) {
-                if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
-                    for (int kk=jj+1; (unsigned) kk < pairs.size(); ++kk) {
-                        // that are in the span of INITIAL phrase, and NOT overlapping each other
-                        if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && InPhrase(pairs[jj],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
+        vector<HieroRule> _extracted = vector<HieroRule>();
+        _extracted.push_back(ParsePhraseTranslationRule(source,target,pairs[ii]));
+        // Find pairs of 2 rules
+        for (int jj=0; (unsigned) jj < pairs.size(); ++jj) {
+            if (jj != ii && InPhrase(pairs[jj],pairs[ii])) {
+                for (int kk=jj+1; (unsigned) kk < pairs.size(); ++kk) {
+                    // that are in the span of INITIAL phrase, and NOT overlapping each other
+                    if (kk != jj && InPhrase(pairs[kk],pairs[ii]) && InPhrase(pairs[jj],pairs[ii]) && !IsPhraseOverlapping(pairs[jj],pairs[kk])) 
+                    {
+                        HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
+                        if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                                (int) _rule.GetTargetSentence().size() <= rule_max_len)
                         {
-                            HieroRule _rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
-                            if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
-                                    (int) _rule.GetTargetSentence().size() <= rule_max_len)
-                            {
-                                HieroRuleManager::AddRule(_extracted,_rule);
-                            }
+                            HieroRuleManager::AddRule(_extracted,_rule);
                         }
                     }
-                    // Unary rule
-                    HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
-                    if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
-                            (int) _rule.GetTargetSentence().size() <= rule_max_len)
-                    {
-                        HieroRuleManager::AddRule(_extracted,_rule);
-                    }
+                }
+                // Unary rule
+                HieroRule _rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
+                if ((int)_rule.GetSourceSentence().size() <= rule_max_len || 
+                        (int) _rule.GetTargetSentence().size() <= rule_max_len)
+                {
+                    HieroRuleManager::AddRule(_extracted,_rule);
                 }
             }
-            if (_extracted.size() > (unsigned) 0) {
-                ret.push_back(_extracted);
-            }
         }
-        // 
+        if (_extracted.size() > (unsigned) 0) {
+            ret.push_back(_extracted);
+        }
     }
     // DEBUG PrintPhrasePairs();
     return ret;
@@ -116,43 +110,36 @@ PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentenc
     }
     for (unsigned s=0; s < s2t.size(); ++s) {
         set<int> ts = s2t[s];
-        BOOST_FOREACH(int t, ts) {
+        BOOST_FOREACH(int t, ts)
             t2s[t].insert((int)s);
-        }
     }
 
     // Phrase Extraction Algorithm 
     // This is very slow (actually), maybe better data structure can improves it.
     for (int s_begin=0; s_begin < (int)s2t.size(); ++s_begin) {
         map<int, int> tp;
-        for (int s_end=s_begin; s_end < (int)s2t.size(); ++s_end) {
-            if (s2t[s_end].size() != 0) { 
-                BOOST_FOREACH(int _t, s2t[s_end]) { tp[_t]++;}
+        int s_last = min((int)s2t.size(), s_begin+GetMaxInitialPhrase());
+        for (int s_end=s_begin; s_end < s_last; ++s_end) {
+            if (s2t[s_end].size() != 0) {
+                BOOST_FOREACH(int _t, s2t[s_end])
+                    tp[_t]++;
             }
             int t_begin = MapMinKey(tp);
             int t_end = MapMaxKey(tp);
             if (QuasiConsecutive(t_begin,t_end,tp,t2s)) {
                 map<int, int> sp;
-                for (int t=t_begin; t<=t_end;++t) {
-                    if (t2s[t].size() != 0) {
-                        BOOST_FOREACH(int _s, t2s[t]) { sp[_s]++; }
-                    }
-                }
+                for (int t=t_begin; t<=t_end;++t) 
+                    BOOST_FOREACH(int _s, t2s[t])
+                        sp[_s]++;
                 if (MapMinKey(sp) >= s_begin && MapMaxKey(sp) <= s_end) {
-                    while (t_begin >= 0) {
-                        int jp = t_end;
-                        while (jp <= (int)t2s.size()) {
+                    int t_first = max(0, t_end-GetMaxInitialPhrase()+1);
+                    while(t_begin >= t_first) {
+                        int t_last = min((int)t2s.size(), t_begin+GetMaxInitialPhrase());
+                        for(int jp = t_end; jp < t_last && (jp == t_end || t2s[jp].size() == 0); jp++)
                             ret.push_back(make_pair(make_pair(s_begin,s_end),make_pair(t_begin,jp)));
-                            ++jp;   
-                            if (jp == (int)t2s.size() || t2s[jp].size() != 0) {
-                                break;
-                            }
-                        }
                         --t_begin;
-                        if(t_begin < 0 || t2s[t_begin].size() != 0) {
+                        if(t2s[t_begin].size() != 0)
                             break;
-                        }
-                        
                     }
                 }
             }
