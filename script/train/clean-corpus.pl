@@ -18,30 +18,41 @@ GetOptions(
     "ids=s" => \$IDS,
 );
 
-if(@ARGV != 4) {
-    print STDERR "Usage: $0 -max_len 60 OLD_SRC OLD_TRG NEW_SRC NEW_TRG\n";
+if((@ARGV == 0) or (@ARGV % 2 != 0)) {
+    print STDERR "Usage: $0 -max_len 60 OLD1 OLD2 ... NEW1 NEW2 ...\n";
     exit 1;
 }
 
-open FILE0, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
-open FILE1, "<:utf8", $ARGV[1] or die "Couldn't open $ARGV[1]\n";
-open FILE2, ">:utf8", $ARGV[2] or die "Couldn't open $ARGV[2]\n";
-open FILE3, ">:utf8", $ARGV[3] or die "Couldn't open $ARGV[3]\n";
+print "@ARGV\n";
+# Open the files for reading and writing
+my (@inhandles, @outhandles);
+for(@ARGV[0 .. @ARGV/2-1]) {
+    my $fh = IO::File->new("< $_") or die "Couldn't open file $_ for reading";
+    binmode $fh, ":utf8";
+    push @inhandles, $fh;
+}
+for(@ARGV[@ARGV/2 .. $#ARGV]) {
+    (not -e $_) or die "File $_ already exists, delete it first.";
+    my $fh = IO::File->new("> $_") or die "Couldn't open file $_ for writing";
+    binmode $fh, ":utf8";
+    push @outhandles, $fh;
+}
 open FILEIDS, ">:utf8", $IDS or die "Couldn't open $IDS\n" if $IDS;
 
-my ($f, $e);
 my $id = 0;
 while(1) {
-    $f = <FILE0>; $e = <FILE1>;
-    last if((not defined $f) and (not defined $e));
-    die "Uneven number of lines" if((not defined $f) or (not defined $e));
-    chomp $f; chomp $e;
-    my @fa = split(/ +/, $f);
-    my @ea = split(/ +/, $e);
+    my @instrs = map { my $str = <$_>; $str } @inhandles;
+    my $defcnt = sum(map { defined($_) ? 1 : 0 } @instrs);
+    last if $defcnt == 0;
+    die "Uneven number of lines" if $defcnt != @inhandles;
+    my @cnts = map { chomp; my $cnt = split(/ +/); $cnt } @instrs;
+    my $okcnt = sum(map { (($_ >= $MIN_LEN) and ($_ <= $MAX_LEN)) ? 1 : 0 } @cnts);
     $id++;
-    if((@fa >= $MIN_LEN) and (@fa <= $MAX_LEN) and (@ea >= $MIN_LEN) and (@ea <= $MAX_LEN)) {
-        print FILE2 "$f\n";
-        print FILE3 "$e\n";
+    if($okcnt == @inhandles) {
+        for(0 .. $#instrs) {
+            my $hand = $outhandles[$_];
+            print $hand "$instrs[$_]\n";
+        }
         print FILEIDS "$id\n" if($IDS);
     }
 }
