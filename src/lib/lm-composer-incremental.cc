@@ -135,7 +135,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
                 below_score += children.back()->Bound();
             // Add terminal
             } else {
-                lm::WordIndex index = lm_->GetVocabulary().Index(Dict::WSym(wid));
+                lm::WordIndex index = GetMapping(wid);
                 if(index == 0) unk++;
                 words.push_back(index);
                 ++terminals;

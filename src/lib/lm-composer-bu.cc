@@ -120,7 +120,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
             } else {
                 // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
                 // Re-index vocabulary
-                lm::WordIndex index = lm_->GetVocabulary().Index(Dict::WSym(trg_id));
+                lm::WordIndex index = GetMapping(trg_id);
                 if(index == 0) unk++;
                 my_rule_score.Terminal(index);
             }
@@ -193,6 +193,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     // Add the root node and its corresponding state
     int len = (nodes.size() > 0) ? nodes[0]->GetSpan().second : 0;
     HyperNode * root = new HyperNode(Dict::WID("LMROOT"), -1, make_pair(0,len));
+    WordId lm_feature = Dict::WID(lm_feature_name_);
     ret->AddNode(root);
     if(parse.NumNodes() == 0) return ret;
     states.resize(1);
@@ -210,7 +211,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
         double my_score = my_rule_score.Finish();
         edge->AddTail(node);
         if(my_score != 0.0) {
-            edge->AddFeature(Dict::WID(lm_feature_name_), my_score);
+            edge->AddFeature(lm_feature, my_score);
             edge->SetScore(my_score * lm_weight_);
         }
         ret->AddEdge(edge);

@@ -25,8 +25,10 @@ protected:
     int chart_limit_;
 
 public:
-    LMComposerBU(lm::ngram::Model * lm, int factor = 0) :
-        LMComposer(lm, factor), stack_pop_limit_(0), chart_limit_(0) { }
+    LMComposerBU(const std::string & str, int factor = 0) :
+        LMComposer(str, factor), stack_pop_limit_(0), chart_limit_(0) { }
+    LMComposerBU(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
+        LMComposer(lm, vocab_map, factor), stack_pop_limit_(0), chart_limit_(0) { }
     virtual ~LMComposerBU() { }
 
     // Intersect this graph with a language model, using cube pruning to control

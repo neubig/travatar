@@ -64,10 +64,13 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
         }
     }
     ofs << "\\end\\" << endl << endl;
-    // Load the LM
-    lm::ngram::Config config;
-    config.messages = NULL;
-    LMComposerBU bu(new lm::ngram::Model("/tmp/oracle.arpa", config));
+    // Create the LM, and an index mapping from travatar IDs to 
+    MapEnumerateVocab lm_save;
+    lm::ngram::Config lm_config;
+    lm_config.enumerate_vocab = &lm_save;
+    lm_config.messages = NULL;
+    lm::ngram::Model* lm_model = new lm::ngram::Model("/tmp/oracle.arpa", lm_config);
+    LMComposerBU bu(lm_model, lm_save.GetAndFreeVocabMap());
     bu.SetFeatureName("oraclelm");
     bu.SetWeight(1);
     bu.SetStackPopLimit(POP_LIMIT);
