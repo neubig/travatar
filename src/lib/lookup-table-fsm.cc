@@ -18,7 +18,7 @@ LookupTableFSM * LookupTableFSM::ReadFromRuleTable(istream & in) {
 	string line;
     LookupTableFSM * ret = new LookupTableFSM;
     while(getline(in, line)) {
-        vector<string> columns, source_word, target_word;
+        vector<string> columns;
         algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
         if(columns.size() < 3)
             THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
@@ -117,32 +117,31 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 
 	// Cleaning unreachable Node
 	CleanUnreachableNode(edge_list, node_map);
-	// First place the root node in the first (and if there is only one node, then don't have to do this)
-	if (node_map.size() != 1) {
-		LookupTableFSM::NodeKey key = make_pair(GetRootSymbol(),make_pair(0,(int)sent.size()));
-		LookupTableFSM::NodeMap::iterator big_span_node = node_map.find(key);
-		if (big_span_node != node_map.end()) {
-			_graph->AddNode(big_span_node->second);
-			node_map.erase(big_span_node);
-		} else {
-			big_span_node = node_map.begin();
-			while (big_span_node != node_map.end()) {
-				pair<int,int> key = (big_span_node->first).second;
-				if (key.second - key.first == (int)sent.size()) {
-					_graph->AddNode(big_span_node->second);
-					node_map.erase(big_span_node);
-					break;
-				}
-				++big_span_node;
-			}
-		}
-	}
-	BOOST_FOREACH (HyperEdge* edges, edge_list) 
-		if (edges != NULL)
-			_graph->AddEdge(edges);
+    
+    // Find the root node
+	LookupTableFSM::NodeKey key = make_pair(GetRootSymbol(),make_pair(0,(int)sent.size()));
+	LookupTableFSM::NodeMap::iterator big_span_node = node_map.find(key);
 
-	for (LookupTableFSM::NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it) 
-		_graph->AddNode(it->second);
+    // If the node is not found, delete and return an empty graph
+    if(big_span_node == node_map.end()) {
+        cerr << "Could not find Span "<<Dict::WSym(GetRootSymbol())<<"[0,"<<sent.size()<<"]"<<endl;
+	    BOOST_FOREACH (HyperEdge* edges, edge_list) 
+            delete edges;
+        BOOST_FOREACH (LookupTableFSM::NodeMap::value_type nodes, node_map)
+            delete nodes.second;
+        return new HyperGraph;
+    }
+
+    // Add the root node
+	if (big_span_node != node_map.end()) {
+		_graph->AddNode(big_span_node->second);
+		node_map.erase(big_span_node);
+	}
+    // Add the rest of the nodes
+	BOOST_FOREACH (HyperEdge* edges, edge_list) 
+		_graph->AddEdge(edges);
+    BOOST_FOREACH (LookupTableFSM::NodeMap::value_type nodes, node_map)
+		_graph->AddNode(nodes.second);
 
 	return _graph;
 }

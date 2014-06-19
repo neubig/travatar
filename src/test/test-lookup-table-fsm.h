@@ -16,29 +16,29 @@ public:
     TestLookupTableFSM() {
         // Load the rules
         ostringstream rule_oss;
-        rule_oss << "\"I\" x0 ||| \"watashi\" \"wa\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        rule_oss << "\"eat\" \"two\" x0 ||| \"futatsu\" \"no\" x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 2
-        rule_oss << "\"two\" x0 ||| \"futatsu\" \"no\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 3
-        rule_oss << "x0 \"eat\" x1 ||| x0 \"wa\" x1 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 4
-        rule_oss << "\"eat\" x0 ||| x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 5
-        rule_oss << "\"I\" x0 \"two\" \"hamburgers\" ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 6
-        rule_oss << "\"I\" x0 \"two\" x1 ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 7
-        rule_oss << "\"I\" ||| \"watashi\" ||| Pegf=0.02 ppen=2.718" << endl; // 8
-        rule_oss << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 9
-        rule_oss << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl; // 10
-        rule_oss << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl; // 11
+        rule_oss << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+        rule_oss << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
+        rule_oss << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
+        rule_oss << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
+        rule_oss << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
+        rule_oss << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
+        rule_oss << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
+        rule_oss << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
+        rule_oss << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
+        rule_oss << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
+        rule_oss << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
 
         istringstream rule_iss(rule_oss.str());
         lookup_fsm.reset(LookupTableFSM::ReadFromRuleTable(rule_iss));
 
         ostringstream rule_oss_gen;
-        rule_oss_gen << "x0 \"a\" x1 ||| x0 \"a\" x1 ||| pgef=0.02" << endl;
-        rule_oss_gen << "x0 x1 \"a\" ||| x0 x1 \"a\" ||| pgef=0.02" << endl;
-        rule_oss_gen << "\"a\" x1 x0 \"b\" ||| x0 \"a\" \"b\" x1 ||| pgef=0.02" << endl;
-        rule_oss_gen << "x0 x1 x2 ||| x0 x1 x2 ||| pgef=0.02" << endl;
-        rule_oss_gen << "x0 \"a\" ||| x0 \"a\" ||| pgef=0.02" << endl;
-        rule_oss_gen << "\"a\" x0 ||| \"a\" x0 ||| pgef=0.02" << endl;
-        rule_oss_gen << "x0 x1 ||| x0 x1 ||| pgef=0.02" << endl;
+        rule_oss_gen << "x0:X \"a\" x1:X @ X ||| x0:X \"a\" x1:X @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "x0:X x1:X \"a\" @ X ||| x0:X x1:X \"a\" @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "\"a\" x1:X x0:X \"b\" @ X ||| x0:X \"a\" \"b\" x1:X @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "x0:X x1:X x2 @ X ||| x0:X x1:X x2 @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "x0:X \"a\" @ X ||| x0:X \"a\" @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "\"a\" x0:X @ X ||| \"a\" x0:X @ X ||| pgef=0.02" << endl;
+        rule_oss_gen << "x0:X x1:X @ X ||| x0:X x1:X @ X ||| pgef=0.02" << endl;
         istringstream rule_iss_gen (rule_oss_gen.str());
         lookup_fsm_general.reset(LookupTableFSM::ReadFromRuleTable(rule_iss_gen));
     }
@@ -66,22 +66,25 @@ public:
         vector<HyperEdge*> edge(15);
         vector<shared_ptr<TranslationRuleHiero> > rules(11);
 
-        for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
+        for (int i=0; i < (int)node.size(); ++i) {
+            node[i] = new HyperNode;
+            node[i]->SetSym(Dict::WID("X"));
+        }
         for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
 
         // Transform into Hiero rule
         vector<string> word, target;
-        rules[0] = BuildRule("\"I\" x0", "\"watashi\" \"wa\" x0", "Pegf=0.02 ppen=2.718");
-        rules[1] = BuildRule("\"I\" x0 \"two\" \"hamburgers\"", "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0", "Pegf=0.02 ppen=2.718");
-        rules[2] = BuildRule("\"I\"", "\"watashi\"", "Pegf=0.02 ppen=2.718");
-        rules[3] = BuildRule("\"I\" x0 \"two\" x1", "\"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0", "Pegf=0.02 ppen=2.718");
-        rules[4] = BuildRule("\"eat\" \"two\" x0", "\"futatsu\" \"no\" x0 \"wo\" \"taberu\"", "Pegf=0.02 ppen=2.718");
-        rules[5] = BuildRule("x0 \"eat\" x1", "x0 \"wa\" x1 \"wo\" \"taberu\"", "Pegf=0.02 ppen=2.718");
-        rules[6] = BuildRule("\"eat\" x0", "x0 \"wo\" \"taberu\"", "Pegf=0.02 ppen=2.718");
-        rules[7] = BuildRule("\"eat\"", "\"taberu\"", "Pegf=0.02 ppen=2.718");
-        rules[8] = BuildRule("\"two\" x0", "\"futatsu\" \"no\" x0", "Pegf=0.02 ppen=2.718");
-        rules[9] = BuildRule("\"two\"", "\"futatsu\"", "Pegf=0.02 ppen=2.718");
-        rules[10] = BuildRule("\"hamburgers\"", "\"hanbaga\"", "Pegf=0.02 ppen=2.718");
+        rules[0] = BuildRule("\"I\" x0:X @ X", "\"watashi\" \"wa\" x0:X @ X", "Pegf=0.02 ppen=2.718");
+        rules[1] = BuildRule("\"I\" x0:X \"two\" \"hamburgers\" @ X", "\"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X", "Pegf=0.02 ppen=2.718");
+        rules[2] = BuildRule("\"I\" @ X", "\"watashi\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[3] = BuildRule("\"I\" x0:X \"two\" x1:X @ X", "\"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X", "Pegf=0.02 ppen=2.718");
+        rules[4] = BuildRule("\"eat\" \"two\" x0:X @ X", "\"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[5] = BuildRule("x0:X \"eat\" x1:X @ X", "x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[6] = BuildRule("\"eat\" x0:X @ X", "x0:X \"wo\" \"taberu\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[7] = BuildRule("\"eat\" @ X", "\"taberu\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[8] = BuildRule("\"two\" x0:X @ X", "\"futatsu\" \"no\" x0:X @ X", "Pegf=0.02 ppen=2.718");
+        rules[9] = BuildRule("\"two\" @ X", "\"futatsu\" @ X", "Pegf=0.02 ppen=2.718");
+        rules[10] = BuildRule("\"hamburgers\" @ X", "\"hanbaga\" @ X", "Pegf=0.02 ppen=2.718");
 
         // TranslationRuleHiero* glue_rule = lookup.GetGlueRule();
 
@@ -232,7 +235,7 @@ public:
             expected_graph->AddWord(w_id);
         }
 
-        bool ret = actual_graph->CheckEqual(*expected_graph);
+        bool ret = expected_graph->CheckEqual(*actual_graph);
         delete actual_graph;
         delete expected_graph;
         return ret;
