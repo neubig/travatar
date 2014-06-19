@@ -47,8 +47,10 @@ while(1) {
     die "Uneven number of lines" if $defcnt != @inhandles;
     my @cnts = map { chomp; my $cnt = split(/ +/); $cnt } @instrs;
     my $okcnt = sum(map { (($_ >= $MIN_LEN) and ($_ <= $MAX_LEN)) ? 1 : 0 } @cnts);
+    print join("\n", @instrs)."\n@cnts --- $okcnt\n";
     $id++;
     if($okcnt == @inhandles) {
+        print "PRINTING!\n";
         for(0 .. $#instrs) {
             my $hand = $outhandles[$_];
             print $hand "$instrs[$_]\n";
