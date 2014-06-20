@@ -126,7 +126,8 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     if(big_span_node == node_map.end()) {
         cerr << "Could not find Span "<<Dict::WSym(GetRootSymbol())<<"[0,"<<sent.size()<<"]"<<endl;
 	    BOOST_FOREACH (HyperEdge* edges, edge_list) 
-            delete edges;
+            if(edges)
+                delete edges;
         BOOST_FOREACH (LookupTableFSM::NodeMap::value_type nodes, node_map)
             delete nodes.second;
         return new HyperGraph;
@@ -139,7 +140,8 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
 	}
     // Add the rest of the nodes
 	BOOST_FOREACH (HyperEdge* edges, edge_list) 
-		_graph->AddEdge(edges);
+        if(edges)
+		    _graph->AddEdge(edges);
     BOOST_FOREACH (LookupTableFSM::NodeMap::value_type nodes, node_map)
 		_graph->AddNode(nodes.second);
 
@@ -294,6 +296,7 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(LookupTableFSM::NodeMap* node_m
 		tail = NULL;
 	}
 	head = NULL;
+
 	return hedge;
 }
 
