@@ -170,7 +170,7 @@ public:
         e_root_ay->AddTrgWord(-1);
 
         // Intersect the graph with the LM
-        LMComposerBU lm(new lm::ngram::Model(file_name_.c_str()));
+        LMComposerBU lm(file_name_.c_str());
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
@@ -264,7 +264,7 @@ public:
         e_root_ay->AddTrgWord(-1);
 
         // Intersect the graph with the LM
-        LMComposerIncremental lm(new lm::ngram::Model(file_name_.c_str()));
+        LMComposerIncremental lm(file_name_);
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
@@ -376,7 +376,7 @@ public:
         e_root_xb->AddTail(n_02_xb);
         e_root_xb->AddTrgWord(-1);
         // Intersect the graph with the LM
-        LMComposerBU lm(new lm::ngram::Model(file_name_.c_str()));
+        LMComposerBU lm(file_name_.c_str());
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(5);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
@@ -496,7 +496,7 @@ public:
         e_root_ay->AddTrgWord(-1);
 
         // Intersect the graph with the LM
-        LMComposerIncremental lm(new lm::ngram::Model(file_name_.c_str()));
+        LMComposerIncremental lm(file_name_.c_str());
         lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(5);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));

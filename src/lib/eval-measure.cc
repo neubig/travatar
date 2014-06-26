@@ -31,11 +31,11 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     BOOST_FOREACH(WordId wid, ref) bord_ref.push_back(wid);
     bord_ref.push_back(Dict::WID("</s>"));
     // Create the n-grams
-    typedef map<vector<WordId>, int> NgramMap;
+    typedef map<Sentence, int> NgramMap;
     vector<NgramMap> ngrams(NGRAM_ORDER+1);
     int act_order = 0;
     for(int i = 0; i < (int)bord_ref.size(); i++) {
-        vector<WordId> curr;
+        Sentence curr;
         for(int j = 0; j <= NGRAM_ORDER; j++) {
             ngrams[j][curr]++;
             act_order = max(j, act_order);
@@ -56,7 +56,7 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
         ofs << endl << "\\"<<n<<"-grams:"<<endl;
         if(n == 1) ofs << "-99\t<unk>\t-99" << endl;
         BOOST_FOREACH(const NgramMap::value_type & val, ngrams[n]) {
-            vector<WordId> context = val.first;
+            Sentence context = val.first;
             context.resize(context.size()-1);
             ofs << log(val.second)-log(ngrams[n-1][context]) << "\t" << Dict::PrintWords(val.first);
             if(n != act_order) ofs << "\t-99";
@@ -64,10 +64,13 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
         }
     }
     ofs << "\\end\\" << endl << endl;
-    // Load the LM
-    lm::ngram::Config config;
-    config.messages = NULL;
-    LMComposerBU bu(new lm::ngram::Model("/tmp/oracle.arpa", config));
+    // Create the LM, and an index mapping from travatar IDs to 
+    MapEnumerateVocab lm_save;
+    lm::ngram::Config lm_config;
+    lm_config.enumerate_vocab = &lm_save;
+    lm_config.messages = NULL;
+    lm::ngram::Model* lm_model = new lm::ngram::Model("/tmp/oracle.arpa", lm_config);
+    LMComposerBU bu(lm_model, lm_save.GetAndFreeVocabMap());
     bu.SetFeatureName("oraclelm");
     bu.SetWeight(1);
     bu.SetStackPopLimit(POP_LIMIT);

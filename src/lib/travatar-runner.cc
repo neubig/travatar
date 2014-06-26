@@ -10,7 +10,6 @@
 #include <travatar/trimmer-nbest.h>
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
-#include <travatar/lookup-table-hiero.h>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
@@ -29,7 +28,6 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 using namespace lm::ngram;
-
 
 void TravatarRunnerTask::Run() {
     PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
@@ -205,17 +203,16 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load the language model
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
     if(config.GetString("lm_file") != "") {
+        // Set the LM Composer
         if(config.GetString("search") == "cp") {
-            LMComposerBU * bu = 
-                new LMComposerBU(new Model(config.GetString("lm_file").c_str()));
+            LMComposerBU * bu = new LMComposerBU(config.GetString("lm_file"));
             bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
             bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
             bu->SetStackPopLimit(config.GetInt("pop_limit"));
             bu->SetChartLimit(config.GetInt("chart_limit"));
             lm_.reset(bu);
         } else if(config.GetString("search") == "inc") {
-            LMComposerIncremental * inc = 
-                new LMComposerIncremental(new Model(config.GetString("lm_file").c_str()));
+            LMComposerIncremental * inc = new LMComposerIncremental(config.GetString("lm_file"));
             inc->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
             inc->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
             inc->SetStackPopLimit(config.GetInt("pop_limit"));

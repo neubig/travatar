@@ -54,9 +54,9 @@ else {
 sub process {
     my $line = $_[0];
     chomp($line);
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-    my @WORD  = split(/\s+/,$line);
+    $line =~ s/^ +//;
+    $line =~ s/ +$//;
+    my @WORD  = split(/ +/,$line);
 
     # uppercase at sentence start
     my $sentence_start = 1;

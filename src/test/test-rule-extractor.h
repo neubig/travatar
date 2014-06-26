@@ -2,7 +2,8 @@
 #define TEST_RULE_EXTRACTOR_H__
 
 #include "test-base.h"
-#include <travatar/rule-extractor.h>
+#include <travatar/forest-extractor.h>
+#include <travatar/hiero-extractor.h>
 #include <travatar/alignment.h>
 #include <travatar/rule-composer.h>
 #include <boost/shared_ptr.hpp>

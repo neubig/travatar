@@ -374,9 +374,9 @@ sub run_truecase {
     my $model = shift;
     run_parallel("$PREF/tree", "$PREF/high", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -output_format word < INFILE > OUTFILE");
     if(not $model) {
-        $model = "$PREF/train/$lang.truecaser";
+        $model = "$PREF/truecaser/$lang.truecaser";
         if(not -e $model) {
-            safesystem("mkdir -p $PREF/train") or die;
+            safesystem("mkdir -p $PREF/truecaser") or die;
             safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
         }
     }
@@ -392,7 +392,7 @@ if($ALIGN) {
     $TRG or die "Aligning cannot be performed when target is not specified.";
 
     # Align using GIZA++
-    safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step lex -work_dir $PREF/train -no_lm true -src_words $PREF/low/$SRC -src_file $PREF/treelow/$SRC -trg_file $PREF/low/$TRG -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train";
+    safesystem("$TRAVATAR_DIR/script/train/train-travatar.pl -last_step lex -work_dir $PREF/train -no_lm true -src_words $PREF/low/$SRC -src_file $PREF/treelow/$SRC -trg_file $PREF/low/$TRG -travatar_dir $TRAVATAR_DIR -bin_dir $GIZA_DIR -threads $THREADS > $PREF/train.log") if not -e "$PREF/train/align";
     safesystem("mkdir $PREF/giza") if not -e "$PREF/giza";
     safesystem("cp $PREF/train/align/align.txt $PREF/giza/$SRC$TRG") if not -e "$PREF/giza/$SRC$TRG";
     safesystem("cat $PREF/giza/$SRC$TRG | sed \"s/\\([0-9][0-9]*\\)-\\([0-9][0-9]*\\)/\\2-\\1/g\" > $PREF/giza/$TRG$SRC") if not -e "$PREF/giza/$TRG$SRC";

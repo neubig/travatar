@@ -24,6 +24,7 @@ if($NOBUF) {
 }
 
 while(<STDIN>) {
-    $_ =~ tr/A-ZＡ-Ｚ/a-zａ-ｚ/;
+    $_ = lc($_);
+    $_ =~ tr/Ａ-Ｚ/ａ-ｚ/;
     print $_;
 }

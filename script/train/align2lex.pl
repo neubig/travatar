@@ -35,7 +35,7 @@ while(1) {
     # Enumerate all the alignments
     for(@aa) {
         my ($j, $i) = split(/-/);
-        die "Bad alignment\n$f\n$e\n$a\n" if(($j >= @fa) or ($i >= @ea));
+        die "Bad alignment (f length: $j >= ".@fa.") or (e length: $i >= ".@ea.")\n$f\n".join(" ||| ", @fa)."\n$e\n".join(" ||| ", @ea)."\n$a\n" if(($j >= @fa) or ($i >= @ea));
         $fcov[$j]++; $ecov[$i]++;
         $fec{"$fa[$j] $ea[$i]"}++;
         $fc{"$fa[$j]"}++; $ec{"$ea[$i]"}++;

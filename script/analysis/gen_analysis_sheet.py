@@ -48,7 +48,6 @@ class TraceParser():
 		end = self.rules[i][1]
 		tree = self.rules[i][2]
 		string = self.rules[i][3]
-		print(self.rules[i])
 		gentree = Node(i, tree)
 		genstr = Node(i, string)
 		vals = {}

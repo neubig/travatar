@@ -19,7 +19,7 @@ my $TUNE_OPTIONS = ""; # Other options to pass to batch-tune
 my $MAX_ITERS = 20;
 my $MIN_DIFF = 0.001;
 my $CAND_TYPE = "nbest"; # Can be set to "forest" for forest-based mert
-my $IN_FORMAT = "penn"; # The format of the input
+my $IN_FORMAT; # The format of the input
 my $NBEST = 200;
 my $TRG_FACTORS = 1; # The number of target factors
 my $TUNE_FACTOR = 0; # Which factor to use in tuning
@@ -75,7 +75,8 @@ safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
 if($NO_FILTER_RT) {
     safesystem("cp $TRAVATAR_CONFIG $WORKING_DIR/run1.ini");
 } else {
-    safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rt.pl -src $SRC -src-format $IN_FORMAT\"") or die "Couldn't filter";
+    my $format = ($IN_FORMAT ? "-src-format $IN_FORMAT" : "");
+    safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rt.pl -src $SRC $format\"") or die "Couldn't filter";
 }
 
 # Find the weights contained in the model
@@ -99,7 +100,8 @@ foreach $iter (1 .. $MAX_ITERS) {
     if($CAND_TYPE =~ "^nbest") { $CAND_OPTIONS = "-nbest $NBEST -nbest_out $prev.nbest"; }
     elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
-    safesystem("$TRAVATAR -threads $THREADS -in_format $IN_FORMAT -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    my $format = ($IN_FORMAT ? "-in_format $IN_FORMAT" : "");
+    safesystem("$TRAVATAR -threads $THREADS $format -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {

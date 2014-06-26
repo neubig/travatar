@@ -83,7 +83,10 @@ protected:
     int edge_limit_;
 
 public:
-    LMComposerIncremental(lm::ngram::Model * lm) : LMComposer(lm), stack_pop_limit_(0), edge_limit_(1000) { }
+    LMComposerIncremental(const std::string & str, int factor = 0) :
+        LMComposer(str, factor), stack_pop_limit_(0), edge_limit_(1000) { }
+    LMComposerIncremental(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
+        LMComposer(lm, vocab_map, factor), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }
 
     // Intersect this graph with a language model, using incremental search

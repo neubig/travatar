@@ -113,6 +113,8 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
     // For the edges coming from this node, add them to the EdgeGenerator
     search::EdgeGenerator edges;
     int num_edges = 0;
+    if(id < 0 || id >= (int)nodes.size() || nodes[id] == NULL)
+        THROW_ERROR("Bad id=" << id << " at nodes.size() == " << nodes.size());
     BOOST_FOREACH(const HyperEdge * edge, nodes[id]->GetEdges()) {
         // Create the words
         std::vector<lm::WordIndex> words;
@@ -135,7 +137,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
                 below_score += children.back()->Bound();
             // Add terminal
             } else {
-                lm::WordIndex index = lm_->GetVocabulary().Index(Dict::WSym(wid));
+                lm::WordIndex index = GetMapping(wid);
                 if(index == 0) unk++;
                 words.push_back(index);
                 ++terminals;
@@ -211,6 +213,8 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
 // Intersect this rule_graph with a language model, using cube pruning to control
 // the overall state space.
 HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) const {
+
+    if(parse.NumNodes() == 0) return new HyperGraph;
 
     // Create the search configuration
     search::NBestConfig nconfig(edge_limit_);

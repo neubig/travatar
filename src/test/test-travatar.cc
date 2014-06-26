@@ -16,7 +16,6 @@
 #include "test-tune.h"
 #include "test-trimmer.h"
 #include "test-hiero.h"
-// #include "test-hiero-lookup-table.h"
 #include "test-lookup-table-fsm.h"
 
 using namespace std;
