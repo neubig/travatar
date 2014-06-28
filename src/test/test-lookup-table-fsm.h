@@ -29,7 +29,8 @@ public:
         rule_oss << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl; // 11
 
         istringstream rule_iss(rule_oss.str());
-        lookup_fsm.reset(LookupTableFSM::ReadFromRuleTable(rule_iss));
+        lookup_fsm.reset(new LookupTableFSM);
+        lookup_fsm->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
 
         ostringstream rule_oss_gen;
         rule_oss_gen << "x0 \"a\" x1 ||| x0 \"a\" x1 ||| pgef=0.02" << endl;
@@ -40,7 +41,8 @@ public:
         rule_oss_gen << "\"a\" x0 ||| \"a\" x0 ||| pgef=0.02" << endl;
         rule_oss_gen << "x0 x1 ||| x0 x1 ||| pgef=0.02" << endl;
         istringstream rule_iss_gen (rule_oss_gen.str());
-        lookup_fsm_general.reset(LookupTableFSM::ReadFromRuleTable(rule_iss_gen));
+        lookup_fsm_general.reset(new LookupTableFSM);
+        lookup_fsm_general->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_gen));
     }
 
     shared_ptr<TranslationRuleHiero> BuildRule(const string & src, const string & trg, const string & feat) {
