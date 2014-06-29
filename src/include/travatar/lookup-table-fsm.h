@@ -106,6 +106,8 @@ public:
         rule_fsms_.push_back(fsm);
     }
 
+	static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
+
     // Transform a graph of words into a hiero graph
 	virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
@@ -116,6 +118,12 @@ public:
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
 	void SetRootSymbol(WordId symbol) { root_symbol_ = symbol; }
 	void SetDefaultSymbol(WordId symbol) { default_symbol_ = symbol; }
+	void SetSpanLimits(const std::vector<int> limits) {
+        if(limits.size() != rule_fsms_.size())
+            THROW_ERROR("The number of span limits (" << limits.size() << ") must be equal to the number of tm_files ("<<rule_fsms_.size()<<")");
+        for(int i = 0; i < (int)limits.size(); i++)
+            rule_fsms_[i]->SetSpanLimit(limits[i]);
+    }
 
 	static HyperEdge* TransformRuleIntoEdge(HieroNodeMap* map, const int head_first, 
 			const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule);

@@ -6,6 +6,7 @@
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/input-file-stream.h>
 
 using namespace travatar;
 using namespace std;
@@ -22,6 +23,14 @@ LookupState * LookupTableMarisa::MatchStart(const HyperNode & node, const Lookup
 LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupState & state) const {
     std::string next = ((const LookupStateMarisa &)state).GetString() + " )";
     return MatchState(next, state);
+}
+
+LookupTableMarisa * LookupTableMarisa::ReadFromFile(std::string & filename) {
+    InputFileStream tm_in(filename.c_str());
+    cerr << "Reading TM file from "<<filename<<"..." << endl;
+    if(!tm_in)
+        THROW_ERROR("Could not find TM: " << filename);
+    return ReadFromRuleTable(tm_in);
 }
 
 LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {

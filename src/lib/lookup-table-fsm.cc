@@ -5,6 +5,7 @@
 #include <boost/algorithm/string/regex.hpp>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/sentence.h>
+#include <travatar/input-file-stream.h>
 #include <sstream>
 
 using namespace travatar;
@@ -302,6 +303,18 @@ TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId
         Dict::ParseFeatures("unk=1"),
         CfgData(Sentence(1, unknown_word), label)
     );
+}
+
+LookupTableFSM * LookupTableFSM::ReadFromFiles(const std::vector<std::string> & filenames) {
+    LookupTableFSM * ret = new LookupTableFSM;
+    BOOST_FOREACH(const std::string & filename, filenames) {
+        InputFileStream tm_in(filename.c_str());
+        cerr << "Reading TM file from "<<filename<<"..." << endl;
+        if(!tm_in)
+            THROW_ERROR("Could not find TM: " << filename);
+        ret->AddRuleFSM(RuleFSM::ReadFromRuleTable(tm_in));
+    }
+    return ret;
 }
 
 ///////////////////////////////////

@@ -1,6 +1,7 @@
 #include <travatar/config-base.h>
 #include <travatar/util.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 
 using namespace std;
@@ -102,6 +103,13 @@ const std::string & ConfigBase::GetString(const std::string & name) const {
     if(it == optArgs_.end())
         THROW_ERROR("Requesting bad argument "<<name<<" from configuration");
     return it->second.first;
+}
+std::vector<int> ConfigBase::GetIntArray(const std::string & name) const {
+    std::vector<std::string> arr = GetStringArray(name);
+    std::vector<int> ret(arr.size());
+    for(int i = 0; i < (int)ret.size(); i++)
+        ret[i] = boost::lexical_cast<int>(arr[i]);
+    return ret;
 }
 int ConfigBase::GetInt(const std::string & name) const {
     std::string str = GetString(name);

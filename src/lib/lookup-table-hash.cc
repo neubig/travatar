@@ -2,6 +2,7 @@
 #include <travatar/lookup-table-hash.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/input-file-stream.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <sstream>
@@ -39,6 +40,15 @@ LookupStateHash * LookupTableHash::MatchState(const std::string & next, const Lo
 
 void LookupTableHash::AddRule(TranslationRule * rule) {
     rules_[rule->GetSrcStr()].push_back(rule);
+}
+
+
+LookupTableHash * LookupTableHash::ReadFromFile(std::string & filename) {
+    InputFileStream tm_in(filename.c_str());
+    cerr << "Reading TM file from "<<filename<<"..." << endl;
+    if(!tm_in)
+        THROW_ERROR("Could not find TM: " << filename);
+    return ReadFromRuleTable(tm_in);
 }
 
 LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
