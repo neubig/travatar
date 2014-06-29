@@ -145,7 +145,7 @@ PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentenc
                         for(int jp = t_end; jp < t_last && (jp == t_end || t2s[jp].size() == 0); jp++)
                             ret.push_back(make_pair(make_pair(s_begin,s_end),make_pair(t_begin,jp)));
                         --t_begin;
-                        if(t2s[t_begin].size() != 0)
+                        if(t_begin < 0 || t2s[t_begin].size() != 0)
                             break;
                     }
                 }

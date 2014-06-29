@@ -14,9 +14,7 @@ namespace travatar {
 class LookupNodeFSM {
 typedef std::map<WordId, LookupNodeFSM*> HieroNodeMap;
 public:
-	LookupNodeFSM() { 
-		lookup_map = HieroNodeMap(); 
-	}
+	LookupNodeFSM() { }
 
 	virtual ~LookupNodeFSM() { 
 		BOOST_FOREACH(HieroNodeMap::value_type &it, lookup_map) {
@@ -81,19 +79,20 @@ protected:
  	int span_length_;
 
 	void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
-		const Sentence & input, LookupNodeFSM* node, int position, int last_scan, HieroRuleSpans & spans) const;
+		const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
 
 private:
 
 	HieroRuleSpans* GetSpanCopy(const HieroRuleSpans spans) const;
 	void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
 
-	bool NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSpans & spans) const;
+	// bool NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSpans & spans) const;
 };
 
 class LookupTableFSM : public GraphTransformer {
 public:
-    LookupTableFSM() : delete_unknown_(false),
+    LookupTableFSM() : rule_fsms_(),
+                       delete_unknown_(false),
                        default_symbol_(Dict::WID("X")),
                        root_symbol_(Dict::WID("X")) { }
     ~LookupTableFSM() {

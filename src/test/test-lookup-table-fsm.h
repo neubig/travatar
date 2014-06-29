@@ -27,10 +27,28 @@ public:
         rule_oss << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 9
         rule_oss << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl; // 10
         rule_oss << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl; // 11
-
         istringstream rule_iss(rule_oss.str());
         lookup_fsm.reset(new LookupTableFSM);
         lookup_fsm->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
+
+        // Load the rules
+        ostringstream rule_oss1, rule_oss2;
+        rule_oss1 << "\"I\" x0 ||| \"watashi\" \"wa\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 1
+        rule_oss1 << "\"eat\" \"two\" x0 ||| \"futatsu\" \"no\" x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 2
+        rule_oss2 << "\"two\" x0 ||| \"futatsu\" \"no\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 3
+        rule_oss2 << "x0 \"eat\" x1 ||| x0 \"wa\" x1 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 4
+        rule_oss2 << "\"eat\" x0 ||| x0 \"wo\" \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 5
+        rule_oss2 << "\"I\" x0 \"two\" \"hamburgers\" ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 6
+        rule_oss2 << "\"I\" x0 \"two\" x1 ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1 \"wo\" x0 ||| Pegf=0.02 ppen=2.718" << endl; // 7
+        rule_oss2 << "\"I\" ||| \"watashi\" ||| Pegf=0.02 ppen=2.718" << endl; // 8
+        rule_oss2 << "\"eat\" ||| \"taberu\" ||| Pegf=0.02 ppen=2.718" << endl; // 9
+        rule_oss2 << "\"two\" ||| \"futatsu\" ||| Pegf=0.02 ppen=2.718" << endl; // 10
+        rule_oss1 << "\"hamburgers\" ||| \"hanbaga\" ||| Pegf=0.02 ppen=2.718" << endl; // 11
+        istringstream rule_iss1(rule_oss1.str());
+        istringstream rule_iss2(rule_oss2.str());
+        lookup_fsm_split.reset(new LookupTableFSM);
+        lookup_fsm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss1));
+        lookup_fsm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss2));
 
         ostringstream rule_oss_gen;
         rule_oss_gen << "x0 \"a\" x1 ||| x0 \"a\" x1 ||| pgef=0.02" << endl;
@@ -54,16 +72,7 @@ public:
         ));
     }
 
-    bool TestBuildRules(LookupTableFSM & lookup) {
-        string inp = "I eat two hamburgers";
-        Sentence c = Dict::ParseWords(inp);
-
-        shared_ptr<HyperGraph> input_graph(new HyperGraph);
-        BOOST_FOREACH(WordId word, Dict::ParseWords(inp)) 
-            input_graph->AddWord(word);
-
-        HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
-
+    HyperGraph * CreateExpectedGraph() {
         vector<HyperNode*> node(10);
         vector<HyperEdge*> edge(15);
         vector<shared_ptr<TranslationRuleHiero> > rules(11);
@@ -230,11 +239,27 @@ public:
             expected_graph->AddNode(nd);
         }
 
+        string inp = "I eat two hamburgers";
+        Sentence c = Dict::ParseWords(inp);
         BOOST_FOREACH(WordId w_id, c) {
             expected_graph->AddWord(w_id);
         }
+        return expected_graph;
+    }
 
-        bool ret = actual_graph->CheckEqual(*expected_graph);
+    bool TestBuildRules(LookupTableFSM & lookup) {
+        string inp = "I eat two hamburgers";
+        Sentence c = Dict::ParseWords(inp);
+
+        shared_ptr<HyperGraph> input_graph(new HyperGraph);
+        BOOST_FOREACH(WordId word, Dict::ParseWords(inp)) 
+            input_graph->AddWord(word);
+
+        HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
+
+        HyperGraph* expected_graph = CreateExpectedGraph();
+
+        bool ret = expected_graph->CheckMaybeEqual(*actual_graph);
         delete actual_graph;
         delete expected_graph;
         return ret;
@@ -243,11 +268,13 @@ public:
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestBuildRules(lookup_fsm)" << endl; if(TestBuildRules(*lookup_fsm)) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBuildRules(lookup_fsm_split)" << endl; if(TestBuildRules(*lookup_fsm_split)) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestLookupTableFSM Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 private:
     boost::scoped_ptr<LookupTableFSM> lookup_fsm;
+    boost::scoped_ptr<LookupTableFSM> lookup_fsm_split;
     boost::scoped_ptr<LookupTableFSM> lookup_fsm_general;
 
 };
