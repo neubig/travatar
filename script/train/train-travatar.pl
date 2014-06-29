@@ -277,7 +277,7 @@ if(not $CONFIG_FILE) {
     if ($TRANSLATION_METHOD eq "hiero") {
         print TINI "[in_format]\n$SRC_FORMAT\n\n";
         print TINI "[tm_storage]\n$TM_STORAGE\n\n";
-        print TINI "[span_length]\n20\n1000\n\n";
+        print TINI "[hiero_span_limit]\n20\n1000\n\n";
     }
 
     # Default values for the weights
