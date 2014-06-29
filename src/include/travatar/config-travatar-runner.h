@@ -47,10 +47,10 @@ public:
         AddConfigEntry("trace_out", "", "trace output file location");
         AddConfigEntry("trg_factors", "1", "The number of types of output to produce");
         AddConfigEntry("weight_vals", "", "Weight values in format \"name1=val1 name2=val2\", existing features override the file, other features are left unchanged");
-        AddConfigEntry("default_symbol", "x", "Default symbol in the rule-table (fsm)");
+        AddConfigEntry("default_symbol", "X", "Default symbol in the rule-table (fsm)");
         AddConfigEntry("delete_unknown", "false", "Delete unknown source word");
         AddConfigEntry("hiero_span_limit","20", "The span limit of non terminal symbol in hiero translation");
-        AddConfigEntry("root_symbol", "x", "Root symbol in the rule-table (fsm)");
+        AddConfigEntry("root_symbol", "S", "Root symbol in the rule-table (fsm)");
 #ifdef ONLINE_TRAINING_ON
         AddConfigEntry("tune_loss", "bleu", "The evaluation measure to use in tuning (bleu/ribes)");
         AddConfigEntry("tune_ref_files", "", "The reference files to be used for tuning");

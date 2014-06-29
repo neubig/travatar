@@ -224,7 +224,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the rule table
     PRINT_DEBUG(endl << "Loading translation model [" << timer << " sec]" << endl, 1);
-    vector<string> tm_files = config.GetStringArray("tm_files");
+    vector<string> tm_files = config.GetStringArray("tm_file");
     if(config.GetString("tm_storage") == "hash") {
         LookupTableHash * hash_tm_ = LookupTableHash::ReadFromFile(tm_files[0]);
         hash_tm_->SetMatchAllUnk(config.GetBool("all_unk"));

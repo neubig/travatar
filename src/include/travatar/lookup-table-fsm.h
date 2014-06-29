@@ -94,7 +94,7 @@ public:
     LookupTableFSM() : rule_fsms_(),
                        delete_unknown_(false),
                        default_symbol_(Dict::WID("X")),
-                       root_symbol_(Dict::WID("X")) { }
+                       root_symbol_(Dict::WID("S")) { }
     ~LookupTableFSM() {
         BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
             if(rule_fsm != NULL)

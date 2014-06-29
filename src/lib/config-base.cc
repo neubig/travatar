@@ -95,7 +95,7 @@ std::vector<std::string> ConfigBase::GetStringArray(const std::string & name) co
         THROW_ERROR("Requesting bad argument "<<name<<" from configuration");
     std::vector<std::string> ret;
     if(it->second.first.length() != 0)
-        boost::algorithm::split(ret, it->second.first, boost::is_any_of("|"));
+        boost::algorithm::split(ret, it->second.first, boost::is_any_of("| "));
     return ret;
 }
 const std::string & ConfigBase::GetString(const std::string & name) const {
