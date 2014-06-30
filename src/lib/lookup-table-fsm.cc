@@ -84,13 +84,12 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     HieroNodeMap node_map = HieroNodeMap();
     EdgeList edge_list = EdgeList(); 
     // For each grammar
-    int fsmid = 0;
     BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
         // For each starting point
         for(int i = 0; i < (int)sent.size(); i++)
             rule_fsm->BuildHyperGraphComponent(node_map, edge_list, sent, rule_fsm->GetRootNode(), i, span);
     }
-    bool checkup_unknown[sent.size()];
+    vector<bool> checkup_unknown(sent.size(), false);
     vector<TailSpanKey > temp_spans;
     BOOST_FOREACH(const HieroNodeMap::value_type & val, node_map) {
         HyperNode* node = val.second;
@@ -106,6 +105,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
                     delete unk_rule;
                 }
             } else if(val.first.first == GetDefaultSymbol()) {
+                cerr << "checkup_unknown[" << i << "] == true" << endl;
                 checkup_unknown[i] = true;
             }
         }
@@ -219,6 +219,7 @@ void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_
                 now = NULL;
             }
             if (node_edge->size() == 0) {
+                cerr << "Removing node " << Dict::WSym(it->first.first) << it->first.second << endl;
                 node_map.erase(it++);
             } else {
                 ++it;
@@ -254,11 +255,11 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map,
         const int head_first, const int head_second, const vector<TailSpanKey> & tail_spans, 
         TranslationRuleHiero* rule)
 {
-    // // DEBUG start
-    // cerr << " TransformRule @ " << make_pair(head_first,head_second) << " ->";
-    // BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) cerr << " " << tsk.first << tsk.second;
-    // cerr << " " << rule->GetSrcStr() << endl;
-    // // DEBUG end
+    // DEBUG start
+    cerr << " TransformRule @ " << make_pair(head_first,head_second) << " ->";
+    BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) cerr << " " << tsk.first << tsk.second;
+    cerr << " " << rule->GetSrcStr() << endl;
+    // DEBUG end
 
     HyperEdge* hedge = new HyperEdge;
     HyperNode* head = FindNode(node_map, head_first, head_second, rule->GetSrcData().label);
