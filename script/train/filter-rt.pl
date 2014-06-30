@@ -59,7 +59,8 @@ my $line;
 while($line = <STDIN>) {
     chomp $line;
     my @cols = split(/ \|\|\| /, $line);
-    die "Wrong number of columns in $line" if @cols < 3;
+    die "Wrong number of columns in $line" if @cols < 2;
+    if(@cols == 2) { push @cols, ""; }
     my ($term, $nonterm, $bad, @currsrc);
     while($cols[0] =~ / ("([^ ]+)"|x\d+:[^ ]+) /g) {
         my $myid = $2;
