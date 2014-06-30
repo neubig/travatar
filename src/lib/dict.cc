@@ -67,7 +67,7 @@ std::string Dict::WSymAnnotated(WordId id, const Sentence & syms) {
         int loc = -1+id*-1;
         oss << "x" << loc;
         if(loc < (int)syms.size() && syms[loc] != -1)
-            oss << Dict::WSym(syms[loc]);
+            oss << ":" << Dict::WSym(syms[loc]);
     } else {
         oss << '"' << wids_.GetSymbol(id) << '"';
     }
