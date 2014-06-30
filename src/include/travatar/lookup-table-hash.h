@@ -37,6 +37,7 @@ public:
         return new LookupStateHash;
     }
 
+    static LookupTableHash * ReadFromFile(std::string & filename);
     static LookupTableHash * ReadFromRuleTable(std::istream & in);
 
     // Find rules associated with a particular source pattern

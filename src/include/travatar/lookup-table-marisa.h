@@ -32,6 +32,7 @@ public:
         return new LookupStateMarisa;
     }
 
+    static LookupTableMarisa * ReadFromFile(std::string & filename);
     static LookupTableMarisa * ReadFromRuleTable(std::istream & in);
 
     // Find rules associated with a particular source pattern

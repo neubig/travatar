@@ -224,24 +224,21 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the rule table
     PRINT_DEBUG(endl << "Loading translation model [" << timer << " sec]" << endl, 1);
-    InputFileStream tm_in(config.GetString("tm_file").c_str());
-    cerr << "Reading TM file from "<<config.GetString("tm_file")<<"..." << endl;
-    if(!tm_in)
-        THROW_ERROR("Could not find TM: " << config.GetString("tm_file"));
+    vector<string> tm_files = config.GetStringArray("tm_file");
     if(config.GetString("tm_storage") == "hash") {
-        LookupTableHash * hash_tm_ = LookupTableHash::ReadFromRuleTable(tm_in);
+        LookupTableHash * hash_tm_ = LookupTableHash::ReadFromFile(tm_files[0]);
         hash_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
         tm_.reset(hash_tm_);
     } else if(config.GetString("tm_storage") == "marisa") {
-        LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromRuleTable(tm_in);
+        LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromFile(tm_files[0]);
         marisa_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
         tm_.reset(marisa_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
-        LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromRuleTable(tm_in);
-        fsm_tm_->SetSpanLimit(config.GetInt("hiero_span_limit"));
+        LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromFiles(tm_files);
+        fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
         fsm_tm_->SetDefaultSymbol(Dict::WID(config.GetString("default_symbol")));
-        fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
+        fsm_tm_->SetSpanLimits(config.GetIntArray("hiero_span_limit"));
         tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));
@@ -307,7 +304,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         }
 
         TravatarRunnerTask *task = new TravatarRunnerTask(sent++, tree_graph, this, refs, &collector, nbest_collector.get(), trace_collector.get(), forest_collector.get());
-        pool.Submit(task);
+        if(threads_ == 1)
+            task->Run();
+        else
+            pool.Submit(task);
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
     pool.Stop(true);

@@ -253,6 +253,15 @@ if(not $TM_FILE) {
     }
     # Finally, combine the table
     safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --fof-file=$WORK_DIR/model/fof.txt --smooth=$SMOOTH --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd > $TM_FILE") or die;
+    # If we are doing Hiero, print the glue rules too
+    if ($TRANSLATION_METHOD eq "hiero") {
+        my $gfile = "$WORK_DIR/model/glue-rules";
+        open GFILE, ">:utf8", $gfile or die "Couldn't open $gfile\n";
+        print GFILE "x0:X @ S ||| x0:X @ S ||| \n";
+        print GFILE "x0:S x1:X @ S ||| x0:S x1:X @ S ||| glue=1\n";
+        close GFILE;
+        $TM_FILE .= "\n$gfile";
+    }
 }
 
 # ******* 5: Create a configuration file ********
@@ -268,6 +277,7 @@ if(not $CONFIG_FILE) {
     if ($TRANSLATION_METHOD eq "hiero") {
         print TINI "[in_format]\n$SRC_FORMAT\n\n";
         print TINI "[tm_storage]\n$TM_STORAGE\n\n";
+        print TINI "[hiero_span_limit]\n20\n1000\n\n";
     }
 
     # Default values for the weights

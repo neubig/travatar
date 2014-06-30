@@ -49,6 +49,7 @@ public:
     // Getter functions
     std::vector<std::string> GetStringArray(const std::string & name) const;
     const std::string & GetString(const std::string & name) const;
+    std::vector<int> GetIntArray(const std::string & name) const;
     int GetInt(const std::string & name) const;
     double GetDouble(const std::string & name) const;
     bool GetBool(const std::string & name) const;
