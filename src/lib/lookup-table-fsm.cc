@@ -208,6 +208,7 @@ void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_
         set<HyperNode*> has_head;
         has_head.insert(root);
         // For each node
+        vector<HieroNodeMap::key_type> del_keys;
         for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end(); it++) {
             // Check if each edge in the node is OK
             vector<HyperEdge*> & node_edge = it->second->GetEdges();
@@ -234,9 +235,12 @@ void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_
             if (node_edge.size() == 0) {
                 // cerr << "Removing edgeless " << Dict::WSym(it->first.first) << it->first.second << endl;
                 deleted_nodes.insert(it->second);
-                node_map.erase(it);
-            }
+                del_keys.push_back(it->first);
+            }   
         }    
+        BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
+            node_map.erase(del);
+        del_keys.resize(0);
         // If at least one node is missing a head, perform one more loop through and
         // remove all nodes without a head
         // cerr << "has_head.size() == " << has_head.size() << ", node_map.size() == " << node_map.size() << endl;
@@ -250,9 +254,11 @@ void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_
                         deleted_edges.insert(edge);
                     it->second->GetEdges().resize(0);
                     deleted_nodes.insert(it->second);
-                    node_map.erase(it);
+                    del_keys.push_back(it->first);
                 }
             }
+            BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
+                node_map.erase(del);
         }
     } while (removed);
     // Delete edges
