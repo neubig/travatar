@@ -134,7 +134,7 @@ public:
 
 private:
 
-	void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map) const;
+	void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map, HyperNode* root) const;
 
 protected:
     std::vector<RuleFSM*> rule_fsms_;
