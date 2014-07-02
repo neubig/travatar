@@ -14,7 +14,9 @@ my $TRG_SYNTAX = 0;
 my $SRC_LABEL = 0;
 my $TRG_LABEL = 0;
 my $SRC_TRG_LABEL = 0;
-my $PREFIX = "egf";
+my $PREFIX = "";
+my $JOINT = 0;
+my $COND_PREFIX = "egf";
 my $FOF_MAX = 20;
 my $KEEP_EMPTY = 0;
 my $FOF_FILE;
@@ -22,7 +24,9 @@ GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
                                           # calculating model 1
-    "prefix=s" => \$PREFIX,               # Prefix for model 1
+    "cond-prefix=s" => \$COND_PREFIX,     # Prefix for model 1
+    "prefix=s" => \$PREFIX,               # Prefix for all features
+    "joint" => \$JOINT,                   # word/phrase/lfreq features or not
     "trg-syntax" => \$TRG_SYNTAX,         # Use target side syntax
     "src-label" => \$SRC_LABEL,           # Calculate sparse features for the source labels
     "trg-label" => \$TRG_LABEL,           # Calculate sparse features for the target labels
@@ -107,17 +111,20 @@ sub print_counts {
             my $src_lab = $1;
             $trg =~ /@ ([^ ]+)/; #~ / @ ([^ ]+)/
             my $trg_lab = $1;
-            $extra_feat .= " isx=1" if($TRG_SYNTAX and $trg_lab eq "\@X\@");
-            $extra_feat .= " sl_${src_lab}=1" if $SRC_LABEL and $src_lab;
-            $extra_feat .= " tl_${trg_lab}=1" if $TRG_LABEL and $trg_lab;
-            $extra_feat .= " stl_${src_lab}_${trg_lab}=1" if $SRC_TRG_LABEL and $src_lab and $trg_lab;
+            $extra_feat .= " ${PREFIX}isx=1" if($TRG_SYNTAX and $trg_lab eq "\@X\@");
+            $extra_feat .= " ${PREFIX}sl_${src_lab}=1" if $SRC_LABEL and $src_lab;
+            $extra_feat .= " ${PREFIX}tl_${trg_lab}=1" if $TRG_LABEL and $trg_lab;
+            $extra_feat .= " ${PREFIX}stl_${src_lab}_${trg_lab}=1" if $SRC_TRG_LABEL and $src_lab and $trg_lab;
         }
         # Find the counts/probabilities
         my $lfreq = ($cnt > 0) ? log($cnt) : -99;
         my $lprob = $lfreq-$lsum;
-        print "$src ||| $trg ||| ".sprintf("p=1 lfreq=%f ${PREFIX}p=%f$extra_feat", $lfreq, $lprob);
-        printf " ${PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
-        print " w=".scalar(@trgarr) if (@trgarr);
+        print "$src ||| $trg ||| ".sprintf("${PREFIX}${COND_PREFIX}p=%f$extra_feat", $lfreq, $lprob);
+        printf " ${PREFIX}${COND_PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
+        if($JOINT) {
+            printf " ${PREFIX}p=1 ${PREFIX}lfreq=%f";
+            print " ${PREFIX}w=".scalar(@trgarr) if (@trgarr);
+        }
         print " ||| $cnt $sum";
         print "\n";
         # Count the frequencies of frequencies
