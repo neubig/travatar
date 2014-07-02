@@ -14,9 +14,10 @@ using namespace travatar;
 // Convert to and from strings
 string Alignment::ToString() const {
     ostringstream oss;
-    for(int i = 0; i < (int)vec_.size(); i++) {
-        if(i != 0) oss << " ";
-        oss << vec_[i].first << "-" << vec_[i].second;
+    int cnt = 0;
+    BOOST_FOREACH(AlignmentPair align, vec_) {
+        if(cnt++ != 0) oss << " ";
+        oss << align.first << "-" << align.second;
     }
     return oss.str();
 }
@@ -43,7 +44,7 @@ void Alignment::AddAlignment(const AlignmentPair & al) {
     if(al.first >= len_.first || al.second >= len_.second)
         THROW_ERROR("Out of bounds in AddAlignment: "<< al << ", " << len_);
 #endif
-    vec_.push_back(al);
+    vec_.insert(al);
 }
 
 std::vector<std::set<int> > Alignment::GetSrcAlignments() const {

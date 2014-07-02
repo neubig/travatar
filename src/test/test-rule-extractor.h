@@ -180,31 +180,20 @@ public:
         // Printing also checks to make sure that there are no overlapping segments
         vector<string> rule_exp, rule_act;
         BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
-            rule_act.push_back(forest_ext.RuleToString(*edge, src4_graph->GetWords(), trg4_sent));
-        string align4_str = "0-0 0-1 1-2 2-3 2-4 3-4 4-5";
+            rule_act.push_back(forest_ext.RuleToString(*edge, src4_graph->GetWords(), trg4_sent, align4));
+        string align4_str = "0-0 0-1 1-2 2-3 2-4 3-3 4-5";
         // This should cover all the rules extracted
-        // rule_exp.push_back("root ( x0:np ) ||| x0 ||| 1 ||| ");
-        // rule_exp.push_back("np ( x0:np x1:prn ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("np ( x0:nnp ) ||| x0 ||| 1 ||| ");
-        // rule_exp.push_back("nnp ( \"landscape\" ) ||| \"sansui\" \"zu\" ||| 1 ||| 0-0 0-1");
-        // rule_exp.push_back("prn ( x0:-lrb- x1:prn' ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("prn ( x0:prn' x1:-rrb- ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("prn' ( x0:-lrb- x1:np ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("prn' ( x0:np x1:-rrb- ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("-lrb- ( \"-lrb-\" ) ||| \"(\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("-rrb- ( \"-rrb-\" ) ||| \")\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("np ( nnp ( \"private\" ) nnp ( \"collection\" ) ) ||| \"kojin\" \"zo\" ||| 1 ||| 0-0 0-1 1-1");
-        rule_exp.push_back("root ( x0:np ) ||| x0 ||| 1");
-        rule_exp.push_back("np ( x0:np x1:prn ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("np ( x0:nnp ) ||| x0 ||| 1");
-        rule_exp.push_back("nnp ( \"landscape\" ) ||| \"sansui\" \"zu\" ||| 1");
-        rule_exp.push_back("prn ( x0:-lrb- x1:prn' ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("prn ( x0:prn' x1:-rrb- ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("prn' ( x0:-lrb- x1:np ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("prn' ( x0:np x1:-rrb- ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("-lrb- ( \"-lrb-\" ) ||| \"(\" ||| 1");
-        rule_exp.push_back("-rrb- ( \"-rrb-\" ) ||| \")\" ||| 1");
-        rule_exp.push_back("np ( nnp ( \"private\" ) nnp ( \"collection\" ) ) ||| \"kojin\" \"zo\" ||| 1");
+        rule_exp.push_back("root ( x0:np ) ||| x0 ||| 1 ||| ");
+        rule_exp.push_back("np ( x0:np x1:prn ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("np ( x0:nnp ) ||| x0 ||| 1 ||| ");
+        rule_exp.push_back("nnp ( \"landscape\" ) ||| \"sansui\" \"zu\" ||| 1 ||| 0-0 0-1");
+        rule_exp.push_back("prn ( x0:-lrb- x1:prn' ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("prn ( x0:prn' x1:-rrb- ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("prn' ( x0:-lrb- x1:np ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("prn' ( x0:np x1:-rrb- ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("-lrb- ( \"-lrb-\" ) ||| \"(\" ||| 1 ||| 0-0");
+        rule_exp.push_back("-rrb- ( \"-rrb-\" ) ||| \")\" ||| 1 ||| 0-0");
+        rule_exp.push_back("np ( nnp ( \"private\" ) nnp ( \"collection\" ) ) ||| \"kojin\" \"zo\" ||| 1 ||| 0-0 0-1 1-0");
         sort(rule_exp.begin(), rule_exp.end());
         sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);
@@ -451,23 +440,16 @@ public:
         vector<string> rule_exp, rule_act;
         // Get actual rules, plus one composed rule
         BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
-            rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent));
+            rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent, align1));
         shared_ptr<HyperEdge> e01(RuleComposer::ComposeEdge(*frags_act->GetEdge(0), *frags_act->GetEdge(1), 0));
-        rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent));
-        // rule_exp.push_back("ROOT ( x0:S ) ||| x0 ||| 1 ||| ");
-        // rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 ||| 1 ||| ");
-        // rule_exp.push_back("NP ( x0:PRP ) ||| x0 ||| 1 ||| ");
-        // rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1 ||| 0-0 0-1 1-0 1-1");
-        // rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1 ||| ");
-        rule_exp.push_back("ROOT ( x0:S ) ||| x0 ||| 1");
-        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 ||| 1");
-        rule_exp.push_back("NP ( x0:PRP ) ||| x0 ||| 1");
-        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" ||| 1");
-        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1");
-        rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1");
-        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1");
+        rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent, align1));
+        rule_exp.push_back("ROOT ( x0:S ) ||| x0 ||| 1 ||| ");
+        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0 x1 ||| 1 ||| ");
+        rule_exp.push_back("NP ( x0:PRP ) ||| x0 ||| 1 ||| ");
+        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" ||| 1 ||| 0-0");
+        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0 \"pas\" ||| 1 ||| 0-0 0-1 1-0 1-1");
+        rule_exp.push_back("VB ( \"go\" ) ||| \"va\" ||| 1 ||| 0-0");
+        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1 ||| ");
         sort(rule_exp.begin(), rule_exp.end());
         sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);
@@ -481,23 +463,16 @@ public:
         LabeledSpans trg1_spans = trg1_graph->GetLabeledSpans();
         // Get actual rules, plus one composed rule
         BOOST_FOREACH(HyperEdge* edge, frags_act->GetEdges())
-            rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent, &trg1_spans));
+            rule_act.push_back(forest_ext.RuleToString(*edge, src1_graph->GetWords(), trg1_sent, align1, &trg1_spans));
         shared_ptr<HyperEdge> e01(RuleComposer::ComposeEdge(*frags_act->GetEdge(0), *frags_act->GetEdge(1), 0));
-        rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent, &trg1_spans));
-        // rule_exp.push_back("ROOT ( x0:S ) ||| x0:ROOT @ ROOT ||| 1 ||| ");
-        // rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0:NP x1:VP @ ROOT ||| 1 ||| ");
-        // rule_exp.push_back("NP ( x0:PRP ) ||| x0:NP @ NP ||| 1 ||| ");
-        // rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ NP ||| 1 ||| 0-0");
-        // rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0:VB \"pas\" @ VP ||| 1 ||| 0-0 0-1 1-0 1-1");
-        // rule_exp.push_back("VB ( \"go\" ) ||| \"va\" @ VB ||| 1 ||| 0-0");
-        // rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0:NP x1:VP @ ROOT ||| 1 ||| ");
-        rule_exp.push_back("ROOT ( x0:S ) ||| x0:ROOT @ ROOT ||| 1");
-        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0:NP x1:VP @ ROOT ||| 1");
-        rule_exp.push_back("NP ( x0:PRP ) ||| x0:NP @ NP ||| 1");
-        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ NP ||| 1");
-        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0:VB \"pas\" @ VP ||| 1");
-        rule_exp.push_back("VB ( \"go\" ) ||| \"va\" @ VB ||| 1");
-        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0:NP x1:VP @ ROOT ||| 1");
+        rule_act.push_back(forest_ext.RuleToString(*e01, src1_graph->GetWords(), trg1_sent, align1, &trg1_spans));
+        rule_exp.push_back("ROOT ( x0:S ) ||| x0:ROOT @ ROOT ||| 1 ||| ");
+        rule_exp.push_back("S ( x0:NP x1:VP ) ||| x0:NP x1:VP @ ROOT ||| 1 ||| ");
+        rule_exp.push_back("NP ( x0:PRP ) ||| x0:NP @ NP ||| 1 ||| ");
+        rule_exp.push_back("PRP ( \"he\" ) ||| \"il\" @ NP ||| 1 ||| 0-0");
+        rule_exp.push_back("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB ) ||| \"ne\" x0:VB \"pas\" @ VP ||| 1 ||| 0-0 0-1 1-0 1-1");
+        rule_exp.push_back("VB ( \"go\" ) ||| \"va\" @ VB ||| 1 ||| 0-0");
+        rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0:NP x1:VP @ ROOT ||| 1 ||| ");
         sort(rule_exp.begin(), rule_exp.end());
         sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);
@@ -584,19 +559,13 @@ public:
         // Get actual rules, plus one composed rule
         vector<string> rule_exp, rule_act;
         BOOST_FOREACH(HyperEdge* edge, act_hg->GetEdges())
-            rule_act.push_back(forest_ext.RuleToString(*edge, src_hg->GetWords(), trg_sent));
-        // rule_exp.push_back("A ( \"a\" ) ||| \"a\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("B ( \"b\" ) ||| \"b\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("S ( A ( \"a\" ) B ( \"b\" ) ) ||| \"a\" \"b\" ||| 1 ||| 0-0 1-1");
-        // rule_exp.push_back("S ( A ( \"a\" ) x0:B ) ||| \"a\" x0 ||| 1 ||| 0-0");
-        // rule_exp.push_back("S ( x0:A B ( \"b\" ) ) ||| x0 \"b\" ||| 1 ||| 0-0");
-        // rule_exp.push_back("S ( x0:A x1:B ) ||| x0 x1 ||| 1 ||| ");
-        rule_exp.push_back("A ( \"a\" ) ||| \"a\" ||| 1");
-        rule_exp.push_back("B ( \"b\" ) ||| \"b\" ||| 1");
-        rule_exp.push_back("S ( A ( \"a\" ) B ( \"b\" ) ) ||| \"a\" \"b\" ||| 1");
-        rule_exp.push_back("S ( A ( \"a\" ) x0:B ) ||| \"a\" x0 ||| 1");
-        rule_exp.push_back("S ( x0:A B ( \"b\" ) ) ||| x0 \"b\" ||| 1");
-        rule_exp.push_back("S ( x0:A x1:B ) ||| x0 x1 ||| 1");
+            rule_act.push_back(forest_ext.RuleToString(*edge, src_hg->GetWords(), trg_sent, align));
+        rule_exp.push_back("A ( \"a\" ) ||| \"a\" ||| 1 ||| 0-0");
+        rule_exp.push_back("B ( \"b\" ) ||| \"b\" ||| 1 ||| 0-0");
+        rule_exp.push_back("S ( A ( \"a\" ) B ( \"b\" ) ) ||| \"a\" \"b\" ||| 1 ||| 0-0 1-1");
+        rule_exp.push_back("S ( A ( \"a\" ) x0:B ) ||| \"a\" x0 ||| 1 ||| 0-0");
+        rule_exp.push_back("S ( x0:A B ( \"b\" ) ) ||| x0 \"b\" ||| 1 ||| 0-0");
+        rule_exp.push_back("S ( x0:A x1:B ) ||| x0 x1 ||| 1 ||| ");
         sort(rule_exp.begin(), rule_exp.end());
         sort(rule_act.begin(), rule_act.end());
         return CheckVector(rule_exp, rule_act);

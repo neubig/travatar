@@ -24,18 +24,19 @@ public:
 
     // Comparators
     bool operator== (const Alignment & rhs) {
-        for(int i = 0; i < (int)vec_.size(); i++)
-            if(vec_[i] != rhs.vec_[i])
-                return false;
-        return true;
+        return this->vec_ == rhs.vec_;
     }
     bool operator!= (const Alignment & rhs) {
         return !(*this == rhs);
     }
 
     // ------------- Accessors --------------
-    const std::vector<AlignmentPair> & GetAlignmentVector() const {
+    const std::set<AlignmentPair> & GetAlignmentVector() const {
         return vec_;
+    }
+
+    bool Contains(int i, int j) const {
+        return vec_.find(std::make_pair(i, j)) != vec_.end();
     }
 
     std::vector<std::set<int> > GetSrcAlignments() const;
@@ -45,7 +46,7 @@ private:
     // Split a string in the form X-Y into an alignment pair
     static AlignmentPair SplitAlignment(const std::string & str);
 
-    std::vector<AlignmentPair> vec_;
+    std::set<AlignmentPair> vec_;
 
 };
 
