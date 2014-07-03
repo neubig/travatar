@@ -123,6 +123,35 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         tgm.reset(online);
     }
 
+    // Load the features from the weight file
+    SparseMap weights;
+    if(config.GetString("weight_in") != "") {
+        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
+        ifstream weight_in(config.GetString("weight_in").c_str());
+        if(!weight_in)
+            THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
+        weights = Dict::ParseFeatures(weight_in);
+        weight_in.close();
+    }
+
+    // Set the weight ranges
+    if(config.GetString("weight_ranges") != "") {
+        vector<string> ranges, range_vals;
+        boost::split(ranges, config.GetString("weight_ranges"), boost::is_any_of(" "));
+        BOOST_FOREACH(const string & range, ranges) {
+            boost::split(range_vals, range, boost::is_any_of("|"));
+            if(range_vals.size() != 2 && range_vals.size() != 3)
+                THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
+            WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
+            double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
+            double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
+            tgm->SetRange(id, min_score, max_score);
+        }
+    }
+
+    // Set other tuning options
+    tgm->SetGainThreshold(config.GetDouble("threshold"));
+
     // Open the n-best list if it exists
     bool use_nbest = config.GetString("nbest") != "";
     bool use_forest = config.GetString("forest") != "";
@@ -163,35 +192,6 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         if(use_nbest) LoadNbests(sys_in, *tgm, stat_in.get());
         else          LoadForests(sys_in, *tgm);
     }
-
-    // Load the features from the weight file
-    SparseMap weights;
-    if(config.GetString("weight_in") != "") {
-        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
-        ifstream weight_in(config.GetString("weight_in").c_str());
-        if(!weight_in)
-            THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
-        weights = Dict::ParseFeatures(weight_in);
-        weight_in.close();
-    }
-
-    // Set the weight ranges
-    if(config.GetString("weight_ranges") != "") {
-        vector<string> ranges, range_vals;
-        boost::split(ranges, config.GetString("weight_ranges"), boost::is_any_of(" "));
-        BOOST_FOREACH(const string & range, ranges) {
-            boost::split(range_vals, range, boost::is_any_of("|"));
-            if(range_vals.size() != 2 && range_vals.size() != 3)
-                THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
-            WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
-            double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
-            double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
-            tgm->SetRange(id, min_score, max_score);
-        }
-    }
-
-    // Set other tuning options
-    tgm->SetGainThreshold(config.GetDouble("threshold"));
 
     // If there is any shared initialization to be done, do it here
     tgm->Init();
