@@ -72,9 +72,9 @@ while(1) {
     last if not $has0;
     # Get the arrays and check
     chomp $s0; chomp $s1;
-    my @arr0 = split(/ \|\|\| /, $s0);
-    my @arr1 = split(/ \|\|\| /, $s1);
-    die "Wrong number of columns:\nFILE0: $s0\nFILE1: $s1\n" if ((@arr0 != 4) or (@arr1 != 4));
+    my @arr0 = split(/ \|\|\| /, $s0, -1);
+    my @arr1 = split(/ \|\|\| /, $s1, -1);
+    die "Wrong number of columns:\nFILE0: $s0\nFILE1: $s1\n" if ((@arr0 != 5) or (@arr1 != 5));
     die "Rules don't match:\nFILE0: $s0\nFILE1: $s1\n" if ($arr0[0] ne $arr1[0]) or ($arr0[1] ne $arr1[1]);
     # Print the previous set of rules if necessary
     if($arr0[0] ne $curr) {
@@ -103,7 +103,7 @@ while(1) {
         die "Unknown smoothing type: $SMOOTH\n";
     }
     # Make the string
-    my $str = "$arr0[0] ||| $arr0[1] ||| ".join(" ", map { "$_=$feat{$_}" } keys %feat)." ||| $cnt0[0] $cnt0[1] $cnt1[1]\n";
+    my $str = "$arr0[0] ||| $arr0[1] ||| ".join(" ", map { "$_=$feat{$_}" } keys %feat)." ||| $cnt0[0] $cnt0[1] $cnt1[1] ||| $arr0[4]\n";
     push @queue, [$cnt, $order++, $str];
 }
 print_queue(@queue);

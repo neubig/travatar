@@ -3,7 +3,7 @@
 use strict;
 use utf8;
 use Getopt::Long;
-use List::Util qw(sum min max shuffle);
+use List::Util qw(sum min max shuffle reduce);
 binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
@@ -102,8 +102,12 @@ sub print_counts {
         my $trg = $kv->[0];
         my $cnt = $kv->[1];
         next if ($trg eq "") and not $KEEP_EMPTY;
+        # Find the number of words
         my $words = 0;
         my @trgarr = strip_arr($trg);
+        # Find the best alignment
+        my $align = $kv->[2];
+        my $bestalign = reduce { $align->{$a} > $align->{$b} ? $a : $b } keys %$align;
         # If we are using target side syntax and the rule is bad
         my $extra_feat;
         if($SYNTAX_FEATS) {
@@ -125,8 +129,7 @@ sub print_counts {
             printf " ${PREFIX}p=1 ${PREFIX}lfreq=%f";
             print " ${PREFIX}w=".scalar(@trgarr) if (@trgarr);
         }
-        print " ||| $cnt $sum";
-        print "\n";
+        print " ||| $cnt $sum ||| $bestalign\n";
         # Count the frequencies of frequencies
         $cnt = int($cnt);
         $fof[$cnt]++ if $FOF_FILE and ($cnt <= $FOF_MAX);
@@ -144,8 +147,9 @@ while(<STDIN>) {
     # Add to the count
     if(@counts and ($counts[-1]->[0] eq $arr[1])) {
         $counts[-1]->[1] += $arr[2];
+        $counts[-1]->[2]->{$arr[3]} += $arr[2];
     } else {
-        push @counts, [$arr[1], $arr[2]];
+        push @counts, [$arr[1], $arr[2], {$arr[3] => $arr[2]}];
     }
 }
 print_counts($curr_id, \@counts);
