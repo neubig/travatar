@@ -123,10 +123,10 @@ sub print_counts {
         # Find the counts/probabilities
         my $lfreq = ($cnt > 0) ? log($cnt) : -99;
         my $lprob = $lfreq-$lsum;
-        print "$src ||| $trg ||| ".sprintf("${PREFIX}${COND_PREFIX}p=%f$extra_feat", $lfreq, $lprob);
+        print "$src ||| $trg ||| ".sprintf("${PREFIX}${COND_PREFIX}p=%f$extra_feat", $lprob);
         printf " ${PREFIX}${COND_PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
         if($JOINT) {
-            printf " ${PREFIX}p=1 ${PREFIX}lfreq=%f";
+            printf sprintf(" ${PREFIX}p=1 ${PREFIX}lfreq=%f", $lfreq);
             print " ${PREFIX}w=".scalar(@trgarr) if (@trgarr);
         }
         print " ||| $cnt $sum ||| $bestalign\n";
