@@ -2,11 +2,10 @@
 #define TEST_HIERO_H__
 
 #include "test-base.h"
-#include <travatar/rule-extractor.h>
+#include <travatar/hiero-extractor.h>
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
 #include <travatar/sentence.h>
-#include <travatar/hiero-rule-table.h>
 #include <boost/foreach.hpp>
 
 using namespace boost;
@@ -34,9 +33,9 @@ public:
     // Test phrase extraction using the current settings of the phrase extraction
     int PhraseTest(std::vector<set<string> > & exp) {
         for (int i=0; i < (int)exp.size(); ++i) {
-            PhrasePairs pps = extractor.ExtractPhrase(align[i],english[i],japan[i]);
-            BOOST_FOREACH(PhrasePair pp, pps) {
-                string sentence = extractor.PrintPhrasePair(pp,english[i],japan[i]);
+            HieroExtractor::PhrasePairs pps = extractor.ExtractPhrase(align[i],english[i],japan[i]);
+            BOOST_FOREACH(HieroExtractor::PhrasePair pp, pps) {
+                string sentence = HieroExtractor::PrintPhrasePair(pp,english[i],japan[i]);
                 if (exp[i].find(sentence) == exp[i].end()) {
                     cerr << "Could not find phrase-pair: \"" + sentence + "\" in expected sentences" << endl;
                     return 0;
@@ -57,7 +56,7 @@ public:
 
     int TestPhraseExtraction() {
         // EXPECTED
-        std::vector<set<string> > exp;
+        std::vector< set<string> > exp;
 
         exp.push_back(set<string>());
         exp[0].insert("I -> watashi");
@@ -87,7 +86,7 @@ public:
 
     int TestPhraseExtractionLimit() {
         // EXPECTED
-        std::vector<set<string> > exp;
+        std::vector< set<string> > exp;
 
         extractor.SetMaxInitialPhrase(3);
 
@@ -110,22 +109,22 @@ public:
         exp[1].insert("hotel front desk -> hoteru no uketsuke");
         exp[1].insert("front desk -> uketsuke");
         exp[1].insert("front desk -> no uketsuke");
-
+         
         int ret = PhraseTest(exp);
         extractor.SetMaxInitialPhrase(10);
-
         return ret;
     }
 
     int RuleTest(std::vector<set<string> > & exp) {
         // TESTING
         for (int i=0; i < (int)exp.size(); ++i) {
-            std::vector<vector<HieroRule> >rules = extractor.ExtractHieroRule(align[i],english[i],japan[i]);
+            std::vector< vector<HieroRule*> > rules = extractor.ExtractHieroRule(align[i],english[i],japan[i]);
+            
             std::set<string> checked = std::set<string>();
 
-            BOOST_FOREACH(vector<HieroRule> rule , rules) {
-                BOOST_FOREACH(HieroRule r , rule) {
-                    string rule_key = r.ToString();
+            BOOST_FOREACH(vector<HieroRule*> rule , rules) {
+                BOOST_FOREACH(HieroRule* r , rule) {
+                    string rule_key = r->ToString();
                     set<string>::iterator it = exp[i].find(rule_key);
 
                     if (it == exp[i].end() && checked.find(rule_key) == checked.end()) {
@@ -135,7 +134,7 @@ public:
                         exp[i].erase(rule_key);
                         checked.insert(rule_key);
                     }
-
+                    delete r;
                 }
             }
             if (exp[i].size() > (unsigned)0) {
@@ -201,12 +200,11 @@ public:
         exp[1].insert("\"hotel\" \"front\" \"desk\" @ X ||| \"hoteru\" \"no\" \"uketsuke\" @ X");
         exp[1].insert("\"hotel\" x0:X @ X ||| \"hoteru\" \"no\" x0:X @ X");
         exp[1].insert("\"front\" \"desk\" @ X ||| \"uketsuke\" @ X");
+         
         int ret = RuleTest(exp);
-
         extractor.SetMaxInitialPhrase(10);
         
         return ret;
-
     }
 
     int TestRuleExtractionLen() {
@@ -229,11 +227,9 @@ public:
         exp[1].insert("\"hotel\" @ X ||| \"hoteru\" @ X");
         exp[1].insert("\"hotel\" x0:X @ X ||| \"hoteru\" \"no\" x0:X @ X");
         exp[1].insert("\"front\" \"desk\" @ X ||| \"uketsuke\" @ X");
-
-        int ret = RuleTest(exp);
-
-        extractor.SetMaxTerminals(5);
         
+        int ret = RuleTest(exp);
+        extractor.SetMaxTerminals(5);
         return ret;
     }
         
@@ -247,7 +243,7 @@ public:
         done++; cout << "TestRuleExtraction()" << endl; if(TestRuleExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleExtractionInitial()" << endl; if(TestRuleExtractionInitial()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRuleExtractionLen()" << endl; if(TestRuleExtractionLen()) succeeded++; else cout << "FAILED!!!" << endl;
-        cout << "#### TestHiero Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
+        cout << "#### TestHieroExtraction Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 

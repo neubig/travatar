@@ -11,7 +11,6 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
-#include <travatar/hiero-rule-table.h>
 #include <boost/scoped_ptr.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -41,11 +40,11 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     string src_line,trg_line, align_line;
 
     // GLUE RULES
-    cout << "x0:S x1:X @ S ||| x0:S x1:X @ S ||| 1 ||| glue=1" << endl;
-    cout << "x0:X @ S ||| x0:X @ S ||| 1 ||| glue=1" << endl;
+    // cout << "x0:S x1:X @ S ||| x0:S x1:X @ S ||| 1 ||| glue=1" << endl;
+    // cout << "x0:X @ S ||| x0:X @ S ||| 1 ||| glue=1" << endl;
 
     // Rule Extraction Algorithm
-    std::vector<vector<HieroRule> > rules;
+    std::vector< vector<HieroRule*> > rules;
     long long int line = 0;
     while(true) {
 		int has_src = getline(src_in,src_line) ? 1 : 0;
@@ -63,10 +62,11 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
 
         rules = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
 
-        BOOST_FOREACH(vector<HieroRule> rule , rules) {
-            double score = (double)1.0 / rule.size();
-            BOOST_FOREACH(HieroRule r , rule) {
-                cout << r.ToString() << " ||| " << score << endl;
+        BOOST_FOREACH(vector<HieroRule*> rule , rules) {
+            double score = static_cast<double>(1.0) / rule.size();
+            BOOST_FOREACH(HieroRule* r , rule) {
+                cout << r->ToString() << " ||| " << score << endl;
+                delete r;
             }
         }
 

@@ -68,15 +68,6 @@ void RuleFSM::AddRule(int position, LookupNodeFSM* target_node, TranslationRuleH
     }
 }
 
-HieroRuleSpans* RuleFSM::GetSpanCopy(const HieroRuleSpans spans) const {
-    pair<int,int> pair_temp;
-    HieroRuleSpans* rule_span = new HieroRuleSpans();
-    BOOST_FOREACH(pair_temp, spans) {
-        rule_span->push_back(pair_temp);
-    }
-    return rule_span;
-}
-
 HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     HyperGraph* _graph = new HyperGraph;
     Sentence sent = graph.GetWords();
@@ -245,9 +236,7 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(TranslationRuleHiero* rule, con
     }
     int head_first = rule_span[0].first;
     int head_second = rule_span[(int)rule_span.size()-1].second;
-    HyperEdge* edge = TransformRuleIntoEdge(&node_map, head_first, head_second, span_temp, rule);
-
-    return edge;
+    return TransformRuleIntoEdge(&node_map, head_first, head_second, span_temp, rule);
 }
 
 HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map, 
@@ -299,10 +288,6 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap* map_ptr,
     }
 }
 
-string RuleFSM::ToString() const {
-    return root_node_->ToString();
-}
-
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId label) const 
 {
     return new TranslationRuleHiero(
@@ -325,6 +310,14 @@ LookupTableFSM * LookupTableFSM::ReadFromFiles(const std::vector<std::string> & 
     return ret;
 }
 
+void LookupTableFSM::SetSpanLimits(const std::vector<int> limits) {
+    if(limits.size() != rule_fsms_.size())
+        THROW_ERROR("The number of span limits (" << limits.size() << ") must be equal to the number of tm_files ("<<rule_fsms_.size()<<")");
+    for(int i = 0; i < (int)limits.size(); i++)
+        rule_fsms_[i]->SetSpanLimit(limits[i]);
+}
+
+
 ///////////////////////////////////
 ///     LOOK UP NODE FSM         //
 ///////////////////////////////////
@@ -343,10 +336,6 @@ LookupNodeFSM* LookupNodeFSM::FindNode(WordId key) const {
     } else {
         return NULL;
     }
-}
-
-string LookupNodeFSM::ToString() const {
-    return ToString(0);
 }
 
 string LookupNodeFSM::ToString(int indent) const {
