@@ -2,13 +2,13 @@ include $(top_srcdir)/common.am
 bin_PROGRAMS = query build_binary lmplz
 
 query_SOURCES = query_main.cc
-query_LDADD = libklm.la ../util/libklm_util.la -lz -lrt
+query_LDADD = libklm.la ../util/libklm_util.la -lz ${LIBRT}
 
 build_binary_SOURCES = build_binary_main.cc
-build_binary_LDADD = libklm.la ../util/libklm_util.la -lz -lrt
+build_binary_LDADD = libklm.la ../util/libklm_util.la -lz ${LIBRT}
 
 lmplz_SOURCES = builder/lmplz_main.cc
-lmplz_LDADD = libklm.la ../util/libklm_util.la -lz -lboost_program_options -lboost_thread -lboost_system -lpthread -lrt
+lmplz_LDADD = libklm.la ../util/libklm_util.la -lz -lboost_program_options-mt -lboost_thread-mt -lboost_system-mt -lpthread ${LIBRT}
 
 #noinst_PROGRAMS = \
 #  ngram_test
