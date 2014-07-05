@@ -15,8 +15,8 @@ if(@ARGV != 0) {
 
 while(<STDIN>) {
     chomp;
-    my @arr = split(/ \|\|\| /);
-    die "Wrong number of columns (must be 3-4):\n$_" if (@arr < 3) or (@arr > 4);
+    my @arr = split(/ \|\|\| /, $_, -1);
+    die "Wrong number of columns (must be >= 3):\n$_" if (@arr < 3);
     my $tmp = $arr[0]; $arr[0] = $arr[1]; $arr[1] = $tmp;
     print join(" ||| ", @arr)."\n";
 }

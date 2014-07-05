@@ -240,8 +240,8 @@ if(not $TM_FILE) {
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC | env LC_ALL=C sort | gzip > $RT_SRCTRG";
-    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | gzip > $RT_TRGSRC";
+    my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort | gzip > $RT_SRCTRG";
+    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
     my $zip_cmd;

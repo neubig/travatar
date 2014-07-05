@@ -138,6 +138,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
                 cout << extractor.RuleToString(*edge, 
                                                src_graph->GetWords(), 
                                                trg_sent,
+                                               align,
                                                trg_io.get() != NULL ? &trg_labs : NULL) << endl;
             }
         }

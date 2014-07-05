@@ -56,14 +56,14 @@ sub number_ok {
 sub polar_ok {
     my ($ja, $en, $jaw, $enw) = @_;
     my $en_polar = ($en =~ /"(not|n't|no|without|unable)"/) ? 1 : 0;
-    my $ja_polar = ($jaw =~ /(ず に|ま せ ん|な い|な かっ た|な く|な けれ|いいえ)/) ? 1 : 0;
+    my $ja_polar = ($jaw =~ /([せわかがさたなら] ず|ま せ ん|な い|な かっ た|な く|な けれ|いいえ)/) ? 1 : 0;
     $ja_polar = 0 if ($ja_polar == 1) and ($jaw =~ /か も/);
     return ($en_polar == $ja_polar) ? 1 : 0;
 }
 
 sub det_ok {
     my ($ja, $en, $jaw, $enw) = @_;
-    return (($enw =~ /^(the|a)$/) and $jaw) ? 0 : 1;
+    return (($enw =~ /^(the|a)$/) and ($jaw !~ /^([そこあ]の|)$/)) ? 0 : 1;
 }
 
 sub prn_ok {
@@ -87,7 +87,7 @@ sub prn_ok {
 sub md_ok {
     my ($ja, $en, $jaw, $enw) = @_;
     $jaw =~ s/ //g;
-    if($enw =~ /^(was|were)$/) { return ($jaw =~ /^(かった|かったです|(ありまし|されまし|してい|されまし|でし|いまし|[てで]い|しまし|あっ|され|られ|していまし|してしまいまし|しまいまし|し|ってしまっ|い|だっ)[てた])$/) ? 1 : 0; }
+    if($enw =~ /^(was|were)$/) { return ($jaw =~ /^(た|かった|かったです|(っ|であっ|ありまし|されまし|してい|されまし|でし|いまし|[てで]い|しまし|あっ|され|られ|していまし|してしまいまし|しまいまし|し|ってしまっ|い|だっ)[てた])$/) ? 1 : 0; }
     elsif($enw =~ /^will$/) { return ($jaw =~ /^(し|り|い|き|させていただき)ます$/) ? 1 : 0; }
     elsif($enw eq "have") { return (($jaw =~ /^(ことが|が|は|)(あって|ある|あります|ございます|しています)(|が|よ|ね)$/) or ($jaw =~ /(しまっ|してい)[てた]/)) ? 1 : 0; }
     elsif($enw eq "please") { return (($jaw =~ /^(|って|て|で|して|しておいて)(下|くだ)さい$/) or ($jaw =~ /^(お願いします|いただいて|どうぞ、|どうぞ)$/)) ? 1 : 0; }
@@ -105,7 +105,7 @@ sub prep_ok {
     elsif($enw =~ /^out$/)  { return ($jaw =~ /^(外|から)$/) ? 1 : 0; }
     elsif($enw =~ /^to$/)   { return ($jaw =~ /^(に|へ|まで|こと)$/) ? 1 : 0; }
     elsif($enw =~ /^on$/)   { return ($jaw =~ /^(で|上|に)$/) ? 1 : 0; }
-    elsif($enw =~ /^for$/)  { return ($jaw =~ /^(の|のための|のために|へ)$/) ? 1 : 0; }
+    elsif($enw =~ /^for$/)  { return ($jaw =~ /^(用|用の|の|ための|のための|のために|へ|に対する|に対して)$/) ? 1 : 0; }
     return 1;
 }
 

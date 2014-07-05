@@ -301,7 +301,7 @@ inline WordId GetSpanLabel(const LabeledSpans & trg_labs, const pair<int,int> & 
 }
 
 // Creating a rule
-string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const LabeledSpans * trg_labs) const {
+string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const Alignment & align, const LabeledSpans * trg_labs) const {
     // Get the target span for the top node
     const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
     if(trg_span.size() == 0)
@@ -347,25 +347,32 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
             src_cover[j-src_begin] = i;
         }
     }
-    // Create the string to return
+    // Create the string to return and calculate terminal ids
     ostringstream oss;
+    vector<int> src_ids, trg_ids;
     // Traverse the rules in order of edge
     list<HyperEdge*> remaining_fragments;
     BOOST_FOREACH(HyperEdge *edge, rule.GetFragmentEdges()) {
         remaining_fragments.push_back(edge);
+        // Add the terminal ids for the source
+        pair<int,int> src_span = edge->GetHead()->GetSpan();
+        if(edge->GetHead()->IsPreTerminal()) {
+            for(int i = src_span.first; i < src_span.second; i++)
+                src_ids.push_back(i);
+        }
     }
     int tail_num = 0;
     PrintRuleSurface(*(*remaining_fragments.begin())->GetHead(), src_sent, remaining_fragments, tail_num, oss);
     if(remaining_fragments.size() > 0)
         THROW_ERROR("Did not use all fragments");
     // Make the actual rule
-    // TODO: If we have target labels, add them
     oss << " |||";
     int last = -1;
     for(int i = 0; i < (int)trg_cover.size(); i++) {
-        if(trg_cover[i] == -1)
+        if(trg_cover[i] == -1) {
             oss << " \"" << Dict::WSym(trg_sent[i+trg_begin]) << "\"";
-        else if (last != trg_cover[i]) {
+            trg_ids.push_back(i+trg_begin);
+        } else if (last != trg_cover[i]) {
             oss << " x" << trg_cover[i];
             if((int)tail_labs.size() > trg_cover[i] && tail_labs[trg_cover[i]] != -1)
                 oss << ":" << Dict::WSym(tail_labs[trg_cover[i]]);
@@ -374,6 +381,16 @@ string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_
     }
     if(head_lab != -1)
         oss << " @ " << Dict::WSym(head_lab);
-    oss << " ||| " << exp(rule.GetScore());
+    oss << " ||| " << exp(rule.GetScore()) << " ||| ";
+    // Print the alignments
+    int aligned = 0;
+    for(int i = 0; i < (int)src_ids.size(); i++) {
+        for(int j = 0; j < (int)trg_ids.size(); j++) {
+            if(align.Contains(src_ids[i], trg_ids[j])) {
+                if(aligned++ != 0) oss << " ";
+                oss << i << "-" << j;
+            }
+        }
+    }
     return oss.str();
 }

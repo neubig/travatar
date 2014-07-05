@@ -32,6 +32,7 @@ public:
         const HyperEdge & rule,
         const Sentence & src_sent,
         const Sentence & trg_sent,
+        const Alignment & align,
         const LabeledSpans * trg_spans = NULL) const;
 
 private:

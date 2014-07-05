@@ -86,7 +86,6 @@ protected:
     bool delete_unknown_;
     WordId default_symbol_;
     WordId root_symbol_;
-
 public:
     LookupTableFSM() : rule_fsms_(),
                        delete_unknown_(false),
@@ -123,9 +122,8 @@ public:
     static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
 
     static HyperNode* FindNode(HieroNodeMap* map_ptr, const int span_begin, const int span_end, const WordId);
-
 protected:
-    void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map) const;
+	void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map, HyperNode* root) const;
 
 };
 }

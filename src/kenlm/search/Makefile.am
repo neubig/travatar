@@ -1,7 +1,7 @@
 include $(top_srcdir)/common.am
 
-noinst_LIBRARIES = libklm_search.a
+lib_LTLIBRARIES = libklm_search.la
 
-libklm_search_a_SOURCES = edge_generator.cc nbest.cc rule.cc vertex.cc
+libklm_search_la_SOURCES = edge_generator.cc nbest.cc rule.cc vertex.cc
 
 AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) -I$(srcdir)/.. 

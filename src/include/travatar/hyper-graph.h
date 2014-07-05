@@ -329,7 +329,7 @@ public:
     // Get the n-best paths through the graph
     NbestList GetNbest(int n);
 
-    // Calculate the frontier for the whole graph
+    // Calculate frontier nodes and alignments for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {
         nodes_[0]->CalculateFrontier(src_spans, std::set<int>());
     }

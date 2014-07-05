@@ -74,11 +74,12 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     HieroRuleSpans span = HieroRuleSpans();
     HieroNodeMap node_map = HieroNodeMap();
     EdgeList edge_list = EdgeList(); 
-    // For each grammar
-    BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
-        // For each starting point
-        for(int i = 0; i < (int)sent.size(); i++)
+    // For each starting point
+    for(int i = sent.size()-1; i >= 0; i--) {
+        // For each grammar
+        BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
             rule_fsm->BuildHyperGraphComponent(node_map, edge_list, sent, rule_fsm->GetRootNode(), i, span);
+        }
     }
     vector<bool> checkup_unknown(sent.size(), false);
     vector<TailSpanKey > temp_spans;
@@ -96,7 +97,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
                     delete unk_rule;
                 }
             } else if(val.first.first == GetDefaultSymbol()) {
-                //cerr << "checkup_unknown[" << i << "] == true" << endl;
                 checkup_unknown[i] = true;
             }
         }
@@ -114,9 +114,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
         _graph->AddWord(sent[i]);
     }
 
-    // Cleaning unreachable Node
-    CleanUnreachableNode(edge_list, node_map);
-    
     // Find the root node
     HieroNodeKey key = make_pair(GetRootSymbol(),make_pair(0,(int)sent.size()));
     HieroNodeMap::iterator big_span_node = node_map.find(key);
@@ -131,6 +128,9 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
             delete nodes.second;
         return new HyperGraph;
     }
+
+    // Cleaning unreachable Node
+    CleanUnreachableNode(edge_list, node_map, big_span_node->second);
 
     // Add the root node
     if (big_span_node != node_map.end()) {
@@ -181,48 +181,85 @@ void RuleFSM::BuildHyperGraphComponent(
         HieroRuleSpans rule_span_next = HieroRuleSpans(spans);
         rule_span_next.push_back(make_pair(position,position+1));
         BOOST_FOREACH(TranslationRuleHiero* rule, next_node->GetTranslationRules()) 
-            edge_list.push_back(LookupTableFSM::TransformRuleIntoEdge(rule, rule_span_next,node_map));
+            edge_list.push_back(LookupTableFSM::TransformRuleIntoEdge(rule, rule_span_next, node_map));
         // Recurse to match the following rules
         BuildHyperGraphComponent(node_map, edge_list, input, next_node, position+1, rule_span_next);
     }
 }
 
-void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_map) const {
+void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_map, HyperNode* root) const {
+    set<HyperNode*> deleted_nodes;
+    set<HyperEdge*> deleted_edges;
     bool removed;
     do {
         removed = false;
-        for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end();) {
-            vector<HyperEdge*>* node_edge = &it->second->GetEdges();
-            for (int i = node_edge->size()-1; i >= 0; --i) {
-                HyperEdge* now = (*node_edge)[i];
+        // Keep track of which nodes
+        set<HyperNode*> has_head;
+        has_head.insert(root);
+        // For each node
+        vector<HieroNodeMap::key_type> del_keys;
+        for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end(); it++) {
+            // Check if each edge in the node is OK
+            vector<HyperEdge*> & node_edge = it->second->GetEdges();
+            for (int i = node_edge.size()-1; i >= 0; --i) {
+                HyperEdge* now = node_edge[i];
+                // Find if at least one tail of the edge is bad
                 vector<HyperNode*> node_child = now->GetTails();
                 bool edge_valid = true;
-                for (int j=0; edge_valid && j < (int)node_child.size(); ++j) {
-                    if (node_child[j]->GetEdges().size() == 0) {
+                for (int j=0; edge_valid && j < (int)node_child.size(); ++j)
+                    if (node_child[j]->GetEdges().size() == 0) 
                         edge_valid = false;
-                    }
-                }
-                if (!edge_valid) {
+                // If the edge is OK, mark all of its children as having a head
+                if (edge_valid) {
+                    BOOST_FOREACH(HyperNode* child, node_child)
+                        has_head.insert(child);
+                // Otherwise, mark that at least one edge is removed and delete
+                } else {
+                    // cerr << "Removing edge from " << Dict::WSym(it->first.first) << it->first.second << endl;
                     removed = true;
-                    node_edge->erase(node_edge->begin()+i);
+                    deleted_edges.insert(now);
+                    node_edge.erase(node_edge.begin()+i);
                 }
-                now = NULL;
             }
-            if (node_edge->size() == 0) {
-                //cerr << "Removing node " << Dict::WSym(it->first.first) << it->first.second << endl;
-                node_map.erase(it++);
-            } else {
-                ++it;
-            }
-            node_edge = NULL;
+            if (node_edge.size() == 0) {
+                // cerr << "Removing edgeless " << Dict::WSym(it->first.first) << it->first.second << endl;
+                deleted_nodes.insert(it->second);
+                del_keys.push_back(it->first);
+            }   
         }    
+        BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
+            node_map.erase(del);
+        del_keys.resize(0);
+        // If at least one node is missing a head, perform one more loop through and
+        // remove all nodes without a head
+        // cerr << "has_head.size() == " << has_head.size() << ", node_map.size() == " << node_map.size() << endl;
+        if(has_head.size() != node_map.size()) {
+            removed = true;
+            for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end(); it++) {
+                if(has_head.find(it->second) == has_head.end()) {
+                    // cerr << "Removing "<<it->second->GetEdges().size()<<" edges from " << Dict::WSym(it->first.first) << it->first.second << endl;
+                    // cerr << "Removing headless node " << Dict::WSym(it->first.first) << it->first.second << endl;
+                    BOOST_FOREACH(HyperEdge* edge, it->second->GetEdges())
+                        deleted_edges.insert(edge);
+                    it->second->GetEdges().resize(0);
+                    deleted_nodes.insert(it->second);
+                    del_keys.push_back(it->first);
+                }
+            }
+            BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
+                node_map.erase(del);
+        }
     } while (removed);
+    // Delete edges
     for (int i=input.size()-1; i >= 0 ; --i) {
-        if (input[i]->GetHead()->GetEdges().size() == 0) {
+        if (deleted_edges.find(input[i]) != deleted_edges.end()) {
             delete input[i];
             input[i] = NULL;
         }
     }
+    // Delete nodes
+    BOOST_FOREACH(HyperNode* del, deleted_nodes)
+        delete del;
 }
 
 
@@ -243,11 +280,11 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map,
         const int head_first, const int head_second, const vector<TailSpanKey> & tail_spans, 
         TranslationRuleHiero* rule)
 {
-    // DEBUG start
+    // // DEBUG start
     // cerr << " TransformRule @ " << make_pair(head_first,head_second) << " ->";
-    // BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) cerr << " " << tsk.first << tsk.second;
+    // BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) cerr << " " << Dict::WSym(rule->GetSrcData().GetSym(tsk.first)) << tsk.second;
     // cerr << " " << rule->GetSrcStr() << endl;
-    // DEBUG end
+    // // DEBUG end
 
     HyperEdge* hedge = new HyperEdge;
     HyperNode* head = FindNode(node_map, head_first, head_second, rule->GetSrcData().label);
