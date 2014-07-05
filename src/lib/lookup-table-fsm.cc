@@ -68,15 +68,6 @@ void RuleFSM::AddRule(int position, LookupNodeFSM* target_node, TranslationRuleH
     }
 }
 
-HieroRuleSpans* RuleFSM::GetSpanCopy(const HieroRuleSpans spans) const {
-    pair<int,int> pair_temp;
-    HieroRuleSpans* rule_span = new HieroRuleSpans();
-    BOOST_FOREACH(pair_temp, spans) {
-        rule_span->push_back(pair_temp);
-    }
-    return rule_span;
-}
-
 HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     HyperGraph* _graph = new HyperGraph;
     Sentence sent = graph.GetWords();
@@ -106,7 +97,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
                     delete unk_rule;
                 }
             } else if(val.first.first == GetDefaultSymbol()) {
-                // cerr << "checkup_unknown[" << i << "] == true" << endl;
                 checkup_unknown[i] = true;
             }
         }
@@ -153,7 +143,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
             _graph->AddEdge(edges);
     BOOST_FOREACH (HieroNodeMap::value_type nodes, node_map)
         _graph->AddNode(nodes.second);
-
     return _graph;
 }
 
@@ -284,9 +273,7 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(TranslationRuleHiero* rule, con
     }
     int head_first = rule_span[0].first;
     int head_second = rule_span[(int)rule_span.size()-1].second;
-    HyperEdge* edge = TransformRuleIntoEdge(&node_map, head_first, head_second, span_temp, rule);
-
-    return edge;
+    return TransformRuleIntoEdge(&node_map, head_first, head_second, span_temp, rule);
 }
 
 HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map, 
@@ -316,9 +303,6 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map,
     return hedge;
 }
 
-// Build a HyperEdge for a rule, also constructing node if head or tails node are not in the map.
-// Then attaching rule into the edge
-
 // Get an HyperNode, indexed by its span in some map.
 HyperNode* LookupTableFSM::FindNode(HieroNodeMap* map_ptr, 
         const int span_begin, const int span_end, const WordId label)
@@ -339,10 +323,6 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap* map_ptr,
         map_ptr->insert(make_pair(key,ret));
         return ret;
     }
-}
-
-string RuleFSM::ToString() const {
-    return root_node_->ToString();
 }
 
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId label) const 
@@ -367,6 +347,14 @@ LookupTableFSM * LookupTableFSM::ReadFromFiles(const std::vector<std::string> & 
     return ret;
 }
 
+void LookupTableFSM::SetSpanLimits(const std::vector<int> limits) {
+    if(limits.size() != rule_fsms_.size())
+        THROW_ERROR("The number of span limits (" << limits.size() << ") must be equal to the number of tm_files ("<<rule_fsms_.size()<<")");
+    for(int i = 0; i < (int)limits.size(); i++)
+        rule_fsms_[i]->SetSpanLimit(limits[i]);
+}
+
+
 ///////////////////////////////////
 ///     LOOK UP NODE FSM         //
 ///////////////////////////////////
@@ -387,10 +375,6 @@ LookupNodeFSM* LookupNodeFSM::FindNode(WordId key) const {
     }
 }
 
-string LookupNodeFSM::ToString() const {
-    return ToString(0);
-}
-
 string LookupNodeFSM::ToString(int indent) const {
     ostringstream str;
     for (int i=0; i < indent; ++i) str << " ";
@@ -400,8 +384,7 @@ string LookupNodeFSM::ToString(int indent) const {
         str << rule->ToString() << endl;
     }
     for (int i=0; i < indent; ++i) str << " ";
-    str << "===================================" << endl;
-    HieroNodeMap::const_iterator it = lookup_map.begin();
+    HieroNodeMap::const_iterator it = lookup_map.begin(); 
     while (it != lookup_map.end()) {
         string t_str = it->second->ToString(indent+1);
         str << t_str << endl;
