@@ -47,11 +47,11 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
     std::vector< vector<HieroRule*> > rules;
     long long int line = 0;
     while(true) {
-		int has_src = getline(src_in,src_line) ? 1 : 0;
+        int has_src = getline(src_in,src_line) ? 1 : 0;
         int has_trg = getline(trg_in,trg_line) ? 1 : 0;
-		int	has_align = getline(alg_in,align_line) ? 1 : 0;
-		
-		if (has_src+has_trg+has_align == 0) break;
+        int has_align = getline(alg_in,align_line) ? 1 : 0;
+        
+        if (has_src+has_trg+has_align == 0) break;
         if (has_src+has_trg+has_align != 3) {
             THROW_ERROR("File sizes don't match.");
         }
@@ -65,7 +65,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         BOOST_FOREACH(vector<HieroRule*> rule , rules) {
             double score = static_cast<double>(1.0) / rule.size();
             BOOST_FOREACH(HieroRule* r , rule) {
-                cout << r->ToString() << " ||| " << score << endl;
+                cout << r->ToString() << " ||| " << score << " ||| " << PrintAlignment(r->GetAlignments()) << endl;
                 delete r;
             }
         }
@@ -74,6 +74,18 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
             cerr << "Finished Processing: " << line << " lines. " << endl; 
         }
     }
+}
+
+string HieroExtractorRunner::PrintAlignment (const vector< pair<int,int> > & alignments) {
+    ostringstream oss;
+    bool first = true;
+    pair<int,int> temp;
+    BOOST_FOREACH(temp, alignments) {
+        if (first) first = false;
+        else oss << " ";
+        oss << temp.first << "-" << temp.second;
+    }
+    return oss.str();
 }
 
 void HieroExtractorRunner::IsSane(const ConfigHieroExtractorRunner & config) 

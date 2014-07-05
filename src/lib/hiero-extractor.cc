@@ -35,18 +35,18 @@ bool HieroExtractor::IsRuleValid(HieroRule* rule, int max_terminals) {
 vector< vector<HieroRule*> > HieroExtractor::ExtractHieroRule(const Alignment & align, const Sentence & source, 
         const Sentence & target) const
 {
+    const SourceAlignment & src_align = align.GetSrcAlignments();
     vector< vector<HieroRule*> > ret;
     HieroExtractor::PhrasePairs filtered_pairs;
     HieroExtractor::PhrasePairs pairs;
 
     // Doing extraction safely
     try {
-        pairs = ExtractPhrase(align,source, target);
+        pairs = ExtractPhrase(src_align,source, target);
     } catch (exception& exc) {
         THROW_ERROR("Input or alignment error. \n\tOn Src: " + Dict::PrintWords(source) + 
             "\n\tOn Trg: " + Dict::PrintWords(target));
     }
-
     // if there are multiple initial phrase pairs containing the same set of alignments, only the 
     // smallest is kept. That is, unaligned words are not allowed at the edges of phrases
     map<pair<int,int>, int> mp = map<pair<int,int>,int>();
@@ -71,18 +71,18 @@ vector< vector<HieroRule*> > HieroExtractor::ExtractHieroRule(const Alignment & 
         }
     }
     pairs = filtered_pairs;
-    // Rule extraction algorithm for 1 + 2 Nonterminal Symbol. If we use Higher, algorithm is too complex
+    // Rule extraction algorithm for 1 and 2 Nonterminal Symbols.
     for (int ii=0; ii < (int)pairs.size(); ++ii) {
         vector<HieroRule*> extracted;
         // Phrases
-        HieroRule *rule = ParseLexicalTranslationRule(source,target,pairs[ii]);
+        HieroRule *rule = ParseLexicalTranslationRule(source,target,pairs[ii],src_align);
         if(HieroExtractor::IsRuleValid(rule,max_terminals_))
             extracted.push_back(rule);
         for (int jj=0; jj < (int)pairs.size(); ++jj) {
             if (jj == ii || !InPhrase(pairs[jj],pairs[ii])) 
                 continue;
             // Unary rule
-            rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii]);
+            rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii],src_align);
             if(HieroExtractor::IsRuleValid(rule,max_terminals_))
                 extracted.push_back(rule);
             // Binary rule
@@ -90,7 +90,7 @@ vector< vector<HieroRule*> > HieroExtractor::ExtractHieroRule(const Alignment & 
                 // that are in the span of INITIAL phrase, and NOT overlapping each other
                 if (kk == jj || !InPhrase(pairs[kk],pairs[ii]) || !InPhrase(pairs[jj],pairs[ii]) || IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                     continue;
-                rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii]);
+                rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii],src_align);
                 if(HieroExtractor::IsRuleValid(rule,max_terminals_))
                     extracted.push_back(rule);
             }
@@ -105,10 +105,9 @@ vector< vector<HieroRule*> > HieroExtractor::ExtractHieroRule(const Alignment & 
 
 // The implementation of phrase extraction algorithm.
 // The algorithm to extract all consistent phrase pairs from a word-aligned sentence pair
-HieroExtractor::PhrasePairs HieroExtractor::ExtractPhrase(const Alignment & align, const Sentence & source, 
+HieroExtractor::PhrasePairs HieroExtractor::ExtractPhrase(const SourceAlignment & s2t, const Sentence & source, 
         const Sentence & target) const
 {
-    const vector<set<int> > &s2t = align.GetSrcAlignments();
     vector<set<int> > t2s = vector<set<int> >();
     HieroExtractor::PhrasePairs ret = HieroExtractor::PhrasePairs();
 
@@ -171,7 +170,7 @@ string HieroExtractor::AppendString(const Sentence & s, const int begin, const i
 string HieroExtractor::PrintPhrasePair(const HieroExtractor::PhrasePair & pp, const Sentence & source, 
     const Sentence & target) 
 {
-    return AppendString(source, pp.first.first, pp.first.second) + string(" -> ") 
+    return AppendString(source, pp.first.first, pp.first.second) + string(" ||| ") 
         + AppendString(target, pp.second.first, pp.second.second);
 }
 
@@ -230,13 +229,13 @@ int HieroExtractor::IsPhraseOverlapping(const HieroExtractor::PhrasePair & pair1
     return IsTerritoryOverlapping(pair1.first, pair2.first) || IsTerritoryOverlapping(pair1.second,pair2.second);
 }
 
-
 void HieroExtractor::ParseRuleWith1Nonterminals(
         const Sentence & sentence, 
         const pair<int,int> & my_pair, 
         const pair<int,int> & pair_span, 
         HieroRule* target, 
-        const int type) 
+        const int type,
+        const SourceAlignment & align) 
 {
     target->SetType(type);
     int x = 0;
@@ -244,9 +243,15 @@ void HieroExtractor::ParseRuleWith1Nonterminals(
         if (i >= my_pair.first && i <= my_pair.second) {
             x = 1;
         } else {
+            target->SetPenalty(i);
             if (x) target->AddNontermX(--x);
-            target->AddWord(sentence[i]);
-        }
+            target->AddWord(make_pair(i,sentence[i]));
+            if (type == HIERO_SRC) {
+                BOOST_FOREACH(int j, align[i]) {
+                    target->AddAlignment(i,j);
+                }
+            }
+        } 
     }
     if (x) target->AddNontermX(0);
 }
@@ -257,7 +262,8 @@ void HieroExtractor::ParseRuleWith2Nonterminals(
         const pair<int,int> & pair2, 
         const pair<int,int> & pair_span, 
         HieroRule* target, 
-        const int type) 
+        const int type,
+        const SourceAlignment & align) 
 {
     target->SetType(type);
     int x0 = 0;
@@ -270,10 +276,16 @@ void HieroExtractor::ParseRuleWith2Nonterminals(
             if (x0) target->AddNontermX(--x0);
             x1 = 1;
         } else {
+            target->SetPenalty(i);
             if (x0) target->AddNontermX(--x0);
             if (x1) target->AddNontermX(x1--);
-            target->AddWord(sentence[i]);
-        }
+            target->AddWord(make_pair(i,sentence[i]));
+            if (type == HIERO_SRC) {
+                BOOST_FOREACH(int j, align[i]) {
+                    target->AddAlignment(i,j);
+                }
+            }
+        } 
     }
     if (x0) target->AddNontermX(0);
     else if (x1) target->AddNontermX(1);
@@ -282,15 +294,23 @@ void HieroExtractor::ParseRuleWith2Nonterminals(
 HieroRule* HieroExtractor::ParseLexicalTranslationRule(
         const Sentence & source, 
         const Sentence & target, 
-        const HieroExtractor::PhrasePair & my_pair)
+        const HieroExtractor::PhrasePair & my_pair,
+        const SourceAlignment & align)
 {
     HieroRule* rule = new HieroRule;
     rule->SetType(HIERO_SRC);
-    for (int i=my_pair.first.first; i <= my_pair.first.second; ++i) 
-        rule->AddWord(source[i]);
+    for (int i=my_pair.first.first; i <= my_pair.first.second; ++i) {
+        rule->AddWord(make_pair(i,source[i]));
+        BOOST_FOREACH(int j, align[i]) {
+            rule->AddAlignment(i,j);
+        }
+    }
+    rule->SetPenalty(my_pair.first.first);
     rule->SetType(HIERO_TRG);
     for (int i=my_pair.second.first; i <= my_pair.second.second; ++i) 
-        rule->AddWord(target[i]);
+        rule->AddWord(make_pair(i,target[i]));
+    rule->SetPenalty(my_pair.second.first);
+    rule->ShiftAlignment();
     return rule;
 }
 
@@ -298,11 +318,13 @@ HieroRule* HieroExtractor::ParseUnaryPhraseRule(
         const Sentence & source, 
         const Sentence & target, 
         const HieroExtractor::PhrasePair & my_pair, 
-        const HieroExtractor::PhrasePair & pair_span) 
+        const HieroExtractor::PhrasePair & pair_span,
+        const SourceAlignment & align) 
 {
     HieroRule* rule = new HieroRule;
-    ParseRuleWith1Nonterminals(source,my_pair.first,pair_span.first,rule,HIERO_SRC);
-    ParseRuleWith1Nonterminals(target,my_pair.second,pair_span.second,rule,HIERO_TRG);
+    ParseRuleWith1Nonterminals(source,my_pair.first,pair_span.first,rule,HIERO_SRC,align);
+    ParseRuleWith1Nonterminals(target,my_pair.second,pair_span.second,rule,HIERO_TRG,align);
+    rule->ShiftAlignment();
     return rule;
 }
 
@@ -311,11 +333,13 @@ HieroRule* HieroExtractor::ParseBinaryPhraseRule(
         const Sentence & target, 
         const HieroExtractor::PhrasePair & pair1, 
         const HieroExtractor::PhrasePair & pair2, 
-        const HieroExtractor::PhrasePair & pair_span) 
+        const HieroExtractor::PhrasePair & pair_span,
+        const SourceAlignment & align) 
 {
     HieroRule* rule = new HieroRule;
-    ParseRuleWith2Nonterminals(source,pair1.first,pair2.first,pair_span.first,rule,HIERO_SRC);
-    ParseRuleWith2Nonterminals(target,pair1.second,pair2.second,pair_span.second,rule,HIERO_TRG);
+    ParseRuleWith2Nonterminals(source,pair1.first,pair2.first,pair_span.first,rule,HIERO_SRC,align);
+    ParseRuleWith2Nonterminals(target,pair1.second,pair2.second,pair_span.second,rule,HIERO_TRG,align);
+    rule->ShiftAlignment();
     return rule;
 }
 
@@ -329,18 +353,20 @@ int HieroExtractor::InPhrase(
 ////////////////////////
 ///// HIERO RULE ///////
 ////////////////////////
-void HieroRule::AddWord(WordId word, int non_term) {
+void HieroRule::AddWord(pair<int,WordId> word, int non_term) {
     if (type_ == HIERO_SRC) {
         if (non_term) src_nt_position_.insert(src_words_.size());
-        src_words_.push_back(word);
+        src_words_.push_back(word.second);
+        src_index_.push_back(word.first);
     } else if (type_ == HIERO_TRG) {
         if (non_term) trg_nt_position_.insert(trg_words_.size());
-        trg_words_.push_back(word);
+        trg_words_.push_back(word.second);
+        trg_index_.push_back(word.first);
     }
 }
 
 void HieroRule::AddNontermX(int number) {
-    AddWord(-1-number,1);
+    AddWord(make_pair(-1,-1-number),1);
 }
 
 std::string HieroRule::ToString() const {
@@ -363,7 +389,13 @@ std::string HieroRule::ToString() const {
             ss << "x" << -1-trg_words_[i] << ":X";
         }
     }
-    ss << " @ X";
+    ss << " @ X [";
+    for (unsigned i=0; i < alignments_.size(); ++i){
+        pair<int,int> k = alignments_[i];
+        if (i) ss << " ";
+        ss << k.first << "-" << k.second;
+    }
+    ss << "]";
     return ss.str();
 }
 
@@ -377,4 +409,40 @@ bool HieroRule::IsNTSideBySide(HieroRule* rule) {
     return false;
 }
 
+void HieroRule::SetPenalty(int value) {
+    if (type_ == HIERO_SRC && src_penalty_ == -1) 
+        src_penalty_ = value;
+    else if (type_ == HIERO_TRG && trg_penalty_ == -1)
+        trg_penalty_ = value;
+}
+
+void HieroRule::ShiftAlignment() {
+    map<int,int> src_shift;
+    map<int,int> trg_shift;
+    // Creating shift map for source
+    unsigned position = 0;
+    while (position < src_words_.size() && src_words_[position] < 0) 
+        ++position;
+    int index = 0;
+    for (unsigned i=position; i < src_words_.size(); ++i) {
+        if (src_words_[i] >= 0) {
+            src_shift[src_index_[i]] = index++;
+        }
+    }
+    // Creating shift map for target
+    index = 0;
+    position = 0;
+    while (position < trg_words_.size() && trg_words_[position] < 0)
+        ++position;
+    for (unsigned i=position; i < trg_words_.size(); ++i) {
+        if (trg_words_[i] >= 0) {
+            trg_shift[trg_index_[i]] = index++;
+        }
+    }
+    // Shifting alignment
+    for (unsigned i=0; i < alignments_.size(); ++i) {
+        pair<int,int> align = alignments_[i];
+        alignments_[i] = make_pair(src_shift[align.first],trg_shift[align.second]);
+    }
+}
 
