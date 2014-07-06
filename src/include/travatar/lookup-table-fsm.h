@@ -13,30 +13,28 @@
 namespace travatar {
 class LookupNodeFSM {
 typedef std::map<WordId, LookupNodeFSM*> HieroNodeMap;
-public:
-	LookupNodeFSM() { }
-
-	virtual ~LookupNodeFSM() { 
-		BOOST_FOREACH(HieroNodeMap::value_type &it, lookup_map) {
-			delete it.second++;
-		}
-		BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
-			delete rule;
-		}
-	}
-	
-	virtual void AddEntry(WordId & key, LookupNodeFSM* rule);
-	virtual LookupNodeFSM* FindNode(WordId key) const;
-	virtual void AddRule(TranslationRuleHiero* rule);
-	virtual std::string ToString() const;
-	virtual std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
 protected:
-	HieroNodeMap lookup_map;
-	std::vector<TranslationRuleHiero*> rules;
-	std::set<WordId> labels;
-private:
-	std::string ToString(int indent) const;
-};	
+    HieroNodeMap lookup_map;
+    std::vector<TranslationRuleHiero*> rules;
+    std::set<WordId> labels;
+public:
+    LookupNodeFSM() { }
+
+    virtual ~LookupNodeFSM() { 
+        BOOST_FOREACH(HieroNodeMap::value_type &it, lookup_map) {
+            delete it.second++;
+        }
+        BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
+            delete rule;
+        }
+    }
+    
+    virtual void AddEntry(WordId & key, LookupNodeFSM* rule);
+    virtual LookupNodeFSM* FindNode(WordId key) const;
+    virtual void AddRule(TranslationRuleHiero* rule);
+    virtual std::string ToString(int indent) const;
+    virtual std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
+};  
 
 typedef std::vector<std::pair<int,int> > HieroRuleSpans;
 typedef std::pair<WordId, std::pair<int,int> > HieroNodeKey;
@@ -45,51 +43,49 @@ typedef std::vector<HyperEdge* > EdgeList;
 typedef std::pair<int, std::pair<int,int> > TailSpanKey;
 
 class RuleFSM {
+protected:
+    LookupNodeFSM* root_node_;
+    int span_length_;
 public:
 
     friend class LookupTableFSM;
 
-	RuleFSM() {
-		root_node_ = new LookupNodeFSM;
-        span_length_ = 20;
-	}
+    RuleFSM() : root_node_(new LookupNodeFSM), span_length_(20) { }
 
-	virtual ~RuleFSM() { 
-		delete root_node_;
-	}
-	
-	static RuleFSM * ReadFromRuleTable(std::istream & in);
+    virtual ~RuleFSM() { 
+        delete root_node_;
+    }
+    
+    static RuleFSM * ReadFromRuleTable(std::istream & in);
 
-	static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
-			std::vector<std::string> & target, SparseMap features);
+    static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
+            std::vector<std::string> & target, SparseMap features);
 
-	virtual void AddRule(TranslationRuleHiero* rule);
+    virtual void AddRule(TranslationRuleHiero* rule);
 
-	virtual std::string ToString() const;
-
-	// ACCESSOR
-	int GetSpanLimit() const { return span_length_; } 
+    // ACCESSOR
+    int GetSpanLimit() const { return span_length_; } 
     LookupNodeFSM* GetRootNode() const { return root_node_; }
  
-	// MUTATOR
-	void SetSpanLimit(int length) { span_length_ = length; }
-
+    // MUTATOR
+    void SetSpanLimit(int length) { span_length_ = length; }
+    
+    // ToString
+    std::string ToString() const;
 protected:
-	LookupNodeFSM* root_node_;
- 	int span_length_;
-
-	void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
-		const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
+    void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
+        const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
 
 private:
-
-	HieroRuleSpans* GetSpanCopy(const HieroRuleSpans spans) const;
-	void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
-
-	// bool NTInSpanLimit(TranslationRuleHiero* rule, const HieroRuleSpans & spans) const;
+    void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
 };
 
 class LookupTableFSM : public GraphTransformer {
+protected:
+    std::vector<RuleFSM*> rule_fsms_;
+    bool delete_unknown_;
+    WordId default_symbol_;
+    WordId root_symbol_;
 public:
     LookupTableFSM() : rule_fsms_(),
                        delete_unknown_(false),
@@ -106,44 +102,30 @@ public:
         rule_fsms_.push_back(fsm);
     }
 
-	static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
-
     // Transform a graph of words into a hiero graph
-	virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
+    virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
-	TranslationRuleHiero* GetUnknownRule(WordId unknown_word, WordId symbol) const;
-	WordId GetRootSymbol() const { return root_symbol_; } 
-	WordId GetDefaultSymbol() const { return default_symbol_; }
+    TranslationRuleHiero* GetUnknownRule(WordId unknown_word, WordId symbol) const;
+    WordId GetRootSymbol() const { return root_symbol_; } 
+    WordId GetDefaultSymbol() const { return default_symbol_; }
 
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
-	void SetRootSymbol(WordId symbol) { root_symbol_ = symbol; }
-	void SetDefaultSymbol(WordId symbol) { default_symbol_ = symbol; }
-	void SetSpanLimits(const std::vector<int> limits) {
-        if(limits.size() != rule_fsms_.size())
-            THROW_ERROR("The number of span limits (" << limits.size() << ") must be equal to the number of tm_files ("<<rule_fsms_.size()<<")");
-        for(int i = 0; i < (int)limits.size(); i++)
-            rule_fsms_[i]->SetSpanLimit(limits[i]);
-    }
+    void SetRootSymbol(WordId symbol) { root_symbol_ = symbol; }
+    void SetDefaultSymbol(WordId symbol) { default_symbol_ = symbol; }
+    void SetSpanLimits(const std::vector<int> limits);
 
-	static HyperEdge* TransformRuleIntoEdge(HieroNodeMap* map, const int head_first, 
-			const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule);
+    static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
 
-	static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
+    static HyperEdge* TransformRuleIntoEdge(HieroNodeMap* map, const int head_first, 
+            const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule);
 
-	static HyperNode* FindNode(HieroNodeMap* map_ptr, const int span_begin, const int span_end, const WordId);
+    static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
 
-private:
-
+    static HyperNode* FindNode(HieroNodeMap* map_ptr, const int span_begin, const int span_end, const WordId);
+protected:
 	void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map, HyperNode* root) const;
 
-protected:
-    std::vector<RuleFSM*> rule_fsms_;
-	bool delete_unknown_;
-	WordId default_symbol_;
-	WordId root_symbol_;
 };
-
-
 }
 
 #endif

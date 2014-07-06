@@ -44,7 +44,7 @@ void TravatarRunnerTask::Run() {
 
     // If we have an lm, score with the LM
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
-    if(runner_->HasLM()) {
+    if(runner_->HasLM() && rule_graph->NumNodes() > 0) {
         shared_ptr<HyperGraph> lm_graph(runner_->GetLM().TransformGraph(*rule_graph));
         lm_graph.swap(rule_graph);
     }

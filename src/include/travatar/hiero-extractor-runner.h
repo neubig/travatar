@@ -16,7 +16,8 @@ public:
     void Run(const ConfigHieroExtractorRunner & config);
     
 private:
-	void IsSane(const ConfigHieroExtractorRunner & config);
+    void IsSane(const ConfigHieroExtractorRunner & config);
+    std::string PrintAlignment (const std::vector< std::pair<int,int> > & alignments);
 };
 
 }
