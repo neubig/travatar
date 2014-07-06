@@ -13,7 +13,7 @@ LMData::LMData(const std::string & str) :
     // Load the parameters
     if(cols.size() > 1) {
         BOOST_FOREACH(std::string param, Tokenize(cols[1], ',')) {
-            std::vector<std::string> kv = Tokenize(str, '=');
+            std::vector<std::string> kv = Tokenize(param, '=');
             if(kv.size() != 2)
                 THROW_ERROR("Bad parameter \""<<param<<"\" in " << endl << str);
             if(kv[0] == "factor") {

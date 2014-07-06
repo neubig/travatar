@@ -12,7 +12,7 @@ binmode STDERR, ":utf8";
 my $FORMAT = "penn";
 my $NOBUF = "";
 my $ROOT = "ROOT";
-my $MAX_FOREST = 0;
+my $MAX_FOREST = 2500;
 GetOptions(
     "format=s" => \$FORMAT,
     "nobuf!" => \$NOBUF,
@@ -51,7 +51,7 @@ if($FORMAT eq "penn") {
         die "Found sentence in suspicious file, but not correct: $sketchy\n" if $sketchy and not $correct;
         last if not $correct;
         my @arr = ($sketchy ? split(/\n/, $sketchy) : ());
-        print STDERR "".scalar(@arr)." $MAX_FOREST\n" if @arr > $MAX_FOREST;
+        print STDERR "WARNING: removing overly large forest: size ".scalar(@arr)." > limit $MAX_FOREST\n" if @arr > $MAX_FOREST;
         if($sketchy and ((not $MAX_FOREST) or (@arr <= $MAX_FOREST))) {
             print $sketchy;
         } else {
