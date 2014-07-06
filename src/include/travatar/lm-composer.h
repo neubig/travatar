@@ -37,41 +37,25 @@ protected:
     VocabMap * vocab_map_;
 };
 
-// A parent class for search algorithms that compose a rule graph with a
-// target side language model
-class LMComposer : public GraphTransformer {
-
-protected:
-    // The name of the feature expressed by this model
-    std::string lm_feature_name_, lm_unk_feature_name_;
-    // The language model that this composer handles
-    lm::ngram::Model * lm_;
-    // The vocabulary map from Travatar vocab to LM vocab
-    VocabMap * vocab_map_;
-    // The weight assigned to this particular LM
-    double lm_weight_, lm_unk_weight_;
-    // The factor to use
-    int factor_;
-
+// The data for each LM
+// This is read from a specification string of the following format
+//   /path/to/file.blm|factor=0,lm_feat=lm,lm_unk_feat=lmunk
+// where the first string is the file and the following parameters are optional
+//   factor: which factor to use
+//   lm_feat: the name of the feature for the lm probability
+//   lm_unk: the name of the feature for LM unknown words
+class LMData {
 public:
-    LMComposer() : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(NULL), vocab_map_(NULL), lm_weight_(1), lm_unk_weight_(1), factor_(0) { }
-    LMComposer(const std::string & str, int factor = 0) : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_weight_(1), lm_unk_weight_(1), factor_(factor) {
-        // Create the LM, and an index mapping from travatar IDs to 
-        MapEnumerateVocab lm_save;
-        lm::ngram::Config lm_config;
-        lm_config.enumerate_vocab = &lm_save;
-        lm_ = new lm::ngram::Model(str.c_str(), lm_config);
-        vocab_map_ = lm_save.GetAndFreeVocabMap();
-    }
-    LMComposer(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) : lm_feature_name_("lm"), lm_unk_feature_name_("lmunk"), lm_(lm), vocab_map_(vocab_map), lm_weight_(1), lm_unk_weight_(1), factor_(factor) { }
+    LMData(const std::string & str);
+    LMData(lm::ngram::Model * model, VocabMap* vocab_map) :
+        lm_feat_(Dict::WID("lm")), lm_unk_feat_(Dict::WID("lmunk")), 
+        lm_(model), vocab_map_(vocab_map), 
+        lm_weight_(1), lm_unk_weight_(0), factor_(0) { }
 
-    virtual ~LMComposer() {
+    virtual ~LMData() {
         if(lm_) delete lm_;
         if(vocab_map_) delete vocab_map_;
     }
-
-    // Compose the rule graph with a language model
-    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const = 0;
 
     lm::WordIndex GetMapping(WordId wid) const {
         VocabMap::const_iterator it = vocab_map_->find(wid);
@@ -83,10 +67,59 @@ public:
     void SetWeight(double lm_weight) { lm_weight_ = lm_weight; }
     double GetUnkWeight() const { return lm_unk_weight_; }
     void SetUnkWeight(double lm_unk_weight) { lm_unk_weight_ = lm_unk_weight; }
-    const std::string & GetFeatureName() const { return lm_feature_name_; }
-    void SetFeatureName(const std::string & lm_feature_name) { lm_feature_name_ = lm_feature_name; }
-    const std::string & GetUnkFeatureName() const { return lm_unk_feature_name_; }
-    void SetUnkFeatureName(const std::string & lm_unk_feature_name) { lm_unk_feature_name_ = lm_unk_feature_name; }
+    WordId GetFeatureName() const { return lm_feat_; }
+    void SetFeatureName(WordId lm_feat) { lm_feat_ = lm_feat; }
+    WordId GetUnkFeatureName() const { return lm_unk_feat_; }
+    void SetUnkFeatureName(WordId lm_unk_feat) { lm_unk_feat_ = lm_unk_feat; }
+    int GetFactor() const { return factor_; }
+    void SetFactor(int factor) { factor_ = factor; }
+
+protected:
+    // The name of the feature expressed by this model
+    WordId lm_feat_, lm_unk_feat_;
+    // The language model that this composer handles
+    lm::ngram::Model * lm_;
+    // The vocabulary map from Travatar vocab to LM vocab
+    VocabMap * vocab_map_;
+    // The weight assigned to this particular LM
+    double lm_weight_, lm_unk_weight_;
+    // The factor to use
+    int factor_; 
+};
+
+// A parent class for search algorithms that compose a rule graph with a
+// target side language model
+class LMComposer : public GraphTransformer {
+    
+protected:
+    std::vector<LMData*> lm_data_;
+
+public:
+    LMComposer(const std::string & str);
+    LMComposer(lm::ngram::Model * model, VocabMap* vocab_map) {
+        LMData * data = new LMData(model,vocab_map);
+        lm_data_.push_back(data);
+    }
+        
+    std::vector<LMData*> & GetData() { return lm_data_; }
+    const std::vector<LMData*> & GetData() const { return lm_data_; }
+
+    virtual ~LMComposer() {
+        BOOST_FOREACH(LMData* data, lm_data_)
+            if(data) delete data;
+    }
+
+    void UpdateWeights(const SparseMap & weights) {
+        BOOST_FOREACH(LMData* data, lm_data_) {
+            SparseMap::const_iterator it1 = weights.find(data->GetFeatureName());
+            data->SetWeight(it1 != weights.end() ? it1->second : 0);
+            SparseMap::const_iterator it2 = weights.find(data->GetUnkFeatureName());
+            data->SetUnkWeight(it2 != weights.end() ? it2->second : 0);
+        }
+    }
+
+    // Compose the rule graph with a language model
+    virtual HyperGraph * TransformGraph(const HyperGraph & hg) const = 0;
 
 };
 

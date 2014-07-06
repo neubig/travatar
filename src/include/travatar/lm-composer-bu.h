@@ -25,10 +25,11 @@ protected:
     int chart_limit_;
 
 public:
-    LMComposerBU(const std::string & str, int factor = 0) :
-        LMComposer(str, factor), stack_pop_limit_(0), chart_limit_(0) { }
-    LMComposerBU(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
-        LMComposer(lm, vocab_map, factor), stack_pop_limit_(0), chart_limit_(0) { }
+    LMComposerBU(const std::string & str) :
+        LMComposer(str), stack_pop_limit_(0), chart_limit_(0) { }
+    LMComposerBU(lm::ngram::Model * lm, VocabMap * vocab_map) :
+        LMComposer(lm, vocab_map), stack_pop_limit_(0), chart_limit_(0) { }
+    
     virtual ~LMComposerBU() { }
 
     // Intersect this graph with a language model, using cube pruning to control
@@ -46,7 +47,7 @@ protected:
     const ChartEntry & BuildChartCubePruning(
                         const HyperGraph & parse,
                         std::vector<boost::shared_ptr<ChartEntry> > & chart, 
-                        std::vector<lm::ngram::ChartState> & states, 
+                        std::vector<std::vector<lm::ngram::ChartState> > & states, 
                         int id,
                         HyperGraph & graph) const;
 

@@ -171,8 +171,11 @@ public:
 
         // Intersect the graph with the LM
         LMComposerBU lm(file_name_.c_str());
-        lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
+        SparseMap weights;
+        weights[Dict::WID("lmunk")] = -20;
+        weights[Dict::WID("lm")] = 1;
+        lm.UpdateWeights(weights);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
         return exp_graph->CheckEqual(*act_graph);
 
@@ -265,8 +268,11 @@ public:
 
         // Intersect the graph with the LM
         LMComposerIncremental lm(file_name_);
-        lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(3);
+        SparseMap weights;
+        weights[Dict::WID("lmunk")] = -20;
+        weights[Dict::WID("lm")] = 1;
+        lm.UpdateWeights(weights);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
         return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
 
@@ -377,8 +383,11 @@ public:
         e_root_xb->AddTrgWord(-1);
         // Intersect the graph with the LM
         LMComposerBU lm(file_name_.c_str());
-        lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(5);
+        SparseMap weights;
+        weights[Dict::WID("lmunk")] = -20;
+        weights[Dict::WID("lm")] = 1;
+        lm.UpdateWeights(weights);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
         return act_graph.get() && exp_graph->CheckEqual(*act_graph);
 
@@ -497,8 +506,11 @@ public:
 
         // Intersect the graph with the LM
         LMComposerIncremental lm(file_name_.c_str());
-        lm.SetUnkWeight(-20);
         lm.SetStackPopLimit(5);
+        SparseMap weights;
+        weights[Dict::WID("lmunk")] = -20;
+        weights[Dict::WID("lm")] = 1;
+        lm.UpdateWeights(weights);
         shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
         return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
 

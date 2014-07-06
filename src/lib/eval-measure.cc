@@ -71,8 +71,8 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     lm_config.messages = NULL;
     lm::ngram::Model* lm_model = new lm::ngram::Model("/tmp/oracle.arpa", lm_config);
     LMComposerBU bu(lm_model, lm_save.GetAndFreeVocabMap());
-    bu.SetFeatureName("oraclelm");
-    bu.SetWeight(1);
+    bu.GetData()[0]->SetFeatureName(Dict::WID("oraclelm"));
+    bu.GetData()[0]->SetWeight(1);
     bu.SetStackPopLimit(POP_LIMIT);
     // Decode with the reference
     HyperGraph rescored_graph(graph);

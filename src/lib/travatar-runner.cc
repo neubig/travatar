@@ -206,16 +206,14 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         // Set the LM Composer
         if(config.GetString("search") == "cp") {
             LMComposerBU * bu = new LMComposerBU(config.GetString("lm_file"));
-            bu->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
-            bu->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
             bu->SetStackPopLimit(config.GetInt("pop_limit"));
             bu->SetChartLimit(config.GetInt("chart_limit"));
+            bu->UpdateWeights(weights_->GetCurrent());
             lm_.reset(bu);
         } else if(config.GetString("search") == "inc") {
             LMComposerIncremental * inc = new LMComposerIncremental(config.GetString("lm_file"));
-            inc->SetWeight(weights_->GetCurrent(Dict::WID("lm")));
-            inc->SetUnkWeight(weights_->GetCurrent(Dict::WID("lmunk")));
             inc->SetStackPopLimit(config.GetInt("pop_limit"));
+            inc->UpdateWeights(weights_->GetCurrent());
             lm_.reset(inc);
         } else {
             THROW_ERROR("Unknown search algorithm: " << config.GetString("search"));

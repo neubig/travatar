@@ -364,27 +364,6 @@ public:
     GenericString<int> id_;
 };
 
-inline string PrintContext(const State & context) {
-    ostringstream out;
-    out << "[";
-    for(unsigned i = 0; i < context.length; i++) {
-        if(i != 0) out << ", ";
-        out << context.words[i];
-    }
-    out << "]";
-    return out.str();
-}
-inline string PrintContext(const Left & context) {
-    ostringstream out;
-    out << "[";
-    for(unsigned i = 0; i < context.length; i++) {
-        if(i != 0) out << ", ";
-        out << context.pointers[i];
-    }
-    out << "]";
-    return out.str();
-}
-
 void HyperEdge::SetRule(const TranslationRule * rule, const SparseMap & orig_features) {
     rule_str_ = rule->GetSrcStr();
     features_ = rule->GetFeatures() + orig_features;

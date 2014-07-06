@@ -113,6 +113,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
     // For the edges coming from this node, add them to the EdgeGenerator
     search::EdgeGenerator edges;
     int num_edges = 0;
+    LMData* data = lm_data_[0];
     if(id < 0 || id >= (int)nodes.size() || nodes[id] == NULL)
         THROW_ERROR("Bad id=" << id << " at nodes.size() == " << nodes.size());
     BOOST_FOREACH(const HyperEdge * edge, nodes[id]->GetEdges()) {
@@ -123,7 +124,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
         float below_score = 0.0;
         int unk = 0;
         // Iterate over all output words in the target edge
-        BOOST_FOREACH(WordId wid, edge->GetTrgData()[factor_].words) {
+        BOOST_FOREACH(WordId wid, edge->GetTrgData()[data->GetFactor()].words) {
             // Add non-terminal
             if(wid < 0) {
                 words.push_back(lm::kMaxWordIndex);
@@ -137,7 +138,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
                 below_score += children.back()->Bound();
             // Add terminal
             } else {
-                lm::WordIndex index = GetMapping(wid);
+                lm::WordIndex index = data->GetMapping(wid);
                 if(index == 0) unk++;
                 words.push_back(index);
                 ++terminals;
@@ -155,8 +156,8 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
             *nt = (*i)->RootAlternate();
 
         // Score the rule
-        search::ScoreRuleRet score = search::ScoreRule(*lm_, words, pedge.Between());
-        pedge.SetScore(below_score + edge->GetScore() + lm_weight_ * score.prob + lm_unk_weight_ * score.oov);
+        search::ScoreRuleRet score = search::ScoreRule(*data->GetLM(), words, pedge.Between());
+        pedge.SetScore(below_score + edge->GetScore() + data->GetWeight() * score.prob + data->GetUnkWeight() * score.oov);
         best.SetLMUnk(edge->GetId(), score.oov);
 
         // Set the note
@@ -187,9 +188,10 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     search::EdgeGenerator edges;
     std::vector<lm::WordIndex> words(3,0);
     // Calculate the word indexes
-    words[0] = lm_->GetVocabulary().Index("<s>");
+    LMData* data = lm_data_[0];
+    words[0] = data->GetLM()->GetVocabulary().Index("<s>");
     words[1] = lm::kMaxWordIndex;
-    words[2] = lm_->GetVocabulary().Index("</s>");
+    words[2] = data->GetLM()->GetVocabulary().Index("</s>");
     // Allocate the edge
     search::PartialEdge pedge(edges.AllocateEdge(1));
     (*pedge.NT()) = vertices[0]->RootAlternate();
@@ -200,8 +202,8 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     pedge.SetNote(note);
     edges.AddEdge(pedge);
     // Perform scoring and add the edge
-    search::ScoreRuleRet score = search::ScoreRule(*lm_, words, pedge.Between());
-    pedge.SetScore(below_score + lm_weight_ * score.prob + lm_unk_weight_ * score.oov);
+    search::ScoreRuleRet score = search::ScoreRule(*data->GetLM(), words, pedge.Between());
+    pedge.SetScore(below_score + data->GetWeight() * score.prob + data->GetUnkWeight() * score.oov);
     edges.AddEdge(pedge);
     // Create the vertex
     vertices[id] = new search::Vertex;
@@ -218,9 +220,10 @@ HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) con
 
     // Create the search configuration
     search::NBestConfig nconfig(edge_limit_);
-    search::Config config(lm_weight_, stack_pop_limit_, nconfig);
-    search::Context<lm::ngram::Model> context(config, *lm_);
-    search::Forest best(lm_weight_, lm_unk_weight_, factor_);
+    LMData* data = lm_data_[0];
+    search::Config config(data->GetWeight(), stack_pop_limit_, nconfig);
+    search::Context<lm::ngram::Model> context(config, *data->GetLM());
+    search::Forest best(data->GetWeight(), data->GetUnkWeight(), data->GetFactor());
 
     // Create the search graph
     vector<search::Vertex*> vertices(parse.NumNodes() + 1);

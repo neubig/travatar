@@ -83,10 +83,13 @@ protected:
     int edge_limit_;
 
 public:
-    LMComposerIncremental(const std::string & str, int factor = 0) :
-        LMComposer(str, factor), stack_pop_limit_(0), edge_limit_(1000) { }
+    LMComposerIncremental(const std::string & str) :
+        LMComposer(str), stack_pop_limit_(0), edge_limit_(1000) {
+        if(lm_data_.size() != 1)
+            THROW_ERROR("Cannot perform search using 'inc' when using more than one language model. Try using 'cp' instead.");
+    }
     LMComposerIncremental(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
-        LMComposer(lm, vocab_map, factor), stack_pop_limit_(0), edge_limit_(1000) { }
+        LMComposer(lm, vocab_map), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }
 
     // Intersect this graph with a language model, using incremental search
