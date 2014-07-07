@@ -76,23 +76,32 @@ vector< vector<HieroRule*> > HieroExtractor::ExtractHieroRule(const Alignment & 
         vector<HieroRule*> extracted;
         // Phrases
         HieroRule *rule = ParseLexicalTranslationRule(source,target,pairs[ii],src_align);
-        if(HieroExtractor::IsRuleValid(rule,max_terminals_))
+        if(HieroExtractor::IsRuleValid(rule,max_terminals_)) {
             extracted.push_back(rule);
+        } else {
+            delete rule;
+        }
         for (int jj=0; jj < (int)pairs.size(); ++jj) {
             if (jj == ii || !InPhrase(pairs[jj],pairs[ii])) 
                 continue;
             // Unary rule
             rule = ParseUnaryPhraseRule(source,target,pairs[jj],pairs[ii],src_align);
-            if(HieroExtractor::IsRuleValid(rule,max_terminals_))
+            if(HieroExtractor::IsRuleValid(rule,max_terminals_)) {
                 extracted.push_back(rule);
+            } else {
+                delete rule;
+            }
             // Binary rule
             for (int kk=jj+1; kk < (int)pairs.size(); ++kk) {
                 // that are in the span of INITIAL phrase, and NOT overlapping each other
                 if (kk == jj || !InPhrase(pairs[kk],pairs[ii]) || !InPhrase(pairs[jj],pairs[ii]) || IsPhraseOverlapping(pairs[jj],pairs[kk])) 
                     continue;
                 rule = ParseBinaryPhraseRule(source,target,pairs[jj],pairs[kk],pairs[ii],src_align);
-                if(HieroExtractor::IsRuleValid(rule,max_terminals_))
+                if(HieroExtractor::IsRuleValid(rule,max_terminals_)) {
                     extracted.push_back(rule);
+                } else {
+                    delete rule;
+                }
             }
         }
         if (extracted.size() > static_cast<unsigned int>(0)) {
