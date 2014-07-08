@@ -43,7 +43,7 @@ public:
         AddConfigEntry("threads", "1", "The number of threads to use");
         AddConfigEntry("threshold", "1e-6", "Terminate when gains are less than this");
         AddConfigEntry("trg_factors", "1", "The number of factors in the target");
-        AddConfigEntry("tune_factor", "1", "The factor to use as the target of tuning");
+        AddConfigEntry("tune_factor", "0", "The factor to use as the target of tuning");
         AddConfigEntry("update", "perceptron", "Which online update to use");
         AddConfigEntry("weight_in", "", "File of initial weights");
         AddConfigEntry("weight_ranges", "", "A space-separated string of MIN|MAX|NAME. When NAME is omitted all non-specified features will be assigned this range.");
