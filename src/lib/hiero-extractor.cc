@@ -398,13 +398,14 @@ std::string HieroRule::ToString() const {
             ss << "x" << -1-trg_words_[i] << ":X";
         }
     }
-    ss << " @ X [";
-    for (unsigned i=0; i < alignments_.size(); ++i){
-        pair<int,int> k = alignments_[i];
-        if (i) ss << " ";
-        ss << k.first << "-" << k.second;
-    }
-    ss << "]";
+    ss << " @ X";
+    // ss << " [";
+    // for (unsigned i=0; i < alignments_.size(); ++i){
+    //     pair<int,int> k = alignments_[i];
+    //     if (i) ss << " ";
+    //     ss << k.first << "-" << k.second;
+    // }
+    // ss << "]";
     return ss.str();
 }
 

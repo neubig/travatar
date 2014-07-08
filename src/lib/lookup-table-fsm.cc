@@ -282,8 +282,11 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap* node_map,
 {
     // // DEBUG start
     // cerr << " TransformRule @ " << make_pair(head_first,head_second) << " ->";
-    // BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) cerr << " " << Dict::WSym(rule->GetSrcData().GetSym(tsk.first)) << tsk.second;
-    // cerr << " " << rule->GetSrcStr() << endl;
+    // BOOST_FOREACH(const TailSpanKey & tsk, tail_spans) {
+    //     WordId symid = rule->GetSrcData().GetSym(tsk.first);
+    //     cerr << " " << (symid >= 0 ? Dict::WSym(symid) : "NULL") << "---" << tsk.second;
+    // }
+    // cerr << " ||| " << rule->GetSrcStr() << endl;
     // // DEBUG end
 
     HyperEdge* hedge = new HyperEdge;

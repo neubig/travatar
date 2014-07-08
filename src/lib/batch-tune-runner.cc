@@ -37,7 +37,7 @@ void BatchTuneRunnerTask::Run() {
 
 void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
     string line;
-    regex threebars(" \\|\\|\\| ");
+    regex threebars(" \\|\\|\\| "),  barcolbar(" \\|COL\\| ");
     while(getline(sys_in, line)) {
         vector<string> columns;
         algorithm::split_regex(columns, line, threebars);
@@ -45,7 +45,11 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         // Get the number
         int id = atoi(columns[0].c_str());
-        Sentence hyp = Dict::ParseWords(columns[1]);
+        // Get the factors... For now, just use a single factor
+        vector<string> factors;
+        algorithm::split_regex(factors, columns[1], barcolbar);
+        Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
+        // Get the features
         SparseMap feat = Dict::ParseFeatures(columns[3]);
         // Calculate the score
         const Sentence & ref = SafeAccess(refs_,id);
@@ -253,15 +257,17 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
         THROW_ERROR(filename << " could not be opened for reading");
     // Process the file one by one
     string line;
-    regex threebars(" \\|\\|\\| ");
+    regex threebars(" \\|\\|\\| "),  barcolbar(" \\|COL\\| ");
     while(getline(sys_in, line)) {
         vector<string> columns;
         algorithm::split_regex(columns, line, threebars);
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         int id = atoi(columns[0].c_str());
-        std::vector<Sentence> hyps = Dict::ParseWordVector(columns[1]);
-        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyps[tune_factor_], id);
+        vector<string> factors;
+        algorithm::split_regex(factors, columns[1], barcolbar);
+        Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
+        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyp, id);
         stat_out << stats->WriteStats() << endl;
     }
 }
