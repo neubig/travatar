@@ -49,8 +49,9 @@ AC_LANG([C++])
 AC_CHECK_HEADERS([tr1/unordered_map])
 AC_CHECK_HEADERS([ext/hash_map])
 
-# Check if we have rt
+# Check if we have rt/boost
 AC_CHECK_LIB([rt], [timer_create], [AC_SUBST(LIBRT, "-lrt")], [])
+AC_CHECK_LIB([boost_system-mt], [main], [AC_SUBST(BOOSTMT, "-mt")], [])
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
