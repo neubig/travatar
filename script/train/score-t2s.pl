@@ -34,7 +34,7 @@ GetOptions(
     "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
     "fof-file=s" => \$FOF_FILE,           # Save frequencies of frequencies to a file
 );
-my $LEX_ALL = ($LEX_TYPE eq "all");
+my $LEX_ALIGNED = ($LEX_TYPE eq "aligned");
 
 if(@ARGV != 0) {
     print STDERR "Usage: $0 < INPUT > OUTPUT\n";
@@ -72,7 +72,7 @@ sub m1prob {
     my ($srcarr, $trgarr, $align) = @_;
     my $ret;
     # If we have an alignment, calculate using it
-    if($align) {
+    if($LEX_ALIGNED and $align) {
         my (@probs, @num);
         while($align =~ /([0-9]+)-([0-9]+)/g) {
             $probs[$1] += $lex{"$trgarr->[$2]\t$srcarr->[$1]"};
