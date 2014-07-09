@@ -18,7 +18,6 @@ my $PREFIX = "";
 my $JOINT = 0;
 my $COND_PREFIX = "egf";
 my $FOF_MAX = 20;
-my $KEEP_EMPTY = 0;
 my $FOF_FILE;
 GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
@@ -32,7 +31,6 @@ GetOptions(
     "trg-label" => \$TRG_LABEL,           # Calculate sparse features for the target labels
     "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
     "fof-file=s" => \$FOF_FILE,           # Save frequencies of frequencies to a file
-    "keep-empty" => \$KEEP_EMPTY,         # Keep rules that have an empty string on one side
 );
 
 if(@ARGV != 0) {
@@ -58,32 +56,25 @@ if($LEX_PROB_FILE) {
 }
 
 sub strip_arr {
-    my $str = shift;
-    my $isstring = !($str =~ /^[^ ]+ \( /);
     my @ret;
-    my @arr = split(/ +/, $str);
-    for(@arr) {
-        return @ret if($isstring and ($_ eq "@")); # Skip syntactic labels
-        # Check if there are quotes and remove them
-        # Doing this with substrings is uglier than a regex but faster
-        if((substr($_,0,1) eq "\"") and (substr($_,-1) eq "\"")) {
-            push @ret, substr($_, 1, -1);
-        }
+    while($_[0] =~ /"([^ ]+)"/g) {
+        push @ret, $1;
     }
     return @ret;
 }
 
 # Calculate the m1 probability of f given e
-my $min_prob = 1e-7;
+my $min_log = -20;
 sub m1prob {
-    my ($srcarr, $trgarr) = @_;
-    my $ret = 0;
-    foreach my $f (@$trgarr) {
-        my $prob = 0;
-        foreach my $e (@$srcarr, "NULL") {
-            $prob += max($min_prob, $lex{"$f\t$e"});
-        }
-        $ret += ($prob ? log($prob/(@$srcarr+1)) : -99);
+    my ($srcarr, $trgarr, $align) = @_;
+    my (@probs, @num, $ret);
+    while($align =~ /([0-9]+)-([0-9]+)/g) {
+        $probs[$1] += $lex{"$trgarr->[$2]\t$srcarr->[$1]"};
+        $num[$1] += 1;
+    }
+    for(0 .. @$trgarr-1) {
+        my $prob = ($num[$_] ? $probs[$_]/$num[$_] : $lex{"$trgarr->[$_]\tNULL"});
+        $ret += ($prob ? log($prob) : $min_log);
     }
     return $ret;
 }
@@ -91,23 +82,24 @@ sub m1prob {
 my @fof;
 my $SYNTAX_FEATS = ($TRG_SYNTAX or $SRC_LABEL or $TRG_LABEL or $SRC_TRG_LABEL);
 sub print_counts {
-    my $src = shift;
-    my $counts = shift;
-    return if ($src eq "") and not $KEEP_EMPTY;
-    my @srcarr = strip_arr($src);
-    my $sum = sum(map { $_->[1] } @$counts);
+    my ($src, $counts) = @_;
+    my $sum;
+    for(@$counts) { $sum += $_->[1]; }
     return if $sum < $SRC_MIN_FREQ;
-    my $lsum = log($sum);
+    my @srcarr = strip_arr($src);
+    # my $lsum = log($sum);
     foreach my $kv (@$counts) {
-        my $trg = $kv->[0];
-        my $cnt = $kv->[1];
-        next if ($trg eq "") and not $KEEP_EMPTY;
+        my ($trg, $cnt, $align) = @$kv;
         # Find the number of words
-        my $words = 0;
         my @trgarr = strip_arr($trg);
         # Find the best alignment
-        my $align = $kv->[2];
-        my $bestalign = reduce { $align->{$a} > $align->{$b} ? $a : $b } keys %$align;
+        my ($bestalign, $maxalign);
+        while(my ($k,$v) = each(%$align)) {
+            if($v > $maxalign) {
+                $bestalign = $k;
+                $maxalign = $v;
+            }
+        }
         # If we are using target side syntax and the rule is bad
         my $extra_feat;
         if($SYNTAX_FEATS) {
@@ -121,12 +113,11 @@ sub print_counts {
             $extra_feat .= " ${PREFIX}stl_${src_lab}_${trg_lab}=1" if $SRC_TRG_LABEL and $src_lab and $trg_lab;
         }
         # Find the counts/probabilities
-        my $lfreq = ($cnt > 0) ? log($cnt) : -99;
-        my $lprob = $lfreq-$lsum;
+        my $lprob = ($cnt > 0) ? log($cnt/$sum) : -99;
         print "$src ||| $trg ||| ".sprintf("${PREFIX}${COND_PREFIX}p=%f$extra_feat", $lprob);
-        printf " ${PREFIX}${COND_PREFIX}l=%f", m1prob(\@srcarr, \@trgarr) if $LEX_PROB_FILE;
+        printf " ${PREFIX}${COND_PREFIX}l=%f", m1prob(\@srcarr, \@trgarr, $bestalign) if $LEX_PROB_FILE;
         if($JOINT) {
-            printf sprintf(" ${PREFIX}p=1 ${PREFIX}lfreq=%f", $lfreq);
+            printf " ${PREFIX}p=1";
             print " ${PREFIX}w=".scalar(@trgarr) if (@trgarr);
         }
         print " ||| $cnt $sum ||| $bestalign\n";
