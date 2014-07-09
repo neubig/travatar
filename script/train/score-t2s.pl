@@ -67,14 +67,27 @@ sub strip_arr {
 my $min_log = -20;
 sub m1prob {
     my ($srcarr, $trgarr, $align) = @_;
-    my (@probs, @num, $ret);
-    while($align =~ /([0-9]+)-([0-9]+)/g) {
-        $probs[$1] += $lex{"$trgarr->[$2]\t$srcarr->[$1]"};
-        $num[$1] += 1;
-    }
-    for(0 .. @$trgarr-1) {
-        my $prob = ($num[$_] ? $probs[$_]/$num[$_] : $lex{"$trgarr->[$_]\tNULL"});
-        $ret += ($prob ? log($prob) : $min_log);
+    my $ret;
+    # If we have an alignment, calculate using it
+    if($align) {
+        my (@probs, @num);
+        while($align =~ /([0-9]+)-([0-9]+)/g) {
+            $probs[$1] += $lex{"$trgarr->[$2]\t$srcarr->[$1]"};
+            $num[$1] += 1;
+        }
+        for(0 .. @$trgarr-1) {
+            my $prob = ($num[$_] ? $probs[$_]/$num[$_] : $lex{"$trgarr->[$_]\tNULL"});
+            $ret += ($prob ? log($prob) : $min_log);
+        }
+    # Otherwise, calculate all
+    } else {
+        foreach my $f (@$trgarr) {
+            my $prob = 0;
+            foreach my $e (@$srcarr, "NULL") {
+                $prob += $lex{"$f\t$e"};
+            }
+            $ret += ($prob ? log($prob/@$srcarr) : $min_log);
+        }
     }
     return $ret;
 }
