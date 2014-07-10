@@ -2,7 +2,6 @@
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/sentence.h>
 #include <travatar/input-file-stream.h>
@@ -19,8 +18,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     string line;
     RuleFSM * ret = new RuleFSM;
     while(getline(in, line)) {
-        vector<string> columns;
-        algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
+        vector<string> columns = Tokenize(line, " ||| ");;
         if(columns.size() < 3)
             THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
         CfgData src_data = Dict::ParseAnnotatedWords(columns[0]);
