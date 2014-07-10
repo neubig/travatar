@@ -89,7 +89,7 @@ sub m1prob {
             foreach my $e (@$srcarr, "NULL") {
                 $prob += $lex{"$f\t$e"};
             }
-            $ret += ($prob ? log($prob/@$srcarr) : $min_log);
+            $ret += ($prob ? log($prob/(@$srcarr+1)) : $min_log);
         }
     }
     return $ret;
