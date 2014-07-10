@@ -10,6 +10,7 @@ binmode STDERR, ":utf8";
 
 my $SRC_MIN_FREQ = 0;
 my $LEX_PROB_FILE = "";
+my $LEX_TYPE = "all";
 my $TRG_SYNTAX = 0;
 my $SRC_LABEL = 0;
 my $TRG_LABEL = 0;
@@ -23,6 +24,7 @@ GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
                                           # calculating model 1
+    "lex-type=s" => \$LEX_TYPE,           # Calculate lexical probs. using "all" or "aligned" words
     "cond-prefix=s" => \$COND_PREFIX,     # Prefix for model 1
     "prefix=s" => \$PREFIX,               # Prefix for all features
     "joint" => \$JOINT,                   # word/phrase/lfreq features or not
@@ -32,6 +34,7 @@ GetOptions(
     "src-trg-label" => \$SRC_TRG_LABEL,   # Calculate sparse features for the source/target labels
     "fof-file=s" => \$FOF_FILE,           # Save frequencies of frequencies to a file
 );
+my $LEX_ALIGNED = ($LEX_TYPE eq "aligned");
 
 if(@ARGV != 0) {
     print STDERR "Usage: $0 < INPUT > OUTPUT\n";
@@ -69,7 +72,7 @@ sub m1prob {
     my ($srcarr, $trgarr, $align) = @_;
     my $ret;
     # If we have an alignment, calculate using it
-    if($align) {
+    if($LEX_ALIGNED and $align) {
         my (@probs, @num);
         while($align =~ /([0-9]+)-([0-9]+)/g) {
             $probs[$1] += $lex{"$trgarr->[$2]\t$srcarr->[$1]"};
@@ -86,7 +89,7 @@ sub m1prob {
             foreach my $e (@$srcarr, "NULL") {
                 $prob += $lex{"$f\t$e"};
             }
-            $ret += ($prob ? log($prob/@$srcarr) : $min_log);
+            $ret += ($prob ? log($prob/(@$srcarr+1)) : $min_log);
         }
     }
     return $ret;
