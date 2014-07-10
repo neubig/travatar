@@ -1,7 +1,6 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/config-batch-tune.h>
@@ -37,17 +36,14 @@ void BatchTuneRunnerTask::Run() {
 
 void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
     string line;
-    regex threebars(" \\|\\|\\| "),  barcolbar(" \\|COL\\| ");
     while(getline(sys_in, line)) {
-        vector<string> columns;
-        algorithm::split_regex(columns, line, threebars);
+        vector<string> columns = Tokenize(line, " ||| ");
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         // Get the number
         int id = atoi(columns[0].c_str());
         // Get the factors... For now, just use a single factor
-        vector<string> factors;
-        algorithm::split_regex(factors, columns[1], barcolbar);
+        vector<string> factors = Tokenize(columns[1], " |COL| ");
         Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
         // Get the features
         SparseMap feat = Dict::ParseFeatures(columns[3]);
@@ -257,15 +253,12 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
         THROW_ERROR(filename << " could not be opened for reading");
     // Process the file one by one
     string line;
-    regex threebars(" \\|\\|\\| "),  barcolbar(" \\|COL\\| ");
     while(getline(sys_in, line)) {
-        vector<string> columns;
-        algorithm::split_regex(columns, line, threebars);
+        vector<string> columns = Tokenize(line, " ||| ");
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         int id = atoi(columns[0].c_str());
-        vector<string> factors;
-        algorithm::split_regex(factors, columns[1], barcolbar);
+        vector<string> factors = Tokenize(columns[1], " |COL| ");
         Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
         EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyp, id);
         stat_out << stats->WriteStats() << endl;

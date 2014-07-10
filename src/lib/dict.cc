@@ -1,8 +1,6 @@
 #include <boost/foreach.hpp>
-#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <travatar/util.h>
 #include <travatar/dict.h>
 #include <travatar/symbol-set.h>
@@ -134,7 +132,6 @@ std::vector<Sentence> Dict::ParseWordVector(const std::string & str) {
 }
 
 CfgData Dict::ParseAnnotatedWords(const std::string & str) {
-    smatch str_match;
     CfgData data;
     std::istringstream iss(str);
     std::string buff;

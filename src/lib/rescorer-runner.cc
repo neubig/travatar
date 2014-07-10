@@ -2,7 +2,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <travatar/dict.h>
 #include <travatar/config-rescorer-runner.h>
 #include <travatar/rescorer-runner.h>
@@ -131,13 +130,11 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     }
 
     // Load n-best lists
-    regex threebars(" \\|\\|\\| ");
     RescorerNbest nbest;
     int last_id = -1;
     string line;
     while(getline(*nbest_in, line)) {
-        vector<string> columns;
-        algorithm::split_regex(columns, line, threebars);
+        vector<string> columns = Tokenize(line, " ||| ");
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         // Parse the values

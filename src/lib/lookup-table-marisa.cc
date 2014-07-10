@@ -1,6 +1,5 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <sstream>
 #include <marisa/marisa.h>
 #include <travatar/lookup-table-marisa.h>
@@ -37,14 +36,12 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
     // First read in the rule table
     string line;
     LookupTableMarisa * ret = new LookupTableMarisa;
-    regex threebars(" \\|\\|\\| ");
     // Rule table
     typedef vector<TranslationRule*> RuleVec;
     vector<RuleVec> rules;
     marisa::Keyset keyset;
     while(getline(in, line)) {
-        vector<string> columns;
-        algorithm::split_regex(columns, line, threebars);
+        vector<string> columns = Tokenize(line, " ||| ");
         if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
         vector<WordId> trg_words, trg_syms;
         CfgDataVector trg_data = Dict::ParseAnnotatedVector(columns[1]);

@@ -4,7 +4,6 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/input-file-stream.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <sstream>
 
 using namespace travatar;
@@ -55,8 +54,7 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
     string line;
     LookupTableHash * ret = new LookupTableHash;
     while(getline(in, line)) {
-        vector<string> columns, words;
-        algorithm::split_regex(columns, line, regex(" \\|\\|\\| "));
+        vector<string> columns = Tokenize(line, " ||| "), words;
         if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
         algorithm::split(words, columns[0], is_any_of(" "));
         ostringstream partial;
