@@ -258,7 +258,7 @@ if(not $TM_FILE) {
         my $gfile = "$WORK_DIR/model/glue-rules";
         open GFILE, ">:utf8", $gfile or die "Couldn't open $gfile\n";
         print GFILE "x0:X @ S ||| x0:X @ S ||| \n";
-        print GFILE "x0:S x1:X @ S ||| x0:S x1:X @ S ||| glue=1\n";
+        print GFILE "x0:X x1:S @ S ||| x0:X x1:S @ S ||| glue=1\n";
         close GFILE;
         $TM_FILE .= "\n$gfile";
     }

@@ -11,17 +11,26 @@
 #include <generic-string.h>
 
 namespace travatar {
+
+class LookupNodeFSM;
+typedef std::vector<std::pair<int,int> > HieroRuleSpans;
+typedef std::pair<WordId, std::pair<int,int> > HieroNodeKey;
+typedef std::map<HieroNodeKey, HyperNode*> HieroNodeMap;
+typedef std::vector<HyperEdge* > EdgeList;
+typedef std::pair<int, std::pair<int,int> > TailSpanKey;
+typedef std::map<WordId,std::set<WordId> > UnaryMap;
+typedef std::map<WordId, LookupNodeFSM*> LookupNodeMap;
+
 class LookupNodeFSM {
-typedef std::map<WordId, LookupNodeFSM*> HieroNodeMap;
 protected:
-    HieroNodeMap lookup_map;
+    LookupNodeMap lookup_map;
     std::vector<TranslationRuleHiero*> rules;
     std::set<WordId> labels;
 public:
     LookupNodeFSM() { }
 
     virtual ~LookupNodeFSM() { 
-        BOOST_FOREACH(HieroNodeMap::value_type &it, lookup_map) {
+        BOOST_FOREACH(LookupNodeMap::value_type &it, lookup_map) {
             delete it.second++;
         }
         BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
@@ -29,22 +38,21 @@ public:
         }
     }
     
-    virtual void AddEntry(WordId & key, LookupNodeFSM* rule);
-    virtual LookupNodeFSM* FindNode(WordId key) const;
-    virtual void AddRule(TranslationRuleHiero* rule);
-    virtual std::string ToString(int indent) const;
-    virtual std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
-};  
+    void AddEntry(WordId & key, LookupNodeFSM* rule);
+    LookupNodeFSM* FindNode(WordId key) const;
+    LookupNodeMap & GetNodeMap() { return lookup_map; }
+    const LookupNodeMap & GetNodeMap() const { return lookup_map; }
+    void AddRule(TranslationRuleHiero* rule);
+    std::string ToString(int indent) const;
+    std::vector<TranslationRuleHiero*> & GetTranslationRules() { return rules; }
 
-typedef std::vector<std::pair<int,int> > HieroRuleSpans;
-typedef std::pair<WordId, std::pair<int,int> > HieroNodeKey;
-typedef std::map<HieroNodeKey, HyperNode*> HieroNodeMap;
-typedef std::vector<HyperEdge* > EdgeList;
-typedef std::pair<int, std::pair<int,int> > TailSpanKey;
+
+};  
 
 class RuleFSM {
 protected:
     LookupNodeFSM* root_node_;
+    UnaryMap unaries_;
     int span_length_;
 public:
 
@@ -122,8 +130,6 @@ public:
     static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
 
     static HyperNode* FindNode(HieroNodeMap* map_ptr, const int span_begin, const int span_end, const WordId);
-protected:
-	void CleanUnreachableNode(EdgeList & edge_list, HieroNodeMap & node_map, HyperNode* root) const;
 
 };
 }

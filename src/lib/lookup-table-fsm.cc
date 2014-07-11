@@ -17,6 +17,7 @@ using namespace boost;
 RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     string line;
     RuleFSM * ret = new RuleFSM;
+    UnaryMap & unaries = ret->unaries_;
     while(getline(in, line)) {
         vector<string> columns = Tokenize(line, " ||| ");;
         if(columns.size() < 3)
@@ -28,16 +29,37 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
             Dict::ParseFeatures(columns[2]),
             src_data
         ); 
+        if(src_data.syms.size() == 1 && src_data.words.size() == 1)
+            unaries[src_data.syms[0]].insert(src_data.label);
         // Sanity check
         BOOST_FOREACH(const CfgData & trg_data, rule->GetTrgData())
             if(trg_data.syms.size() != src_data.syms.size())
                 THROW_ERROR("Mismatched number of non-terminals in rule table: " << endl << line);
         if(src_data.words.size() == 0)
             THROW_ERROR("Empty sources in a rule are not allowed: " << endl << line);
-        if(src_data.syms.size() == 1 && src_data.words.size() == 1 && src_data.syms[0] == src_data.label)
-            THROW_ERROR("Unary rules with identical labels for parent and child are not allowed: " << endl << line);
         // Add the rule
         ret->AddRule(rule);
+    }
+    // Expand unary values
+    bool added = true;
+    while(added) {
+        added = false;
+        BOOST_FOREACH(UnaryMap::value_type & val, unaries) {
+            BOOST_FOREACH(WordId target, val.second) {
+                if(val.first == target)
+                    THROW_ERROR("Unary cycles are not allowed in CFG grammars, but found one with for label " << Dict::WSym(target) << endl);
+                UnaryMap::iterator it = unaries.find(target);
+                if(it != unaries.end()) {
+                    BOOST_FOREACH(WordId second_trg, it->second) {
+                        set<WordId>::iterator it2 = val.second.find(target);
+                        if(it2 == val.second.end()) {
+                            added = true;
+                            val.second.insert(second_trg);
+                        } 
+                    }
+                }
+            }
+        }
     }
     return ret;
 }
@@ -50,9 +72,8 @@ void RuleFSM::AddRule(int position, LookupNodeFSM* target_node, TranslationRuleH
     Sentence rule_sent = rule->GetSrcData().words;
     WordId key = rule_sent[position];
 
-    if (key < 0) {
-        key = -1;
-    }
+    if (key < 0)
+        key = -1 - rule->GetSrcData().GetSym(-1 - key);    
 
     LookupNodeFSM* next_node = target_node->FindNode(key);
     if (next_node == NULL) {
@@ -74,10 +95,11 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     EdgeList edge_list = EdgeList(); 
     // For each starting point
     for(int i = sent.size()-1; i >= 0; i--) {
-        // For each grammar
-        BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
+        // Unknown nodes are possible
+        FindNode(&node_map, i, i+1, GetDefaultSymbol());
+        // For each grammar, add rules
+        BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_)
             rule_fsm->BuildHyperGraphComponent(node_map, edge_list, sent, rule_fsm->GetRootNode(), i, span);
-        }
     }
     vector<bool> checkup_unknown(sent.size(), false);
     vector<TailSpanKey > temp_spans;
@@ -127,9 +149,6 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
         return new HyperGraph;
     }
 
-    // Cleaning unreachable Node
-    CleanUnreachableNode(edge_list, node_map, big_span_node->second);
-
     // Add the root node
     if (big_span_node != node_map.end()) {
         _graph->AddNode(big_span_node->second);
@@ -155,23 +174,6 @@ void RuleFSM::BuildHyperGraphComponent(
     if (position >= (int)input.size())
         return;
 
-    // Processing of non-terminal nodes
-    pair<int,int> temp_pair;
-    LookupNodeFSM* x_node = node->FindNode(-1);
-    if (x_node != NULL) {
-        // Continue until the end of the sentence or the max span length
-        int until = min((int)input.size(), position+span_length_);
-        for(int next_pos = position+1; next_pos <= until; next_pos++) {
-            // Add the rules
-            HieroRuleSpans rule_span_next = HieroRuleSpans(spans);
-            rule_span_next.push_back(make_pair(position,next_pos));
-            BOOST_FOREACH(TranslationRuleHiero* rule, x_node->GetTranslationRules()) 
-                edge_list.push_back(LookupTableFSM::TransformRuleIntoEdge(rule, rule_span_next, node_map));
-            // Recurse to match the next node
-            BuildHyperGraphComponent(node_map, edge_list, input, x_node, next_pos, rule_span_next);
-        }
-    }
-
     // For the nodes that match the words
     LookupNodeFSM* next_node = node->FindNode(input[position]);
     if (next_node != NULL) {
@@ -183,83 +185,46 @@ void RuleFSM::BuildHyperGraphComponent(
         // Recurse to match the following rules
         BuildHyperGraphComponent(node_map, edge_list, input, next_node, position+1, rule_span_next);
     }
-}
 
-void LookupTableFSM::CleanUnreachableNode(EdgeList & input, HieroNodeMap & node_map, HyperNode* root) const {
-    set<HyperNode*> deleted_nodes;
-    set<HyperEdge*> deleted_edges;
-    bool removed;
-    do {
-        removed = false;
-        // Keep track of which nodes
-        set<HyperNode*> has_head;
-        has_head.insert(root);
-        // For each node
-        vector<HieroNodeMap::key_type> del_keys;
-        for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end(); it++) {
-            // Check if each edge in the node is OK
-            vector<HyperEdge*> & node_edge = it->second->GetEdges();
-            for (int i = node_edge.size()-1; i >= 0; --i) {
-                HyperEdge* now = node_edge[i];
-                // Find if at least one tail of the edge is bad
-                vector<HyperNode*> node_child = now->GetTails();
-                bool edge_valid = true;
-                for (int j=0; edge_valid && j < (int)node_child.size(); ++j)
-                    if (node_child[j]->GetEdges().size() == 0) 
-                        edge_valid = false;
-                // If the edge is OK, mark all of its children as having a head
-                if (edge_valid) {
-                    BOOST_FOREACH(HyperNode* child, node_child)
-                        has_head.insert(child);
-                // Otherwise, mark that at least one edge is removed and delete
-                } else {
-                    // cerr << "Removing edge from " << Dict::WSym(it->first.first) << it->first.second << endl;
-                    removed = true;
-                    deleted_edges.insert(now);
-                    node_edge.erase(node_edge.begin()+i);
+    // TODO: insert unknown word processing here
+
+    // Continue until the end of the sentence or the max span length
+    int until = min((int)input.size(), position+span_length_);
+    for(int next_pos = position+1; next_pos <= until; next_pos++) {
+        pair<int,int> span(position,next_pos);
+        // If this is the root, ensure unary nodes are expanded
+        if(node == root_node_) {
+            set<WordId> next_set;
+            int last_size;
+            do {
+                last_size = next_set.size();
+                BOOST_FOREACH(const UnaryMap::value_type & val, unaries_) {
+                    pair<WordId,pair<int,int> > labeled_span(val.first, span);
+                    if(node_map.find(labeled_span) != node_map.end()) {
+                        BOOST_FOREACH(WordId child_lab, val.second) {
+                            next_set.insert(child_lab);
+                            LookupTableFSM::FindNode(&node_map, position, next_pos, child_lab);
+                        }
+                    }
                 }
-            }
-            if (node_edge.size() == 0) {
-                // cerr << "Removing edgeless " << Dict::WSym(it->first.first) << it->first.second << endl;
-                deleted_nodes.insert(it->second);
-                del_keys.push_back(it->first);
-            }   
-        }    
-        BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
-            node_map.erase(del);
-        del_keys.resize(0);
-        // If at least one node is missing a head, perform one more loop through and
-        // remove all nodes without a head
-        // cerr << "has_head.size() == " << has_head.size() << ", node_map.size() == " << node_map.size() << endl;
-        if(has_head.size() != node_map.size()) {
-            removed = true;
-            for (HieroNodeMap::iterator it = node_map.begin(); it != node_map.end(); it++) {
-                if(has_head.find(it->second) == has_head.end()) {
-                    // cerr << "Removing "<<it->second->GetEdges().size()<<" edges from " << Dict::WSym(it->first.first) << it->first.second << endl;
-                    // cerr << "Removing headless node " << Dict::WSym(it->first.first) << it->first.second << endl;
-                    BOOST_FOREACH(HyperEdge* edge, it->second->GetEdges())
-                        deleted_edges.insert(edge);
-                    it->second->GetEdges().resize(0);
-                    deleted_nodes.insert(it->second);
-                    del_keys.push_back(it->first);
-                }
-            }
-            BOOST_FOREACH(HieroNodeMap::key_type & del, del_keys)
-                node_map.erase(del);
+            } while(last_size != (int)next_set.size());
         }
-    } while (removed);
-    // Delete edges
-    for (int i=input.size()-1; i >= 0 ; --i) {
-        if (deleted_edges.find(input[i]) != deleted_edges.end()) {
-            delete input[i];
-            input[i] = NULL;
+        // Add the rules
+        HieroRuleSpans rule_span_next = HieroRuleSpans(spans);
+        rule_span_next.push_back(span);
+        BOOST_FOREACH(LookupNodeMap::value_type & next_node, node->GetNodeMap()) {
+            if(next_node.first >= 0) break;
+            WordId sym = -1 - next_node.first;
+            if(node_map.find(make_pair(sym, span)) != node_map.end()) {
+                BOOST_FOREACH(TranslationRuleHiero* rule, next_node.second->GetTranslationRules())
+                    edge_list.push_back(LookupTableFSM::TransformRuleIntoEdge(rule, rule_span_next, node_map));
+                // Recurse to match the next node
+                BuildHyperGraphComponent(node_map, edge_list, input, next_node.second, next_pos, rule_span_next);
+            }
         }
     }
-    // Delete nodes
-    BOOST_FOREACH(HyperNode* del, deleted_nodes)
-        delete del;
-}
 
+}
 
 HyperEdge* LookupTableFSM::TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span,
     HieroNodeMap & node_map)
@@ -368,7 +333,7 @@ void LookupNodeFSM::AddRule(TranslationRuleHiero* rule) {
 }
 
 LookupNodeFSM* LookupNodeFSM::FindNode(WordId key) const {
-    HieroNodeMap::const_iterator it = lookup_map.find(key); 
+    LookupNodeMap::const_iterator it = lookup_map.find(key); 
     if (it != lookup_map.end()) {
         return it->second;
     } else {
@@ -385,7 +350,7 @@ string LookupNodeFSM::ToString(int indent) const {
         str << rule->ToString() << endl;
     }
     for (int i=0; i < indent; ++i) str << " ";
-    HieroNodeMap::const_iterator it = lookup_map.begin(); 
+    LookupNodeMap::const_iterator it = lookup_map.begin(); 
     while (it != lookup_map.end()) {
         string t_str = it->second->ToString(indent+1);
         str << t_str << endl;
