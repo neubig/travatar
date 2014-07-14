@@ -28,6 +28,7 @@ nobase_include_HEADERS = \
 test_travatar_SOURCES = \
 	test-travatar.cc \
 	test-alignment.cc \
+    test-binarizer.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
