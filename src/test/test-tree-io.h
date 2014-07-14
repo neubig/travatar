@@ -221,7 +221,7 @@ public:
         string tree_str = "(A (B (C x) (D y)) (E z))";
         PennTreeIO penn;
         istringstream iss(tree_str);
-        shared_ptr<HyperGraph> graph(penn.ReadTree(iss));
+        boost::shared_ptr<HyperGraph> graph(penn.ReadTree(iss));
         ostringstream oss; penn.WriteTree(*graph, oss);
         string act_str = oss.str();
         return CheckEqual(tree_str, act_str);
@@ -230,7 +230,7 @@ public:
     int TestWriteRule() {
         RuleTreeIO rule;
         istringstream iss(rule_str);
-        shared_ptr<HyperGraph> graph(rule.ReadTree(iss));
+        boost::shared_ptr<HyperGraph> graph(rule.ReadTree(iss));
         ostringstream oss; rule.WriteTree(*graph, oss);
         string act_str = oss.str();
         return CheckEqual(rule_str, act_str);
@@ -242,7 +242,7 @@ public:
         PennTreeIO penn;
         MosesXMLTreeIO moses;
         istringstream iss(tree_str);
-        shared_ptr<HyperGraph> graph(penn.ReadTree(iss));
+        boost::shared_ptr<HyperGraph> graph(penn.ReadTree(iss));
         ostringstream oss; moses.WriteTree(*graph, oss);
         string act_str = oss.str();
         return CheckEqual(exp_str, act_str);
@@ -254,7 +254,7 @@ public:
         PennTreeIO penn;
         WordTreeIO word;
         istringstream iss(word_str);
-        shared_ptr<HyperGraph> graph(word.ReadTree(iss));
+        boost::shared_ptr<HyperGraph> graph(word.ReadTree(iss));
         ostringstream oss; penn.WriteTree(*graph, oss);
         string act_str = oss.str();
         return CheckEqual(exp_str, act_str);
