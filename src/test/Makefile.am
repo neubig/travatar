@@ -30,6 +30,7 @@ test_travatar_SOURCES = \
 	test-alignment.cc \
     test-binarizer.cc \
     test-dict.cc \
+    test-eval-measure.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
