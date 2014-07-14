@@ -1,6 +1,7 @@
 #ifndef TRAVATAR_ALIGNMENT_H__ 
 #define TRAVATAR_ALIGNMENT_H__
 
+#include <string>
 #include <vector>
 #include <set>
 
