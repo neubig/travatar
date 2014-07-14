@@ -31,6 +31,7 @@ test_travatar_SOURCES = \
     test-binarizer.cc \
     test-dict.cc \
     test-eval-measure.cc \
+    test-graph-transformer.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
