@@ -8,9 +8,6 @@
 #include <travatar/sentence.h>
 #include <boost/foreach.hpp>
 
-using namespace boost;
-
-
 namespace travatar {
 
 class TestHiero : public TestBase {
