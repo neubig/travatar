@@ -32,6 +32,7 @@ test_travatar_SOURCES = \
     test-dict.cc \
     test-eval-measure.cc \
     test-graph-transformer.cc \
+    test-hiero.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
