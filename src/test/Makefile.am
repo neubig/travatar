@@ -29,6 +29,7 @@ test_travatar_SOURCES = \
 	test-travatar.cc \
 	test-alignment.cc \
     test-binarizer.cc \
+    test-dict.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
