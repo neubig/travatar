@@ -1,20 +1,18 @@
 #ifndef TUNE_GREEDY_MERT_H__
 #define TUNE_GREEDY_MERT_H__
 
-#include <vector>
-#include <cfloat>
-#include <boost/thread.hpp>
-#include <tr1/unordered_map>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
-#include <travatar/thread-pool.h>
-#include <travatar/eval-measure.h>
+#include <travatar/task.h>
 #include <travatar/tune.h>
-#include <travatar/tune-mert.h>
+#include <boost/thread.hpp>
+#include <vector>
+#include <cfloat>
+
 
 namespace travatar {
 
+class LineSearchResult;
 class TuningExample;
 class TuneGreedyMert;
 class OutputCollector;
@@ -45,8 +43,7 @@ class TuneGreedyMert : public Tune {
 
 public:
 
-    TuneGreedyMert() : Tune(),
-                       early_terminate_(false) { }
+    TuneGreedyMert();
 
     // Tune new weights using greedy mert
     virtual double RunTuning(SparseMap & weights);
@@ -58,7 +55,7 @@ public:
     void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
     const SparseMap & GetCurrentWeights() { return curr_weights_; }
-    double GetBestGain() { return best_result_.gain; }
+    double GetBestGain(); // { return best_result_.gain; }
     bool GetEarlyTerminate() { return early_terminate_; }
     int GetThreads() const { return threads_; }
     void SetThreads(int threads) { threads_ = threads; }

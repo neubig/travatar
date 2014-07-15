@@ -1,17 +1,23 @@
 #ifndef LM_COMPOSER_INCREMENTAL_H__
 #define LM_COMPOSER_INCREMENTAL_H__
 
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <lm/left.hh>
-#include <search/applied.hh>
-#include <search/edge.hh>
-#include <search/nbest.hh>
-#include <search/edge_generator.hh>
 #include <travatar/lm-composer.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/util.h>
+#include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace search {
+
+class PartialEdge;
+class NBestComplete;
+class Vertex;
+template <class V>
+class Context;
+
+namespace ngram {
+class Model;
+}
 
 class Forest {
 public:
@@ -31,9 +37,7 @@ public:
     typedef std::vector<PartialEdge> Combine;
 
     // At the beginning, just add new edges
-    void Add(std::vector<PartialEdge> &existing, PartialEdge add) const {
-        existing.push_back(add);
-    }
+    void Add(std::vector<PartialEdge> &existing, PartialEdge add) const;
     
     // Return the hypergraph and set the pointer to null
     travatar::HyperGraph* StealPointer() {

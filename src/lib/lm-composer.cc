@@ -1,8 +1,29 @@
 #include <travatar/lm-composer.h>
+#include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace travatar;
+
+void MapEnumerateVocab::Add(lm::WordIndex index, const StringPiece &str) {
+    vocab_map_->insert(std::make_pair(Dict::WID(str.as_string()), index));
+}
+
+LMData::LMData(lm::ngram::Model * model, VocabMap* vocab_map) :
+        lm_feat_(Dict::WID("lm")), lm_unk_feat_(Dict::WID("lmunk")), 
+        lm_(model), vocab_map_(vocab_map), 
+        lm_weight_(1), lm_unk_weight_(0), factor_(0) { }
+
+LMData::~LMData() {
+    if(lm_) delete lm_;
+    if(vocab_map_) delete vocab_map_;
+}
+
+lm::WordIndex LMData::GetMapping(WordId wid) const {
+    VocabMap::const_iterator it = vocab_map_->find(wid);
+    return it == vocab_map_->end() ? 0 : it->second;
+}
 
 LMData::LMData(const std::string & str) : 
         lm_feat_(Dict::WID("lm")), lm_unk_feat_(Dict::WID("lmunk")), lm_weight_(1), lm_unk_weight_(0), factor_(0) { 
@@ -39,4 +60,18 @@ LMComposer::LMComposer(const std::string & str) : lm_data_() {
     std::vector<std::string> params = Tokenize(str, ' ');
     BOOST_FOREACH(const std::string & param, params)
         lm_data_.push_back(new LMData(param));
+}
+
+LMComposer::~LMComposer() {
+    BOOST_FOREACH(LMData* data, lm_data_)
+        if(data) delete data;
+}
+
+void LMComposer::UpdateWeights(const SparseMap & weights) {
+    BOOST_FOREACH(LMData* data, lm_data_) {
+        SparseMap::const_iterator it1 = weights.find(data->GetFeatureName());
+        data->SetWeight(it1 != weights.end() ? it1->second : 0);
+        SparseMap::const_iterator it2 = weights.find(data->GetUnkFeatureName());
+        data->SetUnkWeight(it2 != weights.end() ? it2->second : 0);
+    }
 }

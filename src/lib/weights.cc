@@ -2,27 +2,39 @@
 #include <travatar/weights.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/eval-measure.h>
+#include <travatar/util.h>
 #include <boost/foreach.hpp>
 
 using namespace std;
 using namespace travatar;
 
-namespace travatar {
+void Weights::Adjust(
+        const std::vector<std::pair<double,double> > & scores,
+        const std::vector<SparseMap*> & features) {
+    THROW_ERROR("Standard weights cannot be adjusted");
+}
 
-double operator*(Weights & lhs, const SparseMap & rhs) {
-    double ret = 0;
-    BOOST_FOREACH(const SparsePair & val, rhs) {
-        ret += val.second * lhs.GetCurrent(val.first);
-    }
-    return ret;
+void Weights::Update (
+    const SparseMap & oracle, double oracle_score, double oracle_eval,
+    const SparseMap & system, double system_score, double system_eval
+) {
+    THROW_ERROR("Standard weights cannot be updated");
 }
-double operator*(const Weights & lhs, const SparseMap & rhs) {
-    double ret = 0;
-    BOOST_FOREACH(const SparsePair & val, rhs) {
-        ret += val.second * lhs.GetCurrent(val.first);
-    }
-    return ret;
-}
+
+// double operator*(Weights & lhs, const SparseMap & rhs) {
+//     double ret = 0;
+//     BOOST_FOREACH(const SparsePair & val, rhs) {
+//         ret += val.second * lhs.GetCurrent(val.first);
+//     }
+//     return ret;
+// }
+// double operator*(const Weights & lhs, const SparseMap & rhs) {
+//     double ret = 0;
+//     BOOST_FOREACH(const SparsePair & val, rhs) {
+//         ret += val.second * lhs.GetCurrent(val.first);
+//     }
+//     return ret;
+// }
 
 // Adjust based on a single one-best list
 void Weights::Adjust(const Sentence & src,
@@ -45,5 +57,3 @@ void Weights::Adjust(const Sentence & src,
     BOOST_FOREACH(SparseMap * feat, features)
         delete feat;
 }
-
-};

@@ -10,6 +10,63 @@ using namespace std::tr1;
 using namespace travatar;
 using namespace boost;
 
+std::string EvalStatsInterp::ConvertToString() const {
+    std::ostringstream oss;
+    oss << "INTERP = " << ConvertToScore() << " (";
+    for(int i = 0; i < (int)stats_.size(); i++) {
+        if(i != 0) oss << " + ";
+        oss << stats_[i]->ConvertToScore() << '*' << coeffs_[i];
+    }
+    oss << ")/Z";
+    return oss.str();
+}
+std::string EvalStatsInterp::GetIdString() const { return "INTERP"; }
+double EvalStatsInterp::ConvertToScore() const {
+    double num = 0, denom = 0;
+    for(int i = 0; i < (int)stats_.size(); i++) {
+        num   += coeffs_[i] * stats_[i]->ConvertToScore();
+        denom += coeffs_[i];
+    }
+
+    return num/denom;
+}
+// Check if the value is zero
+bool EvalStatsInterp::IsZero() {
+    BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
+        if(!ptr->IsZero())
+            return false;
+    return true;
+}
+EvalStats & EvalStatsInterp::PlusEquals(const EvalStats & rhs) {
+    const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
+    if(stats_.size() != rhsi.stats_.size())
+        THROW_ERROR("Interpreted eval measure sizes don't match");
+    for(int i = 0; i < (int)stats_.size(); i++)
+        stats_[i]->PlusEquals(*rhsi.stats_[i]);
+    return *this;
+}
+EvalStats & EvalStatsInterp::TimesEquals(EvalStatsDataType mult) {
+    for(int i = 0; i < (int)stats_.size(); i++)
+        stats_[i]->TimesEquals(mult);
+    return *this;
+}
+bool EvalStatsInterp::Equals(const EvalStats & rhs) const {
+    const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
+    if(stats_.size() != rhsi.stats_.size()) return false;
+    for(int i = 0; i < (int)stats_.size(); i++) {
+        if(!stats_[i]->Equals(*rhsi.stats_[i]) || coeffs_[i] != rhsi.coeffs_[i])
+            return false;
+    }
+    return true;
+}
+
+EvalStatsPtr EvalStatsInterp::Clone() const { 
+    std::vector<EvalStatsPtr> newstats;
+    BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
+        newstats.push_back(ptr->Clone());
+    return EvalStatsPtr(new EvalStatsInterp(newstats, coeffs_));
+}
+
 // Measure the score of the sys output according to the ref
 EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 

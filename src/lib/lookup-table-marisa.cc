@@ -1,11 +1,12 @@
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string.hpp>
-#include <sstream>
-#include <marisa/marisa.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/input-file-stream.h>
+#include <travatar/util.h>
+#include <marisa/marisa.h>
+#include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
+#include <sstream>
 
 using namespace travatar;
 using namespace std;

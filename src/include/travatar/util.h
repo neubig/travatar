@@ -1,6 +1,9 @@
 #ifndef _TRAVATAR_UTIL__
 #define _TRAVATAR_UTIL__
 
+#include <tr1/unordered_map>
+#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 #include <cmath>
 #include <vector>
 #include <set>
@@ -10,9 +13,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
-#include <tr1/unordered_map>
-#include <boost/foreach.hpp>
-#include <boost/shared_ptr.hpp>
 
 #define DEFAULT_ALMOST 1e-6
 #define TRAVATAR_SAFE

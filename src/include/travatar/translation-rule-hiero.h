@@ -1,12 +1,11 @@
 #ifndef TRANSLATION_RULE_HIERO_H__
 #define TRANSLATION_RULE_HIERO_H__
 
+#include <travatar/translation-rule.h>
+#include <travatar/sentence.h>
+#include <travatar/sparse-map.h>
 #include <string>
 #include <vector>
-#include <travatar/sentence.h>
-#include <travatar/dict.h>
-#include <travatar/sparse-map.h>
-#include <travatar/translation-rule.h>
 
 namespace travatar {
 class TranslationRuleHiero : public TranslationRule {

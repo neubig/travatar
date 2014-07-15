@@ -1,14 +1,14 @@
 #ifndef LM_COMPOSER_H__
 #define LM_COMPOSER_H__
 
-#include <string>
-#include <utility>
-#include <tr1/unordered_map>
-#include <lm/left.hh>
-#include <lm/model.hh>
 #include <travatar/graph-transformer.h>
 #include <travatar/sentence.h>
-#include <travatar/dict.h>
+#include <travatar/sparse-map.h>
+#include <lm/left.hh>
+#include <lm/model.hh>
+#include <tr1/unordered_map>
+#include <string>
+#include <utility>
 
 namespace travatar {
 
@@ -23,9 +23,7 @@ public:
             delete vocab_map_;    
     }
 
-    virtual void Add(lm::WordIndex index, const StringPiece &str) {
-        vocab_map_->insert(std::make_pair(Dict::WID(str.as_string()), index));
-    }
+    virtual void Add(lm::WordIndex index, const StringPiece &str);
 
     std::tr1::unordered_map<WordId, lm::WordIndex> * GetAndFreeVocabMap() {
         VocabMap * ret = vocab_map_;
@@ -47,20 +45,11 @@ protected:
 class LMData {
 public:
     LMData(const std::string & str);
-    LMData(lm::ngram::Model * model, VocabMap* vocab_map) :
-        lm_feat_(Dict::WID("lm")), lm_unk_feat_(Dict::WID("lmunk")), 
-        lm_(model), vocab_map_(vocab_map), 
-        lm_weight_(1), lm_unk_weight_(0), factor_(0) { }
+    LMData(lm::ngram::Model * model, VocabMap* vocab_map);
 
-    virtual ~LMData() {
-        if(lm_) delete lm_;
-        if(vocab_map_) delete vocab_map_;
-    }
+    virtual ~LMData();
 
-    lm::WordIndex GetMapping(WordId wid) const {
-        VocabMap::const_iterator it = vocab_map_->find(wid);
-        return it == vocab_map_->end() ? 0 : it->second;
-    }
+    lm::WordIndex GetMapping(WordId wid) const;
 
     lm::ngram::Model * GetLM() { return lm_; }
     double GetWeight() const { return lm_weight_; }
@@ -104,19 +93,9 @@ public:
     std::vector<LMData*> & GetData() { return lm_data_; }
     const std::vector<LMData*> & GetData() const { return lm_data_; }
 
-    virtual ~LMComposer() {
-        BOOST_FOREACH(LMData* data, lm_data_)
-            if(data) delete data;
-    }
+    virtual ~LMComposer();
 
-    void UpdateWeights(const SparseMap & weights) {
-        BOOST_FOREACH(LMData* data, lm_data_) {
-            SparseMap::const_iterator it1 = weights.find(data->GetFeatureName());
-            data->SetWeight(it1 != weights.end() ? it1->second : 0);
-            SparseMap::const_iterator it2 = weights.find(data->GetUnkFeatureName());
-            data->SetUnkWeight(it2 != weights.end() ? it2->second : 0);
-        }
-    }
+    void UpdateWeights(const SparseMap & weights);
 
     // Compose the rule graph with a language model
     virtual HyperGraph * TransformGraph(const HyperGraph & hg) const = 0;

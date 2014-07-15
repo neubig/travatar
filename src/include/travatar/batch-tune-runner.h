@@ -1,12 +1,12 @@
 #ifndef BATCH_TUNE_H__ 
 #define BATCH_TUNE_H__
 
+#include <travatar/task.h>
+#include <travatar/sentence.h>
+#include <travatar/sparse-map.h>
+#include <boost/shared_ptr.hpp>
 #include <iostream>
 #include <vector>
-#include <boost/shared_ptr.hpp>
-#include <travatar/sentence.h>
-#include <travatar/thread-pool.h>
-#include <travatar/sparse-map.h>
 
 namespace travatar {
 

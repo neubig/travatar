@@ -1,12 +1,12 @@
 #ifndef TRAVATAR_DICT_H__
 #define TRAVATAR_DICT_H__
 
-#include <string>
-#include <vector>
-#include <iostream>
 #include <travatar/sentence.h>
 #include <travatar/cfg-data.h>
 #include <travatar/sparse-map.h>
+#include <string>
+#include <vector>
+#include <iostream>
 
 namespace travatar {
 

@@ -11,10 +11,10 @@
 //  Xingyi Song, Trevor Cohn, Lucia Specia
 //  CICLING 13
 
+#include <travatar/eval-measure.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <vector>
-#include <travatar/eval-measure.h>
 
 namespace travatar {
 

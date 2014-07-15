@@ -1,6 +1,8 @@
 #include <travatar/sparse-map.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/util.h>
+#include <travatar/weights.h>
+#include <travatar/eval-measure.h>
 #include <boost/foreach.hpp>
 #include <cfloat>
 #include <algorithm>

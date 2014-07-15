@@ -1,13 +1,11 @@
 #ifndef TUNE_H__
 #define TUNE_H__
 
-#include <vector>
-#include <cfloat>
-#include <boost/shared_ptr.hpp>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
-#include <travatar/dict.h>
+#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <cfloat>
 
 namespace travatar {
 
@@ -19,9 +17,7 @@ class Tune {
 public:
 
     // **** Non-static Members ****
-    Tune() : gain_threshold_(0.000001), scale_id_(Dict::WID("__SCALE__")) {
-        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
-    }
+    Tune();
 
     // Tune weights
     virtual double RunTuning(SparseMap & weights) = 0;
@@ -51,9 +47,7 @@ public:
     }
     std::vector<boost::shared_ptr<TuningExample> > & GetExamples() { return examps_; }
     const std::vector<boost::shared_ptr<TuningExample> > & GetExamples() const { return examps_; }
-    TuningExample & GetExample(int id) {
-        return *SafeAccess(examps_, id);
-    }
+    TuningExample & GetExample(int id);
     WordId GetScaleId() { return scale_id_; }
 
 protected:

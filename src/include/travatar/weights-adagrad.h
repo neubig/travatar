@@ -1,9 +1,7 @@
 #ifndef WEIGHTS_ADAGRAD_H__
 #define WEIGHTS_ADAGRAD_H__
 
-#include <boost/foreach.hpp>
 #include <travatar/weights-perceptron.h>
-#include <cmath>
 
 namespace travatar {
 

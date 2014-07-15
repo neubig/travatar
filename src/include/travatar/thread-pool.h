@@ -5,18 +5,14 @@
 // threads. (This was highly influenced by Moses's ThreadPool, but
 // re-implemented and tweaked a bit.
 
-#include <queue>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <pthread.h>
+#include <queue>
 
 namespace travatar {
 
-class Task {
-public:
-    virtual void Run() = 0;
-    virtual ~Task() { }
-};
+class Task;
 
 class ThreadPool {
 

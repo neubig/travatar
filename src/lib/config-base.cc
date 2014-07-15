@@ -7,6 +7,12 @@
 using namespace std;
 using namespace travatar;
 
+#define DIE_HELP(msg) do {                      \
+    std::ostringstream oss;                     \
+    oss << msg;                                 \
+    DieOnHelp(oss.str()); }                     \
+  while (0);
+
 void ConfigBase::DieOnHelp(const std::string & str) const {
     // print arguments
     std::cerr << usage_ << std::endl;
@@ -139,4 +145,20 @@ void ConfigBase::SetString(const std::string & name, const std::string & val) {
     if(it == optArgs_.end())
         THROW_ERROR("Setting bad argument "<<name<<" in configuration");
     it->second.first = val;
+}
+
+const std::string & ConfigBase::GetMainArg(int id) const { 
+    if(id >= (int)mainArgs_.size())
+        throw std::runtime_error("Argument request is out of bounds");
+    return mainArgs_[id];
+}
+
+void ConfigBase::SetInt(const std::string & name, int val) {
+    std::ostringstream oss; oss << val; SetString(name,oss.str());
+}
+void ConfigBase::SetDouble(const std::string & name, double val) {
+    std::ostringstream oss; oss << val; SetString(name,oss.str());
+}
+void ConfigBase::SetBool(const std::string & name, bool val) {
+    std::ostringstream oss; oss << val; SetString(name,oss.str());
 }

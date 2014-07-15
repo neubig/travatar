@@ -1,7 +1,6 @@
 #ifndef WEIGHTS_AVERAGE_PERCEPTRON_H__
 #define WEIGHTS_AVERAGE_PERCEPTRON_H__
 
-#include <boost/foreach.hpp>
 #include <travatar/weights-perceptron.h>
 #include <travatar/sparse-map.h>
 #include <cmath>
@@ -25,21 +24,7 @@ public:
     virtual double GetCurrent(const SparseMap::key_type & key) const;
 
     // Get the final values of the weights
-    virtual const SparseMap & GetFinal() {
-        if(curr_iter_) {
-            BOOST_FOREACH(SparseMap::value_type final_val, current_) {
-                // Save the old value and get the new value in the range
-                int prev_iter = last_update_[final_val.first];
-                double avg_val = final_[final_val.first];
-                double new_val = GetCurrent(final_val.first);
-                final_[final_val.first] = (avg_val*prev_iter + new_val*(curr_iter_-prev_iter))/curr_iter_;
-                last_update_[final_val.first] = curr_iter_;
-            }
-            return final_;
-        } else {
-            return current_;
-        }
-    }
+    virtual const SparseMap & GetFinal();
 
 protected:
     

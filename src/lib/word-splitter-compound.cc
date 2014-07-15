@@ -3,6 +3,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
+#include <lm/model.hh>
 #include <boost/foreach.hpp>
 
 using namespace travatar;

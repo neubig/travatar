@@ -1,13 +1,13 @@
 #ifndef LOOKUP_TABLE_H__
 #define LOOKUP_TABLE_H__
 
-#include <vector>
-#include <map>
-#include <climits>
-#include <boost/shared_ptr.hpp>
 #include <travatar/graph-transformer.h>
 #include <travatar/sparse-map.h>
 #include <travatar/translation-rule.h>
+#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <map>
+#include <climits>
 
 namespace travatar {
 
@@ -39,7 +39,7 @@ protected:
 class LookupTable : public GraphTransformer {
 public:
     LookupTable();
-    virtual ~LookupTable() { };
+    virtual ~LookupTable();
 
     virtual HyperGraph * TransformGraph(const HyperGraph & parse) const;
 

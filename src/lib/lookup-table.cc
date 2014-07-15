@@ -1,9 +1,10 @@
 
-#include <boost/foreach.hpp>
 #include <travatar/translation-rule.h>
 #include <travatar/lookup-table.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/util.h>
+#include <boost/foreach.hpp>
 
 using namespace travatar;
 using namespace boost;
@@ -11,6 +12,8 @@ using namespace std;
 
 LookupTable::LookupTable() : 
     unk_rule_("UNK", CfgDataVector(), Dict::ParseFeatures("unk=1")), match_all_unk_(false) { }
+
+LookupTable::~LookupTable() { }
 
 // Find all the translation rules rooted at a particular node in a parse graph
 vector<shared_ptr<LookupState> > LookupTable::LookupSrc(

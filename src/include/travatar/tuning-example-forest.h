@@ -1,15 +1,16 @@
 #ifndef TUNING_EXAMPLE_FOREST_H__
 #define TUNING_EXAMPLE_FOREST_H__
 
-#include <boost/shared_ptr.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/sentence.h>
-#include <travatar/hyper-graph.h>
+#include <travatar/util.h>
+#include <boost/shared_ptr.hpp>
 #include <set>
 #include <cfloat>
 
 namespace travatar {
 
+class HyperGraph;
 class EvalMeasure;
 class MertHull;
 class MertHullWeightFunction;

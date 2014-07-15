@@ -1,17 +1,15 @@
 #ifndef TRAVATAR_HYPER_GRAPH__
 #define TRAVATAR_HYPER_GRAPH__
 
+#include <travatar/sparse-map.h>
+#include <travatar/sentence.h>
+#include <travatar/cfg-data.h>
+#include <travatar/nbest-list.h>
 #include <vector>
 #include <climits>
 #include <cfloat>
 #include <set>
 #include <map>
-#include <utility>
-#include <travatar/sparse-map.h>
-#include <travatar/nbest-list.h>
-#include <travatar/sentence.h>
-#include <travatar/util.h>
-#include <travatar/cfg-data.h>
 
 namespace travatar {
 
@@ -255,14 +253,7 @@ public:
     void SetLoss(double loss) { loss_ = loss; }
     double GetLoss() { return loss_; }
 
-    CfgDataVector CalcTranslations() {
-        if(edges_.size() == 0)
-            THROW_ERROR("Cannot calculate a translation for a path with no edges");
-        CfgDataVector ret(GlobalVars::trg_factors);
-        for(int i = 0; i < GlobalVars::trg_factors; i++)
-            ret[i] = CalcTranslation(i);
-        return ret;
-    }
+    CfgDataVector CalcTranslations();
     CfgData CalcTranslation(int factor) {
         int idx = 0; return CalcTranslation(factor, idx);
     }
@@ -279,12 +270,7 @@ public:
     const CfgDataVector & GetTrgData() const { return data_; }
     CfgDataVector & GetTrgData() { return data_; }
     void SetTrgData(const CfgDataVector & data) { data_ = data; }
-    SparseMap GetFeatures() {
-        SparseMap ret;
-        BOOST_FOREACH(const HyperEdge* edge, edges_)
-            ret += edge->GetFeatures();
-        return ret;
-    }
+    SparseMap GetFeatures();
 
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
@@ -364,8 +350,8 @@ public:
     LabeledSpans GetLabeledSpans() const;
 
     // Accessors
-    const HyperNode* GetNode(int i) const { return SafeAccess(nodes_, i); }
-    HyperNode* GetNode(int i) { return SafeAccess(nodes_, i); }
+    const HyperNode* GetNode(int i) const;
+    HyperNode* GetNode(int i);
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     std::vector<HyperNode*> & GetNodes() { return nodes_; }
     int NumNodes() const { return nodes_.size(); }

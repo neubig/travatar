@@ -1,10 +1,9 @@
 #ifndef LOOKUP_TABLE_HASH_H__
 #define LOOKUP_TABLE_HASH_H__
 
-#include <vector>
-#include <tr1/unordered_set>
-#include <boost/foreach.hpp>
 #include <travatar/lookup-table.h>
+#include <tr1/unordered_set>
+#include <vector>
 
 namespace travatar {
 
@@ -27,11 +26,7 @@ protected:
 class LookupTableHash : public LookupTable {
 public:
     LookupTableHash() { }
-    virtual ~LookupTableHash() {
-        BOOST_FOREACH(RulePair & rule_pair, rules_)
-            BOOST_FOREACH(TranslationRule * rule, rule_pair.second)
-                delete rule;
-    };
+    virtual ~LookupTableHash();
 
     virtual LookupState * GetInitialState() const {
         return new LookupStateHash;

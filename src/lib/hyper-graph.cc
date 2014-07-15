@@ -220,6 +220,13 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
     return frontier_;
 }
 
+SparseMap HyperPath::GetFeatures() {
+    SparseMap ret;
+    BOOST_FOREACH(const HyperEdge* edge, edges_)
+        ret += edge->GetFeatures();
+    return ret;
+}
+
 class PathScoreMore {
 public:
     bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
@@ -545,3 +552,15 @@ LabeledSpans HyperGraph::GetLabeledSpans() const {
         ret[node->GetSpan()] = node->GetSym();
     return ret;
 }
+
+CfgDataVector HyperPath::CalcTranslations() {
+    if(edges_.size() == 0)
+        THROW_ERROR("Cannot calculate a translation for a path with no edges");
+    CfgDataVector ret(GlobalVars::trg_factors);
+    for(int i = 0; i < GlobalVars::trg_factors; i++)
+        ret[i] = CalcTranslation(i);
+    return ret;
+}
+
+const HyperNode* HyperGraph::GetNode(int i) const { return SafeAccess(nodes_, i); }
+HyperNode* HyperGraph::GetNode(int i) { return SafeAccess(nodes_, i); }

@@ -3,12 +3,19 @@
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/input-file-stream.h>
-#include <boost/algorithm/string.hpp>
+#include <travatar/util.h>
+#include <boost/foreach.hpp>
 #include <sstream>
 
 using namespace travatar;
 using namespace std;
 using namespace boost;
+
+LookupTableHash::~LookupTableHash() {
+    BOOST_FOREACH(RulePair & rule_pair, rules_)
+        BOOST_FOREACH(TranslationRule * rule, rule_pair.second)
+            delete rule;
+};
 
 // Match the start of an edge
 LookupState * LookupTableHash::MatchStart(const HyperNode & node, const LookupState & state) const {
@@ -54,9 +61,9 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
     string line;
     LookupTableHash * ret = new LookupTableHash;
     while(getline(in, line)) {
-        vector<string> columns = Tokenize(line, " ||| "), words;
+        vector<string> columns = Tokenize(line, " ||| ");
         if(columns.size() < 3) { delete ret; THROW_ERROR("Bad line in rule table: " << line); }
-        algorithm::split(words, columns[0], is_any_of(" "));
+        vector<string> words = Tokenize(columns[0], ' ');
         ostringstream partial;
         int pos = 0;
         BOOST_FOREACH(const string & str, words) {

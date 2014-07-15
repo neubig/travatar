@@ -7,6 +7,7 @@
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/util.h>
 #include <travatar/dict.h>
+#include <travatar/thread-pool.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
@@ -39,6 +40,10 @@ void GreedyMertTask::Run() {
     else
         cerr << oss.str();
 }
+
+// Constructor
+TuneGreedyMert::TuneGreedyMert() : Tune(),
+                       early_terminate_(false) { }
 
 void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
     mutex::scoped_lock lock(result_mutex_);
@@ -112,3 +117,5 @@ double TuneGreedyMert::RunTuning(SparseMap & weights) {
     } while(result.gain > gain_threshold_);
     return result.after->ConvertToScore();
 }
+
+double TuneGreedyMert::GetBestGain() { return best_result_.gain; }
