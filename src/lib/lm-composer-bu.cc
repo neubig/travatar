@@ -228,6 +228,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
         edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
+        edge->AddTail(node);
         double total_score = 0;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
@@ -237,7 +238,6 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
             my_rule_score.NonTerminal(states[node->GetId()][lm_id], 0);
             my_rule_score.Terminal(data->GetLM()->GetVocabulary().Index("</s>"));
             double my_score = my_rule_score.Finish();
-            edge->AddTail(node);
             if(my_score != 0.0)
                 edge->AddFeature(data->GetFeatureName(), my_score);
             total_score += my_score * data->GetWeight();
