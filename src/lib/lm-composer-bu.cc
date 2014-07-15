@@ -108,7 +108,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         HyperEdge * next_edge = new HyperEdge;
         next_edge->SetFeatures(id_edge->GetFeatures());
         next_edge->SetTrgData(id_edge->GetTrgData());
-        next_edge->SetRuleStr(id_edge->GetRuleStr());
+        next_edge->SetSrcStr(id_edge->GetSrcStr());
         vector<ChartState> my_state(lm_data_.size());
         // *** Get the data, etc. necessary for scoring
         for(int curr_id = 0; curr_id < (int)id_edge->GetTails().size(); curr_id++) {

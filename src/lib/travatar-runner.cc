@@ -86,7 +86,7 @@ void TravatarRunnerTask::Run() {
             trace_out
                 << sent_
                 << " ||| " << edge->GetHead()->GetSpan()
-                << " ||| " << edge->GetRuleStr() 
+                << " ||| " << edge->GetSrcStr() 
                 << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
                 << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                 << endl;
