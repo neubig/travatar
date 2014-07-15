@@ -1,5 +1,7 @@
 #include "test-rule-extractor.h"
+#include <travatar/util.h>
 #include <boost/shared_ptr.hpp>
+#include <sstream>
 
 using namespace std;
 

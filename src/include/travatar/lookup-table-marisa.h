@@ -1,9 +1,9 @@
 #ifndef LOOKUP_TABLE_MARISA_H__
 #define LOOKUP_TABLE_MARISA_H__
 
-#include <vector>
 #include <travatar/lookup-table.h>
 #include <marisa/marisa.h>
+#include <vector>
 
 namespace travatar {
 

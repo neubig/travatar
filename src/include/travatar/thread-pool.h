@@ -5,10 +5,10 @@
 // threads. (This was highly influenced by Moses's ThreadPool, but
 // re-implemented and tweaked a bit.
 
-#include <queue>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <pthread.h>
+#include <queue>
 
 namespace travatar {
 

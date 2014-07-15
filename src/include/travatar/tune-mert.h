@@ -1,16 +1,15 @@
 #ifndef TUNE_MERT_H__
 #define TUNE_MERT_H__
 
-#include <vector>
-#include <cfloat>
-#include <boost/thread.hpp>
-#include <tr1/unordered_map>
+#include <travatar/tune.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
-#include <travatar/thread-pool.h>
 #include <travatar/eval-measure.h>
-#include <travatar/tune.h>
+#include <boost/thread.hpp>
+#include <tr1/unordered_map>
+#include <vector>
+#include <cfloat>
+
 
 namespace travatar {
 

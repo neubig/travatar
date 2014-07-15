@@ -7,6 +7,7 @@
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/util.h>
 #include <travatar/dict.h>
+#include <travatar/thread-pool.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>

@@ -1,12 +1,12 @@
 #ifndef TRAVATAR_RULE_EXTRACTOR__
 #define TRAVATAR_RULE_EXTRACTOR__
 
+#include <travatar/sentence.h>
 #include <set>
 #include <list>
 #include <map>
 #include <string>
 #include <ostream>
-#include <travatar/sentence.h>
 
 namespace travatar {
 

@@ -1,11 +1,10 @@
 #ifndef TUNING_EXAMPLE_NBEST_H__
 #define TUNING_EXAMPLE_NBEST_H__
 
-#include <vector>
-#include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/tuning-example.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 namespace travatar {
 

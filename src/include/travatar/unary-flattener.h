@@ -2,7 +2,6 @@
 #define UNARY_FLATTENER_RIGHT_H__
 
 #include <travatar/graph-transformer.h>
-#include <travatar/generic-string.h>
 #include <travatar/sentence.h>
 #include <boost/unordered_map.hpp>
 #include <string>

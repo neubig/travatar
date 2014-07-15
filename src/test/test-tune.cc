@@ -4,6 +4,8 @@
 #include <travatar/tune-xeval.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/eval-measure-bleu.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/weights.h>
 
 using namespace std;
 using namespace boost;

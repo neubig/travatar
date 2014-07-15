@@ -1,6 +1,8 @@
 #include "test-lookup-table-fsm.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
+#include <travatar/dict.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/translation-rule-hiero.h>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;

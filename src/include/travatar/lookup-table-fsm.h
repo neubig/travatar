@@ -1,18 +1,22 @@
 #ifndef LOOKUP_TABLE_FSM_H__
 #define LOOKUP_TABLE_FSM_H__
 
-#include <vector>
-#include <boost/shared_ptr.hpp>
-#include <travatar/sparse-map.h>
-#include <travatar/translation-rule-hiero.h>
-#include <travatar/dict.h>
-#include <travatar/hyper-graph.h>
 #include <travatar/graph-transformer.h>
-#include <generic-string.h>
+#include <travatar/generic-string.h>
+#include <travatar/sparse-map.h>
+#include <travatar/sentence.h>
+#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <map>
+#include <set>
 
 namespace travatar {
 
+class HyperNode;
+class HyperEdge;
 class LookupNodeFSM;
+class TranslationRuleHiero;
+
 typedef std::vector<std::pair<int,int> > HieroRuleSpans;
 typedef std::pair<WordId, std::pair<int,int> > HieroNodeKey;
 typedef std::map<HieroNodeKey, HyperNode*> HieroNodeMap;
@@ -29,14 +33,7 @@ protected:
 public:
     LookupNodeFSM() { }
 
-    virtual ~LookupNodeFSM() { 
-        BOOST_FOREACH(LookupNodeMap::value_type &it, lookup_map) {
-            delete it.second++;
-        }
-        BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
-            delete rule;
-        }
-    }
+    virtual ~LookupNodeFSM();
     
     void AddEntry(WordId & key, LookupNodeFSM* rule);
     LookupNodeFSM* FindNode(WordId key) const;
@@ -95,16 +92,8 @@ protected:
     WordId default_symbol_;
     WordId root_symbol_;
 public:
-    LookupTableFSM() : rule_fsms_(),
-                       delete_unknown_(false),
-                       default_symbol_(Dict::WID("X")),
-                       root_symbol_(Dict::WID("S")) { }
-    ~LookupTableFSM() {
-        BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
-            if(rule_fsm != NULL)
-                delete rule_fsm;
-        }
-    }
+    LookupTableFSM();
+    ~LookupTableFSM();
 
     void AddRuleFSM(RuleFSM* fsm) {
         rule_fsms_.push_back(fsm);

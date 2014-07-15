@@ -1,3 +1,7 @@
+#include <travatar/lm-composer-incremental.h>
+#include <travatar/generic-string.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
 #include <boost/unordered_set.hpp>
 #include <boost/foreach.hpp>
 #include <lm/left.hh>
@@ -9,16 +13,17 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <travatar/lm-composer-incremental.h>
-#include <travatar/generic-string.h>
-#include <travatar/hyper-graph.h>
-#include <travatar/dict.h>
 
 using namespace travatar;
 using namespace std;
 using namespace boost;
 using namespace lm;
 using namespace search;
+
+// At the beginning, just add new edges
+void Forest::Add(std::vector<PartialEdge> &existing, PartialEdge add) const {
+    existing.push_back(add);
+}
 
 // Convert all of the edges together into a node
 NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {

@@ -1,10 +1,10 @@
 #ifndef LM_COMPOSER_BU_H__
 #define LM_COMPOSER_BU_H__
 
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <lm/left.hh>
 #include <travatar/lm-composer.h>
+#include <lm/left.hh>
+#include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace travatar {
 

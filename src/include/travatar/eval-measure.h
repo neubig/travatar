@@ -4,8 +4,8 @@
 #include <travatar/sentence.h>
 #include <boost/shared_ptr.hpp>
 #include <cfloat>
-#include <vector>
 #include <climits>
+#include <vector>
 #include <string>
 #include <sstream>
 

@@ -1,4 +1,5 @@
 #include "test-graph-transformer.h"
+#include <travatar/util.h>
 #include <fstream>
 #include <sstream>
 #include <utility>

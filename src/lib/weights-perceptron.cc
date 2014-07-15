@@ -8,6 +8,13 @@ inline double InRange(double val, pair<double,double> range) {
     return min(max(val,range.first), range.second);
 }
 
+// Get the final values of the weights
+const SparseMap & WeightsPerceptron::GetFinal() {
+    BOOST_FOREACH(SparseMap::value_type val, current_)
+        val.second = GetCurrent(val.first);
+    return current_;
+}
+
 // The pairwise weight update rule
 void WeightsPerceptron::Update(
     const SparseMap & oracle, double oracle_score, double oracle_loss,

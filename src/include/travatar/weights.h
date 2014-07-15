@@ -4,7 +4,7 @@
 #include <travatar/sparse-map.h>
 #include <travatar/nbest-list.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
+#include <boost/foreach.hpp>
 #include <cfloat>
 
 namespace travatar {
@@ -58,17 +58,13 @@ public:
     // Scores are current model scores and evaluation scores
     virtual void Adjust(
             const std::vector<std::pair<double,double> > & scores,
-            const std::vector<SparseMap*> & features) {
-        THROW_ERROR("Standard weights cannot be adjusted");
-    }
+            const std::vector<SparseMap*> & features);
 
     // The pairwise weight update rule
     virtual void Update (
         const SparseMap & oracle, double oracle_score, double oracle_eval,
         const SparseMap & system, double system_score, double system_eval
-    ) {
-        THROW_ERROR("Standard weights cannot be updated");
-    }
+    );
 
     // Adjust based on a single one-best list
     virtual void Adjust(const Sentence & src,
@@ -92,9 +88,15 @@ protected:
 
 };
 
-double operator*(Weights & lhs, const SparseMap & rhs);
-double operator*(const Weights & lhs, const SparseMap & rhs);
+inline double operator*(const Weights & lhs, const SparseMap & rhs) {
+    double ret = 0;
+    BOOST_FOREACH(const SparsePair & val, rhs) {
+        ret += val.second * lhs.GetCurrent(val.first);
+    }
+    return ret;
+}
 
 }
+
 
 #endif

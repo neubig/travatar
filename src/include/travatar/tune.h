@@ -3,7 +3,6 @@
 
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
-#include <travatar/dict.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <cfloat>
@@ -18,9 +17,7 @@ class Tune {
 public:
 
     // **** Non-static Members ****
-    Tune() : gain_threshold_(0.000001), scale_id_(Dict::WID("__SCALE__")) {
-        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
-    }
+    Tune();
 
     // Tune weights
     virtual double RunTuning(SparseMap & weights) = 0;

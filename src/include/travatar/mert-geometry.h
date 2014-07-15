@@ -9,13 +9,12 @@
 //
 // It has been adapted from the implementation in the cdec decoder.
 
+#include <travatar/sparse-map.h>
+#include <travatar/sentence.h>
+#include <boost/shared_ptr.hpp>
 #include <vector>
 #include <iostream>
 #include <cfloat>
-#include <boost/shared_ptr.hpp>
-
-#include <travatar/sparse-map.h>
-#include <travatar/sentence.h>
 
 namespace travatar {
 

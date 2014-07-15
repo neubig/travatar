@@ -1,7 +1,6 @@
 #ifndef WEIGHTS_PERCEPTRON_H__
 #define WEIGHTS_PERCEPTRON_H__
 
-#include <boost/foreach.hpp>
 #include <travatar/weights-pairwise.h>
 #include <cmath>
 
@@ -44,11 +43,7 @@ public:
     virtual double GetCurrent(const SparseMap::key_type & key) const;
 
     // Get the final values of the weights
-    virtual const SparseMap & GetFinal() {
-        BOOST_FOREACH(SparseMap::value_type val, current_)
-            val.second = GetCurrent(val.first);
-        return current_;
-    }
+    virtual const SparseMap & GetFinal();
 
     void SetL1Coeff(double l1_coeff) { l1_coeff_ = l1_coeff; }
     void SetLearningRate(double rate) { rate_ = rate; }

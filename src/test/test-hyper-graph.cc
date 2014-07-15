@@ -1,6 +1,10 @@
 #include "test-hyper-graph.h"
 #include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
+#include <sstream>
+#include <cmath>
 
 using namespace std;
 

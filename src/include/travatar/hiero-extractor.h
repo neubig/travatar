@@ -1,13 +1,14 @@
 #ifndef TRAVATAR_HIERO_EXTRACTOR__
 #define TRAVATAR_HIERO_EXTRACTOR__
 
+#include <travatar/sentence.h>
+#include <travatar/alignment.h>
+#include <travatar/dict.h>
 #include <vector>
 #include <string>
 #include <map>
 #include <set>
-#include <travatar/sentence.h>
-#include <travatar/alignment.h>
-#include <travatar/dict.h>
+
 #define HIERO_SRC 0
 #define HIERO_TRG 1
 #define HIERO_UNDEF -1

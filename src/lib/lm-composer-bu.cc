@@ -1,13 +1,14 @@
+#include <travatar/lm-composer-bu.h>
+#include <travatar/generic-string.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/unordered_set.hpp>
 #include <boost/foreach.hpp>
 #include <lm/left.hh>
 #include <vector>
 #include <queue>
 #include <map>
-#include <travatar/lm-composer-bu.h>
-#include <travatar/generic-string.h>
-#include <travatar/hyper-graph.h>
-#include <travatar/dict.h>
 
 using namespace travatar;
 using namespace std;

@@ -1,9 +1,9 @@
 #ifndef TRAVATAR_TREE_IO__
 #define TRAVATAR_TREE_IO__
 
+#include <travatar/sentence.h>
 #include <vector>
 #include <iostream>
-#include "travatar/sentence.h"
 
 namespace travatar {
 

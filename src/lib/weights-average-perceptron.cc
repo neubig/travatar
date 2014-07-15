@@ -9,6 +9,23 @@ inline double InRange(double val, pair<double,double> range) {
     return min(max(val,range.first), range.second);
 }
 
+// Get the final values of the weights
+const SparseMap & WeightsAveragePerceptron::GetFinal() {
+    if(curr_iter_) {
+        BOOST_FOREACH(SparseMap::value_type final_val, current_) {
+            // Save the old value and get the new value in the range
+            int prev_iter = last_update_[final_val.first];
+            double avg_val = final_[final_val.first];
+            double new_val = GetCurrent(final_val.first);
+            final_[final_val.first] = (avg_val*prev_iter + new_val*(curr_iter_-prev_iter))/curr_iter_;
+            last_update_[final_val.first] = curr_iter_;
+        }
+        return final_;
+    } else {
+        return current_;
+    }
+}
+
 // The pairwise weight update rule
 void WeightsAveragePerceptron::Update(
     const SparseMap & oracle, double oracle_model, double oracle_eval,

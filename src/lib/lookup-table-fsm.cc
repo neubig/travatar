@@ -1,10 +1,11 @@
 #include <travatar/translation-rule-hiero.h>
 #include <travatar/dict.h>
+#include <travatar/util.h>
 #include <travatar/hyper-graph.h>
-#include <boost/algorithm/string.hpp>
 #include <travatar/lookup-table-fsm.h>
 #include <travatar/sentence.h>
 #include <travatar/input-file-stream.h>
+#include <boost/foreach.hpp>
 #include <sstream>
 
 using namespace travatar;
@@ -14,6 +15,18 @@ using namespace boost;
 ///////////////////////////////////
 ///     LOOK UP TABLE FSM        //
 ///////////////////////////////////
+LookupTableFSM::LookupTableFSM() : rule_fsms_(),
+                   delete_unknown_(false),
+                   default_symbol_(Dict::WID("X")),
+                   root_symbol_(Dict::WID("S")) { }
+
+LookupTableFSM::~LookupTableFSM() {
+    BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_) {
+        if(rule_fsm != NULL)
+            delete rule_fsm;
+    }
+}
+
 RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     string line;
     RuleFSM * ret = new RuleFSM;
@@ -356,4 +369,13 @@ string LookupNodeFSM::ToString(int indent) const {
         ++it;
     }    
     return str.str();
+}
+
+LookupNodeFSM::~LookupNodeFSM() { 
+    BOOST_FOREACH(LookupNodeMap::value_type &it, lookup_map) {
+        delete it.second++;
+    }
+    BOOST_FOREACH(TranslationRuleHiero* rule, rules) {
+        delete rule;
+    }
 }

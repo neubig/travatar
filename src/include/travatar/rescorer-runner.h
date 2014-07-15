@@ -1,16 +1,16 @@
 #ifndef RESCORER_H__ 
 #define RESCORER_H__
 
-#include <iostream>
-#include <vector>
-#include <boost/shared_ptr.hpp>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
-#include <travatar/eval-measure.h>
+#include <boost/shared_ptr.hpp>
+#include <iostream>
+#include <vector>
 
 namespace travatar {
 
 class ConfigRescorer;
+class EvalMeasure;
 
 class RescorerNbestElement {
 public:

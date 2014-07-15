@@ -1,14 +1,14 @@
 #ifndef TUNE_XEVAL_H__
 #define TUNE_XEVAL_H__
 
-#include <vector>
-#include <cfloat>
-#include <boost/thread.hpp>
-#include <tr1/unordered_map>
-#include <travatar/sparse-map.h>
 #include <travatar/tune.h>
+#include <travatar/sparse-map.h>
 #include <travatar/dict.h>
 #include <travatar/eval-measure.h>
+#include <boost/thread.hpp>
+#include <tr1/unordered_map>
+#include <vector>
+#include <cfloat>
 
 namespace travatar {
 

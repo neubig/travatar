@@ -1,5 +1,3 @@
-#include <travatar/dict.h>
-#include <travatar/util.h>
 #include <travatar/config-batch-tune.h>
 #include <travatar/batch-tune-runner.h>
 #include <travatar/input-file-stream.h>
@@ -15,6 +13,9 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
 #include <travatar/output-collector.h>
+#include <travatar/thread-pool.h>
+#include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <fstream>

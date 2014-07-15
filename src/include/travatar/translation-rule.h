@@ -1,11 +1,11 @@
 #ifndef TRANSLATION_RULE_H__
 #define TRANSLATION_RULE_H__
 
-#include <string>
-#include <vector>
 #include <travatar/sentence.h>
 #include <travatar/cfg-data.h>
 #include <travatar/sparse-map.h>
+#include <string>
+#include <vector>
 
 namespace travatar {
 

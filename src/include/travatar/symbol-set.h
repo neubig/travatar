@@ -1,15 +1,13 @@
 #ifndef SYMBOL_SET_H__
 #define SYMBOL_SET_H__
 
+#include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
+#include <tr1/unordered_map>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include <utility>
-#include <tr1/unordered_map>
-// #include <boost/bind.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/locks.hpp>
 
 namespace travatar {
 
