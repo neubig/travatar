@@ -36,9 +36,12 @@ test_travatar_SOURCES = \
     test-hyper-graph.cc \
     test-io-util.cc \
     test-lookup-table-fsm.cc \
+    test-lookup-table.cc \
     test-lm-composer.cc \
     test-rule-extractor.cc \
     test-travatar-runner.cc \
+    test-trimmer.cc \
+    test-tune.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
