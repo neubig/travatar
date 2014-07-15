@@ -1,6 +1,8 @@
 #include "test-lm-composer.h"
-#include <travatar/translation-rule.h>
+#include <travatar/lm-composer-incremental.h>
+#include <travatar/lm-composer-bu.h>
 #include <fstream>
+#include <utility>
 
 using namespace std;
 using namespace boost;

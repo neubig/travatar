@@ -2,6 +2,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 
+using namespace std;
+
 namespace travatar {
 
 TestLookupTableFSM::TestLookupTableFSM() {

@@ -1,5 +1,7 @@
 #include "test-io-util.h"
 
+using namespace std;
+
 namespace travatar {
 
 TestIOUtil::TestIOUtil() { }

@@ -1,5 +1,10 @@
 #include "test-hiero.h"
 
+#include <travatar/dict.h>
+#include <boost/foreach.hpp>
+
+using namespace std;
+
 namespace travatar {
 
 TestHiero::TestHiero() {

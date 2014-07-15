@@ -5,6 +5,8 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-average-perceptron.h>
 
+using namespace std;
+
 namespace travatar {
 
 TestWeights::TestWeights() { }

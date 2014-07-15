@@ -1,5 +1,7 @@
 #include "test-dict.h"
 
+using namespace std;
+
 namespace travatar {
 
 TestDict::TestDict() {}

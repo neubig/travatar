@@ -3,9 +3,8 @@
 
 #include "test-base.h"
 #include <travatar/hyper-graph.h>
-#include <travatar/binarizer-directional.h>
-#include <travatar/binarizer-cky.h>
 #include <boost/scoped_ptr.hpp>
+#include <vector>
 
 namespace travatar {
 
@@ -25,7 +24,7 @@ public:
 
 private:
     boost::scoped_ptr<HyperGraph> trinary_graph_, unordered_graph_, double_graph_;
-    vector<WordId> src_;
+    std::vector<WordId> src_;
 
 };
 

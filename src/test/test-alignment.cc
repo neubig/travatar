@@ -1,5 +1,7 @@
 #include "test-alignment.h"
 
+using namespace std;
+
 namespace travatar {
 
 TestAlignment::TestAlignment() {

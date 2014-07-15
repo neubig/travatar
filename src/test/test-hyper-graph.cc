@@ -2,6 +2,8 @@
 #include <travatar/dict.h>
 #include <boost/shared_ptr.hpp>
 
+using namespace std;
+
 namespace travatar {
 
 TestHyperGraph::TestHyperGraph() {

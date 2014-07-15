@@ -1,6 +1,9 @@
 #include "test-graph-transformer.h"
 #include <fstream>
 #include <sstream>
+#include <utility>
+
+using namespace std;
 
 namespace travatar {
 

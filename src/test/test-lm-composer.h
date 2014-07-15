@@ -2,10 +2,11 @@
 #define TEST_LM_COMPOSER_H__
 
 #include "test-base.h"
-#include <utility>
-#include <travatar/lm-composer-incremental.h>
-#include <travatar/lm-composer-bu.h>
+
+#include <travatar/hyper-graph.h>
+#include <travatar/translation-rule.h>
 #include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace travatar {
 
@@ -27,7 +28,7 @@ private:
     // JSONTreeIO json_tree_io_;
     // std::vector<WordId> src_;
     // boost::scoped_ptr<HyperGraph> rule_graph_, unary_graph_;
-    string file_name_;
+    std::string file_name_;
     boost::shared_ptr<HyperGraph> rule_graph_;
     boost::shared_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10, rule_01bad;
     boost::shared_ptr<HyperGraph> exp_graph;

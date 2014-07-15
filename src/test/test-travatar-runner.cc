@@ -1,5 +1,7 @@
 #include "test-travatar-runner.h"
 
+using namespace std;
+
 namespace travatar {
 
 TestTravatarRunner::TestTravatarRunner() { }

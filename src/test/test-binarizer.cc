@@ -1,5 +1,11 @@
 #include "test-binarizer.h"
 
+#include <travatar/binarizer-directional.h>
+#include <travatar/binarizer-cky.h>
+#include <utility>
+
+using namespace std;
+
 namespace travatar {
 
 TestBinarizer::TestBinarizer() {

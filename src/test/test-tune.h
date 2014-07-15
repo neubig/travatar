@@ -2,13 +2,10 @@
 #define TEST_TUNE_H__
 
 #include "test-base.h"
-#include <travatar/tune-mert.h>
-#include <travatar/tune-xeval.h>
-#include <travatar/tune-greedy-mert.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
-
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 namespace travatar {
 
@@ -36,7 +33,7 @@ public:
 
 private:
     int valid, slopeid;
-    vector<boost::shared_ptr<TuningExample> > examp_set;
+    std::vector<boost::shared_ptr<TuningExample> > examp_set;
     boost::shared_ptr<HyperGraph> forest, forest2, forest2c, forest2d;
     SparseMap weights, gradient;
     TuningExampleNbest examp_nbest;

@@ -1,6 +1,8 @@
 #include "test-rule-extractor.h"
 #include <boost/shared_ptr.hpp>
 
+using namespace std;
+
 namespace travatar {
 
 TestRuleExtractor::TestRuleExtractor() {

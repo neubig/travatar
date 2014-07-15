@@ -4,9 +4,10 @@
 #include "test-base.h"
 #include <travatar/hiero-extractor.h>
 #include <travatar/alignment.h>
-#include <travatar/dict.h>
 #include <travatar/sentence.h>
-#include <boost/foreach.hpp>
+#include <vector>
+#include <set>
+#include <string>
 
 namespace travatar {
 
@@ -16,10 +17,10 @@ public:
     TestHiero();
     ~TestHiero();
     
-    int PhraseTest(std::vector<set<string> > & exp);
+    int PhraseTest(std::vector<std::set<std::string> > & exp);
     int TestPhraseExtraction();
     int TestPhraseExtractionLimit();
-    int RuleTest(std::vector<set<string> > & exp);
+    int RuleTest(std::vector<std::set<std::string> > & exp);
     int TestRuleExtraction();
     int TestRuleExtractionInitial();
     int TestRuleExtractionLen();

@@ -1,6 +1,8 @@
 #include "test-eval-measure.h"
 #include <travatar/dict.h>
 
+using namespace std;
+
 namespace travatar {
 
 TestEvalMeasure::TestEvalMeasure() :

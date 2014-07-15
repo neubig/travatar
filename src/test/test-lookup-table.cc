@@ -4,6 +4,7 @@
 #include <travatar/dict.h>
 #include <boost/shared_ptr.hpp>
 
+using namespace std;
 using namespace boost;
 
 namespace travatar {

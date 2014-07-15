@@ -5,6 +5,7 @@
 #include <travatar/lookup-table-fsm.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <string>
 
 namespace travatar {
 
@@ -13,7 +14,7 @@ public:
     TestLookupTableFSM();
     ~TestLookupTableFSM();
 
-    boost::shared_ptr<TranslationRuleHiero> BuildRule(const string & src, const string & trg, const string & feat);
+    boost::shared_ptr<TranslationRuleHiero> BuildRule(const std::string & src, const std::string & trg, const std::string & feat);
     HyperGraph * CreateExpectedGraph();
     bool TestBuildRules(LookupTableFSM & lookup);
     

@@ -1,7 +1,11 @@
 #include "test-tune.h"
 
+#include <travatar/tune-mert.h>
+#include <travatar/tune-xeval.h>
+#include <travatar/tune-greedy-mert.h>
 #include <travatar/eval-measure-bleu.h>
 
+using namespace std;
 using namespace boost;
 
 namespace travatar {
