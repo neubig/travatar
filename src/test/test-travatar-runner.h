@@ -9,19 +9,13 @@ namespace travatar {
 class TestTravatarRunner : public TestBase {
 
 public:
+    TestTravatarRunner();
+    ~TestTravatarRunner();
 
-    TestTravatarRunner() { }
-    ~TestTravatarRunner() { }
-
-    bool RunTest() {
-        int done = 0, succeeded = 0;
-        // done++; cout << "TestLoadCorpus()" << endl; if(TestLoadCorpus()) succeeded++; else cout << "FAILED!!!" << endl;
-        cout << "#### TestTravatarRunner Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-        return done == succeeded;
-    }
+    bool RunTest();
 
 private:
-    TravatarRunner nr;
+    //TravatarRunner nr;
 
 };
 
