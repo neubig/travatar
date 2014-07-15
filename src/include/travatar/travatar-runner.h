@@ -1,9 +1,10 @@
 #ifndef TRAVATAR_RUNNER_H__ 
 #define TRAVATAR_RUNNER_H__
 
-#include <boost/shared_ptr.hpp>
-#include <travatar/thread-pool.h>
+#include <travatar/task.h>
 #include <travatar/output-collector.h>
+#include <boost/shared_ptr.hpp>
+#include <vector>
 
 namespace travatar {
 

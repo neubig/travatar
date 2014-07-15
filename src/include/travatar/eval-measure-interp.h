@@ -6,11 +6,11 @@
 //  interp=0.4|bleu|0.6|ribes
 // To do the 0.4/0.6 interperation fo the BLEU and RIBES measures
 
-#include <map>
-#include <vector>
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
 #include <boost/shared_ptr.hpp>
+#include <map>
+#include <vector>
 
 namespace travatar {
 
@@ -22,62 +22,16 @@ public:
         stats_(stats), coeffs_(coeffs) { }
     virtual ~EvalStatsInterp() { }
 
-    virtual std::string ConvertToString() const {
-        std::ostringstream oss;
-        oss << "INTERP = " << ConvertToScore() << " (";
-        for(int i = 0; i < (int)stats_.size(); i++) {
-            if(i != 0) oss << " + ";
-            oss << stats_[i]->ConvertToScore() << '*' << coeffs_[i];
-        }
-        oss << ")/Z";
-        return oss.str();
-    }
-    virtual std::string GetIdString() const { return "INTERP"; }
-    virtual double ConvertToScore() const {
-        double num = 0, denom = 0;
-        for(int i = 0; i < (int)stats_.size(); i++) {
-            num   += coeffs_[i] * stats_[i]->ConvertToScore();
-            denom += coeffs_[i];
-        }
-
-        return num/denom;
-    }
+    virtual std::string ConvertToString() const;
+    virtual std::string GetIdString() const;
+    virtual double ConvertToScore() const;
     // Check if the value is zero
-    virtual bool IsZero() {
-        BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
-            if(!ptr->IsZero())
-                return false;
-        return true;
-    }
-    virtual EvalStats & PlusEquals(const EvalStats & rhs) {
-        const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
-        if(stats_.size() != rhsi.stats_.size())
-            THROW_ERROR("Interpreted eval measure sizes don't match");
-        for(int i = 0; i < (int)stats_.size(); i++)
-            stats_[i]->PlusEquals(*rhsi.stats_[i]);
-        return *this;
-    }
-    virtual EvalStats & TimesEquals(EvalStatsDataType mult) {
-        for(int i = 0; i < (int)stats_.size(); i++)
-            stats_[i]->TimesEquals(mult);
-        return *this;
-    }
-    virtual bool Equals(const EvalStats & rhs) const {
-        const EvalStatsInterp & rhsi = (const EvalStatsInterp &)rhs;
-        if(stats_.size() != rhsi.stats_.size()) return false;
-        for(int i = 0; i < (int)stats_.size(); i++) {
-            if(!stats_[i]->Equals(*rhsi.stats_[i]) || coeffs_[i] != rhsi.coeffs_[i])
-                return false;
-        }
-        return true;
-    }
+    virtual bool IsZero();
+    virtual EvalStats & PlusEquals(const EvalStats & rhs);
+    virtual EvalStats & TimesEquals(EvalStatsDataType mult);
+    virtual bool Equals(const EvalStats & rhs) const;
 
-    EvalStatsPtr Clone() const { 
-        std::vector<EvalStatsPtr> newstats;
-        BOOST_FOREACH(const EvalStatsPtr & ptr, stats_)
-            newstats.push_back(ptr->Clone());
-        return EvalStatsPtr(new EvalStatsInterp(newstats, coeffs_));
-    }
+    EvalStatsPtr Clone() const;
 
     virtual std::string WriteStats();
 

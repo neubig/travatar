@@ -1,5 +1,6 @@
 #include "test-eval-measure.h"
 #include <travatar/dict.h>
+#include <travatar/util.h>
 
 using namespace std;
 

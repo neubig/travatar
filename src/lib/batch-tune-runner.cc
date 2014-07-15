@@ -1,6 +1,3 @@
-#include <fstream>
-#include <boost/shared_ptr.hpp>
-#include <boost/algorithm/string.hpp>
 #include <travatar/dict.h>
 #include <travatar/util.h>
 #include <travatar/config-batch-tune.h>
@@ -9,6 +6,7 @@
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
+#include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tune-xeval.h>
 #include <travatar/tune-online.h>
@@ -17,6 +15,9 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
 #include <travatar/output-collector.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
+#include <fstream>
 
 using namespace travatar;
 using namespace std;

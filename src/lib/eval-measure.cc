@@ -23,6 +23,83 @@ using namespace boost;
 #define NBEST_COUNT 10
 #define POP_LIMIT 500
 
+bool EvalStats::IsZero() {
+    BOOST_FOREACH(const EvalStatsDataType & val, vals_)
+        if(val != 0)
+            return false;
+    return true;
+}
+// Utility functions
+std::string EvalStats::ConvertToString() const {
+    std::ostringstream oss;
+    oss << GetIdString() << " = " << ConvertToScore();
+    return oss.str();
+}
+EvalStats & EvalStats::PlusEquals(const EvalStats & rhs) {
+    if(vals_.size() == 0) {
+        vals_ = rhs.vals_;
+    } else if (rhs.vals_.size() != 0) {
+        if(rhs.vals_.size() != vals_.size())
+            THROW_ERROR("Mismatched in EvalStats::PlusEquals");
+        for(int i = 0; i < (int)rhs.vals_.size(); i++)
+            vals_[i] += rhs.vals_[i];
+    }
+    return *this;
+}
+EvalStats & EvalStats::PlusEqualsTimes(const EvalStats & rhs, double p) {
+    if(vals_.size() == 0) {
+        vals_ = rhs.vals_;
+        for(int i = 0; i < (int)vals_.size(); i++)
+            vals_[i] *= p;
+    } else if (rhs.vals_.size() != 0) {
+        if(rhs.vals_.size() != vals_.size())
+            THROW_ERROR("Mismatched in EvalStats::PlusEqualsTimes");
+        for(int i = 0; i < (int)rhs.vals_.size(); i++)
+            vals_[i] += rhs.vals_[i] * p;
+    }
+    return *this;
+}
+EvalStats & EvalStats::TimesEquals(EvalStatsDataType mult) {
+    BOOST_FOREACH(EvalStatsDataType & val, vals_)
+        val *= mult;
+    return *this;
+}
+EvalStatsPtr EvalStats::Plus(const EvalStats & rhs) {
+    EvalStatsPtr ret(this->Clone());
+    ret->PlusEquals(rhs);
+    return ret;
+}
+EvalStatsPtr EvalStats::Times(EvalStatsDataType mult) {
+    EvalStatsPtr ret(this->Clone());
+    ret->TimesEquals(mult);
+    return ret;
+}
+bool EvalStats::Equals(const EvalStats & rhs) const {
+    if(vals_.size() != rhs.vals_.size()) return false;
+    for(int i = 0; i < (int)vals_.size(); i++) {
+        if(fabs(vals_[i]-rhs.vals_[i]) > 1e-6)
+            return false;
+    }
+    return true;
+}
+const std::vector<EvalStatsDataType> & EvalStats::GetVals() const { return vals_; }
+void EvalStats::ReadStats(const std::string & str) {
+    vals_.resize(0);
+    EvalStatsDataType val;
+    std::istringstream iss(str);
+    while(iss >> val)
+        vals_.push_back(val);
+}
+std::string EvalStats::WriteStats() {
+    std::ostringstream oss;
+    for(int i = 0; i < (int)vals_.size(); i++) {
+        if(i) oss << ' ';
+        oss << vals_[i];
+    }
+    return oss.str();
+}
+
+
 // Find the oracle sentence for this evaluation measure
 Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence & ref, int factor) {
     Sentence bord_ref;

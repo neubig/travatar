@@ -1,11 +1,9 @@
 #ifndef CFG_DATA_H__
 #define CFG_DATA_H__
 
+#include <travatar/sentence.h>
 #include <iostream>
 #include <vector>
-#include <boost/foreach.hpp>
-#include <travatar/sentence.h>
-#include <travatar/util.h>
 
 namespace travatar {
 
@@ -20,23 +18,13 @@ public:
             const Sentence & _syms = Sentence())
         : words(_words), label(_label), syms(_syms) { }
     
-    void AppendChild(const CfgData & child) {
-        BOOST_FOREACH(WordId wid, child.words)
-            words.push_back(wid);
-        syms.push_back(child.label);
-    }
+    void AppendChild(const CfgData & child);
 
     bool operator==(const CfgData & rhs) const {
         return words == rhs.words && label == rhs.label && syms == rhs.syms;
     }
 
-    std::vector<int> GetNontermPositions() {
-        std::vector<int> ret;
-        for(int i = 0; i < (int)words.size(); i++)
-            if(words[i] < 0)
-                ret.push_back(i);
-        return ret;
-    }
+    std::vector<int> GetNontermPositions();
 
     void Print(std::ostream & out) const;
 

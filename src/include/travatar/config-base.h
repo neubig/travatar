@@ -3,20 +3,9 @@
 
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <sstream>
-#include <iostream>
-#include <stdexcept>
 #include <tr1/unordered_map>
 
-
 namespace travatar {
-
-#define DIE_HELP(msg) do {                      \
-    std::ostringstream oss;                     \
-    oss << msg;                                 \
-    DieOnHelp(oss.str()); }                     \
-  while (0);
 
 // name -> value, description
 typedef std::tr1::unordered_map<std::string, std::pair<std::string,std::string> > ConfigMap;
@@ -57,24 +46,14 @@ public:
     // Setter functions
     void SetString(const std::string & name, const std::string & val);
 
-    void SetInt(const std::string & name, int val) {
-        std::ostringstream oss; oss << val; SetString(name,oss.str());
-    }
-    void SetDouble(const std::string & name, double val) {
-        std::ostringstream oss; oss << val; SetString(name,oss.str());
-    }
-    void SetBool(const std::string & name, bool val) {
-        std::ostringstream oss; oss << val; SetString(name,oss.str());
-    }
+    void SetInt(const std::string & name, int val);
+    void SetDouble(const std::string & name, double val);
+    void SetBool(const std::string & name, bool val);
 
     void SetUsage(const std::string & str) { usage_ = str; }
 
     const std::vector<std::string> & GetMainArgs() const { return mainArgs_; }
-    const std::string & GetMainArg(int id) const { 
-        if(id >= (int)mainArgs_.size())
-            throw std::runtime_error("Argument request is out of bounds");
-        return mainArgs_[id];
-    }
+    const std::string & GetMainArg(int id) const;
 	
 };
 

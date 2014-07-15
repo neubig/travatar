@@ -1,14 +1,13 @@
 #ifndef EVAL_MEASURE_H__
 #define EVAL_MEASURE_H__
 
+#include <travatar/sentence.h>
+#include <boost/shared_ptr.hpp>
 #include <cfloat>
 #include <vector>
 #include <climits>
 #include <string>
 #include <sstream>
-#include <boost/shared_ptr.hpp>
-#include <travatar/sentence.h>
-#include <travatar/util.h>
 
 namespace travatar {
 
@@ -31,81 +30,18 @@ public:
     // Get the ID of this stats
     virtual std::string GetIdString() const = 0;
     // Check if the value is zero
-    virtual bool IsZero() {
-        BOOST_FOREACH(const EvalStatsDataType & val, vals_)
-            if(val != 0)
-                return false;
-        return true;
-    }
+    virtual bool IsZero();
     // Utility functions
-    virtual std::string ConvertToString() const {
-        std::ostringstream oss;
-        oss << GetIdString() << " = " << ConvertToScore();
-        return oss.str();
-    }
-    virtual EvalStats & PlusEquals(const EvalStats & rhs) {
-        if(vals_.size() == 0) {
-            vals_ = rhs.vals_;
-        } else if (rhs.vals_.size() != 0) {
-            if(rhs.vals_.size() != vals_.size())
-                THROW_ERROR("Mismatched in EvalStats::PlusEquals");
-            for(int i = 0; i < (int)rhs.vals_.size(); i++)
-                vals_[i] += rhs.vals_[i];
-        }
-        return *this;
-    }
-    virtual EvalStats & PlusEqualsTimes(const EvalStats & rhs, double p) {
-        if(vals_.size() == 0) {
-            vals_ = rhs.vals_;
-            for(int i = 0; i < (int)vals_.size(); i++)
-                vals_[i] *= p;
-        } else if (rhs.vals_.size() != 0) {
-            if(rhs.vals_.size() != vals_.size())
-                THROW_ERROR("Mismatched in EvalStats::PlusEqualsTimes");
-            for(int i = 0; i < (int)rhs.vals_.size(); i++)
-                vals_[i] += rhs.vals_[i] * p;
-        }
-        return *this;
-    }
-    virtual EvalStats & TimesEquals(EvalStatsDataType mult) {
-        BOOST_FOREACH(EvalStatsDataType & val, vals_)
-            val *= mult;
-        return *this;
-    }
-    virtual EvalStatsPtr Plus(const EvalStats & rhs) {
-        EvalStatsPtr ret(this->Clone());
-        ret->PlusEquals(rhs);
-        return ret;
-    }
-    virtual EvalStatsPtr Times(EvalStatsDataType mult) {
-        EvalStatsPtr ret(this->Clone());
-        ret->TimesEquals(mult);
-        return ret;
-    }
-    virtual bool Equals(const EvalStats & rhs) const {
-        if(vals_.size() != rhs.vals_.size()) return false;
-        for(int i = 0; i < (int)vals_.size(); i++) {
-            if(fabs(vals_[i]-rhs.vals_[i]) > 1e-6)
-                return false;
-        }
-        return true;
-    }
-    const std::vector<EvalStatsDataType> & GetVals() const { return vals_; }
-    virtual void ReadStats(const std::string & str) {
-        vals_.resize(0);
-        EvalStatsDataType val;
-        std::istringstream iss(str);
-        while(iss >> val)
-            vals_.push_back(val);
-    }
-    virtual std::string WriteStats() {
-        std::ostringstream oss;
-        for(int i = 0; i < (int)vals_.size(); i++) {
-            if(i) oss << ' ';
-            oss << vals_[i];
-        }
-        return oss.str();
-    }
+    virtual std::string ConvertToString() const;
+    virtual EvalStats & PlusEquals(const EvalStats & rhs);
+    virtual EvalStats & PlusEqualsTimes(const EvalStats & rhs, double p);
+    virtual EvalStats & TimesEquals(EvalStatsDataType mult);
+    virtual EvalStatsPtr Plus(const EvalStats & rhs);
+    virtual EvalStatsPtr Times(EvalStatsDataType mult);
+    virtual bool Equals(const EvalStats & rhs) const;
+    const std::vector<EvalStatsDataType> & GetVals() const;
+    virtual void ReadStats(const std::string & str);
+    virtual std::string WriteStats();
 protected:
     std::vector<EvalStatsDataType> vals_;
 };

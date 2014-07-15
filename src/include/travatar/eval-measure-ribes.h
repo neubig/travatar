@@ -1,11 +1,11 @@
 #ifndef EVAL_MEASURE_RIBES_H__
 #define EVAL_MEASURE_RIBES_H__
 
-#include <map>
-#include <vector>
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
 #include <boost/shared_ptr.hpp>
+#include <map>
+#include <vector>
 
 namespace travatar {
 

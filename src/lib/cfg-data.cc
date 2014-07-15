@@ -1,8 +1,23 @@
 #include <travatar/cfg-data.h>
 #include <travatar/dict.h>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace travatar;
+
+std::vector<int> CfgData::GetNontermPositions() {
+    std::vector<int> ret;
+    for(int i = 0; i < (int)words.size(); i++)
+        if(words[i] < 0)
+            ret.push_back(i);
+    return ret;
+}
+
+void CfgData::AppendChild(const CfgData & child) {
+    BOOST_FOREACH(WordId wid, child.words)
+        words.push_back(wid);
+    syms.push_back(child.label);
+}
 
 void CfgData::Print(std::ostream & out) const {
     out << "{\"label\": " << label;

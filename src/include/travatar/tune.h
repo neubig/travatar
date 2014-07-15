@@ -1,13 +1,12 @@
 #ifndef TUNE_H__
 #define TUNE_H__
 
-#include <vector>
-#include <cfloat>
-#include <boost/shared_ptr.hpp>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
 #include <travatar/dict.h>
+#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <cfloat>
 
 namespace travatar {
 
@@ -51,9 +50,7 @@ public:
     }
     std::vector<boost::shared_ptr<TuningExample> > & GetExamples() { return examps_; }
     const std::vector<boost::shared_ptr<TuningExample> > & GetExamples() const { return examps_; }
-    TuningExample & GetExample(int id) {
-        return *SafeAccess(examps_, id);
-    }
+    TuningExample & GetExample(int id);
     WordId GetScaleId() { return scale_id_; }
 
 protected:

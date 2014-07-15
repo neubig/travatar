@@ -12,11 +12,7 @@
 
 namespace travatar {
 
-class Task {
-public:
-    virtual void Run() = 0;
-    virtual ~Task() { }
-};
+class Task;
 
 class ThreadPool {
 

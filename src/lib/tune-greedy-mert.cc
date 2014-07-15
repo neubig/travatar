@@ -40,6 +40,10 @@ void GreedyMertTask::Run() {
         cerr << oss.str();
 }
 
+// Constructor
+TuneGreedyMert::TuneGreedyMert() : Tune(),
+                       early_terminate_(false) { }
+
 void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
     mutex::scoped_lock lock(result_mutex_);
     if(best_result_.gain < result.gain) {
@@ -112,3 +116,5 @@ double TuneGreedyMert::RunTuning(SparseMap & weights) {
     } while(result.gain > gain_threshold_);
     return result.after->ConvertToScore();
 }
+
+double TuneGreedyMert::GetBestGain() { return best_result_.gain; }

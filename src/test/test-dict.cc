@@ -1,4 +1,6 @@
 #include "test-dict.h"
+#include <travatar/util.h>
+#include <boost/foreach.hpp>
 
 using namespace std;
 

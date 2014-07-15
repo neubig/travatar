@@ -1,9 +1,7 @@
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/algorithm/string.hpp>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/util.h>
+#include <travatar/thread-pool.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>
 #include <travatar/travatar-runner.h>
@@ -22,6 +20,9 @@
 #include <travatar/input-file-stream.h>
 #include <travatar/config-travatar-runner.h>
 #include <lm/model.hh>
+#include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+// #include <boost/algorithm/string.hpp>
 #include <fstream>
 
 using namespace travatar;
@@ -170,10 +171,9 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
             tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
         // Set the weight ranges
         if(config.GetString("tune_weight_ranges") != "") {
-            vector<string> ranges, range_vals;
-            boost::split(ranges, config.GetString("tune_weight_ranges"), boost::is_any_of(" "));
+            vector<string> ranges = Tokenize(config.GetString("tune_weight_ranges"), ' '), range_vals;
             BOOST_FOREACH(const string & range, ranges) {
-                boost::split(range_vals, range, boost::is_any_of("|"));
+                range_vals = Tokenize(range, '|');
                 if(range_vals.size() != 2 && range_vals.size() != 3)
                     THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
                 WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);

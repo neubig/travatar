@@ -1,6 +1,7 @@
 #include "test-lm-composer.h"
 #include <travatar/lm-composer-incremental.h>
 #include <travatar/lm-composer-bu.h>
+#include <travatar/dict.h>
 #include <fstream>
 #include <utility>
 
