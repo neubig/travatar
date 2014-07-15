@@ -4,6 +4,8 @@
 #include <set>
 #include <list>
 #include <map>
+#include <string>
+#include <ostream>
 #include <travatar/sentence.h>
 
 namespace travatar {
@@ -37,12 +39,12 @@ public:
 
 private:
     // A function to help print rules recursively
-    void PrintRuleSurface(const HyperNode & node,
-                          const Sentence & src_sent,
-                          std::list<HyperEdge*> & remaining_fragments,
-                          int & tail_num,
-                          std::ostream & oss) const;
-
+    void PrintRuleSurface(
+        const HyperNode & node,
+        const Sentence & src_sent,
+        std::list<HyperEdge*> & remaining_fragments,
+        int & tail_num,
+        std::ostream & oss) const;
 };
 
 }

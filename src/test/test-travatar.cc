@@ -1,22 +1,24 @@
-#include <iostream>
 #include "test-alignment.h"
-#include "test-dict.h"
-#include "test-travatar-runner.h"
-#include "test-hyper-graph.h"
-#include "test-tree-io.h"
-#include "test-rule-extractor.h"
-#include "test-io-util.h"
-#include "test-lookup-table.h"
-#include "test-graph-transformer.h"
-#include "test-lm-composer.h"
 #include "test-binarizer.h"
-#include "test-base.h"
-#include "test-weights.h"
+#include "test-dict.h"
 #include "test-eval-measure.h"
-#include "test-tune.h"
-#include "test-trimmer.h"
+#include "test-graph-transformer.h"
 #include "test-hiero.h"
+#include "test-hyper-graph.h"
+#include "test-io-util.h"
+#include "test-lm-composer.h"
+#include "test-lookup-table.h"
 #include "test-lookup-table-fsm.h"
+#include "test-rule-extractor.h"
+#include "test-travatar-runner.h"
+#include "test-tree-io.h"
+#include "test-trimmer.h"
+#include "test-tune.h"
+#include "test-weights.h"
+
+#include "test-base.h"
+
+#include <iostream>
 
 using namespace std;
 using namespace travatar;
