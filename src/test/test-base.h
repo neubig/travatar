@@ -1,8 +1,6 @@
 #ifndef TEST_BASE__
 #define TEST_BASE__
 
-using namespace std;
-
 namespace travatar {
 
 class TestBase {
@@ -19,8 +17,6 @@ public:
 protected:
 
     bool passed_;
-
-
 
 };
 
