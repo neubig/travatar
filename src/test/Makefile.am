@@ -37,6 +37,7 @@ test_travatar_SOURCES = \
     test-io-util.cc \
     test-lm-composer.cc \
     test-rule-extractor.cc \
+    test-travatar-runner.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
