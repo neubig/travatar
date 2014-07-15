@@ -40,8 +40,10 @@ test_travatar_SOURCES = \
     test-lm-composer.cc \
     test-rule-extractor.cc \
     test-travatar-runner.cc \
+    test-tree-io.cc \
     test-trimmer.cc \
     test-tune.cc \
+    test-weights.cc \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
