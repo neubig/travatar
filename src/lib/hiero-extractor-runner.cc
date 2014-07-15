@@ -12,7 +12,6 @@
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
-#include <boost/tokenizer.hpp>
 
 using namespace travatar;
 using namespace std;
