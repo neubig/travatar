@@ -135,6 +135,16 @@ inline std::vector<std::string> Tokenize(const char *str, char c = ' ') {
 inline std::vector<std::string> Tokenize(const std::string &str, char c = ' ') {
     return Tokenize(str.c_str(), c);
 }
+inline std::vector<std::string> Tokenize(const std::string & str, const std::string & delim) {
+    std::vector<std::string> vec;
+    size_t loc, prev = 0;
+    while((loc = str.find(delim, prev)) != std::string::npos) {
+        vec.push_back(str.substr(prev, loc-prev));
+        prev = loc + delim.length();
+    }
+    vec.push_back(str.substr(prev, str.size()-prev));
+    return vec;
+}
 
 inline void GetlineEquals(std::istream & in, const std::string & str) {
     std::string line;

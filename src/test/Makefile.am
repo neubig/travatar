@@ -47,15 +47,16 @@ test_travatar_SOURCES = \
 	${TRAVATARH}
 
 test_travatar_LDADD = \
-	../lib/libtravatar.la \
-	../kenlm/lm/libklm.la \
-	../kenlm/util/libklm_util.la \
-	../kenlm/search/libklm_search.la \
-	../tercpp/libter.la \
-	../marisa/libmarisa.la \
-	../liblbfgs/liblbfgs.la \
-	-lboost_thread-mt \
-	-lboost_regex-mt \
-	-lboost_iostreams-mt \
-	-lboost_system-mt \
-	-lz ${LIBRT}
+    ../lib/libtravatar.la \
+    ../kenlm/lm/libklm.la \
+    ../kenlm/util/libklm_util.la \
+    ../kenlm/search/libklm_search.la \
+    ../tercpp/libter.la \
+    ../marisa/libmarisa.la \
+    ../liblbfgs/liblbfgs.la \
+    -lboost_thread${BOOSTMT} \
+    -lboost_regex${BOOSTMT} \
+    -lboost_iostreams${BOOSTMT} \
+    -lboost_system${BOOSTMT} \
+    -lz ${LIBRT}
+

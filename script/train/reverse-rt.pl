@@ -16,7 +16,16 @@ if(@ARGV != 0) {
 while(<STDIN>) {
     chomp;
     my @arr = split(/ \|\|\| /, $_, -1);
-    die "Wrong number of columns (must be >= 3):\n$_" if (@arr < 3);
+    die "Wrong number of columns (must >= 3):\n$_" if (@arr < 3);
     my $tmp = $arr[0]; $arr[0] = $arr[1]; $arr[1] = $tmp;
+    # Reverse the alignments if necessary
+    if(@arr >= 4) {
+        my $align = pop @arr;
+        my @out;
+        while($align =~ /(\d+)-(\d+)/g) { 
+            push @out, "$2-$1";
+        }
+        push @arr, "@out";
+    }
     print join(" ||| ", @arr)."\n";
 }

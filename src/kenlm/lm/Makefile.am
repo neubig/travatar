@@ -1,7 +1,7 @@
 include $(top_srcdir)/common.am
 bin_PROGRAMS = query build_binary lmplz
 
-LDLIBS = -lz -lboost_program_options-mt -lboost_thread-mt -lboost_system-mt -lpthread ${LIBRT}
+LDLIBS = -lz -lboost_program_options${BOOSTMT} -lboost_thread${BOOSTMT} -lboost_system${BOOSTMT} -lpthread ${LIBRT}
 
 query_SOURCES = query_main.cc
 query_LDADD = libklm.la ../util/libklm_util.la ${LDLIBS}

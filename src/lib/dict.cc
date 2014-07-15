@@ -1,8 +1,6 @@
 #include <boost/foreach.hpp>
-#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <travatar/util.h>
 #include <travatar/dict.h>
 #include <travatar/symbol-set.h>
@@ -126,8 +124,7 @@ Sentence Dict::ParseWords(const std::string & str) {
 
 std::vector<Sentence> Dict::ParseWordVector(const std::string & str) {
     std::vector<Sentence> ret;
-    vector<string> columns;
-    algorithm::split_regex(columns, str, regex(" \\|COL\\| "));
+    vector<string> columns = Tokenize(str, " |COL| ");
     BOOST_FOREACH(const std::string & col, columns) {
         ret.push_back(ParseWords(col));
     }
@@ -135,14 +132,12 @@ std::vector<Sentence> Dict::ParseWordVector(const std::string & str) {
 }
 
 CfgData Dict::ParseAnnotatedWords(const std::string & str) {
-    regex term_regex("^\"(.+)\"$");
-    regex nonterm_regex("^x(\\d+)(:.+)?$");
-    smatch str_match;
     CfgData data;
     std::istringstream iss(str);
     std::string buff;
     // Read all the words in the string
     while(iss >> buff) {
+        int bs = buff.size();
         // The next word is the head symbol
         if(buff == "@") {
             if(!(iss >> buff))
@@ -152,16 +147,20 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
                 THROW_ERROR("Too many labels in synchronus rule: " <<  str);
             break;
         // Read a terminal
-        } else if(regex_match(buff, str_match, term_regex)) {
-            data.words.push_back(Dict::WID(str_match[1]));
+        } else if (bs > 2 && buff[0] == '"' && buff[bs-1] == '"') {
+            data.words.push_back(Dict::WID(buff.substr(1, bs-2)));
         // Read a non-terminal
-        } else if(regex_match(buff, str_match, nonterm_regex)) {
-            int id = lexical_cast<int>(str_match[1]);
+        } else if(buff[0] == 'x') {
+            int end;
+            for(end = 1; end < bs && buff[end] >= '0' && buff[end] <= '9'; end++);
+            if(end == 1) THROW_ERROR("Bad rule string: " << str);
+            int id = lexical_cast<int>(buff.substr(1, end-1));
             data.words.push_back(-1 - id);
-            if(str_match[2].length() > 0) {
+            if(end != bs) {
+                if(buff[end] != ':') THROW_ERROR("Bad rule string: " << str);
                 if(id >= (int)data.syms.size())
                     data.syms.resize(id+1, -1);
-                data.syms[id] = Dict::WID(((string)str_match[2]).substr(1));
+                data.syms[id] = Dict::WID(buff.substr(end+1));
             }
         // Everything else is bad
         } else {
@@ -173,8 +172,7 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
 
 CfgDataVector Dict::ParseAnnotatedVector(const std::string & str) {
     CfgDataVector ret;
-    vector<string> columns;
-    algorithm::split_regex(columns, str, regex(" \\|COL\\| "));
+    vector<string> columns = Tokenize(str, " |COL| ");
     BOOST_FOREACH(const std::string & col, columns) {
         ret.push_back(ParseAnnotatedWords(col));
     }

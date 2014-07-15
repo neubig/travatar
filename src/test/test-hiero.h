@@ -24,7 +24,7 @@ public:
     int TestRuleExtraction();
     int TestRuleExtractionInitial();
     int TestRuleExtractionLen();
-
+    
     bool RunTest();
 
 private:

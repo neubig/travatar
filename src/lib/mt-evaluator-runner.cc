@@ -20,6 +20,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
 
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
+    int factor = config.GetInt("factor");
 
     // Load the reference
     ifstream refin(config.GetString("ref").c_str());
@@ -72,7 +73,8 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         ifstream sysin(filename.c_str());
         if(!sysin) THROW_ERROR("Could not open system file: " << filename);
         while(getline(sysin, line)) {
-            Sentence sys_sent = Dict::ParseWords(line);
+            vector<string> factors = Tokenize(line, " |COL| ");
+            Sentence sys_sent = Dict::ParseWords(factors[factor]);
             for(int i = 0; i < eval_count; i++) {
                 EvalStatsPtr stats = eval_measures[i]->CalculateStats(ref_sentences[0][id],sys_sent);
                 if(sent) {

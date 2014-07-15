@@ -31,7 +31,7 @@ protected:
     HyperNode* head_;
     std::vector<HyperNode*> tails_;
     double score_;
-    std::string rule_str_;
+    std::string src_str_;
     CfgDataVector trg_data_;
     SparseMap features_;
     // A pointer to edges in a separate hypergraph that are
@@ -73,13 +73,13 @@ public:
     // const TranslationRule * GetRule() const { return rule_; }
     // Set the translation rule, including the features in the edges covered by the rule
     void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
-    const std::string & GetRuleStr() const { return rule_str_; }
+    const std::string & GetSrcStr() const { return src_str_; }
     const CfgDataVector & GetTrgData() const { return trg_data_; }
     const SparseMap & GetFeatures() const { return features_; }
-    std::string & GetRuleStr() { return rule_str_; }
+    std::string & GetSrcStr() { return src_str_; }
     CfgDataVector & GetTrgData() { return trg_data_; }
     SparseMap & GetFeatures() { return features_; }
-    void SetRuleStr(const std::string & str) { rule_str_ = str; }
+    void SetSrcStr(const std::string & str) { src_str_ = str; }
     void SetTrgData(const CfgDataVector & trg) { trg_data_ = trg; }
     void SetFeatures(const SparseMap & feat) { features_ = feat; }
     void AddFeature(int idx, double feat) { features_[idx] += feat; }

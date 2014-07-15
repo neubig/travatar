@@ -86,7 +86,7 @@ void TravatarRunnerTask::Run() {
             trace_out
                 << sent_
                 << " ||| " << edge->GetHead()->GetSpan()
-                << " ||| " << edge->GetRuleStr() 
+                << " ||| " << edge->GetSrcStr() 
                 << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
                 << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
                 << endl;
@@ -302,10 +302,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         }
 
         TravatarRunnerTask *task = new TravatarRunnerTask(sent++, tree_graph, this, refs, &collector, nbest_collector.get(), trace_collector.get(), forest_collector.get());
-        if(threads_ == 1)
+        if(threads_ == 1) {
             task->Run();
-        else
+            delete task;
+        } else {
             pool.Submit(task);
+        }
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
     pool.Stop(true);
