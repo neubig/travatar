@@ -39,6 +39,8 @@ LMData::LMData(const std::string & str) :
                 THROW_ERROR("Bad parameter \""<<param<<"\" in " << endl << str);
             if(kv[0] == "factor") {
                 factor_ = boost::lexical_cast<int>(kv[1]);
+                if(factor_ >= GlobalVars::trg_factors)
+                    THROW_ERROR("LM factor ID " << factor_ << " is too large for number of target factors ("<<GlobalVars::trg_factors<<", with the first index at 0)");
             } else if(kv[0] == "lm_feat") {
                 lm_feat_ = Dict::WID(kv[1]);
             } else if(kv[0] == "lm_unk_feat") {
