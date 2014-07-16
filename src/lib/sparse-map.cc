@@ -4,6 +4,7 @@
 #include <boost/foreach.hpp>
 #include <map>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
@@ -118,9 +119,22 @@ void NormalizeL1(SparseMap & weights, double denom) {
 
 
 SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_() {
-    map<WordId, double> temp;
-    BOOST_FOREACH(SparsePair val, vec) { temp[val.first] += val.second; }
-    BOOST_FOREACH(SparsePair val, temp) { impl_.push_back(val); }
+    if(vec.size() == 0) return;
+    impl_ = vec;
+    sort(impl_.begin(), impl_.end());
+    SparseVectorImpl::iterator itl = impl_.begin(), itr = impl_.begin()+1;
+    while(itr != impl_.end()) {
+        if(itl->first == itr->first) {
+            itl->second += itr->first;
+        } else {
+            itl++;
+            *itl = *itr;
+        }
+        itr++;
+    }
+    if(++itl != impl_.end()) {
+        impl_.resize(itl - impl_.begin());
+    }
 }
 
 // Add a single value
