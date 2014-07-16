@@ -44,7 +44,7 @@ public:
     virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
 
     // Count weights
-    virtual void CountWeights(SparseMap & weights);
+    virtual void CountWeights(std::set<WordId> & weights);
 
     // Calculate the convex hull for this example given the current weights
     // and gradients

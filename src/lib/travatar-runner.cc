@@ -75,7 +75,7 @@ void TravatarRunnerTask::Run() {
                 << sent_
                 << " ||| " << Dict::PrintWords(path->GetTrgData())
                 << " ||| " << path->GetScore()
-                << " ||| " << Dict::PrintFeatures(path->CalcFeatures()) << endl;
+                << " ||| " << Dict::PrintSparseVector(path->CalcFeatures()) << endl;
         }
         nbest_collector_->Write(sent_, nbest_out.str(), "");
     }
@@ -89,7 +89,7 @@ void TravatarRunnerTask::Run() {
                 << " ||| " << edge->GetHead()->GetSpan()
                 << " ||| " << edge->GetSrcStr() 
                 << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
-                << " ||| " << Dict::PrintFeatures(edge->GetFeatures())
+                << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
                 << endl;
         }
         trace_collector_->Write(sent_, trace_out.str(), "");
@@ -131,7 +131,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Set weights
     if(config.GetString("weight_vals") == "")
         THROW_ERROR("You must specify weights through -weight_vals. If you really don't want any weights, just set -weight_vals dummy=0");
-    SparseMap init_weights = Dict::ParseFeatures(config.GetString("weight_vals"));
+    SparseMap init_weights = Dict::ParseSparseMap(config.GetString("weight_vals"));
 
     // Create the appropriate weights
     // If we are using online tuning, choose weights according to the tuning method,

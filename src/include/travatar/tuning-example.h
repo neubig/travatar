@@ -2,8 +2,10 @@
 #define TUNING_EXAMPLE_H__
 
 #include <travatar/sparse-map.h>
+#include <travatar/sentence.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include <set>
 
 namespace travatar {
 
@@ -16,7 +18,7 @@ typedef std::pair<Span, EvalStatsPtr> ScoredSpan;
 typedef std::vector<ScoredSpan> ConvexHull;
 
 // A pair of features and scores
-typedef std::pair<SparseMap, EvalStatsPtr> ExamplePair;
+typedef std::pair<SparseVector, EvalStatsPtr> ExamplePair;
 
 class TuningExample {
 
@@ -31,7 +33,7 @@ public:
     virtual SparseMap CalculatePotentialGain(const SparseMap & weights) = 0;
 
     // Add weights for this example
-    virtual void CountWeights(SparseMap & weights) = 0;
+    virtual void CountWeights(std::set<WordId> & weights) = 0;
 
     // Calculate the convex hull for this example given the current weights
     // and gradients

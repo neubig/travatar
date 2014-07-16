@@ -23,14 +23,14 @@ public:
     const std::vector<const HyperNode*> & GetNonterms() const { return nonterm_nodes_; }
     std::vector<const HyperNode*> & GetNonterms() { return nonterm_nodes_; }
     void SetNonterms(const std::vector<const HyperNode*> & nonterm_nodes) { nonterm_nodes_ = nonterm_nodes; }
-    const SparseMap & GetFeatures() const { return features_; }
-    void SetFeatures(const SparseMap & feat) { features_ = feat; }
-    void AddFeatures(const SparseMap & feat) { features_ += feat; }
+    const SparseVector & GetFeatures() const { return features_; }
+    void SetFeatures(const SparseVector & feat) { features_ = feat; }
+    void AddFeatures(const SparseVector & feat) { features_ += feat; }
 
 protected:
     // Links to the nodes of non-terminals that are abstracted
     std::vector<const HyperNode*> nonterm_nodes_;
-    SparseMap features_;
+    SparseVector features_;
 };
 
 // An implementation of a GraphTransformer that takes as input

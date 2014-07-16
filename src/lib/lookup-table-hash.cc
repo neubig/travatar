@@ -72,7 +72,7 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
             ret->AddToMatches(partial.str());
         }
         CfgDataVector trg_data = Dict::ParseAnnotatedVector(columns[1]);
-        SparseMap features = Dict::ParseFeatures(columns[2]);
+        SparseVector features = Dict::ParseSparseVector(columns[2]);
         ret->AddRule(new TranslationRule(columns[0], trg_data, features));
     }
     return ret;

@@ -23,9 +23,9 @@ int TestDict::TestParseWords() {
     return CheckVector(strs_exp, strs_act);
 }
 
-int TestDict::TestParseFeatures() {
+int TestDict::TestParseSparseMap() {
     // Parse the vector
-    SparseMap feat_act = Dict::ParseFeatures("a=1.5 b=2");
+    SparseMap feat_act = Dict::ParseSparseMap("a=1.5 b=2");
     SparseMap feat_exp;
     feat_exp[Dict::WID("a")] = 1.5;
     feat_exp[Dict::WID("b")] = 2;
@@ -35,7 +35,7 @@ int TestDict::TestParseFeatures() {
 bool TestDict::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestParseWords()" << endl; if(TestParseWords()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestParseFeatures()" << endl; if(TestParseFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestParseSparseMap()" << endl; if(TestParseSparseMap()) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestDict Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
 }

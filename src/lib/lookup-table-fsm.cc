@@ -39,7 +39,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
         TranslationRuleHiero * rule = new TranslationRuleHiero(
             columns[0],
             Dict::ParseAnnotatedVector(columns[1]),
-            Dict::ParseFeatures(columns[2]),
+            Dict::ParseSparseVector(columns[2]),
             src_data
         ); 
         if(src_data.syms.size() == 1 && src_data.words.size() == 1)
@@ -308,7 +308,7 @@ TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId
     return new TranslationRuleHiero(
         "UNK",
         CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, unknown_word), label)),
-        Dict::ParseFeatures("unk=1"),
+        Dict::ParseSparseVector("unk=1"),
         CfgData(Sentence(1, unknown_word), label)
     );
 }

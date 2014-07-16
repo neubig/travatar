@@ -23,7 +23,7 @@ using namespace travatar;
 
 // Tune new weights using online learning
 double TuneOnline::RunTuning(SparseMap & kv) {
-    PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintFeatures(kv) << endl, 2);
+    PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintSparseMap(kv) << endl, 2);
 
     // Create a weight adjuster
     shared_ptr<Weights> weights;
@@ -87,8 +87,8 @@ double TuneOnline::RunTuning(SparseMap & kv) {
             
             // Calculate the scores
             vector<pair<double, double> > scores(nbest.size());
-            vector<SparseMap*> feats(nbest.size());
-            PRINT_DEBUG("CURRENT: " << Dict::PrintFeatures(weights->GetCurrent()) << endl, 3);
+            vector<SparseVector*> feats(nbest.size());
+            PRINT_DEBUG("CURRENT: " << Dict::PrintSparseMap(weights->GetCurrent()) << endl, 3);
             for(int i = 0; i < (int)nbest.size(); i++) {
                 total_stats->PlusEquals(*nbest[i].second);
                 scores[i].first  = (*weights) * nbest[i].first;
@@ -100,7 +100,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
 
             // Actually adjust the weights
             weights->Adjust(scores, feats);
-            PRINT_DEBUG("AFTER:   " << Dict::PrintFeatures(weights->GetCurrent()) << endl, 3);
+            PRINT_DEBUG("AFTER:   " << Dict::PrintSparseMap(weights->GetCurrent()) << endl, 3);
 
             // Re-add the stats for the current example
             const ExamplePair & expair = examp.CalculateModelHypothesis(*weights);

@@ -45,9 +45,12 @@ struct Dict {
     static std::string PrintAnnotatedVector(const CfgDataVector & data);
 
     // Feature functions
-    static std::string PrintFeatures(const SparseMap & feats);
-    static SparseMap ParseFeatures(std::istream & iss);
-    static SparseMap ParseFeatures(const std::string & str);
+    static std::string PrintSparseMap(const SparseMap & feats);
+    static std::string PrintSparseVector(const SparseVector & feats);
+    static SparseMap ParseSparseMap(std::istream & iss);
+    static SparseMap ParseSparseMap(const std::string & str);
+    static SparseVector ParseSparseVector(std::istream & iss);
+    static SparseVector ParseSparseVector(const std::string & str);
 
     // Get the word ID
     static Sentence ParseWords(const std::string & str);

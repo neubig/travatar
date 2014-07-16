@@ -20,7 +20,7 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
     // If we have weights, rescore based on the weights
     if(rescore_weights_) {
         BOOST_FOREACH(RescorerNbestElement & elem, nbest)
-            elem.score = elem.feat * weights_;
+            elem.score = weights_ * elem.feat;
     }
     
     // If we are doing MBR rescoring
@@ -85,7 +85,7 @@ void RescorerRunner::Print(const RescorerNbest & nbest) {
             *nbest_out_ << sent_ << " ||| "
                         << Dict::PrintWords(elem.sent) << " ||| "
                         << elem.score << " ||| "
-                        << Dict::PrintFeatures(elem.feat) << endl;
+                        << Dict::PrintSparseVector(elem.feat) << endl;
         } 
     }
 }
@@ -117,7 +117,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
         ifstream weight_in(config.GetString("weight_in").c_str());
         if(!weight_in)
             THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
-        weights_ = Dict::ParseFeatures(weight_in);
+        weights_ = Dict::ParseSparseMap(weight_in);
         rescore_weights_ = true;
         weight_in.close();
     }
@@ -147,7 +147,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
         }
         last_id = id;
         nbest.push_back(RescorerNbestElement(Dict::ParseWords(columns[1]), 
-                                             Dict::ParseFeatures(columns[3]),
+                                             Dict::ParseSparseVector(columns[3]),
                                              boost::lexical_cast<double>(columns[2])));
     }
     Rescore(nbest);

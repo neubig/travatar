@@ -38,7 +38,7 @@ void TuningExampleForest::AddHypothesis(const shared_ptr<HyperGraph> & hg) {
 void TuningExampleForest::FindActiveFeatures() {
     active_.clear();
     BOOST_FOREACH(const HyperEdge * edge, forest_->GetEdges())
-        BOOST_FOREACH(const SparseMap::value_type & feat, edge->GetFeatures())
+        BOOST_FOREACH(const SparsePair & feat, edge->GetFeatures().GetImpl())
             active_.insert(feat.first);
 }
 
@@ -57,10 +57,10 @@ void TuningExampleForest::CalculateOracle() {
 }
 
 // Add weights
-void TuningExampleForest::CountWeights(SparseMap & weights) {
+void TuningExampleForest::CountWeights(set<WordId> & weights) {
     BOOST_FOREACH(const HyperEdge * edge, forest_->GetEdges())
-        BOOST_FOREACH(const SparseMap::value_type & feat, edge->GetFeatures())
-            weights[feat.first] = 1;
+        BOOST_FOREACH(const SparsePair & feat, edge->GetFeatures().GetImpl())
+            weights.insert(feat.first);
 }
 
 // Calculate the potential gain for a single example given the current weights

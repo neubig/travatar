@@ -31,7 +31,7 @@ protected:
     double score_;
     std::string src_str_;
     CfgDataVector trg_data_;
-    SparseMap features_;
+    SparseVector features_;
     // A pointer to edges in a separate hypergraph that are
     // matched by a rule represented by this edge (for use in rule graphs)
     std::vector<HyperEdge*> fragment_edges_;
@@ -70,17 +70,17 @@ public:
     void SetFragmentEdges(const std::vector<HyperEdge*> & fragment_edges) { fragment_edges_ = fragment_edges; }
     // const TranslationRule * GetRule() const { return rule_; }
     // Set the translation rule, including the features in the edges covered by the rule
-    void SetRule(const TranslationRule * rule, const SparseMap & orig_features = SparseMap());
+    void SetRule(const TranslationRule * rule, const SparseVector & orig_features = SparseVector());
     const std::string & GetSrcStr() const { return src_str_; }
     const CfgDataVector & GetTrgData() const { return trg_data_; }
-    const SparseMap & GetFeatures() const { return features_; }
+    const SparseVector & GetFeatures() const { return features_; }
     std::string & GetSrcStr() { return src_str_; }
     CfgDataVector & GetTrgData() { return trg_data_; }
-    SparseMap & GetFeatures() { return features_; }
+    SparseVector & GetFeatures() { return features_; }
     void SetSrcStr(const std::string & str) { src_str_ = str; }
     void SetTrgData(const CfgDataVector & trg) { trg_data_ = trg; }
-    void SetFeatures(const SparseMap & feat) { features_ = feat; }
-    void AddFeature(int idx, double feat) { features_[idx] += feat; }
+    void SetFeatures(const SparseVector & feat) { features_ = feat; }
+    // void AddFeature(int idx, double feat) { features_[idx] += feat; }
     void AddTrgWord(int idx, int factor = 0) {
         if((int)trg_data_.size() <= factor)
             trg_data_.resize(factor+1);
@@ -260,7 +260,7 @@ public:
     CfgData CalcTranslation(int factor, int & idx);
 
     // Calculate the features for this path by simply adding up all the features
-    SparseMap CalcFeatures();
+    SparseVector CalcFeatures();
 
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
@@ -270,7 +270,7 @@ public:
     const CfgDataVector & GetTrgData() const { return data_; }
     CfgDataVector & GetTrgData() { return data_; }
     void SetTrgData(const CfgDataVector & data) { data_ = data; }
-    SparseMap GetFeatures();
+    SparseVector GetFeatures();
 
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }

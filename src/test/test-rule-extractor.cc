@@ -568,8 +568,8 @@ int TestRuleExtractor::TestComposeEdge() {
     // Not clear if calculating rule strings is necessary, as rules are generally
     // composed before calculating their string representations
     // exp14->SetRuleStr("S ( V ( \"a\" ) x0:N )");
-    BOOST_FOREACH(const SparsePair & kv, edges[0]->GetFeatures()) exp14->AddFeature(kv.first, kv.second);
-    BOOST_FOREACH(const SparsePair & kv, edges[2]->GetFeatures()) exp14->AddFeature(kv.first, kv.second);
+    BOOST_FOREACH(const SparsePair & kv, edges[0]->GetFeatures().GetImpl()) exp14->GetFeatures().Add(kv.first, kv.second);
+    BOOST_FOREACH(const SparsePair & kv, edges[2]->GetFeatures().GetImpl()) exp14->GetFeatures().Add(kv.first, kv.second);
     // Don't add these, as target words are not extracted
     // exp14->AddTrgWord(-1); exp14->AddTrgWord(Dict::WID("ne")); exp14->AddTrgWord(-2); exp14->AddTrgWord(Dict::WID("pas"));
     exp14->AddFragmentEdge(src1_graph->GetEdge(1));

@@ -137,13 +137,13 @@ void TuneXeval::CalcBleuGradient(
 void TuneXeval::Init() {
     // If we are not yet initialized
     if(sparse2dense_.size() == 0) {
-        SparseMap potential;
+        set<WordId> potential;
         BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
             examp->CountWeights(potential);
-        potential[scale_id_] = 1;
-        BOOST_FOREACH(SparseMap::value_type val, potential) {
-            sparse2dense_[val.first] = dense2sparse_.size();
-            dense2sparse_.push_back(val.first);
+        potential.insert(scale_id_);
+        BOOST_FOREACH(WordId val, potential) {
+            sparse2dense_[val] = dense2sparse_.size();
+            dense2sparse_.push_back(val);
         }
         // Build the stats
         all_stats_.clear(); all_stats_.resize(examps_.size());
@@ -155,7 +155,7 @@ void TuneXeval::Init() {
             all_feats_[i].resize(K);
             for(int k = 0; k < K; k++) {
                 all_stats_[i][k] = nbest[k].second;
-                BOOST_FOREACH(SparseMap::value_type val, nbest[k].first)
+                BOOST_FOREACH(SparsePair val, nbest[k].first.GetImpl())
                     all_feats_[i][k].push_back(make_pair(sparse2dense_[val.first], val.second));
             }
         }
@@ -294,7 +294,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
         THROW_ERROR("L1 regularization is not supported yet.");
 
     // Start
-    PRINT_DEBUG("Starting Expected Eval Tuning Run: " << Dict::PrintFeatures(kv) << endl, 2);
+    PRINT_DEBUG("Starting Expected Eval Tuning Run: " << Dict::PrintSparseMap(kv) << endl, 2);
 
     // The final score
     double last_score = 0.0;
@@ -310,7 +310,7 @@ double TuneXeval::RunTuning(SparseMap & kv) {
             // Perform stochastic gradient descent
             kv += d_xeval_dw * step_size_;
 
-            PRINT_DEBUG("Iter " << iter+1 << " KV: " << Dict::PrintFeatures(kv) << endl, 2);
+            PRINT_DEBUG("Iter " << iter+1 << " KV: " << Dict::PrintSparseMap(kv) << endl, 2);
         }
     // Optimize using LBFGS. Iterations are done within the library
     } else if (optimizer_ == "lbfgs") {

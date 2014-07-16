@@ -13,7 +13,7 @@ using namespace boost;
 bool Dict::add_ = true;
 SymbolSet<WordId> travatar::Dict::wids_ = SymbolSet<WordId>();
 
-std::string Dict::PrintFeatures(const SparseMap & feats) {
+std::string Dict::PrintSparseMap(const SparseMap & feats) {
     std::ostringstream oss;
     int sent = 0;
     BOOST_FOREACH(const SparsePair & kv, feats) {
@@ -22,8 +22,17 @@ std::string Dict::PrintFeatures(const SparseMap & feats) {
     }
     return oss.str();
 }
+std::string Dict::PrintSparseVector(const SparseVector & feats) {
+    std::ostringstream oss;
+    int sent = 0;
+    BOOST_FOREACH(const SparsePair & kv, feats.GetImpl()) {
+        if(sent++ != 0) oss << ' ';
+        oss << Dict::WSym(kv.first) << '=' << kv.second;
+    }
+    return oss.str();
+}
 // Get the word ID
-SparseMap Dict::ParseFeatures(std::istream & iss) {
+SparseMap Dict::ParseSparseMap(std::istream & iss) {
     std::string buff;
     SparseMap ret;
     while(iss >> buff) {
@@ -33,9 +42,23 @@ SparseMap Dict::ParseFeatures(std::istream & iss) {
     }
     return ret;
 }
-SparseMap Dict::ParseFeatures(const std::string & str) {
+SparseMap Dict::ParseSparseMap(const std::string & str) {
     std::istringstream iss(str);
-    return ParseFeatures(iss);
+    return ParseSparseMap(iss);
+}
+SparseVector Dict::ParseSparseVector(std::istream & iss) {
+    std::string buff;
+    vector<SparsePair> ret;
+    while(iss >> buff) {
+        size_t pos = buff.rfind('=');
+        if(pos == string::npos) THROW_ERROR("Bad feature string @ " << buff);
+        ret.push_back(make_pair(Dict::WID(buff.substr(0, pos)), atof(buff.substr(pos+1).c_str())));
+    }
+    return SparseVector(ret);
+}
+SparseVector Dict::ParseSparseVector(const std::string & str) {
+    std::istringstream iss(str);
+    return ParseSparseVector(iss);
 }
 
 const std::string & Dict::WSym(WordId id) {

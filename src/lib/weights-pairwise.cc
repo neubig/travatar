@@ -37,10 +37,10 @@ void WeightsPairwise::Adjust(EvalMeasure & eval,
                                        << ", ss=" << sys_score << ", se=" << sys_eval << endl
                                        /* << Dict::PrintFeatures(current_) << endl */
                                        , 1);
-    PRINT_DEBUG("Oracle["<<oracle<<"]\t"<<Dict::PrintFeatures(nbest[oracle]->CalcFeatures())<<endl
+    PRINT_DEBUG("Oracle["<<oracle<<"]\t"<<Dict::PrintSparseVector(nbest[oracle]->CalcFeatures())<<endl
                 <<Dict::PrintWords(nbest[oracle]->GetTrgData()[factor_].words)<<endl
-                <<"System[ 0 ]\t"    <<Dict::PrintFeatures(nbest[0]->CalcFeatures())<<endl
+                <<"System[ 0 ]\t"    <<Dict::PrintSparseVector(nbest[0]->CalcFeatures())<<endl
                 <<Dict::PrintWords(nbest[0]->GetTrgData()[factor_].words)<<endl
-                /* <<"Final\t"          <<Dict::PrintFeatures(GetFinal())<<endl */
+                /* <<"Final\t"          <<Dict::PrintSparseVector(GetFinal())<<endl */
                 ,2);
 }

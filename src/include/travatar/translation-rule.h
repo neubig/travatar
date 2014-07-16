@@ -14,7 +14,7 @@ class TranslationRule {
 public:
     TranslationRule(const std::string & src_str = "",
                     const CfgDataVector & trg_data = CfgDataVector(),
-                    const SparseMap & features = SparseMap()) :
+                    const SparseVector & features = SparseVector()) :
         src_str_(src_str), trg_data_(trg_data), features_(features) { }
 
     virtual ~TranslationRule() {} 
@@ -36,10 +36,10 @@ public:
 
     const std::string & GetSrcStr() const { return src_str_; }
     const CfgDataVector & GetTrgData() const { return trg_data_; }
-    const SparseMap & GetFeatures() const { return features_; }
+    const SparseVector & GetFeatures() const { return features_; }
     std::string & GetSrcStr() { return src_str_; }
     CfgDataVector & GetTrgData() { return trg_data_; }
-    SparseMap & GetFeatures() { return features_; }
+    SparseVector & GetFeatures() { return features_; }
 
     void AddTrgWord(WordId word, int factor = 0) {
         if(factor <= (int)trg_data_.size())
@@ -60,7 +60,7 @@ public:
 protected:
     std::string src_str_;
     CfgDataVector trg_data_;
-    SparseMap features_;
+    SparseVector features_;
 
 };
 inline std::ostream &operator<<( std::ostream &out, const TranslationRule &L ) {

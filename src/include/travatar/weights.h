@@ -58,12 +58,12 @@ public:
     // Scores are current model scores and evaluation scores
     virtual void Adjust(
             const std::vector<std::pair<double,double> > & scores,
-            const std::vector<SparseMap*> & features);
+            const std::vector<SparseVector*> & features);
 
     // The pairwise weight update rule
     virtual void Update (
-        const SparseMap & oracle, double oracle_score, double oracle_eval,
-        const SparseMap & system, double system_score, double system_eval
+        const SparseVector & oracle, double oracle_score, double oracle_eval,
+        const SparseVector & system, double system_score, double system_eval
     );
 
     // Adjust based on a single one-best list
@@ -88,9 +88,9 @@ protected:
 
 };
 
-inline double operator*(const Weights & lhs, const SparseMap & rhs) {
+inline double operator*(const Weights & lhs, const SparseVector & rhs) {
     double ret = 0;
-    BOOST_FOREACH(const SparsePair & val, rhs) {
+    BOOST_FOREACH(const SparsePair & val, rhs.GetImpl()) {
         ret += val.second * lhs.GetCurrent(val.first);
     }
     return ret;

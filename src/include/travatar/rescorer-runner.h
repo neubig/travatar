@@ -15,10 +15,10 @@ class EvalMeasure;
 class RescorerNbestElement {
 public:
     RescorerNbestElement() : score(0.0) { }
-    RescorerNbestElement(const Sentence & se, const SparseMap & f, double sc) :
+    RescorerNbestElement(const Sentence & se, const SparseVector & f, double sc) :
         sent(se), feat(f), score(sc) { }
     Sentence sent;
-    SparseMap feat;
+    SparseVector feat;
     double score;
 };
 typedef std::vector<RescorerNbestElement> RescorerNbest;

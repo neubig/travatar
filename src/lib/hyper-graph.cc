@@ -220,8 +220,8 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
     return frontier_;
 }
 
-SparseMap HyperPath::GetFeatures() {
-    SparseMap ret;
+SparseVector HyperPath::GetFeatures() {
+    SparseVector ret;
     BOOST_FOREACH(const HyperEdge* edge, edges_)
         ret += edge->GetFeatures();
     return ret;
@@ -311,8 +311,8 @@ void HyperPath::Print(std::ostream & out) const {
 
 
 // Calculate the features for this path by simply adding up all the features
-SparseMap HyperPath::CalcFeatures() {
-    SparseMap ret;
+SparseVector HyperPath::CalcFeatures() {
+    SparseVector ret;
     BOOST_FOREACH(HyperEdge* edge, edges_)
         ret += edge->GetFeatures();
     return ret;
@@ -359,7 +359,7 @@ CfgData HyperPath::CalcTranslation(int factor, int & idx) {
 // Score each edge in the graph
 void HyperGraph::ScoreEdges(const Weights & weights) {
     BOOST_FOREACH(HyperEdge * edge, edges_)
-        edge->SetScore(weights * edge->GetFeatures());
+        edge->SetScore(weights.GetCurrent() * edge->GetFeatures());
 }
 
 class QueueEntry {
@@ -371,7 +371,7 @@ public:
     GenericString<int> id_;
 };
 
-void HyperEdge::SetRule(const TranslationRule * rule, const SparseMap & orig_features) {
+void HyperEdge::SetRule(const TranslationRule * rule, const SparseVector & orig_features) {
     src_str_ = rule->GetSrcStr();
     features_ = rule->GetFeatures() + orig_features;
     trg_data_ = rule->GetTrgData();

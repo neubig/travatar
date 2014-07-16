@@ -84,9 +84,10 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         edge->SetHead(node);
         edge->SetTails(tails);
         hg->AddEdge(edge); node->AddEdge(edge);
-        edge->GetFeatures()[lm_id] = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
+        double lm_score = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
+        edge->GetFeatures().Add(lm_id, lm_score);
         if(lm_unk)
-            edge->GetFeatures()[lm_unk_id] = lm_unk;
+            edge->GetFeatures().Add(lm_unk_id, lm_unk);
         edge->SetScore(edge_score);
     }
     // Set the span for either the internal or final nodes

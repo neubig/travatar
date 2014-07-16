@@ -203,8 +203,11 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
                 edge->AddTail(ret->GetNode(t.second.get<int>("")));
         } catch (ptree_bad_path e) { }
         try {
+            vector<SparsePair> temp;
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("features"))
-                edge->AddFeature(Dict::WID(t.first), t.second.get<double>(""));
+                temp.push_back(make_pair(Dict::WID(t.first), t.second.get<double>("")));
+            edge->SetFeatures(SparseVector(temp));
+            // edge->AddFeature(Dict::WID(t.first), t.second.get<double>(""));
         } catch (ptree_bad_path e) { }
         try {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg")) {
@@ -316,7 +319,9 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
         if(buff != "|||") THROW_ERROR("||| not found in Egret node string: " << line);
         // Finally, read the score and add it to a parse
         iss >> score;
-        edge->SetScore(score); edge->AddFeature(Dict::WID("parse"), score);
+        edge->SetScore(score);
+        edge->GetFeatures().Add(Dict::WID("parse"), score);
+        // edge->AddFeature(Dict::WID("parse"), score);
     }
     return ret;
 }

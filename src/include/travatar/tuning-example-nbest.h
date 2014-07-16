@@ -21,7 +21,7 @@ public:
     virtual SparseMap CalculatePotentialGain(const SparseMap & weights);
 
     // Count weights
-    virtual void CountWeights(SparseMap & weights);
+    virtual void CountWeights(std::set<WordId> & weights);
 
     // Calculate the convex hull for this example given the current weights and gradients
     virtual ConvexHull CalculateConvexHull(
@@ -29,7 +29,7 @@ public:
                                 const SparseMap & gradient) const;
 
     // Add a new hypothesis to the n-best list
-    void AddHypothesis(const SparseMap & feats, boost::shared_ptr<EvalStats> score) {
+    void AddHypothesis(const SparseVector & feats, boost::shared_ptr<EvalStats> score) {
         nbest_.push_back(std::make_pair(feats,score));
     }
 

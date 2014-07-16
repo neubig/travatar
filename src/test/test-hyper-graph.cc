@@ -62,7 +62,7 @@ TestHyperGraph::TestHyperGraph() {
     HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
     rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
     HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
-    e0->AddFeature(Dict::WID("toy_feature"), 1.5);
+    e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
     rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
     HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
     rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
@@ -361,7 +361,7 @@ int TestHyperGraph::TestPathTranslation() {
 //    n_root->SetSym(Dict::WID("LMROOT"));
 //
 //    // HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
-//    // e0->AddFeature(Dict::WID("toy_feature"), 1.5);
+//    // e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
 //    // rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
 //    // HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
 //    // rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
@@ -394,41 +394,41 @@ int TestHyperGraph::TestPathTranslation() {
 //    n_root->SetViterbiScore(n_02_ax->GetViterbiScore() + -0.4372497 - -0.6368221 + -0.2108534);
 //    // Make edges for 0,1. There are only 2, so no pruning
 //    HyperEdge * e_01_ab = new HyperEdge(n_01_ab); exp_graph->AddEdge(e_01_ab); n_01_ab->AddEdge(e_01_ab);
-//    e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures()); e_01_ab->AddFeature(Dict::WID("lm"), -0.1286666 + -0.6368221);
+//    e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures()); e_01_ab->GetFeatures().Add(Dict::WID("lm"), -0.1286666 + -0.6368221);
 //    e_01_ab->SetTrgWords(rule_graph_->GetEdge(2)->GetTrgWords());
 //    HyperEdge * e_01_ac = new HyperEdge(n_01_ac); exp_graph->AddEdge(e_01_ac); n_01_ac->AddEdge(e_01_ac);
-//    e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures()); e_01_ac->AddFeature(Dict::WID("lm"), -0.1286666 + -0.6368221);
+//    e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures()); e_01_ac->GetFeatures().Add(Dict::WID("lm"), -0.1286666 + -0.6368221);
 //    e_01_ac->SetTrgWords(rule_graph_->GetEdge(3)->GetTrgWords());
 //    // Make edges for 1,2. There are only 3, so no pruning
 //    HyperEdge * e_12_x = new HyperEdge(n_12_x); exp_graph->AddEdge(e_12_x); n_12_x->AddEdge(e_12_x);
-//    e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures()); e_12_x->AddFeature(Dict::WID("lm"), -0.8129134); // P(x)
+//    e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures()); e_12_x->GetFeatures().Add(Dict::WID("lm"), -0.8129134); // P(x)
 //    e_12_x->SetTrgWords(rule_graph_->GetEdge(4)->GetTrgWords());
 //    HyperEdge * e_12_y = new HyperEdge(n_12_y); exp_graph->AddEdge(e_12_y); n_12_y->AddEdge(e_12_y);
-//    e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures()); e_12_y->AddFeature(Dict::WID("lm"), -0.8129134); // P(y)
+//    e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures()); e_12_y->GetFeatures().Add(Dict::WID("lm"), -0.8129134); // P(y)
 //    e_12_y->SetTrgWords(rule_graph_->GetEdge(5)->GetTrgWords());
 //    HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t);
-//    e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures()); e_12_t->AddFeature(Dict::WID("lm"), -100); // P(unk)
+//    e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures()); e_12_t->GetFeatures().Add(Dict::WID("lm"), -100); // P(unk)
 //    e_12_t->SetTrgWords(rule_graph_->GetEdge(6)->GetTrgWords());
 //    // Make edges for 0,2. There are more than three, so only expand the best three
 //    HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx);
-//    e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_abx->AddFeature(Dict::WID("lm"), -0.4855544 - -0.8129134);
+//    e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_abx->GetFeatures().Add(Dict::WID("lm"), -0.4855544 - -0.8129134);
 //    e_02_abx->AddTail(n_01_ab); e_02_abx->AddTail(n_12_x);
 //    e_02_abx->SetTrgWords(rule_graph_->GetEdge(0)->GetTrgWords());
 //    HyperEdge * e_02_acx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_acx); n_02_ax->AddEdge(e_02_acx);
-//    e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_acx->AddFeature(Dict::WID("lm"), -0.30103);
+//    e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_acx->GetFeatures().Add(Dict::WID("lm"), -0.30103);
 //    e_02_acx->AddTail(n_01_ac); e_02_acx->AddTail(n_12_x);
 //    e_02_acx->SetTrgWords(rule_graph_->GetEdge(0)->GetTrgWords());
 //    HyperEdge * e_02_aby = new HyperEdge(n_02_ay); exp_graph->AddEdge(e_02_aby); n_02_ay->AddEdge(e_02_aby);
-//    e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_aby->AddFeature(Dict::WID("lm"), -0.30103);
+//    e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures()); e_02_aby->GetFeatures().Add(Dict::WID("lm"), -0.30103);
 //    e_02_aby->AddTail(n_01_ab); e_02_aby->AddTail(n_12_y);
 //    e_02_aby->SetTrgWords(rule_graph_->GetEdge(0)->GetTrgWords());
 //    // Make edges for the root. There are only two
 //    HyperEdge * e_root_ax = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ax); n_root->AddEdge(e_root_ax);
-//    e_root_ax->AddFeature(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.2108534);
+//    e_root_ax->GetFeatures().Add(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.2108534);
 //    e_root_ax->AddTail(n_02_ax);
 //    e_root_ax->AddTrgWord(-1);
 //    HyperEdge * e_root_ay = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ay); n_root->AddEdge(e_root_ay);
-//    e_root_ay->AddFeature(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.30103 + -0.6368221);
+//    e_root_ay->GetFeatures().Add(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.30103 + -0.6368221);
 //    e_root_ay->AddTail(n_02_ay);
 //    e_root_ay->AddTrgWord(-1);
 //    return exp_graph->CheckEqual(*act_graph);
