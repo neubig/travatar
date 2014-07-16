@@ -79,19 +79,19 @@ LineSearchResult TuneMert::LineSearch(
     else
         middle = (best_span.first.first+best_span.first.second)/2;
     middle = max(range.first, min(middle, range.second));
-    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << "\t@gradient " << Dict::PrintFeatures(gradient) << endl, 3);
+    PRINT_DEBUG("0 --> " << zero_stats->ConvertToString() << ", " << middle << " --> " << best_span.second->ConvertToString() << "\t@gradient " << Dict::PrintSparseMap(gradient) << endl, 3);
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
 void TuneMert::Init() {
     // If we have no gradients, find them from the examples
     if(gradients_.size() == 0) {
-        SparseMap potential;
+        set<WordId> potential;
         BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
             examp->CountWeights(potential);
-        BOOST_FOREACH(SparseMap::value_type val, potential) {
+        BOOST_FOREACH(WordId val, potential) {
             SparseMap gradient;
-            gradient[val.first] = 1;
+            gradient[val] = 1;
             gradients_.push_back(gradient);
         }
     }
@@ -101,7 +101,7 @@ void TuneMert::Init() {
 double TuneMert::RunTuning(SparseMap & weights) {
     // Continue
     double best_score = 0;
-    PRINT_DEBUG("Starting MERT Run: " << Dict::PrintFeatures(weights) << endl, 2);
+    PRINT_DEBUG("Starting MERT Run: " << Dict::PrintSparseMap(weights) << endl, 2);
     while(true) {
         // Initialize the best result
         LineSearchResult best_result;
@@ -122,7 +122,7 @@ double TuneMert::RunTuning(SparseMap & weights) {
         if(best_result.gain <= gain_threshold_) break;
         weights += best_gradient * best_result.pos;
         best_score = best_result.after->ConvertToScore();
-        PRINT_DEBUG("Change: " << Dict::PrintFeatures(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintFeatures(weights) << endl << best_result.after->ConvertToString() << endl, 2);
+        PRINT_DEBUG("Change: " << Dict::PrintSparseMap(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintSparseMap(weights) << endl << best_result.after->ConvertToString() << endl, 2);
     }
 
     // Normalize so that weights add to 1

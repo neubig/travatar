@@ -19,7 +19,7 @@ TestBinarizer::TestBinarizer() {
         HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); trinary_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
         HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); trinary_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
         HyperEdge * e = new HyperEdge(na); trinary_graph_->AddEdge(e); e->AddTail(nb1); e->AddTail(nb2); e->AddTail(nb3); na->AddEdge(e);
-        e->SetScore(1); e->AddFeature(Dict::WID("feat"), 1);
+        e->SetScore(1); e->GetFeatures().Add(Dict::WID("feat"), 1);
     }
     // An example of a unordered graph with an intervening edge
     unordered_graph_.reset(new HyperGraph);
@@ -32,7 +32,7 @@ TestBinarizer::TestBinarizer() {
         HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); unordered_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
         HyperEdge * e1 = new HyperEdge(nb1); unordered_graph_->AddEdge(e1); nb1->AddEdge(e1);
         HyperEdge * e = new HyperEdge(na); unordered_graph_->AddEdge(e); e->AddTail(nb1); e->AddTail(nb2); e->AddTail(nb3); na->AddEdge(e);
-        e->SetScore(1); e->AddFeature(Dict::WID("feat"), 1);
+        e->SetScore(1); e->GetFeatures().Add(Dict::WID("feat"), 1);
     }
     // Example rule graph
     double_graph_.reset(new HyperGraph);
@@ -49,8 +49,8 @@ TestBinarizer::TestBinarizer() {
         HyperEdge * eay = new HyperEdge(na);  double_graph_->AddEdge(eay); eay->AddTail(nry); nrx->AddEdge(eay);
         HyperEdge * erx = new HyperEdge(nrx); double_graph_->AddEdge(erx); erx->AddTail(nb1); erx->AddTail(nb2); erx->AddTail(nb3); nrx->AddEdge(erx);
         HyperEdge * ery = new HyperEdge(nry); double_graph_->AddEdge(ery); ery->AddTail(nb1); ery->AddTail(nb2); ery->AddTail(nb3); nry->AddEdge(ery);
-        eax->SetScore(1); eax->AddFeature(Dict::WID("feat"), 1);
-        eay->SetScore(1); eay->AddFeature(Dict::WID("feat"), 1);
+        eax->SetScore(1); eax->GetFeatures().Add(Dict::WID("feat"), 1);
+        eay->SetScore(1); eay->GetFeatures().Add(Dict::WID("feat"), 1);
     }
 }
 
@@ -67,7 +67,7 @@ int TestBinarizer::TestBinarizerRight() {
     HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
     HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
     HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb1); e1->AddTail(nb23); na->AddEdge(e1);
-    e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+    e1->SetScore(1); e1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * e2 = new HyperEdge(nb23); exp_graph->AddEdge(e2); e2->AddTail(nb2); e2->AddTail(nb3); nb23->AddEdge(e2);
     return exp_graph->CheckEqual(*act_graph);
 }
@@ -83,7 +83,7 @@ int TestBinarizer::TestBinarizerRightRaisePunc() {
     HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
     HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
     HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb12); e1->AddTail(nb3); na->AddEdge(e1);
-    e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+    e1->SetScore(1); e1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * e2 = new HyperEdge(nb12); exp_graph->AddEdge(e2); e2->AddTail(nb1); e2->AddTail(nb2); nb12->AddEdge(e2);
     return exp_graph->CheckEqual(*act_graph);
 }
@@ -99,7 +99,7 @@ int TestBinarizer::TestBinarizerUnordered() {
     HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
     HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); exp_graph->AddNode(nb3);    nb3->SetSym(Dict::WID("."));
     HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb1); e1->AddTail(nb23); na->AddEdge(e1);
-    e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+    e1->SetScore(1); e1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * e2 = new HyperEdge(nb23); exp_graph->AddEdge(e2); e2->AddTail(nb2); e2->AddTail(nb3); nb23->AddEdge(e2);
     HyperEdge * e3 = new HyperEdge(nb1); exp_graph->AddEdge(e3); nb1->AddEdge(e3);
     return exp_graph->CheckEqual(*act_graph);
@@ -116,7 +116,7 @@ int TestBinarizer::TestBinarizerLeft() {
     HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); exp_graph->AddNode(nb2);    nb2->SetSym(Dict::WID("B2"));
     HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); exp_graph->AddNode(nb1);    nb1->SetSym(Dict::WID("B1"));
     HyperEdge * e1 = new HyperEdge(na); exp_graph->AddEdge(e1); e1->AddTail(nb12); e1->AddTail(nb3); na->AddEdge(e1);
-    e1->SetScore(1); e1->AddFeature(Dict::WID("feat"), 1);
+    e1->SetScore(1); e1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * e2 = new HyperEdge(nb12); exp_graph->AddEdge(e2); e2->AddTail(nb1); e2->AddTail(nb2); nb12->AddEdge(e2);
     return exp_graph->CheckEqual(*act_graph);
 }
@@ -137,8 +137,8 @@ int TestBinarizer::TestBinarizerCKY() {
     HyperEdge * e1r = new HyperEdge(na); exp_graph->AddEdge(e1r); e1r->AddTail(nb1); e1r->AddTail(nb23); na->AddEdge(e1r);
     HyperEdge * e1l = new HyperEdge(na); exp_graph->AddEdge(e1l); e1l->AddTail(nb12); e1l->AddTail(nb3); na->AddEdge(e1l);
     HyperEdge * e23 = new HyperEdge(nb23); exp_graph->AddEdge(e23); e23->AddTail(nb2); e23->AddTail(nb3); nb23->AddEdge(e23);
-    e1l->SetScore(1); e1l->AddFeature(Dict::WID("feat"), 1);
-    e1r->SetScore(1); e1r->AddFeature(Dict::WID("feat"), 1);
+    e1l->SetScore(1); e1l->GetFeatures().Add(Dict::WID("feat"), 1);
+    e1r->SetScore(1); e1r->GetFeatures().Add(Dict::WID("feat"), 1);
     return exp_graph->CheckEqual(*act_graph);
 }
 
@@ -158,9 +158,9 @@ int TestBinarizer::TestDoubleRight() {
     HyperNode * ny23 = new HyperNode; ny23->SetSpan(make_pair(1,3)); exp_graph->AddNode(ny23); ny23->SetSym(Dict::WID("Y'"));
     // Add the edges
     HyperEdge * ex1 = new HyperEdge(na); exp_graph->AddEdge(ex1); ex1->AddTail(nrx); na->AddEdge(ex1);
-    ex1->SetScore(1); ex1->AddFeature(Dict::WID("feat"), 1);
+    ex1->SetScore(1); ex1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * ey1 = new HyperEdge(na); exp_graph->AddEdge(ey1); ey1->AddTail(nry); na->AddEdge(ey1);
-    ey1->SetScore(1); ey1->AddFeature(Dict::WID("feat"), 1);
+    ey1->SetScore(1); ey1->GetFeatures().Add(Dict::WID("feat"), 1);
     HyperEdge * ex2 = new HyperEdge(nrx);  exp_graph->AddEdge(ex2); ex2->AddTail(nb1); ex2->AddTail(nx23); nrx->AddEdge(ex2);
     HyperEdge * ex3 = new HyperEdge(nx23); exp_graph->AddEdge(ex3); ex3->AddTail(nb2); ex3->AddTail(nb3);  nx23->AddEdge(ex3);
     HyperEdge * ey2 = new HyperEdge(nry);  exp_graph->AddEdge(ey2); ey2->AddTail(nb1); ey2->AddTail(ny23); nry->AddEdge(ey2);

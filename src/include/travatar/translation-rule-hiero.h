@@ -13,7 +13,7 @@ public:
 
     TranslationRuleHiero(const std::string & src_str = "",
                     const CfgDataVector & trg_data = CfgDataVector(),
-                    const SparseMap & features = SparseMap(),
+                    const SparseVector & features = SparseVector(),
                     const CfgData & src_data = Sentence()
                     ) : TranslationRule(src_str, trg_data, features),
                         src_data_(src_data) { }

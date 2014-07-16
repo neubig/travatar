@@ -33,7 +33,7 @@ BatchTuneRunnerTask::BatchTuneRunnerTask(
 
 void BatchTuneRunnerTask::Run() {
     score_ = tgm_->RunTuning(weights_);
-    PRINT_DEBUG(task_name_<<": " << Dict::PrintFeatures(weights_) << " => " << score_ << endl, 1);
+    PRINT_DEBUG(task_name_<<": " << Dict::PrintSparseMap(weights_) << " => " << score_ << endl, 1);
 }
 
 void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
@@ -48,7 +48,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
         vector<string> factors = Tokenize(columns[1], " |COL| ");
         Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
         // Get the features
-        SparseMap feat = Dict::ParseFeatures(columns[3]);
+        SparseVector feat = Dict::ParseSparseVector(columns[3]);
         // Calculate the score
         const Sentence & ref = SafeAccess(refs_,id);
         shared_ptr<EvalStats> stats;
@@ -132,7 +132,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         ifstream weight_in(config.GetString("weight_in").c_str());
         if(!weight_in)
             THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
-        weights = Dict::ParseFeatures(weight_in);
+        weights = Dict::ParseSparseMap(weight_in);
         weight_in.close();
     }
 
@@ -240,8 +240,8 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     }
 
     // Print result
-    PRINT_DEBUG("Best: " << Dict::PrintFeatures(best_weights) << " => " << best_score << endl, 0);
-    cout << Dict::PrintFeatures(best_weights) << endl;
+    PRINT_DEBUG("Best: " << Dict::PrintSparseMap(best_weights) << " => " << best_score << endl, 0);
+    cout << Dict::PrintSparseMap(best_weights) << endl;
 }
 
 void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, const string & filename) {

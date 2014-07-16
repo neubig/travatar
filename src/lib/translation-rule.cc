@@ -18,7 +18,7 @@ void TranslationRule::Print(std::ostream & out) const {
     if(features_.size()) {
         int pos = 0;
         out << ", \"features\": {";
-        BOOST_FOREACH(const SparsePair & val, features_) {
+        BOOST_FOREACH(const SparsePair & val, features_.GetImpl()) {
             out << (pos++?", ":"") << "\""<<Dict::WSym(val.first)<<"\": " << val.second;
         }
         out << "}";
@@ -26,9 +26,9 @@ void TranslationRule::Print(std::ostream & out) const {
     out << "}";
 }
 
-void TranslationRule::AddFeature(int id, double feat) { 
-    features_.insert(make_pair(id, feat));
-}
-void TranslationRule::AddFeature(const std::string & str, double feat) { 
-    features_.insert(make_pair(Dict::WID(str), feat));
-}
+// void TranslationRule::AddFeature(int id, double feat) { 
+//     features_.insert(make_pair(id, feat));
+// }
+// void TranslationRule::AddFeature(const std::string & str, double feat) { 
+//     features_.insert(make_pair(Dict::WID(str), feat));
+// }

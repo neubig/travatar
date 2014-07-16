@@ -13,7 +13,7 @@ public:
     ~TestDict();
 
     int TestParseWords();
-    int TestParseFeatures();
+    int TestParseSparseMap();
 
     bool RunTest();
 };

@@ -20,7 +20,7 @@ using namespace travatar;
 // and tune the weights using online learning
 void WeightsOnlinePro::Adjust(
         const std::vector<std::pair<double,double> > & scores,
-        const std::vector<SparseMap*> & features) {
+        const std::vector<SparseVector*> & features) {
     boost::mt19937 gen(time(0));
     // Sampling algorithm 1
     vector<pair<double,pair<int,int> > > samples;

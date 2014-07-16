@@ -21,7 +21,7 @@ public:
     // Scores are current model scores and evaluation scores
     virtual void Adjust(
             const std::vector<std::pair<double,double> > & scores,
-            const std::vector<SparseMap*> & features);
+            const std::vector<SparseVector*> & features);
 
     virtual const SparseMap & GetCurrent() const { return weights_->GetCurrent(); }
     virtual const SparseMap & GetFinal() const { return weights_->GetFinal(); }

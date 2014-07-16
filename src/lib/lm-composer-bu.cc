@@ -133,6 +133,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         }
         // *** Actually step through in target order, scoring
         double total_score = 0;
+        vector<SparsePair> lm_features;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
             RuleScore<lm::ngram::Model> my_rule_score(*data->GetLM(), my_state[lm_id]);
@@ -157,10 +158,14 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
             // cerr << " LM prob "<<lm_score<<" for: (id_str=" << id_str << ") @ " << PrintContext(my_state[lm_id].left) << ", " << PrintContext(my_state[lm_id].right) << endl;
             total_score += lm_score * data->GetWeight() + unk * data->GetUnkWeight();
             if(lm_score != 0.0)
-                next_edge->GetFeatures()[data->GetFeatureName()] += lm_score;
+                lm_features.push_back(make_pair(data->GetFeatureName(), lm_score));
+                // next_edge->GetFeatures()[data->GetFeatureName()] += lm_score;
             if(unk != 0)
-                next_edge->GetFeatures()[data->GetUnkFeatureName()] += unk;
+                lm_features.push_back(make_pair(data->GetUnkFeatureName(), unk));
+                // next_edge->GetFeatures()[data->GetUnkFeatureName()] += unk;
         }
+        // Clean up the features
+        next_edge->GetFeatures() += SparseVector(lm_features);
         // Retrieve the hypothesis
         map<vector<ChartState>, HyperNode*>::iterator it = hypo_comb.find(my_state);
         HyperNode * next_node;
@@ -240,7 +245,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
             my_rule_score.Terminal(data->GetLM()->GetVocabulary().Index("</s>"));
             double my_score = my_rule_score.Finish();
             if(my_score != 0.0)
-                edge->AddFeature(data->GetFeatureName(), my_score);
+                edge->GetFeatures().Add(data->GetFeatureName(), my_score);
             total_score += my_score * data->GetWeight();
         }
         edge->SetScore(total_score);

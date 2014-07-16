@@ -20,24 +20,24 @@ TestTune::TestTune() {
     valid = Dict::WID("val");
     slopeid = Dict::WID("slope");
     // Create the examples
-    SparseMap feat10, feat11, feat12, feat20, feat21, feat22;
+    SparseVector feat10, feat11, feat12, feat20, feat21, feat22;
     shared_ptr<TuningExample> examps1(new TuningExampleNbest()), examps2(new TuningExampleNbest());
-    feat10[valid] = 1; feat10[slopeid] = -1; ((TuningExampleNbest&)*examps1).AddHypothesis(feat10, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
-    feat11[valid] = 3; feat11[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat11, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
-    feat12[valid] = 1; feat12[slopeid] = 1;  ((TuningExampleNbest&)*examps1).AddHypothesis(feat12, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
-    feat20[valid] = 7; feat20[slopeid] = -1; ((TuningExampleNbest&)*examps2).AddHypothesis(feat20, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
-    feat21[valid] = 3; feat21[slopeid] = 1;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat21, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
-    feat22[valid] = 6; feat22[slopeid] = 0;  ((TuningExampleNbest&)*examps2).AddHypothesis(feat22, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
+    feat10.Add(valid,1); feat10.Add(slopeid,-1); ((TuningExampleNbest&)*examps1).AddHypothesis(feat10, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
+    feat11.Add(valid,3); feat11.Add(slopeid,1 );  ((TuningExampleNbest&)*examps1).AddHypothesis(feat11, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
+    feat12.Add(valid,1); feat12.Add(slopeid,1 );  ((TuningExampleNbest&)*examps1).AddHypothesis(feat12, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
+    feat20.Add(valid,7); feat20.Add(slopeid,-1); ((TuningExampleNbest&)*examps2).AddHypothesis(feat20, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
+    feat21.Add(valid,3); feat21.Add(slopeid,1 );  ((TuningExampleNbest&)*examps2).AddHypothesis(feat21, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
+    feat22.Add(valid,6); feat22.Add(slopeid,0 );  ((TuningExampleNbest&)*examps2).AddHypothesis(feat22, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
     examp_set.push_back(examps1); examp_set.push_back(examps2);
     weights[valid] = 1;
     gradient[slopeid] = 1;
 
     // Create the examples
-    SparseMap x1; x1[Dict::WID("a")] = 1; x1[Dict::WID("b")] = 1;
+    SparseVector x1; x1.Add(Dict::WID("a"), 1); x1.Add(Dict::WID("b"), 1);
     examp_nbest.AddHypothesis(x1, EvalStatsPtr(new EvalStatsAverage(1.0, 1)));
-    SparseMap x2; x2[Dict::WID("a")] = 1; x2[Dict::WID("c")] = 1;
+    SparseVector x2; x2.Add(Dict::WID("a"), 1); x2.Add(Dict::WID("c"), 1);
     examp_nbest.AddHypothesis(x2, EvalStatsPtr(new EvalStatsAverage(0.5, 1)));
-    SparseMap x3; x3[Dict::WID("a")] = 1; x3[Dict::WID("d")] = 1;
+    SparseVector x3; x3.Add(Dict::WID("a"), 1); x3.Add(Dict::WID("d"), 1);
     examp_nbest.AddHypothesis(x3, EvalStatsPtr(new EvalStatsAverage(0.0, 1)));
             
     forest.reset(new HyperGraph);
@@ -46,16 +46,16 @@ TestTune::TestTune() {
     HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); forest->AddNode(n0);
     HyperNode* n1 = new HyperNode(Dict::WID("B"), -1, make_pair(0,1)); forest->AddNode(n1);
     // And two edges between each node
-    SparseMap f01; f01[valid] = 1; f01[slopeid] = -1;
+    SparseVector f01; f01.Add(valid, 1); f01.Add(slopeid, -1);
     HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("x0 \"a\""))));
     e01->SetFeatures(f01); e01->AddTail(n1); n0->AddEdge(e01); forest->AddEdge(e01);
-    SparseMap f02; f02[valid] = 3; f02[slopeid] =  1;
+    SparseVector f02; f02.Add(valid, 3); f02.Add(slopeid, 1);
     HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"b\" x0"))));
     e02->SetFeatures(f02); e02->AddTail(n1); n0->AddEdge(e02); forest->AddEdge(e02);
-    SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+    SparseVector f11; f11.Add(valid, 1); f11.Add(slopeid, -1);
     HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"c\""))));
     e11->SetFeatures(f11);                   n1->AddEdge(e11); forest->AddEdge(e11);
-    SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+    SparseVector f12; f12.Add(valid, 1); f12.Add(slopeid, 1);
     HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"d\""))));
     e12->SetFeatures(f12);                   n1->AddEdge(e12); forest->AddEdge(e12);         
     }
@@ -81,28 +81,28 @@ HyperGraph * TestTune::CreateForestTwo(bool use_c, bool use_d) {
     }
     // And edges for each node
     if(use_c) {
-        SparseMap f01; f01[valid] = 1; f01[slopeid] = 0;
+        SparseVector f01; f01.Add(valid, 1); f01.Add(slopeid, 0);
         HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("x0 x1"))));
         e01->SetFeatures(f01); e01->AddTail(n1); e01->AddTail(n2); n0->AddEdge(e01); ret->AddEdge(e01);
     }
     if(use_d) {
-        SparseMap f02; f02[valid] = 1; f02[slopeid] =  2;
+        SparseVector f02; f02.Add(valid, 1); f02.Add(slopeid, 2);
         HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("x1 x0"))));
         e02->SetFeatures(f02); e02->AddTail(n1); e02->AddTail(n3); n0->AddEdge(e02); ret->AddEdge(e02);
     }
-    SparseMap f11; f11[valid] = 1; f11[slopeid] = -1;
+    SparseVector f11; f11.Add(valid, 1); f11.Add(slopeid, -1);
     HyperEdge* e11 = new HyperEdge(n1); e11->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"c\""))));
     e11->SetFeatures(f11); n1->AddEdge(e11); ret->AddEdge(e11);
-    SparseMap f12; f12[valid] = 1; f12[slopeid] =  1;
+    SparseVector f12; f12.Add(valid, 1); f12.Add(slopeid, 1);
     HyperEdge* e12 = new HyperEdge(n1); e12->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"d\""))));
     e12->SetFeatures(f12); n1->AddEdge(e12); ret->AddEdge(e12);         
     if(use_c) {
-        SparseMap f21; f21[valid] = 0; f21[slopeid] =  -1;
+        SparseVector f21; f21.Add(valid, 0); f21.Add(slopeid, -1);
         HyperEdge* e21 = new HyperEdge(n2); e21->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"a\""))));
         e21->SetFeatures(f21); n2->AddEdge(e21); ret->AddEdge(e21);
     }
     if(use_d) {
-        SparseMap f31; f31[valid] = 2; f31[slopeid] =  -1;
+        SparseVector f31; f31.Add(valid, 2); f31.Add(slopeid, -1);
         HyperEdge* e31 = new HyperEdge(n3); e31->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"b\""))));
         e31->SetFeatures(f31); n3->AddEdge(e31); ret->AddEdge(e31);
     }
@@ -124,14 +124,14 @@ int TestTune::TestCalculatePotentialGain() {
 int TestTune::TestCalculateModelHypothesis() {
     TuneGreedyMert mert;
     // Create the weights
-    vector<SparseMap> weights(3);
-    weights[0][Dict::WID("a")] = 1; weights[0][Dict::WID("b")] = 1;
-    weights[1][Dict::WID("a")] = 1; weights[1][Dict::WID("c")] = 1;
-    weights[2][Dict::WID("a")] = 1; weights[2][Dict::WID("d")] = 1;
+    vector<SparseVector> weights(3);
+    weights[0].Add(Dict::WID("a"), 1); weights[0].Add(Dict::WID("b"), 1);
+    weights[1].Add(Dict::WID("a"), 1); weights[1].Add(Dict::WID("c"), 1);
+    weights[2].Add(Dict::WID("a"), 1); weights[2].Add(Dict::WID("d"), 1);
     // Calculate the n-bests
     int ok = 1;
     for(int i = 0; i < 3; i++) {
-        Weights my_weights(weights[i]);
+        Weights my_weights(weights[i].ToMap());
         ok = ok && CheckEqual(weights[i], examp_nbest.CalculateModelHypothesis(my_weights).first);
     }
     return ok;
@@ -238,7 +238,7 @@ int TestTune::TestForestUnk() {
     Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
     rule_graph->SetWords(exp_sent);
     HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); rule_graph->AddNode(n0);
-    SparseMap f01; f01[valid] = -10; f01[slopeid] = 1;
+    SparseVector f01; f01.Add(valid, -10); f01.Add(slopeid, 1);
     HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"<unk>\""))));
     e01->SetFeatures(f01); n0->AddEdge(e01); rule_graph->AddEdge(e01);
     HyperEdge* e02 = new HyperEdge(n0); e02->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"hello\""))));
@@ -260,17 +260,17 @@ int TestTune::TestTuneXbleu() {
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
     // Calculate the gradients
     string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
-    SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+    SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     tune.CalcGradient(SparseMap(), act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
 }
@@ -282,10 +282,10 @@ int TestTune::TestScaleXbleu() {
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
@@ -293,12 +293,12 @@ int TestTune::TestScaleXbleu() {
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
     // Calculate the gradients
     string exp_feat_str1 = "fa=0.05061485956898609 fb=-0.019935150830241014 fc=-0.030679708738745072 __SCALE__=0.03508354720468027";
-    SparseMap exp_feat1 = Dict::ParseFeatures(exp_feat_str1), act_feat1;
+    SparseMap exp_feat1 = Dict::ParseSparseMap(exp_feat_str1), act_feat1;
     tune.CalcGradient(weights, act_feat1);
     // Calculate the gradients without auto scaling
     tune.SetAutoScale(false);
     string exp_feat_str2 = "fa=0.05061485956898609 fb=-0.019935150830241014 fc=-0.030679708738745072";
-    SparseMap exp_feat2 = Dict::ParseFeatures(exp_feat_str2), act_feat2;
+    SparseMap exp_feat2 = Dict::ParseSparseMap(exp_feat_str2), act_feat2;
     tune.CalcGradient(weights, act_feat2);
     return CheckAlmostMap(exp_feat1, act_feat1, 0.0001) && CheckAlmostMap(exp_feat2, act_feat2, 0.0001);
 }
@@ -310,16 +310,16 @@ int TestTune::TestBigScaleXbleu() {
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
     // Calculate the gradients
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
-    SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+    SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
     tune.CalcGradient(weights, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
@@ -332,10 +332,10 @@ int TestTune::TestBigScaleXbleup1() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
@@ -343,7 +343,7 @@ int TestTune::TestBigScaleXbleup1() {
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
     // Calculate the gradients
     string exp_feat_str1 = "fa=.2040151250 fb=-.05602268750 fc=-.14799243750 __SCALE__=.0353531271713337";
-    SparseMap exp_feat1 = Dict::ParseFeatures(exp_feat_str1), act_feat1;
+    SparseMap exp_feat1 = Dict::ParseSparseMap(exp_feat_str1), act_feat1;
     tune.CalcGradient(weights, act_feat1);
     return CheckAlmostMap(exp_feat1, act_feat1, 0.0001);
 }
@@ -356,17 +356,17 @@ int TestTune::TestL2Xbleu() {
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.012144414438084214 fc=-0.03363353025509233 __SCALE__=0.007932713323976109";
-    SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+    SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
     tune.CalcGradient(weights, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
@@ -380,19 +380,19 @@ int TestTune::TestEntXbleu() {
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
-    nbest1->AddHypothesis(Dict::ParseFeatures("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
-    nbest1->AddHypothesis(Dict::ParseFeatures("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d")));
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
+    nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d")));
     // Add another hypothesis with a really low weight to test NaNs 
-    nbest2->AddHypothesis(Dict::ParseFeatures("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
+    nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     tune.AddExample(shared_ptr<TuningExample>(nbest1));
     tune.AddExample(shared_ptr<TuningExample>(nbest2));
     tune.Init();
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=.0512297191379721800 fb=-.014870301660482028 fc=-.036359417477490144 __SCALE__=.00887743384534082000";
-    SparseMap exp_feat = Dict::ParseFeatures(exp_feat_str), act_feat;
+    SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2;
     weights[Dict::WID("fe")] = -1e6; weights[Dict::WID("__SCALE__")] = 2.0;
     tune.CalcGradient(weights, act_feat);

@@ -101,11 +101,11 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
 
     // Update with the best value
     if(best_result_.gain > gain_threshold_) {
-        PRINT_DEBUG("Updating: " << Dict::PrintFeatures(best_gradient_) << " * " << best_result_.pos << endl, 2);
+        PRINT_DEBUG("Updating: " << Dict::PrintSparseMap(best_gradient_) << " * " << best_result_.pos << endl, 2);
         weights += best_gradient_ * best_result_.pos;
     }
 
-    PRINT_DEBUG("Features: " << Dict::PrintFeatures(weights) << endl, 2);
+    PRINT_DEBUG("Features: " << Dict::PrintSparseMap(weights) << endl, 2);
     return best_result_;
 }
 

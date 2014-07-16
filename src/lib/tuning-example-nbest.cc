@@ -12,10 +12,10 @@ using namespace travatar;
 using namespace boost;
 
 // Add weights
-void TuningExampleNbest::CountWeights(SparseMap & weights) {
+void TuningExampleNbest::CountWeights(set<WordId> & weights) {
     BOOST_FOREACH(const ExamplePair & examp, nbest_)
-        BOOST_FOREACH(const SparseMap::value_type & val, examp.first)
-            weights[val.first] = 1;
+        BOOST_FOREACH(const SparsePair & val, examp.first.GetImpl())
+            weights.insert(val.first);
 }
 
 // Calculate the potential gain for a single example given the current weights
@@ -24,7 +24,7 @@ SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) 
     int hyp = -1;
     double hyp_score = -DBL_MAX;
     for(int i = 0; i < (int)nbest_.size(); i++) {
-        double my_score = nbest_[i].first * weights;
+        double my_score = weights * nbest_[i].first;
         if(my_score > hyp_score) {
             hyp = i;
             hyp_score = my_score;
@@ -35,7 +35,8 @@ SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) 
     BOOST_FOREACH(const ExamplePair & examp, nbest_) {
         double gain = examp.second->ConvertToScore() - nbest_[hyp].second->ConvertToScore();
         if(gain <= 0) continue; // Skip examples with no or negative gain
-        BOOST_FOREACH(const SparseMap::value_type val, examp.first - nbest_[hyp].first)
+        SparseVector diff = examp.first - nbest_[hyp].first;
+        BOOST_FOREACH(const SparseMap::value_type val, diff.GetImpl())
             if(val.second != 0) // Skip examples with same value as current ans
                 ret[val.first] = max(ret[val.first], gain);
     }
@@ -55,8 +56,8 @@ ConvexHull TuningExampleNbest::CalculateConvexHull(
     // These happen to be the same shape as ScoredSpans so we abuse notation
     vector<ScoredSpan> lines;
     BOOST_FOREACH(const ExamplePair & examp, nbest_) {
-        double slope = examp.first * gradient;
-        double val = examp.first * weights;
+        double slope = gradient * examp.first;
+        double val = weights * examp.first;
         lines.push_back(make_pair(make_pair(slope, val), examp.second));
     }
     // Sort in order of ascending slope
