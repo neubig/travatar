@@ -16,7 +16,7 @@ Sentence TestTune::GetQuotedWords(const std::string & str) {
     return Dict::ParseAnnotatedWords(str).words;
 }
 
-TestTune::TestTune() {
+TestTune::TestTune() : examp_nbest() {
     valid = Dict::WID("val");
     slopeid = Dict::WID("slope");
     // Create the examples
