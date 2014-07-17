@@ -232,15 +232,21 @@ SparseVector operator+(const SparseVector & lhs, const SparseVector & rhs) {
     SparseVector::SparseVectorImpl::const_iterator itr = rhs.begin();
     SparseVector ret;
     SparseVector::SparseVectorImpl & impl = ret.GetImpl();
-    while(itl != lhs.end() || itr != rhs.end()) {
-        if(itr == rhs.end() || itl->first < itr->first) {
-            if(itl->second != 0)
-                impl.push_back(*itl);
-            itl++;
-        } else if(itl == lhs.end() || itr->first < itl->first) {
+    while(1) {
+        if(itr == rhs.end()) {
+            impl.insert(impl.end(), itl, lhs.end());
+            break;
+        } else if(itl == lhs.end()) {
+            impl.insert(impl.end(), itr, rhs.end());
+            break;
+        } else if(itr->first < itl->first) {
             if(itr->second != 0)
                 impl.push_back(*itr);
             itr++;
+        } else if(itl->first < itr->first) {
+            if(itl->second != 0)
+                impl.push_back(*itl);
+            itl++;
         } else {
             double val = itl->second + itr->second;
             if(val != 0)
@@ -256,15 +262,24 @@ SparseVector operator-(const SparseVector & lhs, const SparseVector & rhs) {
     SparseVector::SparseVectorImpl::const_iterator itr = rhs.begin();
     SparseVector ret;
     SparseVector::SparseVectorImpl & impl = ret.GetImpl();
-    while(itl != lhs.end() || itr != rhs.end()) {
-        if(itr == rhs.end() || itl->first < itr->first) {
-            if(itl->second != 0)
-                impl.push_back(*itl);
-            itl++;
-        } else if(itl == lhs.end() || itr->first < itl->first) {
+    while(1) {
+        if(itr == rhs.end()) {
+            impl.insert(impl.end(), itl, lhs.end());
+            break;
+        } else if(itl == lhs.end()) {
+            while(itr != rhs.end()) {
+                impl.push_back(make_pair(itr->first, -itr->second));
+                itr++;
+            }
+            break;
+        } else if(itr->first < itl->first) {
             if(itr->second != 0)
                 impl.push_back(make_pair(itr->first, -itr->second));
             itr++;
+        } else if(itl->first < itr->first) {
+            if(itl->second != 0)
+                impl.push_back(*itl);
+            itl++;
         } else {
             double val = itl->second - itr->second;
             if(val != 0)
