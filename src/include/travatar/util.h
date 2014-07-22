@@ -421,7 +421,7 @@ inline double AddLogProbs(const std::vector<double> & probs) {
 
 inline std::vector<double> Softmax(const std::vector<double> & probs) {
     if(probs.size() == 0)
-        THROW_ERROR("Cannot add probabilities of size zero");
+        return std::vector<double>();
     double myMax = probs[0], norm = 0;
     for(unsigned i = 1; i < probs.size(); i++)
         myMax = std::max(myMax, probs[i]);

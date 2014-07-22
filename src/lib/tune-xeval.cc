@@ -193,7 +193,15 @@ double TuneXeval::CalcGradient(size_t n, const double * x, double * g) const {
     if(gamma == 0.0) gamma = 1.0;
 
     // Allocate some space for statistics
-    EvalStatsPtr first_stats = all_stats_[0][0];
+    EvalStatsPtr first_stats;
+    int i;
+    for(i = 0; i < (int)all_stats_.size(); i++) {
+        if(all_stats_[i].size() > 0) {
+            first_stats = all_stats_[i][0];
+            break;
+        }
+    }
+    if(first_stats.get() == NULL) return 0;
     int N = all_stats_.size();
     vector<vector<double> > p_i_k(N);
     EvalStatsPtr stats;
@@ -219,7 +227,6 @@ double TuneXeval::CalcGradient(size_t n, const double * x, double * g) const {
             stats->PlusEqualsTimes(*all_stats_[i][k], p_i_k[i][k]);
             PRINT_DEBUG("Iter " << iter_ << " "<<i<<" " << k << ": p=" << p_i_k[i][k] << ", stats=" << stats->ConvertToString() << endl, 3);
         }
-        PRINT_DEBUG("Iter " << iter_ << " "<<i<<": F=" << p_i_k[i][0] << endl, 2);
     }
     
     if(first_stats->GetIdString() == "BLEU") {
