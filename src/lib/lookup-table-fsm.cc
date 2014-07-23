@@ -37,7 +37,6 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
             THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
         CfgData src_data = Dict::ParseAnnotatedWords(columns[0]);
         TranslationRuleHiero * rule = new TranslationRuleHiero(
-            columns[0],
             Dict::ParseAnnotatedVector(columns[1]),
             Dict::ParseSparseVector(columns[2]),
             src_data
@@ -306,7 +305,6 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap* map_ptr,
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, WordId label) const 
 {
     return new TranslationRuleHiero(
-        "UNK",
         CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, unknown_word), label)),
         Dict::ParseSparseVector("unk=1"),
         CfgData(Sentence(1, unknown_word), label)

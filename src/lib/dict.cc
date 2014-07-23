@@ -190,14 +190,16 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
             THROW_ERROR("Bad rule string: " << str);
         }
     }
+    if(data.words.capacity() > data.words.size()) { std::vector<WordId>(data.words).swap(data.words); }
+    if(data.syms.capacity() > data.syms.size()) { std::vector<WordId>(data.syms).swap(data.syms); }
     return data;
 }
 
 CfgDataVector Dict::ParseAnnotatedVector(const std::string & str) {
-    CfgDataVector ret;
     vector<string> columns = Tokenize(str, " |COL| ");
-    BOOST_FOREACH(const std::string & col, columns) {
-        ret.push_back(ParseAnnotatedWords(col));
+    CfgDataVector ret(columns.size());
+    for(size_t i = 0; i < columns.size(); i++) {
+        ret[i] = ParseAnnotatedWords(columns[i]);
     }
     return ret;
 }

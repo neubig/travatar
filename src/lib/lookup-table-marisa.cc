@@ -35,7 +35,7 @@ LookupTableMarisa * LookupTableMarisa::ReadFromFile(std::string & filename) {
 
 LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
     // First read in the rule table
-    string line;
+    string line, last_src;
     LookupTableMarisa * ret = new LookupTableMarisa;
     // Rule table
     typedef vector<TranslationRule*> RuleVec;
@@ -47,23 +47,26 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
         vector<WordId> trg_words, trg_syms;
         CfgDataVector trg_data = Dict::ParseAnnotatedVector(columns[1]);
         SparseVector features = Dict::ParseSparseVector(columns[2]);
-        TranslationRule* rule = new TranslationRule(columns[0], trg_data, features);
-        if(rules.size() == 0 || columns[0] != rules[rules.size()-1][0]->GetSrcStr()) {
-            keyset.push_back(rule->GetSrcStr().c_str());
+        TranslationRule* rule = new TranslationRule(trg_data, features);
+        if(rules.size() == 0 || columns[0] != last_src) {
+            keyset.push_back(columns[0].c_str());
             rules.push_back(vector<TranslationRule*>());
+            last_src = columns[0];
         }
-        rules[rules.size()-1].push_back(rule);
+        rules.rbegin()->push_back(rule);
     }
     // Build the trie
     ret->GetTrie().build(keyset);
     // Insert the rule arrays into the appropriate position based on the tree ID
     vector<RuleVec> & main_rules = ret->GetRules();
     main_rules.resize(keyset.size());
-    BOOST_FOREACH(const RuleVec & my_rules, rules) {
+    for(size_t i = 0; i < rules.size(); i++) {
+        const RuleVec & my_rules = rules[i];
         marisa::Agent agent;
-        agent.set_query(my_rules[0]->GetSrcStr().c_str());
+        string str(keyset[i].ptr(), keyset[i].length());
+        agent.set_query(str.c_str());
         if(!ret->GetTrie().lookup(agent))
-            THROW_ERROR("Internal error when building rule table @ " << my_rules[0]->GetSrcStr());
+            THROW_ERROR("Internal error when building rule table @ " << str);
         main_rules[agent.key().id()] = my_rules;
     }
     return ret;

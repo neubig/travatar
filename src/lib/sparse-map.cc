@@ -118,9 +118,8 @@ void NormalizeL1(SparseMap & weights, double denom) {
 }
 
 
-SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_() {
+SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_(vec) {
     if(vec.size() == 0) return;
-    impl_ = vec;
     sort(impl_.begin(), impl_.end());
     SparseVectorImpl::iterator itl = impl_.begin(), itr = impl_.begin()+1;
     while(itr != impl_.end()) {
@@ -134,6 +133,8 @@ SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_() {
     }
     if(++itl != impl_.end()) {
         impl_.resize(itl - impl_.begin());
+        // Shrink the size of the vector to match the actual capacity
+        vector<SparsePair>(impl_).swap(impl_);
     }
 }
 

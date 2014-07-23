@@ -62,7 +62,7 @@ protected:
 
     LookupStateHash * MatchState(const std::string & next, const LookupState & state) const;
 
-    void AddRule(TranslationRule * rule);
+    void AddRule(const std::string & str, TranslationRule * rule);
 
 protected:
     std::tr1::unordered_set<std::string> src_matches;

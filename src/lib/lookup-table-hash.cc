@@ -44,8 +44,8 @@ LookupStateHash * LookupTableHash::MatchState(const std::string & next, const Lo
     }
 }
 
-void LookupTableHash::AddRule(TranslationRule * rule) {
-    rules_[rule->GetSrcStr()].push_back(rule);
+void LookupTableHash::AddRule(const std::string & str, TranslationRule * rule) {
+    rules_[str].push_back(rule);
 }
 
 
@@ -73,7 +73,7 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
         }
         CfgDataVector trg_data = Dict::ParseAnnotatedVector(columns[1]);
         SparseVector features = Dict::ParseSparseVector(columns[2]);
-        ret->AddRule(new TranslationRule(columns[0], trg_data, features));
+        ret->AddRule(columns[0], new TranslationRule(trg_data, features));
     }
     return ret;
 }

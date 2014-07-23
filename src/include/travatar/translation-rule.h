@@ -12,10 +12,11 @@ namespace travatar {
 class TranslationRule {
 
 public:
-    TranslationRule(const std::string & src_str = "",
+    TranslationRule(// const std::string & src_str = "",
                     const CfgDataVector & trg_data = CfgDataVector(),
                     const SparseVector & features = SparseVector()) :
-        src_str_(src_str), trg_data_(trg_data), features_(features) { }
+        // src_str_(src_str), 
+        trg_data_(trg_data), features_(features) { }
 
     virtual ~TranslationRule() {} 
 
@@ -24,7 +25,7 @@ public:
     
     virtual bool operator==(const TranslationRule & rhs) const {
         return
-            src_str_ == rhs.src_str_ &&
+            // src_str_ == rhs.src_str_ &&
             trg_data_ == rhs.trg_data_ &&
             features_ == rhs.features_;
     }
@@ -34,10 +35,10 @@ public:
 
     void Print(std::ostream & out) const;
 
-    const std::string & GetSrcStr() const { return src_str_; }
+    // const std::string & GetSrcStr() const { return src_str_; }
     const CfgDataVector & GetTrgData() const { return trg_data_; }
     const SparseVector & GetFeatures() const { return features_; }
-    std::string & GetSrcStr() { return src_str_; }
+    // std::string & GetSrcStr() { return src_str_; }
     CfgDataVector & GetTrgData() { return trg_data_; }
     SparseVector & GetFeatures() { return features_; }
 
@@ -58,7 +59,7 @@ public:
     }
 
 protected:
-    std::string src_str_;
+    // std::string src_str_;
     CfgDataVector trg_data_;
     SparseVector features_;
 

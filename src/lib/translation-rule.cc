@@ -7,9 +7,9 @@ using namespace std;
 using namespace travatar;
 
 void TranslationRule::Print(std::ostream & out) const {
-    out << "{\"src\": \""<<src_str_ << "\"";
+    out << "{";
     if(trg_data_.size()) {
-        out << ", \"trg_data\": [";
+        out << "\"trg_data\": [";
         for(int i = 0; i < (int)trg_data_.size(); i++) {
             trg_data_[i].Print(out);
             out << ((i == (int)trg_data_.size()-1) ? "]" : ", ");
@@ -17,7 +17,8 @@ void TranslationRule::Print(std::ostream & out) const {
     }
     if(features_.size()) {
         int pos = 0;
-        out << ", \"features\": {";
+        if(trg_data_.size() != 0) out << ", ";
+        out << "\"features\": {";
         BOOST_FOREACH(const SparsePair & val, features_.GetImpl()) {
             out << (pos++?", ":"") << "\""<<Dict::WSym(val.first)<<"\": " << val.second;
         }

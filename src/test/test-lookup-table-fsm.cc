@@ -74,7 +74,6 @@ TestLookupTableFSM::~TestLookupTableFSM() { }
 
 shared_ptr<TranslationRuleHiero> TestLookupTableFSM::BuildRule(const string & src, const string & trg, const string & feat) {
 	return shared_ptr<TranslationRuleHiero>(new TranslationRuleHiero(
-        src,
         Dict::ParseAnnotatedVector(trg),
         Dict::ParseSparseVector(feat),
         Dict::ParseAnnotatedWords(src)

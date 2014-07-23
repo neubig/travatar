@@ -372,7 +372,7 @@ public:
 };
 
 void HyperEdge::SetRule(const TranslationRule * rule, const SparseVector & orig_features) {
-    src_str_ = rule->GetSrcStr();
+    // src_str_ = rule->GetSrcStr();
     features_ = rule->GetFeatures() + orig_features;
     trg_data_ = rule->GetTrgData();
 }

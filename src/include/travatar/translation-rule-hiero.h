@@ -11,11 +11,11 @@ namespace travatar {
 class TranslationRuleHiero : public TranslationRule {
 public: 
 
-    TranslationRuleHiero(const std::string & src_str = "",
+    TranslationRuleHiero(
                     const CfgDataVector & trg_data = CfgDataVector(),
                     const SparseVector & features = SparseVector(),
                     const CfgData & src_data = Sentence()
-                    ) : TranslationRule(src_str, trg_data, features),
+                    ) : TranslationRule(trg_data, features),
                         src_data_(src_data) { }
 
     std::string ToString();
