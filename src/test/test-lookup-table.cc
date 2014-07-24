@@ -142,14 +142,14 @@ int TestLookupTable::TestLookupRules(LookupTable & lookup) {
     return ret;
 }
 
-int TestLookupTable::TestBuildRuleGraph() {
+int TestLookupTable::TestBuildRuleGraph(LookupTable & lookup) {
     // Make the rule graph
-    shared_ptr<HyperGraph> act_rule_graph(lookup_hash->TransformGraph(*src1_graph));
+    shared_ptr<HyperGraph> act_rule_graph(lookup.TransformGraph(*src1_graph));
     vector<vector<shared_ptr<LookupState> > > act_lookups(11);
     vector<shared_ptr<LookupState> > old_states;
-    old_states.push_back(shared_ptr<LookupState>(lookup_hash->GetInitialState()));
+    old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
     for(int i = 0; i < 11; i++)
-        act_lookups[i] = lookup_hash->LookupSrc(*src1_graph->GetNode(i), old_states);
+        act_lookups[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states);
     // Create the rule graph
     // string src1_tree = "(S0 (NP1 (PRP2 he3)) (VP4 (AUX5 does6) (RB7 not8) (VB9 go10)))";
     HyperGraph exp_rule_graph;
@@ -164,13 +164,13 @@ int TestLookupTable::TestBuildRuleGraph() {
     HyperNode * vb9_node = new HyperNode; vb9_node->SetSym(Dict::WID("VB")); vb9_node->SetSpan(src1_graph->GetNode(9)->GetSpan()); exp_rule_graph.AddNode(vb9_node);
     // Gather the rules
     vector<TranslationRule*> act_rules(7);
-    act_rules[0] = SafeReference(lookup_hash->FindRules(*act_lookups[0][0]))[0]; // First S(NP, VP)
-    act_rules[1] = SafeReference(lookup_hash->FindRules(*act_lookups[0][0]))[1]; // Second S(NP, VP)
-    act_rules[2] = SafeReference(lookup_hash->FindRules(*act_lookups[0][1]))[0]; // First S(NP(PRP("he")) VP)
-    act_rules[3] = SafeReference(lookup_hash->FindRules(*act_lookups[1][0]))[0]; // NP
-    act_rules[4] = SafeReference(lookup_hash->FindRules(*act_lookups[2][0]))[0]; // PRP
-    act_rules[5] = SafeReference(lookup_hash->FindRules(*act_lookups[4][0]))[0]; // VP
-    act_rules[6] = SafeReference(lookup_hash->FindRules(*act_lookups[9][0]))[0]; // VB
+    act_rules[0] = SafeReference(lookup.FindRules(*act_lookups[0][0]))[0]; // First S(NP, VP)
+    act_rules[1] = SafeReference(lookup.FindRules(*act_lookups[0][0]))[1]; // Second S(NP, VP)
+    act_rules[2] = SafeReference(lookup.FindRules(*act_lookups[0][1]))[0]; // First S(NP(PRP("he")) VP)
+    act_rules[3] = SafeReference(lookup.FindRules(*act_lookups[1][0]))[0]; // NP
+    act_rules[4] = SafeReference(lookup.FindRules(*act_lookups[2][0]))[0]; // PRP
+    act_rules[5] = SafeReference(lookup.FindRules(*act_lookups[4][0]))[0]; // VP
+    act_rules[6] = SafeReference(lookup.FindRules(*act_lookups[9][0]))[0]; // VB
     // Create the HyperEdges
     HyperEdge* s0_edge = new HyperEdge(s0_node); s0_edge->AddTail(np1_node); s0_edge->AddTail(vp4_node); s0_node->AddEdge(s0_edge); exp_rule_graph.AddEdge(s0_edge); s0_edge->SetRule(act_rules[0]); s0_edge->SetSrcStr("S ( x0:NP x1:VP )");
     HyperEdge* s0_edge_rev = new HyperEdge(s0_node); s0_edge_rev->AddTail(np1_node); s0_edge_rev->AddTail(vp4_node); s0_node->AddEdge(s0_edge_rev); exp_rule_graph.AddEdge(s0_edge_rev); s0_edge_rev->SetRule(act_rules[1]); s0_edge_rev->SetSrcStr("S ( x0:NP x1:VP )");
@@ -178,8 +178,8 @@ int TestLookupTable::TestBuildRuleGraph() {
     HyperEdge* np1_edge = new HyperEdge(np1_node); np1_edge->AddTail(prp2_node); np1_node->AddEdge(np1_edge); exp_rule_graph.AddEdge(np1_edge); np1_edge->SetRule(act_rules[3]); np1_edge->SetSrcStr("NP ( x0:PRP )");
     HyperEdge* prp2_edge = new HyperEdge(prp2_node); prp2_node->AddEdge(prp2_edge); exp_rule_graph.AddEdge(prp2_edge); prp2_edge->SetRule(act_rules[4]); prp2_edge->SetSrcStr("PRP ( \"he\" )");
     HyperEdge* vp4_edge = new HyperEdge(vp4_node); vp4_edge->AddTail(vb9_node); vp4_node->AddEdge(vp4_edge); exp_rule_graph.AddEdge(vp4_edge); vp4_edge->SetRule(act_rules[5]);  vp4_edge->GetFeatures().Add(Dict::WID("parse"), 2.0); vp4_edge->SetSrcStr("VP ( AUX ( \"does\" ) RB ( \"not\" ) x0:VB )");
-    HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup_hash->GetUnknownRule()); aux5_edge->GetFeatures().Add(Dict::WID("parse"), 1.0); aux5_edge->SetTrgData(CfgDataVector(1, CfgData(Sentence(1, Dict::WID("does"))))); aux5_edge->SetSrcStr("AUX ( \"does\" )"); // Unknown edge
-    HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup_hash->GetUnknownRule());  rb7_edge->GetFeatures().Add(Dict::WID("parse"), 1.0); rb7_edge->SetTrgData(CfgDataVector(1, CfgData(Sentence(1, Dict::WID("not"))))); rb7_edge->SetSrcStr("RB ( \"not\" )"); // Unknown edge
+    HyperEdge* aux5_edge = new HyperEdge(aux5_node); aux5_node->AddEdge(aux5_edge); exp_rule_graph.AddEdge(aux5_edge); aux5_edge->SetRule(lookup.GetUnknownRule()); aux5_edge->GetFeatures().Add(Dict::WID("parse"), 1.0); aux5_edge->SetTrgData(CfgDataVector(1, CfgData(Sentence(1, Dict::WID("does"))))); aux5_edge->SetSrcStr("AUX ( \"does\" )"); // Unknown edge
+    HyperEdge* rb7_edge = new HyperEdge(rb7_node); rb7_node->AddEdge(rb7_edge); exp_rule_graph.AddEdge(rb7_edge); rb7_edge->SetRule(lookup.GetUnknownRule());  rb7_edge->GetFeatures().Add(Dict::WID("parse"), 1.0); rb7_edge->SetTrgData(CfgDataVector(1, CfgData(Sentence(1, Dict::WID("not"))))); rb7_edge->SetSrcStr("RB ( \"not\" )"); // Unknown edge
     HyperEdge* vb9_edge = new HyperEdge(vb9_node); vb9_node->AddEdge(vb9_edge); exp_rule_graph.AddEdge(vb9_edge); vb9_edge->SetRule(act_rules[6]); vb9_edge->SetSrcStr("VB ( \"go\" )");
     return exp_rule_graph.CheckEqual(*act_rule_graph);
 }
@@ -218,7 +218,8 @@ bool TestLookupTable::RunTest() {
     done++; cout << "TestLookupRules(lookup_marisa)" << endl; if(TestLookupRules(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBadInputHash()" << endl; if(TestBadInputHash()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBadInputMarisa()" << endl; if(TestBadInputMarisa()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestBuildRuleGraph()" << endl; if(TestBuildRuleGraph()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestBuildRuleGraph(lookup_hash)" << endl; if(TestBuildRuleGraph(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestBuildRuleGraph(lookup_maris)" << endl; if(TestBuildRuleGraph(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestLookupTable Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
 }

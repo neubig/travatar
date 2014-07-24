@@ -15,14 +15,14 @@ using namespace boost;
 
 // Match the start of an edge
 LookupState * LookupTableMarisa::MatchStart(const HyperNode & node, const LookupState & state) const {
-    const std::string & p = ((const LookupStateMarisa &)state).GetString();
+    const std::string & p = state.GetString();
     std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
     return MatchState(next, state);
 }
 
 // Match the end of an edge
 LookupState * LookupTableMarisa::MatchEnd(const HyperNode & node, const LookupState & state) const {
-    std::string next = ((const LookupStateMarisa &)state).GetString() + " )";
+    std::string next = state.GetString() + " )";
     return MatchState(next, state);
 }
 
@@ -75,14 +75,13 @@ LookupTableMarisa * LookupTableMarisa::ReadFromRuleTable(std::istream & in) {
 
 // Match a single node
 LookupState * LookupTableMarisa::MatchNode(const HyperNode & node, const LookupState & state) const {
-    LookupStateMarisa * ret = NULL;
-    const LookupStateMarisa & marisa_state = (const LookupStateMarisa &) state;
+    LookupState * ret = NULL;
     if(node.IsTerminal()) {
-        string next = marisa_state.GetString() + " \"" + Dict::WSym(node.GetSym()) + "\""; 
+        string next = state.GetString() + " \"" + Dict::WSym(node.GetSym()) + "\""; 
         ret = MatchState(next, state);
     } else {
         ostringstream next;
-        next << marisa_state.GetString() << " x" << state.GetNonterms().size() << ":" << Dict::WSym(node.GetSym());
+        next << state.GetString() << " x" << state.GetNonterms().size() << ":" << Dict::WSym(node.GetSym());
         ret = MatchState(next.str(), state);
         if(ret != NULL)
             ret->GetNonterms().push_back(&node);
@@ -90,14 +89,15 @@ LookupState * LookupTableMarisa::MatchNode(const HyperNode & node, const LookupS
     return ret;
 }
 
-LookupStateMarisa * LookupTableMarisa::MatchState(const string & next, const LookupState & state) const {
+LookupState * LookupTableMarisa::MatchState(const string & next, const LookupState & state) const {
     marisa::Agent agent;
     agent.set_query(next.c_str());
     if(trie_.predictive_search(agent)) {
         // cerr << "Matching " << next << " --> success!" << endl;
-        LookupStateMarisa * ret = new LookupStateMarisa;
+        LookupState * ret = new LookupState;
         ret->SetString(next);
         ret->SetNonterms(state.GetNonterms());
+        ret->SetFeatures(state.GetFeatures());
         return ret;
     } else {
         // cerr << "Matching " << next << " --> failure!" << endl;
@@ -108,7 +108,7 @@ LookupStateMarisa * LookupTableMarisa::MatchState(const string & next, const Loo
 
 const vector<TranslationRule*> * LookupTableMarisa::FindRules(const LookupState & state) const {
     marisa::Agent agent;
-    const char* query = ((const LookupStateMarisa &)state).GetString().c_str();
+    const char* query = state.GetString().c_str();
     agent.set_query(query);
     const vector<TranslationRule*> * ret = trie_.lookup(agent) ? &rules_[agent.key().id()] : NULL;
     return ret;

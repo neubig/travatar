@@ -26,11 +26,15 @@ public:
     const SparseVector & GetFeatures() const { return features_; }
     void SetFeatures(const SparseVector & feat) { features_ = feat; }
     void AddFeatures(const SparseVector & feat) { features_ += feat; }
+    const std::string & GetString() const { return curr_string_; }
+    void SetString(const std::string & str) { curr_string_ = str; }
 
 protected:
     // Links to the nodes of non-terminals that are abstracted
     std::vector<const HyperNode*> nonterm_nodes_;
     SparseVector features_;
+    // A string representing the current progress
+    std::string curr_string_;
 };
 
 // An implementation of a GraphTransformer that takes as input

@@ -11,7 +11,6 @@ using namespace boost;
 using namespace std;
 
 LookupTable::LookupTable() : 
-    // unk_rule_("UNK", CfgDataVector(), Dict::ParseSparseVector("unk=1")), match_all_unk_(false) { }
     unk_rule_(CfgDataVector(), Dict::ParseSparseVector("unk=1")),
     match_all_unk_(false), save_src_str_(false) { }
 
@@ -85,6 +84,7 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
                     HyperEdge * next_edge = new HyperEdge(next_node);
                     next_edge->SetTails(next_tails);
                     next_edge->SetRule(rule, state->GetFeatures());
+                    if(save_src_str_) next_edge->SetSrcStr(state->GetString());
                     next_node->AddEdge(next_edge);
                     ret->AddEdge(next_edge);
                 }
@@ -94,6 +94,8 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
         if(my_size == 0 || match_all_unk_) {
             const HyperNode * parse_node = parse.GetNode(rev_node_map[next_node->GetId()]);
             BOOST_FOREACH(const HyperEdge * parse_edge, parse_node->GetEdges()) {
+                ostringstream oss;
+                if(save_src_str_) oss << Dict::WSym(parse_node->GetSym()) << " (";
                 HyperEdge * next_edge = new HyperEdge(next_node);
                 BOOST_FOREACH(const HyperNode * parse_node, parse_edge->GetTails())
                     if(!parse_node->IsTerminal())
@@ -101,17 +103,24 @@ HyperGraph * LookupTable::TransformGraph(const HyperGraph & parse) const {
                 next_edge->SetRule(GetUnknownRule(), parse_edge->GetFeatures());
                 if(next_edge->GetTails().size() > 0) {
                     vector<int> trg(next_edge->GetTails().size());
-                    for(int i = 0; i < (int)trg.size(); i++)
+                    for(int i = 0; i < (int)trg.size(); i++) {
                         trg[i] = -1 - i;
+                        if(save_src_str_) oss << " x" << i << ':' << Dict::WSym(next_edge->GetTail(i)->GetSym());
+                    }
                     next_edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, trg));
                 } else {
                     pair<int,int> span = parse_node->GetSpan();
                     if(span.second - span.first != 1)
                         THROW_ERROR("Multi-terminal edges are not supported.");
                     vector<WordId> trg_words(1, parse.GetWord(span.first));
+                    if(save_src_str_) oss << " \"" << Dict::WSym(parse.GetWord(span.first)) << '"';
                     next_edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, trg_words));
                 }
                 next_node->AddEdge(next_edge);
+                if(save_src_str_) {
+                    oss << " )";
+                    next_edge->SetSrcStr(oss.str());
+                }
                 ret->AddEdge(next_edge);
             }
         }

@@ -19,7 +19,7 @@ public:
 
     int TestLookup(LookupTable & lookup);
     int TestLookupRules(LookupTable & lookup);
-    int TestBuildRuleGraph();
+    int TestBuildRuleGraph(LookupTable & lookup);
     int TestBadInputHash();
     int TestBadInputMarisa();
     

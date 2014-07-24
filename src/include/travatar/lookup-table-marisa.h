@@ -9,19 +9,6 @@ namespace travatar {
 
 class HyperNode;
 
-// A single state for a partial rule match
-class LookupStateMarisa : public LookupState {
-public:
-    LookupStateMarisa() : LookupState() { }
-    virtual ~LookupStateMarisa() { }
-
-    const std::string & GetString() const { return curr_string_; }
-    void SetString(const std::string & str) { curr_string_ = str; }
-protected:
-    // A string representing the current progress
-    std::string curr_string_;
-};
-
 // A table that allows rules to be looked up in a hash table
 class LookupTableMarisa : public LookupTable {
 public:
@@ -29,7 +16,7 @@ public:
     virtual ~LookupTableMarisa();
 
     virtual LookupState * GetInitialState() const {
-        return new LookupStateMarisa;
+        return new LookupState;
     }
 
     static LookupTableMarisa * ReadFromFile(std::string & filename);
@@ -49,7 +36,7 @@ protected:
     // Match the end of an edge
     virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) const;
 
-    LookupStateMarisa * MatchState(const std::string & next, const LookupState & state) const;
+    LookupState * MatchState(const std::string & next, const LookupState & state) const;
 
     // void AddRule(TranslationRule * rule) {
     //     rules_[rule->GetSrcStr()].push_back(rule);

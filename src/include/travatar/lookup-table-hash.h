@@ -9,19 +9,6 @@ namespace travatar {
 
 class HyperNode;
 
-// A single state for a partial rule match
-class LookupStateHash : public LookupState {
-public:
-    LookupStateHash() : LookupState() { }
-    virtual ~LookupStateHash() { }
-
-    const std::string & GetString() const { return curr_string_; }
-    void SetString(const std::string & str) { curr_string_ = str; }
-protected:
-    // A string representing the current progress
-    std::string curr_string_;
-};
-
 // A table that allows rules to be looked up in a hash table
 class LookupTableHash : public LookupTable {
 public:
@@ -29,7 +16,7 @@ public:
     virtual ~LookupTableHash();
 
     virtual LookupState * GetInitialState() const {
-        return new LookupStateHash;
+        return new LookupState;
     }
 
     static LookupTableHash * ReadFromFile(std::string & filename);
@@ -38,7 +25,7 @@ public:
     // Find rules associated with a particular source pattern
     virtual const std::vector<TranslationRule*> * FindRules(const LookupState & state) const {
         RuleMap::const_iterator it = 
-            rules_.find(((const LookupStateHash &)state).GetString());
+            rules_.find(state.GetString());
         if(it == rules_.end())
             return NULL;
         else
@@ -60,7 +47,7 @@ protected:
     // Match the end of an edge
     virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) const;
 
-    LookupStateHash * MatchState(const std::string & next, const LookupState & state) const;
+    LookupState * MatchState(const std::string & next, const LookupState & state) const;
 
     void AddRule(const std::string & str, TranslationRule * rule);
 

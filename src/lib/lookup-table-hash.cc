@@ -20,21 +20,21 @@ LookupTableHash::~LookupTableHash() {
 
 // Match the start of an edge
 LookupState * LookupTableHash::MatchStart(const HyperNode & node, const LookupState & state) const {
-    const std::string & p = ((const LookupStateHash &)state).GetString();
+    const std::string & p = state.GetString();
     std::string next = p + (p.size()?" ":"") + Dict::WSym(node.GetSym()) + " (";
     return MatchState(next, state);
 }
 
 // Match the end of an edge
 LookupState * LookupTableHash::MatchEnd(const HyperNode & node, const LookupState & state) const {
-    std::string next = ((const LookupStateHash &)state).GetString() + " )";
+    std::string next = state.GetString() + " )";
     return MatchState(next, state);
 }
 
-LookupStateHash * LookupTableHash::MatchState(const std::string & next, const LookupState & state) const {
+LookupState * LookupTableHash::MatchState(const std::string & next, const LookupState & state) const {
     if(src_matches.find(next) != src_matches.end()) {
         // std::cerr << "Matching " << next << " --> success!" << std::endl;
-        LookupStateHash * ret = new LookupStateHash;
+        LookupState * ret = new LookupState;
         ret->SetString(next);
         ret->SetNonterms(state.GetNonterms());
         ret->SetFeatures(state.GetFeatures());
@@ -81,14 +81,13 @@ LookupTableHash * LookupTableHash::ReadFromRuleTable(std::istream & in) {
 
 // Match a single node
 LookupState * LookupTableHash::MatchNode(const HyperNode & node, const LookupState & state) const {
-    LookupStateHash * ret = NULL;
-    const LookupStateHash & hash_state = (const LookupStateHash &) state;
+    LookupState * ret = NULL;
     if(node.IsTerminal()) {
-        string next = hash_state.GetString() + " \"" + Dict::WSym(node.GetSym()) + "\""; 
+        string next = state.GetString() + " \"" + Dict::WSym(node.GetSym()) + "\""; 
         ret = MatchState(next, state);
     } else {
         ostringstream next;
-        next << hash_state.GetString() << " x" << state.GetNonterms().size() << ":" << Dict::WSym(node.GetSym());
+        next << state.GetString() << " x" << state.GetNonterms().size() << ":" << Dict::WSym(node.GetSym());
         ret = MatchState(next.str(), state);
         if(ret != NULL) {
             ret->GetNonterms().push_back(&node);
