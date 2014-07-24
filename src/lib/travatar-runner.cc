@@ -123,6 +123,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load all the variables
     GlobalVars::debug = config.GetInt("debug");
     GlobalVars::trg_factors = config.GetInt("trg_factors");
+    bool save_src_str = (config.GetString("trace_out") != "");
     nbest_count_ = config.GetInt("nbest");
     threads_ = config.GetInt("threads");
 
@@ -228,10 +229,12 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     if(config.GetString("tm_storage") == "hash") {
         LookupTableHash * hash_tm_ = LookupTableHash::ReadFromFile(tm_files[0]);
         hash_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
+        hash_tm_->SetSaveSrcStr(save_src_str);
         tm_.reset(hash_tm_);
     } else if(config.GetString("tm_storage") == "marisa") {
         LookupTableMarisa * marisa_tm_ = LookupTableMarisa::ReadFromFile(tm_files[0]);
         marisa_tm_->SetMatchAllUnk(config.GetBool("all_unk"));
+        marisa_tm_->SetSaveSrcStr(save_src_str);
         tm_.reset(marisa_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
         LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromFiles(tm_files);
