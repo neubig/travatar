@@ -56,9 +56,11 @@ public:
 
     virtual LookupState * GetInitialState() const = 0;
 
-    // Match all unknown words or not
+    // Accessors
     void SetMatchAllUnk(bool match_all_unk) { match_all_unk_ = match_all_unk; }
     bool GetMatchAllUnk() { return match_all_unk_; }
+    void SetSaveSrcStr(bool save_src_str) { save_src_str_ = save_src_str; }
+    bool GetSaveSrcStr() { return save_src_str_; }
 
 protected:
 
@@ -80,8 +82,10 @@ protected:
     virtual LookupState * MatchEnd(const HyperNode & node, const LookupState & state) const = 0;
 
     TranslationRule unk_rule_;
-    // Match all nodes with the unknown rule, not just when no other rule is matched
+    // Match all nodes with the unknown rule, not just when no other rule is matched (default false)
     bool match_all_unk_;
+    // Save the source string in the graph or not (default false)
+    bool save_src_str_;
 
 };
 

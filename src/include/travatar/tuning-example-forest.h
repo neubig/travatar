@@ -3,7 +3,6 @@
 
 #include <travatar/tuning-example.h>
 #include <travatar/sentence.h>
-#include <travatar/util.h>
 #include <boost/shared_ptr.hpp>
 #include <set>
 #include <cfloat>
@@ -58,17 +57,11 @@ public:
 
     // Calculate the n-best list giving the current weights
     virtual const std::vector<ExamplePair> & 
-                       CalculateNbest(const Weights & weights) {
-        THROW_ERROR("Cannot yet calculate n-best from forests for tuning");
-        return last_nbest_;
-    }
+                       CalculateNbest(const Weights & weights);
 
     // Calculate the n-best list giving the current weights
     virtual const ExamplePair & 
-                       CalculateModelHypothesis(Weights & weights) const {
-        THROW_ERROR("Cannot yet calculate model hypothesis from forests for tuning");
-        return last_nbest_[0];
-    }
+                       CalculateModelHypothesis(Weights & weights) const;
 
 protected:
     

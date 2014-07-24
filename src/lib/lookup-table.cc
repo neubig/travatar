@@ -12,7 +12,8 @@ using namespace std;
 
 LookupTable::LookupTable() : 
     // unk_rule_("UNK", CfgDataVector(), Dict::ParseSparseVector("unk=1")), match_all_unk_(false) { }
-    unk_rule_(CfgDataVector(), Dict::ParseSparseVector("unk=1")), match_all_unk_(false) { }
+    unk_rule_(CfgDataVector(), Dict::ParseSparseVector("unk=1")),
+    match_all_unk_(false), save_src_str_(false) { }
 
 LookupTable::~LookupTable() { }
 

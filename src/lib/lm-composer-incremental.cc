@@ -2,6 +2,7 @@
 #include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
+#include <travatar/util.h>
 #include <boost/unordered_set.hpp>
 #include <boost/foreach.hpp>
 #include <lm/left.hh>
@@ -19,6 +20,12 @@ using namespace std;
 using namespace boost;
 using namespace lm;
 using namespace search;
+
+LMComposerIncremental::LMComposerIncremental(const std::string & str) :
+    LMComposer(str), stack_pop_limit_(0), edge_limit_(1000) {
+    if(lm_data_.size() != 1)
+        THROW_ERROR("Cannot perform search using 'inc' when using more than one language model. Try using 'cp' instead.");
+}
 
 // At the beginning, just add new edges
 void Forest::Add(std::vector<PartialEdge> &existing, PartialEdge add) const {

@@ -17,6 +17,20 @@ using namespace boost;
 
 // ~TuningExampleForest::TuningExampleForest() { }
 
+// Calculate the n-best list giving the current weights
+const std::vector<ExamplePair> & 
+                   TuningExampleForest::CalculateNbest(const Weights & weights) {
+    THROW_ERROR("Cannot yet calculate n-best from forests for tuning");
+    return last_nbest_;
+}
+
+// Calculate the n-best list giving the current weights
+const ExamplePair & 
+                   TuningExampleForest::CalculateModelHypothesis(Weights & weights) const {
+    THROW_ERROR("Cannot yet calculate model hypothesis from forests for tuning");
+    return last_nbest_[0];
+}
+
 // This function combines multiple forests into a single one via a shared
 // root node. This allows forests from multiple runs to be searched together
 void TuningExampleForest::AddHypothesis(const shared_ptr<HyperGraph> & hg) {

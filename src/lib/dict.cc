@@ -75,9 +75,7 @@ std::string Dict::WSymEscaped(WordId id) {
         oss << id;
     } else {
         std::string ret = wids_.GetSymbol(id);
-        boost::replace_all(ret, "\\", "\\\\");
-        boost::replace_all(ret, "\"", "\\\"");
-        oss << '"' << ret << '"';
+        oss << '"' << EscapeQuotes(ret) << '"';
     }
     return oss.str();
 }

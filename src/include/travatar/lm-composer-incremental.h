@@ -3,7 +3,6 @@
 
 #include <travatar/lm-composer.h>
 #include <travatar/hyper-graph.h>
-#include <travatar/util.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -87,11 +86,7 @@ protected:
     int edge_limit_;
 
 public:
-    LMComposerIncremental(const std::string & str) :
-        LMComposer(str), stack_pop_limit_(0), edge_limit_(1000) {
-        if(lm_data_.size() != 1)
-            THROW_ERROR("Cannot perform search using 'inc' when using more than one language model. Try using 'cp' instead.");
-    }
+    LMComposerIncremental(const std::string & str);
     LMComposerIncremental(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
         LMComposer(lm, vocab_map), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }

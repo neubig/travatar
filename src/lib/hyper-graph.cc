@@ -58,6 +58,8 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
           return false;
     if(features_ != rhs.features_)
         return false;
+    if(src_str_ != rhs.src_str_)
+        return false;
     for(int i = 0; i < (int)trg_data_.size(); i++)
         if(trg_data_ != rhs.trg_data_)
             return false;
@@ -81,6 +83,8 @@ void HyperEdge::Print(std::ostream & out) const {
     }
     if(features_.size())
         out << ", \"features\": " << features_;
+    if(src_str_.size())
+        out << ", \"src_str\": \"" << EscapeQuotes(src_str_) << '"';
     if(fragment_edges_.size()) {
         out << ", \"fragment_edges\": [";
         for(int i = 0; i < (int)fragment_edges_.size(); i++)

@@ -4,6 +4,7 @@
 #include <tr1/unordered_map>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <vector>
 #include <set>
@@ -432,6 +433,12 @@ inline std::vector<double> Softmax(const std::vector<double> & probs) {
     }
     for(int i = 0; i < (int)ret.size(); i++)
         ret[i] /= norm;
+    return ret;
+}
+
+inline std::string EscapeQuotes(std::string ret) {
+    boost::replace_all(ret, "\\", "\\\\");
+    boost::replace_all(ret, "\"", "\\\"");
     return ret;
 }
 

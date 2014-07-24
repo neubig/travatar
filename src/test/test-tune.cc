@@ -6,6 +6,7 @@
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/weights.h>
+#include <travatar/util.h>
 
 using namespace std;
 using namespace boost;
