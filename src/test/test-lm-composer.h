@@ -18,6 +18,7 @@ public:
 
     int TestLMComposerBU();
     int TestLMComposerIncremental();
+    int TestLMComposerIncrementalTimesTwo();
     int TestReverseBU();
     int TestReverseIncremental();
 

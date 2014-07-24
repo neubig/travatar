@@ -2,6 +2,7 @@
 #include <travatar/lm-composer-incremental.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/dict.h>
+#include <boost/foreach.hpp>
 #include <fstream>
 #include <utility>
 
@@ -263,7 +264,105 @@ int TestLMComposer::TestLMComposerIncremental() {
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
     shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-    return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
+    return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+}
+
+int TestLMComposer::TestLMComposerIncrementalTimesTwo() {
+    // Create the expected graph
+    vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
+    exp_graph.reset(new HyperGraph);
+    exp_graph->SetWords(ab);
+    // The root node should be "0,2"
+    HyperNode * n_root = new HyperNode; n_root->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_root);
+    n_root->SetSym(Dict::WID("LMROOT"));
+    HyperNode * n_01_ac = new HyperNode; n_01_ac->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ac);
+    n_01_ac->SetViterbiScore(2*(-0.1786666 + -0.6368221 + -0.3));
+    HyperNode * n_01_ab = new HyperNode; n_01_ab->SetSpan(make_pair(0,1)); exp_graph->AddNode(n_01_ab);
+    n_01_ab->SetViterbiScore(2*(-0.1286666 + -0.6368221 + -0.1));
+    // Options on the right node should be "x" and "y"
+    HyperNode * n_12_t = new HyperNode; n_12_t->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_t);
+    n_12_t->SetViterbiScore(2*(-100 + -2.5 + -20));
+    HyperNode * n_12_y = new HyperNode; n_12_y->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_y);
+    n_12_y->SetViterbiScore(2*(-0.8129134 + -0.5));
+    HyperNode * n_12_x = new HyperNode; n_12_x->SetSpan(make_pair(1,2)); exp_graph->AddNode(n_12_x);
+    n_12_x->SetViterbiScore(2*(-0.8129134 + -0.2));
+    // Options on the top node include a*x, a*y, x*b, x*c, y*b, y*c
+    HyperNode * n_02_ay = new HyperNode; n_02_ay->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ay);
+    n_02_ay->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_y->GetViterbiScore() + 2*(-0.3 + -0.30103));
+    HyperNode * n_02_ax = new HyperNode; n_02_ax->SetSpan(make_pair(0,2)); exp_graph->AddNode(n_02_ax);
+    n_02_ax->SetViterbiScore(n_01_ab->GetViterbiScore() + n_12_x->GetViterbiScore() + 2*(-0.3 + -0.4855544 - -0.8129134));
+    n_root->SetViterbiScore(n_02_ax->GetViterbiScore() + 2*(-0.4372497 - -0.6368221 + -0.2108534));
+    // Make edges for 0,1. There are only 2, so no pruning
+    HyperEdge * e_01_ac = new HyperEdge(n_01_ac); exp_graph->AddEdge(e_01_ac); n_01_ac->AddEdge(e_01_ac);
+    e_01_ac->SetFeatures(rule_graph_->GetEdge(3)->GetFeatures());
+    e_01_ac->GetFeatures().Add(Dict::WID("lm"), -0.1786666 + -0.6368221);
+    e_01_ac->SetScore(2*(-0.1786666 + -0.6368221 + -0.3));
+    e_01_ac->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(3)->GetTrgData()[0].words))));
+    HyperEdge * e_01_ab = new HyperEdge(n_01_ab); exp_graph->AddEdge(e_01_ab); n_01_ab->AddEdge(e_01_ab);
+    e_01_ab->SetFeatures(rule_graph_->GetEdge(2)->GetFeatures());
+    e_01_ab->GetFeatures().Add(Dict::WID("lm"), -0.1286666 + -0.6368221);
+    e_01_ab->SetScore(2*(-0.1286666 + -0.6368221 + -0.1));
+    e_01_ab->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(2)->GetTrgData()[0].words))));
+    // Make edges for 1,2. There are only 3, so no pruning
+    HyperEdge * e_12_t = new HyperEdge(n_12_t); exp_graph->AddEdge(e_12_t); n_12_t->AddEdge(e_12_t);
+    e_12_t->SetFeatures(rule_graph_->GetEdge(6)->GetFeatures());
+    e_12_t->GetFeatures().Add(Dict::WID("lm"), -100); // P(unk)
+    e_12_t->GetFeatures().Add(Dict::WID("lmunk"), 1); // P(unk)
+    e_12_t->SetScore(2*(-100 + -2.5 + -20));
+    e_12_t->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(6)->GetTrgData()[0].words))));
+    HyperEdge * e_12_y = new HyperEdge(n_12_y); exp_graph->AddEdge(e_12_y); n_12_y->AddEdge(e_12_y);
+    e_12_y->SetFeatures(rule_graph_->GetEdge(5)->GetFeatures());
+    e_12_y->GetFeatures().Add(Dict::WID("lm"), -0.8129134); // P(y)
+    e_12_y->SetScore(2*(-0.8129134 + -0.5));
+    e_12_y->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(5)->GetTrgData()[0].words))));
+    HyperEdge * e_12_x = new HyperEdge(n_12_x); exp_graph->AddEdge(e_12_x); n_12_x->AddEdge(e_12_x);
+    e_12_x->SetFeatures(rule_graph_->GetEdge(4)->GetFeatures());
+    e_12_x->GetFeatures().Add(Dict::WID("lm"), -0.8129134); // P(x)
+    e_12_x->SetScore(2*(-0.8129134 + -0.2));
+    e_12_x->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(4)->GetTrgData()[0].words))));
+    // Make edges for 0,2. There are more than three, so only expand the best three
+    HyperEdge * e_02_aby = new HyperEdge(n_02_ay); exp_graph->AddEdge(e_02_aby); n_02_ay->AddEdge(e_02_aby);
+    e_02_aby->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+    e_02_aby->GetFeatures().Add(Dict::WID("lm"), -0.30103);
+    e_02_aby->SetScore(2*(-0.30103 + -0.3));
+    e_02_aby->AddTail(n_01_ab); e_02_aby->AddTail(n_12_y);
+    e_02_aby->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(0)->GetTrgData()[0].words))));
+    HyperEdge * e_02_abx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_abx); n_02_ax->AddEdge(e_02_abx);
+    e_02_abx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+    e_02_abx->GetFeatures().Add(Dict::WID("lm"), -0.4855544 - -0.8129134);
+    e_02_abx->SetScore(2*(-0.4855544 - -0.8129134 + -0.3));
+    e_02_abx->AddTail(n_01_ab); e_02_abx->AddTail(n_12_x);
+    e_02_abx->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(0)->GetTrgData()[0].words))));
+    HyperEdge * e_02_acx = new HyperEdge(n_02_ax); exp_graph->AddEdge(e_02_acx); n_02_ax->AddEdge(e_02_acx);
+    e_02_acx->SetFeatures(rule_graph_->GetEdge(0)->GetFeatures());
+    e_02_acx->GetFeatures().Add(Dict::WID("lm"), -0.30103);
+    e_02_acx->SetScore(2*(-0.30103 + -0.3));
+    e_02_acx->AddTail(n_01_ac); e_02_acx->AddTail(n_12_x);
+    e_02_acx->SetTrgData(CfgDataVector(1, CfgData((rule_graph_->GetEdge(0)->GetTrgData()[0].words))));
+    // Make edges for the root. There are only two
+    HyperEdge * e_root_ax = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ax); n_root->AddEdge(e_root_ax);
+    e_root_ax->GetFeatures().Add(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.2108534);
+    e_root_ax->SetScore(2*(-0.4372497 - -0.6368221 + -0.2108534));
+    e_root_ax->AddTail(n_02_ax);
+    e_root_ax->AddTrgWord(-1);
+    HyperEdge * e_root_ay = new HyperEdge(n_root); exp_graph->AddEdge(e_root_ay); n_root->AddEdge(e_root_ay);
+    e_root_ay->GetFeatures().Add(Dict::WID("lm"), -0.4372497 - -0.6368221 + -0.30103 + -0.6368221);
+    e_root_ay->SetScore(2*(-0.4372497 - -0.6368221 + -0.30103 + -0.6368221));
+    e_root_ay->AddTail(n_02_ay);
+    e_root_ay->AddTrgWord(-1);
+
+    // Intersect the graph with the LM
+    LMComposerIncremental lm(file_name_);
+    lm.SetStackPopLimit(3);
+    SparseMap weights;
+    weights[Dict::WID("lmunk")] = -40;
+    weights[Dict::WID("lm")] = 2;
+    lm.UpdateWeights(weights);
+    HyperGraph my_rule_graph(*rule_graph_);
+    BOOST_FOREACH(HyperEdge* edge, my_rule_graph.GetEdges())
+        edge->SetScore(edge->GetScore()*2);
+    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(my_rule_graph));
+    return act_graph.get() && exp_graph->CheckEqual(*act_graph);
 }
 
 int TestLMComposer::TestReverseBU() {
@@ -504,6 +603,7 @@ bool TestLMComposer::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestLMComposerBU()" << endl; if(TestLMComposerBU()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestLMComposerIncremental()" << endl; if(TestLMComposerIncremental()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestLMComposerIncrementalTimesTwo()" << endl; if(TestLMComposerIncrementalTimesTwo()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestReverseBU()" << endl; if(TestReverseBU()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestReverseIncremental()" << endl; if(TestReverseIncremental()) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestLMComposer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
