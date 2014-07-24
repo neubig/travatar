@@ -1,7 +1,7 @@
 #include <travatar/weights-pairwise.h>
 #include <travatar/eval-measure.h>
 #include <travatar/hyper-graph.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
 
 using namespace std;

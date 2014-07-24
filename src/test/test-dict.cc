@@ -1,5 +1,9 @@
 #include "test-dict.h"
-#include <travatar/util.h>
+// #include <travatar/util.h>
+#include <travatar/sentence.h>
+#include <travatar/dict.h>
+#include <travatar/check-equal.h>
+#include <vector>
 #include <boost/foreach.hpp>
 
 using namespace std;

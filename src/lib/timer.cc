@@ -1,7 +1,7 @@
 #include <ctime>
 #include <iostream>
 #include <iomanip>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/timer.h>
 
 namespace travatar

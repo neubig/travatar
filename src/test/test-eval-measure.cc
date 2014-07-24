@@ -1,6 +1,6 @@
 #include "test-eval-measure.h"
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/check-equal.h>
 
 using namespace std;
 

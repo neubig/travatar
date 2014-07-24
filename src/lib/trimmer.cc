@@ -1,6 +1,6 @@
 #include <travatar/trimmer.h>
 #include <travatar/hyper-graph.h>
-#include <travatar/util.h>
+// #include <travatar/util.h>
 #include <boost/foreach.hpp>
 #include <map>
 

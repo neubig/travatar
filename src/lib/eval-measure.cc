@@ -10,7 +10,7 @@
 #include <travatar/eval-measure-wer.h>
 #include <travatar/eval-measure-interp.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/weights.h>
 #include <travatar/lm-composer-bu.h>
 #include <boost/algorithm/string.hpp>

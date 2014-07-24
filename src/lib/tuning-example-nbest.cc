@@ -1,6 +1,6 @@
 #include <travatar/sparse-map.h>
 #include <travatar/tuning-example-nbest.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/weights.h>
 #include <travatar/eval-measure.h>
 #include <boost/foreach.hpp>
@@ -36,7 +36,7 @@ SparseMap TuningExampleNbest::CalculatePotentialGain(const SparseMap & weights) 
     BOOST_FOREACH(const ExamplePair & examp, nbest_) {
         double gain = examp.second->ConvertToScore() - nbest_[hyp].second->ConvertToScore();
         if(gain <= 0) continue; // Skip examples with no or negative gain
-        SparseVector diff = examp.first - SafeAccess(nbest_, hyp).first;
+        SparseVector diff = examp.first - nbest_[hyp].first;
         BOOST_FOREACH(const SparseMap::value_type val, diff.GetImpl())
             if(val.second != 0) // Skip examples with same value as current ans
                 ret[val.first] = max(ret[val.first], gain);

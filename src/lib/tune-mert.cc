@@ -4,7 +4,8 @@
 #include <boost/shared_ptr.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/tune-mert.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/io-util.h>
 #include <travatar/dict.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>

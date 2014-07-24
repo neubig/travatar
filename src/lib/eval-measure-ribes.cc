@@ -1,8 +1,10 @@
 
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/eval-measure-ribes.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 #include <tr1/unordered_map>
+#include <cmath>
 
 using namespace std;
 using namespace std::tr1;

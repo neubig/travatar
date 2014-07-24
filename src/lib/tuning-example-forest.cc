@@ -1,6 +1,6 @@
 #include <travatar/sparse-map.h>
 #include <travatar/tuning-example-forest.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/weights.h>
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>

@@ -1,6 +1,6 @@
 #include <travatar/config-travatar-runner.h>
 #include <travatar/travatar-runner.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 
 using namespace travatar;
 using namespace std;

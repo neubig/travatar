@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/mt-segmenter-runner.h>
 #include <travatar/config-mt-segmenter-runner.h>
 #include <travatar/dict.h>
@@ -9,6 +9,7 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace travatar;

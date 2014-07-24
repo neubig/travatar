@@ -3,7 +3,8 @@
 #include <travatar/dict.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/input-file-stream.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/string-util.h>
 #include <boost/foreach.hpp>
 #include <sstream>
 

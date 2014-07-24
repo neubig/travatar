@@ -1,6 +1,5 @@
 
 #include <travatar/tune.h>
-#include <travatar/util.h>
 #include <travatar/dict.h>
 #include <boost/foreach.hpp>
 
@@ -44,5 +43,5 @@ pair<double,double> Tune::FindGradientRange(
 }
 
 TuningExample & Tune::GetExample(int id) {
-    return *SafeAccess(examps_, id);
+    return *examps_[id];
 }

@@ -1,7 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/string-util.h>
 #include <travatar/mt-evaluator-runner.h>
 #include <travatar/config-mt-evaluator-runner.h>
 #include <travatar/dict.h>
@@ -9,7 +7,11 @@
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
 
 using namespace travatar;
 using namespace std;

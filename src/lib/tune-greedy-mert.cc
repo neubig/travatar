@@ -5,7 +5,7 @@
 #include <travatar/tuning-example.h>
 #include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
 #include <travatar/thread-pool.h>
 #include <travatar/eval-measure.h>

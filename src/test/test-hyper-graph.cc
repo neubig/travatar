@@ -1,6 +1,6 @@
 #include "test-hyper-graph.h"
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/check-equal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <sstream>
@@ -207,7 +207,7 @@ int TestHyperGraph::TestCalculateSpanForest() {
     for(int i = 0; i < 10; i++)
         if(node_exp[i] != src2_graph->GetNode(i)->GetTrgSpan()) {
             ret = 0;
-            cerr << i << " not equal " << SafeReference(SafeAccess(node_span, i)) << endl;
+            cerr << i << " not equal " << *node_span[i] << endl;
         }
     return ret;
 }

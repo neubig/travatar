@@ -1,5 +1,5 @@
 #include <travatar/thread-pool.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/task.h>
 
 using namespace travatar;

@@ -3,12 +3,13 @@
 #include <travatar/forest-extractor.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/alignment.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
 #include <queue>
 #include <stack>
 #include <list>
 #include <map>
+#include <cmath>
 
 using namespace travatar;
 using namespace std;

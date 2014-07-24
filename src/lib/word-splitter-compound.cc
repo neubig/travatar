@@ -2,7 +2,7 @@
 #include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <lm/model.hh>
 #include <boost/foreach.hpp>
 

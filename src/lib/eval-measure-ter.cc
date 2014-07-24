@@ -1,10 +1,11 @@
 
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/eval-measure-ter.h>
 #include <tr1/unordered_map>
 #include <tercpp/tercalc.h>
 #include <tercpp/terAlignment.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace std::tr1;

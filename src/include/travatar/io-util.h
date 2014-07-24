@@ -3,8 +3,61 @@
 
 #define WHITE_SPACE " \t\n\r"
 
+#include <travatar/global-debug.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 #include <iostream>
 #include <sstream>
+#include <set>
+
+namespace std {
+
+// Output function for pairs
+template <class X, class Y>
+inline std::ostream& operator << ( std::ostream& out, 
+                                   const std::pair< X, boost::shared_ptr<Y> >& rhs )
+{
+    out << "[" << rhs.first << ", " << *rhs.second << "]";
+    return out;
+}
+
+// Output function for pairs
+template <class X, class Y>
+inline std::ostream& operator << ( std::ostream& out, 
+                                   const std::pair< X, Y >& rhs )
+{
+    out << "[" << rhs.first << ", " << rhs.second << "]";
+    return out;
+}
+
+// Output function for sets
+template <class X>
+inline std::ostream& operator << ( std::ostream& out, 
+                                   const std::set< X >& rhs )
+{
+    out << "[";
+    int val = 0;
+    BOOST_FOREACH(const X & x, rhs) {
+        if(val++) out << " ";
+        out << x;
+    }
+    out << "]";
+    return out;
+}
+
+// Input function for pairs
+template <class X, class Y>
+inline std::istream & operator>> (std::istream & in, std::pair<X,Y>& s) {
+    string open, close;
+    in >> open >> s.first >> s.second >> close;
+    if(open != "<")
+        THROW_ERROR("Bad start of pair " << open);
+    if(close != "<")
+        THROW_ERROR("Bad end of pair " << close);
+    return in;
+}
+
+}
 
 namespace travatar {
 

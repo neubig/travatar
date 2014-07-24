@@ -1,8 +1,9 @@
 #include <travatar/mert-geometry.h>
 #include <travatar/hyper-graph.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
-
+#include <travatar/io-util.h>
+#include <boost/foreach.hpp>
 #include <cassert>
 #include <climits>
 
@@ -172,12 +173,12 @@ void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<WordId>*
         if(id == unk_id) {
             pair<int,int> span = cur->edge->GetHead()->GetSpan();
             if(span.second-span.first != 1) THROW_ERROR("Bad span in unknown rule: " << span);
-            trans->push_back(SafeAccess(sent, span.first));
+            trans->push_back(sent[span.first]);
         } else if(id >= 0) {
             trans->push_back(id);
         } else {
             // Because tails are in reverse order, we must access them accordingly
-            BOOST_FOREACH(WordId cid, SafeAccess(ant_trans, ant_size + id))
+            BOOST_FOREACH(WordId cid, ant_trans[ant_size + id])
                 trans->push_back(cid);
         }
     }

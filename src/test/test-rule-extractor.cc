@@ -1,5 +1,6 @@
 #include "test-rule-extractor.h"
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/check-equal.h>
 #include <boost/shared_ptr.hpp>
 #include <sstream>
 

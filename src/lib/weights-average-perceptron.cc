@@ -1,5 +1,5 @@
 #include <travatar/weights-average-perceptron.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
 
 using namespace std;

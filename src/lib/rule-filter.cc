@@ -1,6 +1,6 @@
 #include <travatar/rule-filter.h>
 #include <travatar/hyper-graph.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <boost/foreach.hpp>
 
 using namespace travatar;

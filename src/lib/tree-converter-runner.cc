@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/tree-io.h>
 #include <travatar/tree-converter-runner.h>
 #include <travatar/config-tree-converter-runner.h>

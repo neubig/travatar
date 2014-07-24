@@ -1,15 +1,17 @@
-#include <fstream>
-#include <boost/shared_ptr.hpp>
-#include <boost/lexical_cast.hpp>
 #include <travatar/dict.h>
 #include <travatar/config-rescorer-runner.h>
 #include <travatar/rescorer-runner.h>
 #include <travatar/input-file-stream.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/eval-measure.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
+#include <travatar/string-util.h>
 #include <travatar/output-collector.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+#include <fstream>
 
 using namespace travatar;
 using namespace std;

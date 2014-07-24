@@ -8,7 +8,11 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
 #include <travatar/generic-string.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/string-util.h>
+#include <travatar/io-util.h>
+#include <travatar/check-equal.h>
+#include <travatar/softmax.h>
 #include <travatar/dict.h>
 
 using namespace std;
@@ -326,7 +330,7 @@ SparseVector HyperPath::CalcFeatures() {
 CfgData HyperPath::CalcTranslation(int factor, int & idx) {
     vector<CfgData> child_trans;
     int my_id = idx++;
-    BOOST_FOREACH(HyperNode * tail, SafeAccess(edges_, my_id)->GetTails()) {
+    BOOST_FOREACH(HyperNode * tail, edges_[my_id]->GetTails()) {
         if(tail != edges_[idx]->GetHead())
             THROW_ERROR("Unmatching hyper-nodes " << *tail);
         child_trans.push_back(CalcTranslation(factor, idx));
@@ -335,26 +339,10 @@ CfgData HyperPath::CalcTranslation(int factor, int & idx) {
     if(factor >= (int)edges_[my_id]->GetTrgData().size())
         return ret;
     BOOST_FOREACH(int wid, edges_[my_id]->GetTrgData()[factor].words) {
-        // // Special handling of unknowns
-        // if(wid == Dict::WID("<unk>")) {
-        //     // For terminals, map all source words into the target
-        //     if(edges_[my_id]->GetTails().size() == 0) {
-        //         pair<int,int> span = edges_[my_id]->GetHead()->GetSpan();
-        //         for(int i = span.first; i < span.second; i++)
-        //             ret.push_back(src_words.size() == 0 ? wid : SafeAccess(src_words, i));
-        //     // For non-terminals, map in order
-        //     } else {
-        //         BOOST_FOREACH(const vector<int> & vec, child_trans)
-        //             BOOST_FOREACH(int next_wid, vec)
-        //                 ret.push_back(next_wid);
-        //     }
-        // } else
         if(wid >= 0) {
             ret.words.push_back(wid);
         } else {
             ret.AppendChild(child_trans[-1 - wid]);
-            // BOOST_FOREACH(int next_wid, child_trans[-1 - wid])
-            //     ret.words.push_back(next_wid);
         }
     }
     return ret;
@@ -382,7 +370,7 @@ void HyperEdge::SetRule(const TranslationRule * rule, const SparseVector & orig_
 }
 
 double HyperNode::GetInsideProb(vector<double> & inside) {
-    if(SafeAccess(inside, id_) != -DBL_MAX)
+    if(inside[id_] != -DBL_MAX)
         return inside[id_];
     else if(IsTerminal())
         return (inside[id_] = 0);
@@ -405,7 +393,7 @@ double HyperNode::GetInsideProb(vector<double> & inside) {
 }
 
 double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, vector<double> & outside) const {
-    if(SafeAccess(outside, id_) != -DBL_MAX)
+    if(outside[id_] != -DBL_MAX)
         return outside[id_];
     else if(id_ == 0)
         return (outside[id_] = 0);
@@ -566,5 +554,5 @@ CfgDataVector HyperPath::CalcTranslations() {
     return ret;
 }
 
-const HyperNode* HyperGraph::GetNode(int i) const { return SafeAccess(nodes_, i); }
-HyperNode* HyperGraph::GetNode(int i) { return SafeAccess(nodes_, i); }
+const HyperNode* HyperGraph::GetNode(int i) const { return nodes_[i]; }
+HyperNode* HyperGraph::GetNode(int i) { return nodes_[i]; }

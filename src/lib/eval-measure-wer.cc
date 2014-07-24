@@ -1,8 +1,9 @@
 
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/eval-measure-wer.h>
 #include <tr1/unordered_map>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace std::tr1;

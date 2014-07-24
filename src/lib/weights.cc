@@ -2,7 +2,7 @@
 #include <travatar/weights.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/eval-measure.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <boost/foreach.hpp>
 
 using namespace std;

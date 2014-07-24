@@ -1,5 +1,5 @@
 #include <boost/foreach.hpp>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/rule-composer.h>
 #include <travatar/hyper-graph.h>
 
@@ -12,7 +12,7 @@ void RuleComposer::BuildComposedEdges(int id,
                         const vector<vector<HyperEdge*> > & min_edges,
                         vector<vector<RuleComposer::SizedEdge> > & composed_edges,
                         HyperGraph * ret) const {
-    if(SafeAccess(composed_edges,id).size() != 0) return;
+    if(composed_edges[id].size() != 0) return;
     // Save the node size
     std::pair<int,int> node_span = ret->GetNode(id)->GetSpan();
     int node_len = node_span.second-node_span.first;

@@ -4,7 +4,7 @@
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-average-perceptron.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/check-equal.h>
 
 using namespace std;
 

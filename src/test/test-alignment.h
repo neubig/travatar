@@ -3,9 +3,6 @@
 
 #include "test-base.h"
 #include <travatar/alignment.h>
-#include <travatar/dict.h>
-#include <travatar/util.h>
-#include <boost/scoped_ptr.hpp>
 
 namespace travatar {
 

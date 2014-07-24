@@ -2,7 +2,8 @@
 
 #include <travatar/translation-rule.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/safe-access.h>
+#include <travatar/check-equal.h>
 #include <boost/shared_ptr.hpp>
 #include <sstream>
 

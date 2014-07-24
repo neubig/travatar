@@ -2,7 +2,6 @@
 #define TEST_DICT_H__
 
 #include "test-base.h"
-#include <travatar/dict.h>
 
 namespace travatar {
 

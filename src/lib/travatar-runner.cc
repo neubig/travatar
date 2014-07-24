@@ -1,6 +1,8 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/io-util.h>
+#include <travatar/string-util.h>
+#include <travatar/global-debug.h>
 #include <travatar/thread-pool.h>
 #include <travatar/tree-io.h>
 #include <travatar/translation-rule.h>

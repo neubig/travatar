@@ -45,7 +45,8 @@ public:
 
     const std::vector<std::string*> & GetSymbols() const { return vocab_; }
     const std::string & GetSymbol(T id) const {
-        return *SafeAccess(vocab_, id);
+        return *vocab_[id];
+        // return *SafeAccess(vocab_, id);
     }
     T GetId(const std::string & sym, bool add = false) {
         // boost::upgrade_lock< boost::shared_mutex > lock(mutex_);

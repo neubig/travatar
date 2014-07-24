@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/tree-io.h>
 #include <travatar/hiero-extractor.h>
 #include <travatar/hiero-extractor-runner.h>
@@ -12,6 +12,7 @@
 #include <travatar/alignment.h>
 #include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/foreach.hpp>
 
 using namespace travatar;
 using namespace std;

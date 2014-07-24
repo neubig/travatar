@@ -2,17 +2,13 @@
 #define TEST_GRAPH_TRANSFORMER_H__
 
 #include "test-base.h"
-#include <utility>
-#include <travatar/hyper-graph.h>
-#include <travatar/alignment.h>
 #include <travatar/tree-io.h>
-#include <travatar/translation-rule.h>
-#include <travatar/unary-flattener.h>
-#include <travatar/word-splitter-regex.h>
-#include <travatar/word-splitter-compound.h>
-#include <boost/shared_ptr.hpp>
+#include <utility>
+#include <boost/scoped_ptr.hpp>
 
 namespace travatar {
+
+class TranslationRule;
 
 class TestGraphTransformer : public TestBase {
 

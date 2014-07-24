@@ -1,7 +1,8 @@
 
 #include <travatar/eval-measure-bleu.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 #include <cmath>
 
 using namespace std;
@@ -147,7 +148,7 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
 std::string EvalStatsBleu::ConvertToString() const {
     BleuReport report = CalcBleuReport();
     ostringstream oss;
-    oss << "BLEU = " << report.bleu << ", " << SafeAccess(report.scores, 0);
+    oss << "BLEU = " << report.bleu << ", " << report.scores[0];
     for(int i = 1; i < (int)report.scores.size(); i++)
         oss << "/" << report.scores[i];
     oss << " (BP=" << report.brevity << ", ratio=" << report.ratio << ", hyp_len=" << report.sys_len << ", ref_len=" << report.ref_len << ")";

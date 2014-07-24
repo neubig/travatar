@@ -1,7 +1,8 @@
 
 #include <travatar/hiero-extractor.h>
 #include <travatar/alignment.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <boost/foreach.hpp>
 #include <vector>
 
 using namespace std;

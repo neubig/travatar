@@ -1,4 +1,5 @@
 #include "test-alignment.h"
+#include <travatar/check-equal.h>
 
 using namespace std;
 

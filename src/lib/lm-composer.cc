@@ -1,7 +1,9 @@
 #include <travatar/lm-composer.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/string-util.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace travatar;

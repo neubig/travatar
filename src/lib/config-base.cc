@@ -1,5 +1,5 @@
 #include <travatar/config-base.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fstream>

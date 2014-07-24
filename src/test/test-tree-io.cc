@@ -2,7 +2,8 @@
 
 #include <travatar/tree-io.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/check-equal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <sstream>

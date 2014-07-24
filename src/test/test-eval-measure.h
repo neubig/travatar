@@ -3,9 +3,6 @@
 
 #include "test-base.h"
 #include <travatar/eval-measure.h>
-#include <travatar/eval-measure-bleu.h>
-#include <travatar/eval-measure-ribes.h>
-#include <travatar/eval-measure-interp.h>
 #include <boost/shared_ptr.hpp>
 
 namespace travatar {

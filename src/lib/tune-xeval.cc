@@ -4,7 +4,8 @@
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <travatar/tune-xeval.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/softmax.h>
 #include <travatar/dict.h>
 #include <travatar/weights.h>
 #include <travatar/eval-measure.h>

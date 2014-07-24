@@ -1,6 +1,7 @@
 
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/eval-measure-interp.h>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <tr1/unordered_map>

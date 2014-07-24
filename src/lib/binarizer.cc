@@ -1,7 +1,7 @@
 #include <travatar/binarizer.h>
 #include <travatar/binarizer-directional.h>
 #include <travatar/binarizer-cky.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 
 using namespace travatar;
 using namespace std;

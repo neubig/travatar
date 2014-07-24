@@ -2,7 +2,7 @@
 
 // This file is originally from moses with the following copyright info:
 /***********************************************************************
-travatar - factored phrase-based language decoder
+Moses - factored phrase-based language decoder
 Copyright (C) 2006 University of Edinburgh
 
 This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ***********************************************************************/
 
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/input-file-stream.h>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>

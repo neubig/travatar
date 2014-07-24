@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/tune-online.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <travatar/dict.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>

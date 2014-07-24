@@ -4,6 +4,7 @@
 #include <travatar/graph-transformer.h>
 #include <boost/unordered_map.hpp>
 #include <string>
+#include <vector>
 
 namespace travatar {
 

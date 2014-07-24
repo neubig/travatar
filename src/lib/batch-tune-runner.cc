@@ -15,8 +15,10 @@
 #include <travatar/output-collector.h>
 #include <travatar/thread-pool.h>
 #include <travatar/dict.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
+#include <travatar/string-util.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 
@@ -50,7 +52,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
         // Get the features
         SparseVector feat = Dict::ParseSparseVector(columns[3]);
         // Calculate the score
-        const Sentence & ref = SafeAccess(refs_,id);
+        const Sentence & ref = refs_[id];
         shared_ptr<EvalStats> stats;
         if(stat_in) {
             if(!getline(*stat_in, line))
@@ -79,7 +81,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
         if(id % 100 == 0)
             PRINT_DEBUG(id << ".", 1);
         PRINT_DEBUG("Loading line " << id << endl, 1);
-        const Sentence & ref = SafeAccess(refs_,id);
+        const Sentence & ref = refs_[id];
         // Add the example
         if((int)tgm.NumExamples() <= id) {
             double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());

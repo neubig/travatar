@@ -1,5 +1,11 @@
 #include "test-graph-transformer.h"
-#include <travatar/util.h>
+#include <travatar/check-equal.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/dict.h>
+#include <travatar/translation-rule.h>
+#include <travatar/unary-flattener.h>
+#include <travatar/word-splitter-regex.h>
+#include <travatar/word-splitter-compound.h>
 #include <fstream>
 #include <sstream>
 #include <utility>

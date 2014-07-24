@@ -4,7 +4,7 @@
 #include <travatar/io-util.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/symbol-set.h>
-#include <travatar/util.h>
+#include <travatar/global-debug.h>
 #include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
