@@ -61,11 +61,17 @@ public:
 // Read in and write the format of the Egret parser
 class EgretTreeIO : public TreeIO {
 public:
+    EgretTreeIO() : TreeIO(), normalize_(true) { }
     virtual ~EgretTreeIO() { }
     virtual HyperGraph * ReadTree(std::istream & in);
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out);
+    void SetNormalize(bool normalize) { normalize_ = normalize; }
+    bool GetNormalize(bool normalize) const { return normalize_; }
 private:
     HyperNode * MakeEgretNode(const std::string & str_id, SymbolSet<int> & node_map, HyperGraph * graph);
+
+    // Whether to normalize edge posteriors to per-node confusions (def: true)
+    bool normalize_;
 };
 
 // Read in and write Moses XML tree format

@@ -97,7 +97,7 @@ LookupState * LookupTableMarisa::MatchState(const string & next, const LookupSta
         LookupState * ret = new LookupState;
         ret->SetString(next);
         ret->SetNonterms(state.GetNonterms());
-        // ret->SetFeatures(state.GetFeatures());
+        ret->SetFeatures(state.GetFeatures());
         return ret;
     } else {
         // cerr << "Matching " << next << " --> failure!" << endl;

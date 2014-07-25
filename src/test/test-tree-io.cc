@@ -182,7 +182,7 @@ int TestTreeIO::TestReadRule() {
 int TestTreeIO::TestReadEgret() {
     // Use this tree
     istringstream instr(egret_str);
-    EgretTreeIO io;
+    EgretTreeIO io; io.SetNormalize(false);
     boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(instr));
     // Check that both values are equal
     return egret_exp.CheckEqual(*hg_act);
@@ -191,7 +191,7 @@ int TestTreeIO::TestReadEgret() {
 int TestTreeIO::TestWriteEgret() {
     // Use this tree
     stringstream strm;
-    EgretTreeIO io;
+    EgretTreeIO io; io.SetNormalize(false);
     PennTreeIO pio;
     io.WriteTree(tree_exp, strm); strm << endl;
     boost::scoped_ptr<HyperGraph> hg_act(io.ReadTree(strm));

@@ -5,6 +5,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/symbol-set.h>
 #include <travatar/global-debug.h>
+#include <travatar/softmax.h>
 #include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -298,6 +299,8 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
         istringstream iss(wordstring);
         return wtio.ReadTree(iss);
     }
+    // Save the parse ID, and also vectors of scores
+    WordId parse_id = Dict::WID("parse");
     // For each line
     BOOST_REVERSE_FOREACH(const std::string & line, lines) {
         istringstream iss(line);
@@ -320,8 +323,24 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
         // Finally, read the score and add it to a parse
         iss >> score;
         edge->SetScore(score);
-        edge->GetFeatures().Add(Dict::WID("parse"), score);
-        // edge->AddFeature(Dict::WID("parse"), score);
+        if(!normalize_) edge->GetFeatures().Add(parse_id, score);
+    }
+    // Because Egret outputs posterior probabilities of the edge appearing in
+    // the tree, not the relative probability of each edge coming out of a
+    // particular node, we need to normalize by nodes
+    if(normalize_) {
+        BOOST_FOREACH(HyperNode* node, ret->GetNodes()) {
+            vector<double> scores; scores.reserve(node->GetEdges().size());
+            BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
+                scores.push_back(edge->GetScore());
+            double denom = AddLogProbs(scores);
+            for(int i = 0; i < (int)scores.size(); i++) {
+                HyperEdge * edge = node->GetEdge(i);
+                double score = scores[i]-denom;
+                edge->SetScore(score);
+                edge->GetFeatures().Add(parse_id, score);
+            }
+        }
     }
     return ret;
 }

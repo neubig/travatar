@@ -140,6 +140,7 @@ SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_(vec) {
 
 // Add a single value
 void SparseVector::Add(int k, double v) {
+    if(v == 0) return;
     SparseVectorImpl::iterator b = impl_.begin(), e = impl_.end(), n;
     while(1) {
         if(b == e) {
