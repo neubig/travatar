@@ -138,6 +138,8 @@ EvalMeasureRibes::EvalMeasureRibes(const std::string & config)
             alpha_ = boost::lexical_cast<double>(strs.second);
         } else if(strs.first == "beta") {
             beta_ = boost::lexical_cast<double>(strs.second);
+        } else if(strs.first == "factor") {
+            factor_ = boost::lexical_cast<int>(strs.second);
         } else {
             THROW_ERROR("Bad configuration string: " << config);
         }

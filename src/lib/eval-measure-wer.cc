@@ -54,6 +54,8 @@ EvalMeasureWer::EvalMeasureWer(const std::string & config)
                 reverse_ = false;
             else
                 THROW_ERROR("Bad reverse value: " << strs.second);
+        } else if(strs.first == "factor") {
+            factor_ = boost::lexical_cast<int>(strs.second);
         } else {
             THROW_ERROR("Bad configuration string: " << config);
         }

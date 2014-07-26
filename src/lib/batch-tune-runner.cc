@@ -46,9 +46,8 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         // Get the number
         int id = atoi(columns[0].c_str());
-        // Get the factors... For now, just use a single factor
-        vector<string> factors = Tokenize(columns[1], " |COL| ");
-        Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
+        // Get the factors
+        vector<Sentence> hyps = Dict::ParseWordVector(columns[1]);
         // Get the features
         SparseVector feat = Dict::ParseSparseVector(columns[3]);
         // Calculate the score
@@ -59,7 +58,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
                 THROW_ERROR("Lines in statistic file and system input don't match");
             stats = eval_->ReadStats(line);
         } else {
-            stats = eval_->CalculateCachedStats(ref, hyp, id);
+            stats = eval_->CalculateCachedStats(ref, hyps, id);
         }
         // Add the example
         while((int)tgm.NumExamples() <= id) {
@@ -262,9 +261,8 @@ void BatchTuneRunner::CalculateSentenceStats(const ConfigBatchTune & config, con
         if(columns.size() != 4)
             THROW_ERROR("Expected 4 columns in n-best list:\n" << line);
         int id = atoi(columns[0].c_str());
-        vector<string> factors = Tokenize(columns[1], " |COL| ");
-        Sentence hyp = Dict::ParseWords(factors[tune_factor_]);
-        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyp, id);
+        vector<Sentence> hyps = Dict::ParseWordVector(columns[1]);
+        EvalStatsPtr stats = eval_->CalculateCachedStats(refs_[id], hyps, id);
         stat_out << stats->WriteStats() << endl;
     }
 }

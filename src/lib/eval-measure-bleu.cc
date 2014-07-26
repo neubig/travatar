@@ -169,6 +169,8 @@ EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), 
             smooth_val_ = boost::lexical_cast<double>(strs.second);
         } else if(strs.first == "prec") {
             prec_weight_ = boost::lexical_cast<double>(strs.second);
+        } else if(strs.first == "factor") {
+            factor_ = boost::lexical_cast<int>(strs.second);
         } else if(strs.first == "scope") {
             if(strs.second == "corpus") {
                 scope_ = CORPUS;

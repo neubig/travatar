@@ -84,9 +84,9 @@ public:
     typedef std::pair<std::string, std::string> StringPair;
 
     // Create with default settings
-    EvalMeasure() { }
+    EvalMeasure() : factor_(0) { }
     // Create with configuration
-    EvalMeasure(const std::string & config) { }
+    EvalMeasure(const std::string & config) : factor_(0) { }
     virtual ~EvalMeasure() { }
 
     // Calculate the stats for a single sentence
@@ -101,6 +101,15 @@ public:
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) {
         return CalculateStats(ref,sys);
+    }
+
+    // Calculate the stats for a single sentence
+    virtual EvalStatsPtr CalculateCachedStats(
+                const Sentence & ref,
+                const std::vector<Sentence> & syss,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX) {
+        return CalculateCachedStats(ref,syss[factor_],ref_cache_id,sys_cache_id);
     }
 
     // Calculate the stats for a single sentence
@@ -123,6 +132,9 @@ public:
     virtual void ClearCache() { }
 
 protected:
+
+    // Which factore to calculate over
+    int factor_;
 
 };
 
