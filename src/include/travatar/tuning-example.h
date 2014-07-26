@@ -24,7 +24,7 @@ class TuningExample {
 
 public:
 
-    TuningExample(int factor = 0) : factor_(factor) { }
+    TuningExample() { }
 
     virtual ~TuningExample() { }
 
@@ -50,9 +50,6 @@ public:
                                     Weights & weights) const = 0;
 
 protected:
-
-    // The target factor to be evaluated
-    int factor_;
 
 };
 

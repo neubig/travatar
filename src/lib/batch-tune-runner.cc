@@ -1,9 +1,6 @@
 #include <travatar/config-batch-tune.h>
 #include <travatar/batch-tune-runner.h>
 #include <travatar/input-file-stream.h>
-#include <travatar/eval-measure-bleu.h>
-#include <travatar/eval-measure-ribes.h>
-#include <travatar/eval-measure-ter.h>
 #include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/tune-xeval.h>
@@ -64,7 +61,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
         while((int)tgm.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest(tune_factor_)));
+            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
         ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, stats);
     }
@@ -88,7 +85,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
                 shared_ptr<TuningExample>(
                     new TuningExampleForest(
                         eval_.get(),
-                        ref, id, norm, tune_factor_)));
+                        ref, id, norm)));
         }
         ((TuningExampleForest&)tgm.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
         id++;
@@ -273,7 +270,6 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     // Set the debugging level and number of factors
     GlobalVars::debug = config.GetInt("debug");
     GlobalVars::trg_factors = config.GetInt("trg_factors");
-    tune_factor_ = config.GetInt("tune_factor");
 
     // Open the references
     ifstream ref_in(config.GetMainArg(0).c_str());

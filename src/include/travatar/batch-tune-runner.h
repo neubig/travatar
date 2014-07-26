@@ -39,7 +39,7 @@ private:
 class BatchTuneRunner {
 public:
 
-    BatchTuneRunner() : ref_len_(0), tune_factor_(0) { }
+    BatchTuneRunner() : ref_len_(0) { }
     ~BatchTuneRunner() { }
     
     // Run the tuner
@@ -62,9 +62,6 @@ private:
     int ref_len_;
     std::vector<Sentence> refs_;
     boost::shared_ptr<EvalMeasure> eval_;
-
-    // Which factor to tune
-    int tune_factor_;
 
 };
 

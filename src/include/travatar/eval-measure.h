@@ -2,6 +2,7 @@
 #define EVAL_MEASURE_H__
 
 #include <travatar/sentence.h>
+#include <travatar/cfg-data.h>
 #include <boost/shared_ptr.hpp>
 #include <cfloat>
 #include <climits>
@@ -110,6 +111,13 @@ public:
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) {
         return CalculateCachedStats(ref,syss[factor_],ref_cache_id,sys_cache_id);
+    }
+    virtual EvalStatsPtr CalculateCachedStats(
+                const Sentence & ref,
+                const CfgDataVector & syss,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX) {
+        return CalculateCachedStats(ref,syss[factor_].words,ref_cache_id,sys_cache_id);
     }
 
     // Calculate the stats for a single sentence

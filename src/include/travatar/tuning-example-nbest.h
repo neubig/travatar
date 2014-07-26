@@ -12,7 +12,7 @@ class TuningExampleNbest : public TuningExample {
 
 public:
 
-    TuningExampleNbest(int factor = 0) : TuningExample(factor) { } 
+    TuningExampleNbest() : TuningExample() { } 
 
     virtual ~TuningExampleNbest() { }
 
