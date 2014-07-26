@@ -55,6 +55,16 @@ public:
     virtual boost::shared_ptr<EvalStats> CalculateStats(
                 const Sentence & ref,
                 const Sentence & sys) const;
+    virtual EvalStatsPtr CalculateCachedStats(
+                const Sentence & ref,
+                const std::vector<Sentence> & syss,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX);
+    virtual EvalStatsPtr CalculateCachedStats(
+                const Sentence & ref,
+                const CfgDataVector & syss,
+                int ref_cache_id = INT_MAX,
+                int sys_cache_id = INT_MAX);
 
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr ReadStats(

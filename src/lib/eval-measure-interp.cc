@@ -70,14 +70,29 @@ EvalStatsPtr EvalStatsInterp::Clone() const {
 
 // Measure the score of the sys output according to the ref
 EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sentence & sys) const {
-
     // Calculate all the stats independently and add them
     typedef shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
         stats.push_back(meas->CalculateStats(ref,sys));
     return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
+}
 
+EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
+            const Sentence & ref, const std::vector<Sentence> & syss, int ref_cache_id, int sys_cache_id) {
+    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    vector<EvalStatsPtr> stats;
+    BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
+        stats.push_back(meas->CalculateCachedStats(ref,syss,ref_cache_id,sys_cache_id));
+    return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
+}
+EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
+            const Sentence & ref, const CfgDataVector & syss, int ref_cache_id, int sys_cache_id) {
+    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    vector<EvalStatsPtr> stats;
+    BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
+        stats.push_back(meas->CalculateCachedStats(ref,syss,ref_cache_id,sys_cache_id));
+    return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
 }
 
 // Read in the stats
