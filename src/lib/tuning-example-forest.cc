@@ -152,7 +152,6 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
         PRINT_DEBUG("Hull for: " << Dict::PrintWords(refs_[0]) << endl, 6);
         for(int i = 0; i < (int)top_hull.size(); i++) {
             const MertLine & line = *top_hull.GetLines()[i];
-            cerr << GlobalVars::trg_factors << endl;
             std::vector<Sentence> sent(GlobalVars::trg_factors);
             line.ConstructTranslation(forest_->GetWords(), &sent);
             EvalStatsPtr stats = measure_->CalculateCachedStats(refs_, sent, id_);
