@@ -157,29 +157,31 @@ const MertHull& MertHull::operator*=(const MertHull& other) {
 }
 
 // recursively construct translation
-void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<WordId>* trans) const {
+void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<Sentence>* trans) const {
     WordId unk_id = Dict::WID("<unk>");
     const MertLine* cur = this;
     // ant_trans is the translations for the tails in REVERSE order
-    vector<vector<WordId> > ant_trans;
+    vector<vector<Sentence> > ant_trans;
     while(!cur->edge) {
-        ant_trans.resize(ant_trans.size() + 1);
+        ant_trans.resize(ant_trans.size() + 1, vector<Sentence>(trans->size()));
         cur->p2->ConstructTranslation(sent, &ant_trans.back());
         cur = cur->p1.get();
     }
-    size_t ant_size = ant_trans.size();
-    assert(ant_size == (int)cur->edge->GetTails().size());
-    BOOST_FOREACH(WordId id, cur->edge->GetTrgData()[factor].words) {
-        if(id == unk_id) {
-            pair<int,int> span = cur->edge->GetHead()->GetSpan();
-            if(span.second-span.first != 1) THROW_ERROR("Bad span in unknown rule: " << span);
-            trans->push_back(sent[span.first]);
-        } else if(id >= 0) {
-            trans->push_back(id);
-        } else {
-            // Because tails are in reverse order, we must access them accordingly
-            BOOST_FOREACH(WordId cid, ant_trans[ant_size + id])
-                trans->push_back(cid);
+    for(int factor = 0; factor < (int)cur->edge->GetTrgData().size(); factor++) {
+        size_t ant_size = ant_trans.size();
+        assert(ant_size == (int)cur->edge->GetTails().size());
+        BOOST_FOREACH(WordId id, cur->edge->GetTrgData()[factor].words) {
+            if(id == unk_id) {
+                pair<int,int> span = cur->edge->GetHead()->GetSpan();
+                if(span.second-span.first != 1) THROW_ERROR("Bad span in unknown rule: " << span);
+                (*trans)[factor].push_back(sent[span.first]);
+            } else if(id >= 0) {
+                (*trans)[factor].push_back(id);
+            } else {
+                // Because tails are in reverse order, we must access them accordingly
+                BOOST_FOREACH(WordId cid, ant_trans[ant_size + id][factor])
+                    (*trans)[factor].push_back(cid);
+            }
         }
     }
 }

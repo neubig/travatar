@@ -79,19 +79,19 @@ EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sente
 }
 
 EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
-            const Sentence & ref, const std::vector<Sentence> & syss, int ref_cache_id, int sys_cache_id) {
+            const std::vector<Sentence> & refs, const std::vector<Sentence> & syss, int ref_cache_id, int sys_cache_id) {
     typedef shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
-        stats.push_back(meas->CalculateCachedStats(ref,syss,ref_cache_id,sys_cache_id));
+        stats.push_back(meas->CalculateCachedStats(refs,syss,ref_cache_id,sys_cache_id));
     return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
 }
 EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
-            const Sentence & ref, const CfgDataVector & syss, int ref_cache_id, int sys_cache_id) {
+            const std::vector<Sentence> & refs, const CfgDataVector & syss, int ref_cache_id, int sys_cache_id) {
     typedef shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
-        stats.push_back(meas->CalculateCachedStats(ref,syss,ref_cache_id,sys_cache_id));
+        stats.push_back(meas->CalculateCachedStats(refs,syss,ref_cache_id,sys_cache_id));
     return EvalStatsPtr(new EvalStatsInterp(stats, coeffs_));
 }
 

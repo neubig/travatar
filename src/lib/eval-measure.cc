@@ -101,11 +101,11 @@ std::string EvalStats::WriteStats() {
 
 
 // Find the oracle sentence for this evaluation measure
-Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence & ref, int factor) {
+CfgDataVector EvalMeasure::CalculateOracle(const HyperGraph & graph, const std::vector<Sentence> & refs) {
     Sentence bord_ref;
     // Create the bordered sentence
     bord_ref.push_back(Dict::WID("<s>"));
-    BOOST_FOREACH(WordId wid, ref) bord_ref.push_back(wid);
+    BOOST_FOREACH(WordId wid, refs[0]) bord_ref.push_back(wid);
     bord_ref.push_back(Dict::WID("</s>"));
     // Create the n-grams
     typedef map<Sentence, int> NgramMap;
@@ -159,13 +159,12 @@ Sentence EvalMeasure::CalculateOracle(const HyperGraph & graph, const Sentence &
     // Create n-best list
     NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT);
     // Find the sentence in the n-best list with the highest score
-    Sentence ret; 
+    CfgDataVector ret; 
     double best_score = 0;
     BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
-        Sentence curr = path->GetTrgData()[factor].words;
-        double score = this->CalculateStats(ref, curr)->ConvertToScore();
+        double score = this->CalculateCachedStats(refs, path->GetTrgData())->ConvertToScore();
         if(score > best_score) {
-            ret = curr;
+            ret = path->GetTrgData();
             best_score = score;
         }
     }

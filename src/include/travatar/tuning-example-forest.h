@@ -20,12 +20,12 @@ public:
 
     // Constructor tanking the forest and the reference
     TuningExampleForest(EvalMeasure * measure,
-                        const Sentence & ref,
+                        const std::vector<Sentence> & refs,
                         int id,
                         double mult) :
                             TuningExample(),
                             measure_(measure),
-                            ref_(ref), oracle_score_(mult),
+                            refs_(refs), oracle_score_(mult),
                             curr_score_(-DBL_MAX), id_(id), mult_(mult) {
     }
 
@@ -74,7 +74,7 @@ protected:
 
     EvalMeasure * measure_;
     boost::shared_ptr<HyperGraph> forest_;
-    Sentence ref_;
+    std::vector<Sentence> refs_;
     // The score that the best hypothesis in the forest achieves
     double oracle_score_;
     // The score that the forest achieves with the current weights

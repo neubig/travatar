@@ -175,7 +175,7 @@ int TestTune::TestLineSearch() {
 
 int TestTune::TestLatticeHull() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
-    Sentence ref = Dict::ParseWords("c a");
+    vector<Sentence> ref = Dict::ParseWordVector("c a");
     TuningExampleForest tef(&bleu, ref, 1, 1);
     tef.AddHypothesis(forest);
     ConvexHull exp_hull, act_hull = tef.CalculateConvexHull(weights, gradient);
@@ -194,7 +194,7 @@ int TestTune::TestLatticeHull() {
 
 int TestTune::TestForestHull() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
-    Sentence ref = Dict::ParseWords("c a");
+    vector<Sentence> ref = Dict::ParseWordVector("c a");
     TuningExampleForest tef(&bleu, ref, 2, 1);
     tef.AddHypothesis(forest2);
     tef.CalculatePotentialGain(weights);
@@ -213,7 +213,7 @@ int TestTune::TestForestHull() {
 
 int TestTune::TestMultipleForests() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
-    Sentence ref = Dict::ParseWords("c a");
+    vector<Sentence> ref = Dict::ParseWordVector("c a");
     TuningExampleForest tef(&bleu, ref, 2, 1);
     tef.AddHypothesis(forest2c);
     tef.AddHypothesis(forest2d);
@@ -236,8 +236,8 @@ int TestTune::TestMultipleForests() {
 int TestTune::TestForestUnk() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
     shared_ptr<HyperGraph> rule_graph(new HyperGraph);
-    Sentence exp_sent(1,Dict::WID("wordA")), act_sent;
-    rule_graph->SetWords(exp_sent);
+    vector<Sentence> exp_sent = Dict::ParseWordVector("wordA"), act_sent;
+    rule_graph->SetWords(exp_sent[0]);
     HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); rule_graph->AddNode(n0);
     SparseVector f01; f01.Add(valid, -10); f01.Add(slopeid, 1);
     HyperEdge* e01 = new HyperEdge(n0); e01->SetTrgData(CfgDataVector(1, CfgData(GetQuotedWords("\"<unk>\""))));

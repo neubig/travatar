@@ -48,7 +48,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
         // Get the features
         SparseVector feat = Dict::ParseSparseVector(columns[3]);
         // Calculate the score
-        const Sentence & ref = refs_[id];
+        const vector<Sentence> & ref = refs_[id];
         shared_ptr<EvalStats> stats;
         if(stat_in) {
             if(!getline(*stat_in, line))
@@ -77,7 +77,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
         if(id % 100 == 0)
             PRINT_DEBUG(id << ".", 1);
         PRINT_DEBUG("Loading line " << id << endl, 1);
-        const Sentence & ref = refs_[id];
+        const std::vector<Sentence> & ref = refs_[id];
         // Add the example
         if((int)tgm.NumExamples() <= id) {
             double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());
@@ -280,7 +280,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     PRINT_DEBUG("Loading references..." << endl, 1);
     string line;
     while(getline(ref_in, line)) {
-        Sentence ref = Dict::ParseWords(line);
+        std::vector<Sentence> ref = Dict::ParseWordVector(line);
         refs_.push_back(ref);
         ref_len_ += ref.size();
     }

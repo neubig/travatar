@@ -58,9 +58,9 @@ void TuningExampleForest::FindActiveFeatures() {
 
 void TuningExampleForest::CalculateOracle() {
     try {
-        Sentence oracle_sent = measure_->CalculateOracle(*forest_, ref_);
+        CfgDataVector oracle_sent = measure_->CalculateOracle(*forest_, refs_);
         PRINT_DEBUG("Oracle sentence:" << endl << Dict::PrintWords(oracle_sent) << endl, 1);
-        oracle_score_ = measure_->CalculateCachedStats(ref_, oracle_sent, id_)->ConvertToScore();
+        oracle_score_ = measure_->CalculateCachedStats(refs_, oracle_sent, id_)->ConvertToScore();
         PRINT_DEBUG("Oracle score: " << oracle_score_ << endl, 1);
         oracle_score_ *= mult_;
         oracle_score_ = 1;
@@ -84,7 +84,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     Weights wval(weights);
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1);
-    curr_score_ = measure_->CalculateCachedStats(ref_, nbest_list[0]->GetTrgData(), id_)->ConvertToScore() * mult_;
+    curr_score_ = measure_->CalculateCachedStats(refs_, nbest_list[0]->GetTrgData(), id_)->ConvertToScore() * mult_;
     // Find the potential gain
     oracle_score_ = max(oracle_score_, curr_score_);
     double gain = oracle_score_ - curr_score_;
@@ -137,7 +137,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     Weights wval(weights);
     forest_->ScoreEdges(wval);
     NbestList nbest_list = forest_->GetNbest(1);
-    EvalStatsPtr curr_stats = measure_->CalculateCachedStats(ref_, nbest_list[0]->GetTrgData(), id_);
+    EvalStatsPtr curr_stats = measure_->CalculateCachedStats(refs_, nbest_list[0]->GetTrgData(), id_);
     curr_stats->TimesEquals(mult_);
     // If we are not active, return the simple convex hull
     if(!active) {
@@ -149,17 +149,18 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
         CalculateMertHull(func, hulls, 0);
         MertHull top_hull = *hulls[0];
         top_hull.Sort();
-        PRINT_DEBUG("Hull for: " << Dict::PrintWords(ref_) << endl, 6);
+        PRINT_DEBUG("Hull for: " << Dict::PrintWords(refs_[0]) << endl, 6);
         for(int i = 0; i < (int)top_hull.size(); i++) {
             const MertLine & line = *top_hull.GetLines()[i];
-            Sentence sent;
+            cerr << GlobalVars::trg_factors << endl;
+            std::vector<Sentence> sent(GlobalVars::trg_factors);
             line.ConstructTranslation(forest_->GetWords(), &sent);
-            EvalStatsPtr stats = measure_->CalculateCachedStats(ref_, sent, id_);
+            EvalStatsPtr stats = measure_->CalculateCachedStats(refs_, sent, id_);
             double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
             // If the score is exactly the same as last, just update the right side
             // if(ret.size()) 
             //     cerr << "DEBUGGING stats: " << *stats << ", " << *ret.rbegin()->second << endl;
-            PRINT_DEBUG("Forest: " << *stats << "\t" << Dict::PrintWords(sent) << endl, 6);
+            PRINT_DEBUG("Forest: " << *stats << "\t" << Dict::PrintWords(sent[0]) << endl, 6);
             if(ret.size() && (*ret.rbegin()->second == *stats)) {
                 ret.rbegin()->first.second = PosZero(next)-DBL_MIN;
                 continue;

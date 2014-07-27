@@ -60,7 +60,8 @@ private:
 
     // The evaluation measure to use
     int ref_len_;
-    std::vector<Sentence> refs_;
+    // References for each sentence, each factor
+    std::vector<std::vector<Sentence> > refs_;
     boost::shared_ptr<EvalMeasure> eval_;
 
 };

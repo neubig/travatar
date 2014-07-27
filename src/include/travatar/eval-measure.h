@@ -104,20 +104,20 @@ public:
         return CalculateStats(ref,sys);
     }
 
-    // Calculate the stats for a single sentence
+    // Calculate the stats for a singles sentence with factors
     virtual EvalStatsPtr CalculateCachedStats(
-                const Sentence & ref,
+                const std::vector<Sentence> & refs,
                 const std::vector<Sentence> & syss,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) {
-        return CalculateCachedStats(ref,syss[factor_],ref_cache_id,sys_cache_id);
+        return CalculateCachedStats(refs[factor_],syss[factor_],ref_cache_id,sys_cache_id);
     }
     virtual EvalStatsPtr CalculateCachedStats(
-                const Sentence & ref,
+                const std::vector<Sentence> & refs,
                 const CfgDataVector & syss,
                 int ref_cache_id = INT_MAX,
                 int sys_cache_id = INT_MAX) {
-        return CalculateCachedStats(ref,syss[factor_].words,ref_cache_id,sys_cache_id);
+        return CalculateCachedStats(refs[factor_],syss[factor_].words,ref_cache_id,sys_cache_id);
     }
 
     // Calculate the stats for a single sentence
@@ -134,7 +134,7 @@ public:
     // TODO: This is totally a hack, doing very ugly things like writing a file to
     //       a specific place on disk, not accounting for sentence brevity, etc.
     //       This needs to be fixed.
-    virtual Sentence CalculateOracle(const HyperGraph & graph, const Sentence & ref, int factor = 0);
+    virtual CfgDataVector CalculateOracle(const HyperGraph & graph, const std::vector<Sentence> & ref);
 
     // Clear the cache
     virtual void ClearCache() { }
