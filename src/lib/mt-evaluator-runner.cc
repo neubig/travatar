@@ -22,16 +22,15 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
 
     // Set the debugging level
     GlobalVars::debug = config.GetInt("debug");
-    int factor = config.GetInt("factor");
 
     // Load the reference
     ifstream refin(config.GetString("ref").c_str());
     if(!refin) THROW_ERROR("Could not open reference: " << config.GetString("ref"));
-    vector< vector<Sentence> > ref_sentences(1);
+    vector< vector<Sentence> > ref_sentences;
     string line;
     while(getline(refin, line))
-        ref_sentences[0].push_back(Dict::ParseWords(line));
-    int ref_len = ref_sentences[0].size();
+        ref_sentences.push_back(Dict::ParseWordVector(line));
+    int ref_len = ref_sentences.size();
     bool sent = config.GetBool("sent");
     
     // Load the evaluation measure
@@ -75,10 +74,9 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         ifstream sysin(filename.c_str());
         if(!sysin) THROW_ERROR("Could not open system file: " << filename);
         while(getline(sysin, line)) {
-            vector<string> factors = Tokenize(line, " |COL| ");
-            Sentence sys_sent = Dict::ParseWords(factors[factor]);
+            vector<Sentence> sys_sent = Dict::ParseWordVector(line);
             for(int i = 0; i < eval_count; i++) {
-                EvalStatsPtr stats = eval_measures[i]->CalculateStats(ref_sentences[0][id],sys_sent);
+                EvalStatsPtr stats = eval_measures[i]->CalculateCachedStats(ref_sentences[id],sys_sent);
                 if(sent) {
                     if(config.GetMainArgs().size() > 1) cout << filename << " ";
                     cout << "Sent " << id << ": " << stats->ConvertToString() << endl;
