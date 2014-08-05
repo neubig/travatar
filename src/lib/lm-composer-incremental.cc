@@ -114,9 +114,10 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
 }
 
 // Calculate a single vertex
+template <class LMType>
 search::Vertex* LMComposerIncremental::CalculateVertex(
                     const HyperGraph & parse, vector<search::Vertex*> & vertices,
-                    search::Context<lm::ngram::Model> & context, search::Forest & best,
+                    search::Context<LMType> & context, search::Forest & best,
                     int id) const {
 
     // Don't redo ones we've already finished
@@ -169,7 +170,7 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
             *nt = (*i)->RootAlternate();
 
         // Score the rule
-        search::ScoreRuleRet score = search::ScoreRule(*data->GetLM(), words, pedge.Between());
+        search::ScoreRuleRet score = search::ScoreRule(*static_cast<LMType*>(data->GetLM()), words, pedge.Between());
         pedge.SetScore(below_score + edge->GetScore() + data->GetWeight() * score.prob + data->GetUnkWeight() * score.oov);
         best.SetLMUnk(edge->GetId(), score.oov);
 
@@ -190,9 +191,10 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
 }
 
 // Calculate the root vetex
+template <class LMType>
 search::Vertex* LMComposerIncremental::CalculateRootVertex(
                     vector<search::Vertex*> & vertices,
-                    search::Context<lm::ngram::Model> & context, search::Forest & best) const {
+                    search::Context<LMType> & context, search::Forest & best) const {
     assert(vertices[0]);
     // Don't redo ones we've already finished
     int id = vertices.size()-1;
@@ -202,9 +204,9 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     std::vector<lm::WordIndex> words(3,0);
     // Calculate the word indexes
     LMData* data = lm_data_[0];
-    words[0] = data->GetLM()->GetVocabulary().Index("<s>");
+    words[0] = static_cast<LMType*>(data->GetLM())->GetVocabulary().Index("<s>");
     words[1] = lm::kMaxWordIndex;
-    words[2] = data->GetLM()->GetVocabulary().Index("</s>");
+    words[2] = static_cast<LMType*>(data->GetLM())->GetVocabulary().Index("</s>");
     // Allocate the edge
     search::PartialEdge pedge(edges.AllocateEdge(1));
     (*pedge.NT()) = vertices[0]->RootAlternate();
@@ -215,7 +217,7 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     pedge.SetNote(note);
     edges.AddEdge(pedge);
     // Perform scoring and add the edge
-    search::ScoreRuleRet score = search::ScoreRule(*data->GetLM(), words, pedge.Between());
+    search::ScoreRuleRet score = search::ScoreRule(*static_cast<LMType*>(data->GetLM()), words, pedge.Between());
     pedge.SetScore(below_score + data->GetWeight() * score.prob + data->GetUnkWeight() * score.oov);
     edges.AddEdge(pedge);
     // Create the vertex
@@ -228,6 +230,26 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
 // Intersect this rule_graph with a language model, using cube pruning to control
 // the overall state space.
 HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) const {
+    switch(lm_data_[0]->GetType()) {
+    case lm::ngram::PROBING:
+      return TransformGraphTemplate<lm::ngram::ProbingModel>(parse);
+    case lm::ngram::REST_PROBING:
+      return TransformGraphTemplate<lm::ngram::RestProbingModel>(parse);
+    case lm::ngram::TRIE:
+      return TransformGraphTemplate<lm::ngram::TrieModel>(parse);
+    case lm::ngram::QUANT_TRIE:
+      return TransformGraphTemplate<lm::ngram::QuantTrieModel>(parse);
+    case lm::ngram::ARRAY_TRIE:
+      return TransformGraphTemplate<lm::ngram::ArrayTrieModel>(parse);
+    case lm::ngram::QUANT_ARRAY_TRIE:
+      return TransformGraphTemplate<lm::ngram::QuantArrayTrieModel>(parse);
+    default:
+      THROW_ERROR("Unrecognized kenlm model type " << lm_data_[0]->GetType());
+    }
+}
+
+template <class LMType>
+HyperGraph * LMComposerIncremental::TransformGraphTemplate(const HyperGraph & parse) const {
 
     if(parse.NumNodes() == 0) return new HyperGraph;
 
@@ -235,7 +257,7 @@ HyperGraph * LMComposerIncremental::TransformGraph(const HyperGraph & parse) con
     search::NBestConfig nconfig(edge_limit_);
     LMData* data = lm_data_[0];
     search::Config config(data->GetWeight(), stack_pop_limit_, nconfig);
-    search::Context<lm::ngram::Model> context(config, *data->GetLM());
+    search::Context<LMType> context(config, *static_cast<LMType*>(data->GetLM()));
     search::Forest best(data->GetWeight(), data->GetUnkWeight(), data->GetFactor());
 
     // Create the search graph

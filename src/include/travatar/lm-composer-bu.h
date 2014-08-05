@@ -13,6 +13,23 @@ class HyperGraph;
 
 typedef std::vector<HyperNode*> ChartEntry;
 
+// A virtual class to represent templated functions needed for handling
+// various types of KenLM LMs
+class LMComposerBUFunc {
+public:
+    static LMComposerBUFunc * CreateFromType(lm::ngram::ModelType type);
+    virtual std::pair<double,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state) = 0;
+    virtual double CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state) = 0;
+    virtual ~LMComposerBUFunc() { }
+};
+
+template <class LMType>
+class LMComposerBUFuncTemplate : public LMComposerBUFunc {
+    virtual std::pair<double,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state);
+    virtual double CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state);
+    virtual ~LMComposerBUFuncTemplate() { }
+};
+
 // A bottom up language model composer that uses cube pruning to keep the
 // search space small
 class LMComposerBU : public LMComposer {
@@ -23,13 +40,21 @@ protected:
     int stack_pop_limit_;
     // The maximum number of elements in a single chart cell
     int chart_limit_;
+    // The functions used to calculate LM scores for each model
+    std::vector<LMComposerBUFunc*> funcs_;
 
 public:
     LMComposerBU(const std::string & str) :
-        LMComposer(str), stack_pop_limit_(0), chart_limit_(0) { }
-    LMComposerBU(lm::ngram::Model * lm, VocabMap * vocab_map) :
-        LMComposer(lm, vocab_map), stack_pop_limit_(0), chart_limit_(0) { }
-    
+            LMComposer(str), stack_pop_limit_(0), chart_limit_(0) {
+        for(int i = 0; i < (int)lm_data_.size(); i++)
+            funcs_.push_back(LMComposerBUFunc::CreateFromType(lm_data_[i]->GetType()));
+            
+    }
+    LMComposerBU(void * lm, lm::ngram::ModelType type, VocabMap * vocab_map) :
+            LMComposer(lm, type, vocab_map), stack_pop_limit_(0), chart_limit_(0) { 
+        for(int i = 0; i < (int)lm_data_.size(); i++)
+            funcs_.push_back(LMComposerBUFunc::CreateFromType(lm_data_[i]->GetType()));
+    }
     virtual ~LMComposerBU() { }
 
     // Intersect this graph with a language model, using cube pruning to control

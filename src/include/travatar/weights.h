@@ -15,7 +15,7 @@ class Weights {
 
 public:
 
-    Weights(int factor = 0) : factor_(factor_) {
+    Weights(int factor = 0) : factor_(factor) {
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
     Weights(const SparseMap & current, int factor = 0) :

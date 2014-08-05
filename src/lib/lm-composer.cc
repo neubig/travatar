@@ -12,13 +12,36 @@ void MapEnumerateVocab::Add(lm::WordIndex index, const StringPiece &str) {
     vocab_map_->insert(std::make_pair(Dict::WID(str.as_string()), index));
 }
 
-LMData::LMData(lm::ngram::Model * model, VocabMap* vocab_map) :
+LMData::LMData(void * model, lm::ngram::ModelType type, VocabMap* vocab_map) :
         lm_feat_(Dict::WID("lm")), lm_unk_feat_(Dict::WID("lmunk")), 
-        lm_(model), vocab_map_(vocab_map), 
+        lm_(model), type_(type), vocab_map_(vocab_map), 
         lm_weight_(1), lm_unk_weight_(0), factor_(0) { }
 
 LMData::~LMData() {
-    if(lm_) delete lm_;
+    if(lm_) {
+        switch(type_) {
+        case lm::ngram::PROBING:
+            delete static_cast<lm::ngram::ProbingModel*>(lm_);
+            break;
+        case lm::ngram::REST_PROBING:
+            delete static_cast<lm::ngram::RestProbingModel*>(lm_);
+            break;
+        case lm::ngram::TRIE:
+            delete static_cast<lm::ngram::TrieModel*>(lm_);
+            break;
+        case lm::ngram::QUANT_TRIE:
+            delete static_cast<lm::ngram::QuantTrieModel*>(lm_);
+            break;
+        case lm::ngram::ARRAY_TRIE:
+            delete static_cast<lm::ngram::ArrayTrieModel*>(lm_);
+            break;
+        case lm::ngram::QUANT_ARRAY_TRIE:
+            delete static_cast<lm::ngram::QuantArrayTrieModel*>(lm_);
+            break;
+        default:
+            THROW_ERROR("Unrecognized kenlm model type " << type_);
+        }
+    }
     if(vocab_map_) delete vocab_map_;
 }
 
@@ -56,7 +79,30 @@ LMData::LMData(const std::string & str) :
     MapEnumerateVocab lm_save;
     lm::ngram::Config lm_config;
     lm_config.enumerate_vocab = &lm_save;
-    lm_ = new lm::ngram::Model(cols[0].c_str(), lm_config);
+    if (!lm::ngram::RecognizeBinary(cols[0].c_str(), type_))
+        type_ = lm::ngram::PROBING;
+    switch(type_) {
+    case lm::ngram::PROBING:
+        lm_ = new lm::ngram::ProbingModel(cols[0].c_str(), lm_config);
+        break;
+    case lm::ngram::REST_PROBING:
+        lm_ = new lm::ngram::RestProbingModel(cols[0].c_str(), lm_config);
+        break;
+    case lm::ngram::TRIE:
+        lm_ = new lm::ngram::TrieModel(cols[0].c_str(), lm_config);
+        break;
+    case lm::ngram::QUANT_TRIE:
+        lm_ = new lm::ngram::QuantTrieModel(cols[0].c_str(), lm_config);
+        break;
+    case lm::ngram::ARRAY_TRIE:
+        lm_ = new lm::ngram::ArrayTrieModel(cols[0].c_str(), lm_config);
+        break;
+    case lm::ngram::QUANT_ARRAY_TRIE:
+        lm_ = new lm::ngram::QuantArrayTrieModel(cols[0].c_str(), lm_config);
+        break;
+    default:
+        THROW_ERROR("Unrecognized kenlm model type " << type_);
+    }
     vocab_map_ = lm_save.GetAndFreeVocabMap();    
 }
 

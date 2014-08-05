@@ -45,13 +45,14 @@ protected:
 class LMData {
 public:
     LMData(const std::string & str);
-    LMData(lm::ngram::Model * model, VocabMap* vocab_map);
+    LMData(void * model, lm::ngram::ModelType type, VocabMap* vocab_map);
 
     virtual ~LMData();
 
     lm::WordIndex GetMapping(WordId wid) const;
 
-    lm::ngram::Model * GetLM() { return lm_; }
+    void * GetLM() { return lm_; }
+    const void * GetLM() const { return lm_; }
     double GetWeight() const { return lm_weight_; }
     void SetWeight(double lm_weight) { lm_weight_ = lm_weight; }
     double GetUnkWeight() const { return lm_unk_weight_; }
@@ -61,13 +62,16 @@ public:
     WordId GetUnkFeatureName() const { return lm_unk_feat_; }
     void SetUnkFeatureName(WordId lm_unk_feat) { lm_unk_feat_ = lm_unk_feat; }
     int GetFactor() const { return factor_; }
+    lm::ngram::ModelType GetType() const { return type_; }
     void SetFactor(int factor) { factor_ = factor; }
 
 protected:
     // The name of the feature expressed by this model
     WordId lm_feat_, lm_unk_feat_;
     // The language model that this composer handles
-    lm::ngram::Model * lm_;
+    void * lm_;
+    // Identify the type of model being used
+    lm::ngram::ModelType type_;
     // The vocabulary map from Travatar vocab to LM vocab
     VocabMap * vocab_map_;
     // The weight assigned to this particular LM
@@ -85,8 +89,8 @@ protected:
 
 public:
     LMComposer(const std::string & str);
-    LMComposer(lm::ngram::Model * model, VocabMap* vocab_map) {
-        LMData * data = new LMData(model,vocab_map);
+    LMComposer(void * model, lm::ngram::ModelType type, VocabMap* vocab_map) {
+        LMData * data = new LMData(model, type, vocab_map);
         lm_data_.push_back(data);
     }
         

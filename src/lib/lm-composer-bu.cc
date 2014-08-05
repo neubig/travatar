@@ -54,6 +54,59 @@ public:
 
 }
 
+
+LMComposerBUFunc * LMComposerBUFunc::CreateFromType(lm::ngram::ModelType type) {
+    switch(type) {
+    case lm::ngram::PROBING:
+      return new LMComposerBUFuncTemplate<lm::ngram::ProbingModel>();
+    case lm::ngram::REST_PROBING:
+      return new LMComposerBUFuncTemplate<lm::ngram::RestProbingModel>();
+    case lm::ngram::TRIE:
+      return new LMComposerBUFuncTemplate<lm::ngram::TrieModel>();
+    case lm::ngram::QUANT_TRIE:
+      return new LMComposerBUFuncTemplate<lm::ngram::QuantTrieModel>();
+    case lm::ngram::ARRAY_TRIE:
+      return new LMComposerBUFuncTemplate<lm::ngram::ArrayTrieModel>();
+    case lm::ngram::QUANT_ARRAY_TRIE:
+      return new LMComposerBUFuncTemplate<lm::ngram::QuantArrayTrieModel>();
+    default:
+      THROW_ERROR("Unrecognized kenlm model type " << type);
+    }
+}
+
+template <class LMType>
+pair<double,int> LMComposerBUFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
+    // Get the rule score for the appropriate model
+    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
+    int unk = 0;
+    BOOST_FOREACH(int trg_id, syms) {
+        if(trg_id < 0) {
+            int curr_id = -1 - trg_id;
+            // Add that edge to our non-terminal
+            const vector<ChartState> & child_state = states[tails[curr_id]->GetId()];
+            // cerr << " Adding node context " << *next_edge->GetTail(curr_id) << " : " << PrintContext(child_state[lm_id].left) << ", " << PrintContext(child_state[lm_id].right) << endl;
+            my_rule_score.NonTerminal(child_state[lm_id], 0);
+        } else {
+            // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
+            // Re-index vocabulary
+            lm::WordIndex index = data->GetMapping(trg_id);
+            if(index == 0) unk++;
+            my_rule_score.Terminal(index);
+        }
+    }
+    return make_pair(my_rule_score.Finish(), unk);
+}
+
+template <class LMType>
+double LMComposerBUFuncTemplate<LMType>::CalcFinalScore(const void * lm, const ChartState & prev_state) {
+    ChartState my_state;
+    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(lm), my_state);
+    my_rule_score.BeginSentence();
+    my_rule_score.NonTerminal(prev_state, 0);
+    my_rule_score.Terminal(static_cast<const LMType*>(lm)->GetVocabulary().Index("</s>"));
+    return my_rule_score.Finish();
+}
+
 const ChartEntry & LMComposerBU::BuildChartCubePruning(
                     const HyperGraph & parse,
                     vector<shared_ptr<ChartEntry> > & chart,
@@ -136,33 +189,14 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         vector<SparsePair> lm_features;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
-            RuleScore<lm::ngram::Model> my_rule_score(*data->GetLM(), my_state[lm_id]);
-            int unk = 0;
-            BOOST_FOREACH(int trg_id, id_edge->GetTrgData()[data->GetFactor()].words) {
-                if(trg_id < 0) {
-                    int curr_id = -1 - trg_id;
-                    // Add that edge to our non-terminal
-                    const vector<ChartState> & child_state = states[next_edge->GetTail(curr_id)->GetId()];
-                    // cerr << " Adding node context " << *next_edge->GetTail(curr_id) << " : " << PrintContext(child_state[lm_id].left) << ", " << PrintContext(child_state[lm_id].right) << endl;
-                    my_rule_score.NonTerminal(child_state[lm_id], 0);
-                } else {
-                    // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
-                    // Re-index vocabulary
-                    lm::WordIndex index = data->GetMapping(trg_id);
-                    if(index == 0) unk++;
-                    my_rule_score.Terminal(index);
-                }
-            }
-            double lm_score = my_rule_score.Finish();
+
+            pair<double,int> lm_scores = funcs_[lm_id]->CalcNontermScore(data, id_edge->GetTrgData()[data->GetFactor()].words, next_edge->GetTails(), states, lm_id, my_state[lm_id]);
             // Add to the features and the score
-            // cerr << " LM prob "<<lm_score<<" for: (id_str=" << id_str << ") @ " << PrintContext(my_state[lm_id].left) << ", " << PrintContext(my_state[lm_id].right) << endl;
-            total_score += lm_score * data->GetWeight() + unk * data->GetUnkWeight();
-            if(lm_score != 0.0)
-                lm_features.push_back(make_pair(data->GetFeatureName(), lm_score));
-                // next_edge->GetFeatures()[data->GetFeatureName()] += lm_score;
-            if(unk != 0)
-                lm_features.push_back(make_pair(data->GetUnkFeatureName(), unk));
-                // next_edge->GetFeatures()[data->GetUnkFeatureName()] += unk;
+            total_score += lm_scores.first * data->GetWeight() + lm_scores.second * data->GetUnkWeight();
+            if(lm_scores.first != 0.0)
+                lm_features.push_back(make_pair(data->GetFeatureName(), lm_scores.first));
+            if(lm_scores.second != 0)
+                lm_features.push_back(make_pair(data->GetUnkFeatureName(), lm_scores.second));
         }
         // Clean up the features
         next_edge->GetFeatures() += SparseVector(lm_features);
@@ -230,6 +264,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     states.resize(1);
     // Build the chart
     BuildChartCubePruning(parse, chart, states, 0, *ret);
+
     // Build the final nodes
     BOOST_FOREACH(HyperNode * node, *chart[0]) {
         HyperEdge * edge = new HyperEdge(root);
@@ -238,12 +273,13 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
         double total_score = 0;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
-            ChartState my_state;
-            RuleScore<lm::ngram::Model> my_rule_score(*data->GetLM(), my_state);
-            my_rule_score.BeginSentence();
-            my_rule_score.NonTerminal(states[node->GetId()][lm_id], 0);
-            my_rule_score.Terminal(data->GetLM()->GetVocabulary().Index("</s>"));
-            double my_score = my_rule_score.Finish();
+            // ChartState my_state;
+            // RuleScore<LMType> my_rule_score(*data->GetLM(), my_state);
+            // my_rule_score.BeginSentence();
+            // my_rule_score.NonTerminal(states[node->GetId()][lm_id], 0);
+            // my_rule_score.Terminal(static_cast<LMType*>(data->GetLM())->GetVocabulary().Index("</s>"));
+            // double my_score = my_rule_score.Finish();
+            double my_score = funcs_[lm_id]->CalcFinalScore(data->GetLM(), states[node->GetId()][lm_id]);
             if(my_score != 0.0)
                 edge->GetFeatures().Add(data->GetFeatureName(), my_score);
             total_score += my_score * data->GetWeight();

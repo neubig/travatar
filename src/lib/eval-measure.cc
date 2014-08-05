@@ -147,7 +147,7 @@ CfgDataVector EvalMeasure::CalculateOracle(const HyperGraph & graph, const std::
     lm_config.enumerate_vocab = &lm_save;
     lm_config.messages = NULL;
     lm::ngram::Model* lm_model = new lm::ngram::Model("/tmp/oracle.arpa", lm_config);
-    LMComposerBU bu(lm_model, lm_save.GetAndFreeVocabMap());
+    LMComposerBU bu(static_cast<void*>(lm_model), lm::ngram::PROBING, lm_save.GetAndFreeVocabMap());
     bu.GetData()[0]->SetFeatureName(Dict::WID("oraclelm"));
     bu.GetData()[0]->SetWeight(1);
     bu.SetStackPopLimit(POP_LIMIT);

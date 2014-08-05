@@ -87,8 +87,8 @@ protected:
 
 public:
     LMComposerIncremental(const std::string & str);
-    LMComposerIncremental(lm::ngram::Model * lm, VocabMap * vocab_map, int factor = 0) :
-        LMComposer(lm, vocab_map), stack_pop_limit_(0), edge_limit_(1000) { }
+    LMComposerIncremental(void * lm, lm::ngram::ModelType type, VocabMap * vocab_map, int factor = 0) :
+        LMComposer(lm, type, vocab_map), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }
 
     // Intersect this graph with a language model, using incremental search
@@ -100,15 +100,21 @@ public:
 
 protected:
 
+    // A templated version of transformgraph
+    template <class LMType>
+    HyperGraph * TransformGraphTemplate(const HyperGraph & hg) const;
+
     // Calculate a single vertex
+    template <class LMType>
     search::Vertex* CalculateVertex(
                     const HyperGraph & parse, std::vector<search::Vertex*> & verticies,
-                    search::Context<lm::ngram::Model> & context, search::Forest & best,
+                    search::Context<LMType> & context, search::Forest & best,
                     int id) const;
     // Calculate the root vertex
+    template <class LMType>
     search::Vertex* CalculateRootVertex(
                     std::vector<search::Vertex*> & vertices,
-                    search::Context<lm::ngram::Model> & context,
+                    search::Context<LMType> & context,
                     search::Forest & best) const;
 
 };
