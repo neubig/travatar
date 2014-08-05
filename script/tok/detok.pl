@@ -27,6 +27,7 @@ while(<STDIN>) {
     s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
     s/ ([,\.\?:。、%])/$1/g;
     s/ (-) /$1/g;
+    s/\\\*/*/g;
     s/ \\\/ /\//g;
     s/`` /"/g;
     s/ ''/"/g;
