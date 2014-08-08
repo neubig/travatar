@@ -25,7 +25,7 @@ while(<STDIN>) {
     s/([0-9]) (℃|°|K) /$1$2 /g;
     s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
     s/(\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”]) (\p{InHiragana}|\p{InKatakana}|\p{InHalfwidthAndFullwidthForms}|\p{InCJKUnifiedIdeographs}|[、。「」　“”])/$1$2/g;
-    s/ ([,\.\?:。、%])/$1/g;
+    s/ ([,\.\?:。、%!])/$1/g;
     s/ (-) /$1/g;
     s/\\\*/*/g;
     s/ \\\/ /\//g;
