@@ -176,7 +176,7 @@ var parentref = new Object();
         html = "<span id='range-%d-%d-%s'>" % (sentid, structure.id, postfix)
         for i, item in enumerate(structure.items):
             if isinstance(item, str):
-                html += "<span id='text-%d-%d-%d-%s' class='text'> %s </span>" % (sentid, structure.id, i, postfix, item)
+                html += "<span id='text-%d-%d-%d-%s' class='text'> %s </span>" % (sentid, structure.id, i, postfix, escape(item))
             elif isinstance(item, Node):
                 parentref["%d-%d" % (sentid, item.id)] = "%d-%d" % (sentid, structure.id)
                 html += self.__gen(sentid, item, postfix, descset, parentref)
@@ -207,7 +207,7 @@ var parentref = new Object();
             print(self.html_table1 % (i, src), file=fp)
 
             if ref:
-                print(self.html_table2 % ref.strip(), file=fp)
+                print(self.html_table2 % escape(ref.strip()), file=fp)
 
             print(self.html_table3 % trg, file=fp)
             if (i+1) % size == 0:
