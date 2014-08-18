@@ -119,7 +119,6 @@ search::Vertex* LMComposerIncremental::CalculateVertex(
                     const HyperGraph & parse, vector<search::Vertex*> & vertices,
                     search::Context<LMType> & context, search::Forest & best,
                     int id) const {
-
     // Don't redo ones we've already finished
     if(vertices[id]) return vertices[id];
     // Get the nodes from the parse
@@ -199,6 +198,7 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     // Don't redo ones we've already finished
     int id = vertices.size()-1;
     if(vertices[id]) return vertices[id];
+    if(vertices[0]->Empty()) return (vertices[0] = new search::Vertex);
     // For the edges coming from this node, add them to the EdgeGenerator
     search::EdgeGenerator edges;
     std::vector<lm::WordIndex> words(3,0);
@@ -266,7 +266,7 @@ HyperGraph * LMComposerIncremental::TransformGraphTemplate(const HyperGraph & pa
         vertices[i] = NULL;
     vertices[0] = CalculateVertex(parse, vertices, context, best, 0);
 
-    // Create the final vertex (recursively creating the others)
+    // Create the final vertex
     CalculateRootVertex(vertices, context, best);
 
     // Clear the memory
@@ -276,14 +276,19 @@ HyperGraph * LMComposerIncremental::TransformGraphTemplate(const HyperGraph & pa
 
     // Get the hypergraph and set words
     HyperGraph* ret = best.StealPointer();
-    ret->SetWords(parse.GetWords());
     vector<HyperNode*> & nodes = ret->GetNodes();
     // Swap the root into the first position
     nodes[0] = nodes[nodes.size()-1];
-    nodes[0]->SetId(0);
     nodes.resize(nodes.size()-1);
+    if(nodes[0] != NULL) {
+        nodes[0]->SetId(0);
+    } else {
+        delete ret;
+        ret = new HyperGraph;
+    }
 
     // Return the pointer
+    ret->SetWords(parse.GetWords());
     return ret;
 
 }
