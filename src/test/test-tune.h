@@ -22,7 +22,7 @@ public:
     int TestForestHull();
     int TestMultipleForests();
     int TestForestUnk();
-    int TestTuneXbleu();
+    int TestGradientXbleu();
     int TestScaleXbleu();
     int TestBigScaleXbleu();
     int TestBigScaleXbleup1();
@@ -35,7 +35,7 @@ private:
     int valid, slopeid;
     std::vector<boost::shared_ptr<TuningExample> > examp_set;
     boost::shared_ptr<HyperGraph> forest, forest2, forest2c, forest2d;
-    SparseMap weights, gradient;
+    SparseMap weights, gradient, empty;
     TuningExampleNbest examp_nbest;
 
     Sentence GetQuotedWords(const std::string & str);

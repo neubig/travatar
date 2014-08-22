@@ -13,6 +13,8 @@ TRAVATARCPP = \
 	eval-measure-ribes.cc \
 	eval-measure-ter.cc \
 	eval-measure-wer.cc \
+    gradient.cc \
+    gradient-xeval.cc \
 	hyper-graph.cc \
 	input-file-stream.cc \
 	io-util.cc \

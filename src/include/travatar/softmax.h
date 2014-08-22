@@ -1,19 +1,7 @@
 #ifndef _TRAVATAR_SOFTMAX__
 #define _TRAVATAR_SOFTMAX__
 
-// #include <tr1/unordered_map>
-// #include <boost/foreach.hpp>
-// #include <boost/shared_ptr.hpp>
-// #include <boost/algorithm/string.hpp>
-// #include <cmath>
-// #include <vector>
-// #include <set>
-// #include <map>
-// #include <string>
-// #include <sstream>
-// #include <stdexcept>
-// #include <algorithm>
-// #include <iostream>
+#include <cmath>
 
 namespace travatar {
 

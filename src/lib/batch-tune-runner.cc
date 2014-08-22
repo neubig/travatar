@@ -7,6 +7,7 @@
 #include <travatar/tune-online.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
+#include <travatar/gradient-xeval.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
 #include <travatar/output-collector.h>
@@ -108,10 +109,11 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
         threads = 1; // Threading is done inside greedy mert
     } else if(config.GetString("algorithm") == "xeval") {
-        TuneXeval * tx = new TuneXeval;
+        GradientXeval * gx = new GradientXeval;
+        gx->SetL2Coefficient(config.GetDouble("l2"));
+        gx->SetEntCoefficient(config.GetDouble("ent"));
+        TuneXeval * tx = new TuneXeval(gx);
         tx->SetL1Coefficient(config.GetDouble("l1"));
-        tx->SetL2Coefficient(config.GetDouble("l2"));
-        tx->SetEntCoefficient(config.GetDouble("ent"));
         tgm.reset(tx);
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;

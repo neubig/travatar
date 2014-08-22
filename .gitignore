@@ -13,6 +13,7 @@ Makefile.in
 config.h.in*
 aclocal.m4
 autom4te.cache/
+compile
 config.guess
 config.log
 config.status
@@ -38,3 +39,4 @@ src/test/test-travatar
 src/include/travatar/stamp-h1
 src/kenlm/lm/lmplz
 src/kenlm/lm/build_binary
+test-driver

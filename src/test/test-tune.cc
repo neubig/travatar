@@ -1,12 +1,13 @@
 #include "test-tune.h"
 
 #include <travatar/tune-mert.h>
-#include <travatar/tune-xeval.h>
+#include <travatar/gradient-xeval.h>
 #include <travatar/tune-greedy-mert.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/weights.h>
 #include <travatar/check-equal.h>
+#include <travatar/dict.h>
 
 using namespace std;
 using namespace boost;
@@ -255,9 +256,9 @@ int TestTune::TestForestUnk() {
     return CheckVector(exp_hull, act_hull);
 }
 
-int TestTune::TestTuneXbleu() {
+int TestTune::TestGradientXbleu() {
     // Create tuning examples and references
-    TuneXeval tune;
+    GradientXeval gx;
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -266,20 +267,20 @@ int TestTune::TestTuneXbleu() {
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
-    tune.CalcGradient(SparseMap(), act_feat);
+    gx.CalcSparseGradient(empty, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
 }
 
 int TestTune::TestScaleXbleu() {
     // Create tuning examples and references
-    TuneXeval tune;
-    tune.SetAutoScale(true);
+    GradientXeval gx;
+    gx.SetAutoScale(true);
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -287,27 +288,27 @@ int TestTune::TestScaleXbleu() {
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
     // Calculate the gradients
     string exp_feat_str1 = "fa=0.05061485956898609 fb=-0.019935150830241014 fc=-0.030679708738745072 __SCALE__=0.03508354720468027";
     SparseMap exp_feat1 = Dict::ParseSparseMap(exp_feat_str1), act_feat1;
-    tune.CalcGradient(weights, act_feat1);
+    gx.CalcSparseGradient(weights, act_feat1);
     // Calculate the gradients without auto scaling
-    tune.SetAutoScale(false);
+    gx.SetAutoScale(false);
     string exp_feat_str2 = "fa=0.05061485956898609 fb=-0.019935150830241014 fc=-0.030679708738745072";
     SparseMap exp_feat2 = Dict::ParseSparseMap(exp_feat_str2), act_feat2;
-    tune.CalcGradient(weights, act_feat2);
+    gx.CalcSparseGradient(weights, act_feat2);
     return CheckAlmostMap(exp_feat1, act_feat1, 0.0001) && CheckAlmostMap(exp_feat2, act_feat2, 0.0001);
 }
 
 int TestTune::TestBigScaleXbleu() {
     // Create tuning examples and references
-    TuneXeval tune;
-    tune.SetAutoScale(true);
+    GradientXeval gx;
+    gx.SetAutoScale(true);
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -315,21 +316,21 @@ int TestTune::TestBigScaleXbleu() {
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
-    tune.CalcGradient(weights, act_feat);
+    gx.CalcSparseGradient(weights, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
 }
 
 int TestTune::TestBigScaleXbleup1() {
     // Create tuning examples and references
-    TuneXeval tune;
-    tune.SetAutoScale(true);
+    GradientXeval gx;
+    gx.SetAutoScale(true);
     EvalMeasureBleu bleu(4, 1, SENTENCE);
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -337,23 +338,23 @@ int TestTune::TestBigScaleXbleup1() {
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
     // Calculate the gradients
     string exp_feat_str1 = "fa=.2040151250 fb=-.05602268750 fc=-.14799243750 __SCALE__=.0353531271713337";
     SparseMap exp_feat1 = Dict::ParseSparseMap(exp_feat_str1), act_feat1;
-    tune.CalcGradient(weights, act_feat1);
+    gx.CalcSparseGradient(weights, act_feat1);
     return CheckAlmostMap(exp_feat1, act_feat1, 0.0001);
 }
 
 int TestTune::TestL2Xbleu() {
     // Create tuning examples and references
-    TuneXeval tune;
-    tune.SetAutoScale(true);
-    tune.SetL2Coefficient(0.01);
+    GradientXeval gx;
+    gx.SetAutoScale(true);
+    gx.SetL2Coefficient(0.01);
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -361,23 +362,23 @@ int TestTune::TestL2Xbleu() {
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.012144414438084214 fc=-0.03363353025509233 __SCALE__=0.007932713323976109";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
-    tune.CalcGradient(weights, act_feat);
+    gx.CalcSparseGradient(weights, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
 }
 
 int TestTune::TestEntXbleu() {
     // Create tuning examples and references
-    TuneXeval tune;
-    tune.SetAutoScale(true);
-    tune.SetEntCoefficient(0.1);
+    GradientXeval gx;
+    gx.SetAutoScale(true);
+    gx.SetEntCoefficient(0.1);
     EvalMeasureBleu bleu;
     vector<shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
@@ -387,16 +388,16 @@ int TestTune::TestEntXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d")));
     // Add another hypothesis with a really low weight to test NaNs 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    tune.AddExample(shared_ptr<TuningExample>(nbest1));
-    tune.AddExample(shared_ptr<TuningExample>(nbest2));
-    tune.Init();
+    examps.push_back(shared_ptr<TuningExample>(nbest1));
+    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    gx.Init(examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=.0512297191379721800 fb=-.014870301660482028 fc=-.036359417477490144 __SCALE__=.00887743384534082000";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2;
     weights[Dict::WID("fe")] = -1e6; weights[Dict::WID("__SCALE__")] = 2.0;
-    tune.CalcGradient(weights, act_feat);
+    gx.CalcSparseGradient(weights, act_feat);
     return CheckAlmostMap(exp_feat, act_feat, 0.0001);
 }
 
@@ -410,7 +411,7 @@ bool TestTune::RunTest() {
     done++; cout << "TestForestHull()" << endl; if(TestForestHull()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestMultipleForests()" << endl; if(TestMultipleForests()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestForestUnk()" << endl; if(TestForestUnk()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestTuneXbleu()" << endl; if(TestTuneXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestGradientXbleu()" << endl; if(TestGradientXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestScaleXbleu()" << endl; if(TestScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBigScaleXbleu()" << endl; if(TestBigScaleXbleu()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBigScaleXbleup1()" << endl; if(TestBigScaleXbleup1()) succeeded++; else cout << "FAILED!!!" << endl;
