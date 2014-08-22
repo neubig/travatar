@@ -128,7 +128,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     // Load the features from the weight file
     SparseMap weights;
     if(config.GetString("weight_in") != "") {
-        cerr << "Reading weight file from "<<config.GetString("weight_in")<<"..." << endl;
+        PRINT_DEBUG("Reading weight file from "<<config.GetString("weight_in")<<"..." << endl, 1);
         ifstream weight_in(config.GetString("weight_in").c_str());
         if(!weight_in)
             THROW_ERROR("Could not find weights: " << config.GetString("weight_in"));
