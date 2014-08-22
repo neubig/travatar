@@ -40,7 +40,7 @@ TRAVATARCPP = \
 	tune-greedy-mert.cc \
 	tune-mert.cc \
 	tune-online.cc \
-	tune-xeval.cc \
+	tune-lbfgs.cc \
 	tuning-example-forest.cc \
 	tuning-example-nbest.cc \
 	unary-flattener.cc \

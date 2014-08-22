@@ -14,23 +14,16 @@ namespace travatar {
 class Weights;
 class Gradient;
 
-// Performs gradient ascent to maximize the expectation of the eval measure
-// This is similar to the methods proposed in:
-//   David Smith and Jason Eisner
-//   Minimum Risk Annealing for Training Log-Linear Models
-//
-//   Rosti, A.-V., Zhang, B., Matsoukas, S. and Schwartz, R.
-//   BBN System Description for WMT10 System Combination Task
-class TuneXeval : public Tune {
+// Tune using the L-BFGS algorithm
+class TuneLbfgs : public Tune {
 
 public:
 
-    TuneXeval(Gradient* gradient) : iters_(100), iter_(0),
+    TuneLbfgs(Gradient* gradient) : iters_(100), iter_(0),
                   l1_coeff_(0.0),
-                  optimizer_("lbfgs"),
                   use_init_(true), gradient_(gradient) { }
 
-    ~TuneXeval();
+    ~TuneLbfgs();
 
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);

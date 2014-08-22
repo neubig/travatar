@@ -3,7 +3,7 @@
 #include <travatar/input-file-stream.h>
 #include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
-#include <travatar/tune-xeval.h>
+#include <travatar/tune-lbfgs.h>
 #include <travatar/tune-online.h>
 #include <travatar/tuning-example-nbest.h>
 #include <travatar/tuning-example-forest.h>
@@ -108,11 +108,11 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         tgm.reset(new TuneGreedyMert);
         ((TuneGreedyMert&)*tgm).SetThreads(threads);
         threads = 1; // Threading is done inside greedy mert
-    } else if(config.GetString("algorithm") == "xeval") {
+    } else if(config.GetString("algorithm") == "lbfgs") {
         GradientXeval * gx = new GradientXeval;
         gx->SetL2Coefficient(config.GetDouble("l2"));
         gx->SetEntCoefficient(config.GetDouble("ent"));
-        TuneXeval * tx = new TuneXeval(gx);
+        TuneLbfgs * tx = new TuneLbfgs(gx);
         tx->SetL1Coefficient(config.GetDouble("l1"));
         tgm.reset(tx);
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
