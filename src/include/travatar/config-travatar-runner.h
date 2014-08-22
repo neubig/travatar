@@ -23,8 +23,8 @@ public:
 "~~~ travatar ~~~\n"
 "  by Graham Neubig\n"
 "\n"
-"A tree to string translator.\n"
-"  Usage: travatar < INPUT > OUTPUT\n"
+"A tree-to-string machine translation decoder.\n"
+"  Usage: travatar -config_file CONFIG < INPUT > OUTPUT\n"
 );
 
         AddConfigEntry("config_file", "", "The location of the configuration file");

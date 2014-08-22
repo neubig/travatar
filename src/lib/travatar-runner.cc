@@ -132,8 +132,9 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     timer.start();
 
     // Set weights
-    if(config.GetString("weight_vals") == "")
+    if(config.GetString("weight_vals") == "") {
         THROW_ERROR("You must specify weights through -weight_vals. If you really don't want any weights, just set -weight_vals dummy=0");
+    }
     SparseMap init_weights = Dict::ParseSparseMap(config.GetString("weight_vals"));
 
     // Create the appropriate weights
