@@ -25,6 +25,9 @@ public:
 
     ~TuneLbfgs();
 
+    // Initialize the data structures
+    virtual void Init();
+
     // Tune new weights to maximize the expectation of the evaluation measure
     virtual double RunTuning(SparseMap & weights);
 

@@ -22,6 +22,10 @@ TuneLbfgs::~TuneLbfgs() {
         delete gradient_;
 }
 
+void TuneLbfgs::Init() {
+    gradient_->Init(examps_);
+}
+
 double TuneLbfgs::operator()(size_t n, const double * x, double * g) const {
     return gradient_->CalcGradient(n, x, g);
 }
@@ -41,7 +45,9 @@ double TuneLbfgs::RunTuning(SparseMap & kv) {
     // The final score
     double last_score = 0.0;
 
+    // Initialize the gradient
     gradient_->SetMult(-1);
+
     // Initialize the weights appropriately
     vector<double> weights;
     if(!use_init_)

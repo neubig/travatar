@@ -15,12 +15,13 @@ using namespace travatar;
 Gradient::Gradient() : examps_ptr_(NULL), auto_scale_(false), dense_scale_id_(-1), scale_id_(Dict::WID("__SCALE__")), l2_coeff_(0.0), mult_(1.0) { }
 
 void Gradient::DensifyWeights(const SparseMap & sparse, std::vector<double> & dense) {
+    dense.resize(dense2sparse_.size());
     for(int i = 0; i < (int)dense2sparse_.size(); i++) {
         SparseMap::const_iterator it = sparse.find(dense2sparse_[i]);
         dense[i] = (it == sparse.end() ? 0.0 : it->second);
     }
-    if(dense[sparse2dense_[scale_id_]] == 0.0)
-        dense[sparse2dense_[scale_id_]] = 1.0;
+    if(dense_scale_id_ != -1 && dense[dense_scale_id_] == 0.0)
+        dense[dense_scale_id_] = 1.0;
 }
 
 void Gradient::SparsifyWeights(const std::vector<double> & dense, SparseMap & sparse) {
