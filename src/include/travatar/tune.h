@@ -23,7 +23,7 @@ public:
     virtual double RunTuning(SparseMap & weights) = 0;
 
     // Initialize any parameters
-    virtual void Init() { }
+    virtual void Init(const SparseMap & init_weights) { }
 
     // Find gradient range
     std::pair<double,double> FindGradientRange(

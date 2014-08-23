@@ -22,8 +22,8 @@ TuneLbfgs::~TuneLbfgs() {
         delete gradient_;
 }
 
-void TuneLbfgs::Init() {
-    gradient_->Init(examps_);
+void TuneLbfgs::Init(const SparseMap & init_weights) {
+    gradient_->Init(init_weights, examps_);
 }
 
 double TuneLbfgs::operator()(size_t n, const double * x, double * g) const {

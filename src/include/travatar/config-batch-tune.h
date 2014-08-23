@@ -35,6 +35,7 @@ public:
         AddConfigEntry("l2", "0.0", "Coefficient for L2 regularization");
         AddConfigEntry("ent", "0.0", "Coefficient for Entropy regularization");
         AddConfigEntry("margin_scale", "0", "The size of the margin");
+        AddConfigEntry("mert_directions", "coord", "Which MERT direcftions to use, coordinate (\"coord\"), random (\"rand=NUM\"), or expected eval measure (\"xeval=MIN:MAX:MULT\")");
         AddConfigEntry("rand_seed", "0", "The random seed, zero to use the time");
         AddConfigEntry("rate", "1", "The learning rate");
         AddConfigEntry("restarts", "18", "The number of random tuning restarts");

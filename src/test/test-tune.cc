@@ -269,7 +269,7 @@ int TestTune::TestGradientXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
@@ -290,7 +290,7 @@ int TestTune::TestScaleXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
     // Calculate the gradients
@@ -318,7 +318,7 @@ int TestTune::TestBigScaleXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     SparseMap exp_feat = Dict::ParseSparseMap(exp_feat_str), act_feat;
@@ -340,7 +340,7 @@ int TestTune::TestBigScaleXbleup1() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
     // Calculate the gradients
@@ -364,7 +364,7 @@ int TestTune::TestL2Xbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.012144414438084214 fc=-0.03363353025509233 __SCALE__=0.007932713323976109";
@@ -390,7 +390,7 @@ int TestTune::TestEntXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
     examps.push_back(shared_ptr<TuningExample>(nbest1));
     examps.push_back(shared_ptr<TuningExample>(nbest2));
-    gx.Init(examps);
+    gx.Init(SparseMap(), examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
     string exp_feat_str = "fa=.0512297191379721800 fb=-.014870301660482028 fc=-.036359417477490144 __SCALE__=.00887743384534082000";

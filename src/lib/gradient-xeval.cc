@@ -36,7 +36,7 @@ void GradientXeval::CalcAvgGradient(
         vector<double> d_xeval_dsikprime(K,0);
         for(int k = 0; k < K; k++) {
             EvalStatsAverage * stats_i_k_avg = (EvalStatsAverage*)all_stats_[i][k].get();
-            PRINT_DEBUG("Stats i=" << i << ", k=" << k << ": " << stats_i_k_avg->ConvertToString() << endl, 3);
+            PRINT_DEBUG("Stats i=" << i << ", k=" << k << ": " << stats_i_k_avg->ConvertToString() << endl, 4);
             // Calculate the derivative of xeval
             double d_xeval_logpik = p_i_k[i][k]*stats_i_k_avg->GetVal()/stats_avg->GetDenom();
             // Now multiply this value for every k'
@@ -75,7 +75,7 @@ void GradientXeval::CalcBleuGradient(
     double B = (emR-1)/(e10kmR+1) + 1;
     double Bprime = (emR-(emR-1)*10000*(e10kmR/(1+e10kmR)))/(1+e10kmR);
     // This is used in the calculation of dB/log(p_{i,k})
-    PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kmR="<<e10kmR<<", emR=" << emR << endl, 2);
+    PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kmR="<<e10kmR<<", emR=" << emR << endl, 3);
     // The left and right constants
     double left = eP * Bprime * -R;
     double right = eP * B / stats_bleu->GetNgramOrder();
@@ -91,7 +91,7 @@ void GradientXeval::CalcBleuGradient(
         vector<double> d_xeval_dsikprime(K,0);
         for(int k = 0; k < K; k++) {
             EvalStatsBleu * stats_i_k_bleu = (EvalStatsBleu*)all_stats_[i][k].get();
-            PRINT_DEBUG("s_i_k_bleu: " << stats_i_k_bleu->ConvertToString() << endl, 2);
+            PRINT_DEBUG("s_i_k_bleu: " << stats_i_k_bleu->ConvertToString() << endl, 3);
             double pik = p_i_k[i][k];
             // Calculate the derivative of exp(P) with respect to log(p_{i,k})
             double my_right = 0;
@@ -99,15 +99,15 @@ void GradientXeval::CalcBleuGradient(
                 my_right += DivideZero(stats_i_k_bleu->GetMatch(n)*pik,stats_bleu->GetMatch(n)) -
                             DivideZero(stats_i_k_bleu->GetSysCount(n)*pik,stats_bleu->GetSysCount(n));
             my_right *= right;
-            PRINT_DEBUG("my_right: " << my_right << endl, 2);
+            PRINT_DEBUG("my_right: " << my_right << endl, 3);
             // Calculate the derivative of B with respect to log(p_{i,k})
             double my_left = left * (
                              DivideZero(stats_i_k_bleu->GetRefCount(0)*pik,stats_bleu->GetRefCount(0)) -
                              DivideZero(stats_i_k_bleu->GetSysCount(0)*pik,stats_bleu->GetSysCount(0)));
-            PRINT_DEBUG("my_left: " << my_left << endl, 2);
+            PRINT_DEBUG("my_left: " << my_left << endl, 3);
             // Calculate the derivative of xeval
             double d_xeval_logpik = my_left + my_right;
-            PRINT_DEBUG("d_xeval_logpik: " << d_xeval_logpik << endl, 2);
+            PRINT_DEBUG("d_xeval_logpik: " << d_xeval_logpik << endl, 3);
             // Now multiply this value for every k'
             for(int kprime = 0; kprime < K; kprime++) {
                 d_xeval_dsikprime[kprime] += 
@@ -169,7 +169,7 @@ double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const
         // Add to the expectation of the statistics
         for(int k = 0; k < K; k++) {
             stats->PlusEqualsTimes(*all_stats_[i][k], p_i_k[i][k]);
-            PRINT_DEBUG("i="<<i<<", k=" << k << ": p=" << p_i_k[i][k] << ", stats=" << stats->ConvertToString() << endl, 3);
+            PRINT_DEBUG("i="<<i<<", k=" << k << ": p=" << p_i_k[i][k] << ", stats=" << stats->ConvertToString() << endl, 4);
         }
     }
     
@@ -230,7 +230,7 @@ double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const
             g[i] *= mult_;
     }
 
-    PRINT_DEBUG("Xeval: " << score << " @ " << stats->ConvertToString() << endl, 1);
+    PRINT_DEBUG("Xeval: " << score << " @ " << stats->ConvertToString() << endl, 2);
 
     return score * mult_;
 }

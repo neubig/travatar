@@ -2,11 +2,14 @@
 #include <map>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 #include <travatar/tuning-example.h>
 #include <travatar/tune-mert.h>
 #include <travatar/global-debug.h>
 #include <travatar/io-util.h>
+#include <travatar/string-util.h>
 #include <travatar/dict.h>
+#include <travatar/gradient-xeval.h>
 #include <travatar/eval-measure.h>
 #include <travatar/sparse-map.h>
 #include <travatar/output-collector.h>
@@ -16,6 +19,8 @@ using namespace boost;
 using namespace travatar;
 
 #define MARGIN 1
+
+TuneMert::TuneMert() : use_coordinate_(true), num_random_(0) { }
 
 LineSearchResult TuneMert::LineSearch(
                 const SparseMap & weights,
@@ -84,17 +89,14 @@ LineSearchResult TuneMert::LineSearch(
     return LineSearchResult(middle, *zero_stats, *best_span.second);
 }
 
-void TuneMert::Init() {
-    // If we have no gradients, find them from the examples
-    if(gradients_.size() == 0) {
-        set<WordId> potential;
+void TuneMert::Init(const SparseMap & init_weights) {
+    if(!potentials_.size()) {
+        // Get the coordinate-wise gradients
         BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
-            examp->CountWeights(potential);
-        BOOST_FOREACH(WordId val, potential) {
-            SparseMap gradient;
-            gradient[val] = 1;
-            gradients_.push_back(gradient);
-        }
+            examp->CountWeights(potentials_);
+        // Initialize the xeval if we are using it
+        if(xeval_scales_.size())
+            xeval_gradient_.Init(init_weights, examps_);
     }
 }
 
@@ -104,11 +106,40 @@ double TuneMert::RunTuning(SparseMap & weights) {
     double best_score = 0;
     PRINT_DEBUG("Starting MERT Run: " << Dict::PrintSparseMap(weights) << endl, 2);
     while(true) {
-        // Initialize the best result
+        // 1) Initialize the best result
         LineSearchResult best_result;
         SparseMap best_gradient;
-        // Perform line search over one gradient
-        BOOST_FOREACH(const SparseMap & gradient, gradients_) {
+
+        // 2) Find the gradients
+        vector<SparseMap> gradients(
+            (use_coordinate_ ? potentials_.size() : 0)
+            + num_random_
+            + xeval_scales_.size()
+        );
+        int curr_grad = 0;
+        //  ** Coordinate-wise
+        if(use_coordinate_) {
+            BOOST_FOREACH(WordId val, potentials_)
+                gradients[curr_grad++][val] = 1;
+        }
+        //  ** Random
+        for(int i = 0; i < num_random_; i++) {
+            BOOST_FOREACH(WordId val, potentials_)
+                gradients[curr_grad][val] = (rand()/(double)RAND_MAX*2 - 1);
+            curr_grad++;
+        }
+        //  ** Xeval
+        BOOST_FOREACH(double scale, xeval_scales_) {
+            weights[xeval_gradient_.GetScaleId()] = scale;
+            xeval_gradient_.CalcSparseGradient(weights, gradients[curr_grad]);
+            curr_grad++;
+        }
+        if(weights.find(xeval_gradient_.GetScaleId()) != weights.end())
+            weights.erase(xeval_gradient_.GetScaleId());
+            // weights.erase(weights.find(xeval_gradient_.GetScaleId()));
+
+        // 3) Perform line search over one gradient at a time
+        BOOST_FOREACH(const SparseMap & gradient, gradients) {
             LineSearchResult result = TuneMert::LineSearch(weights, gradient, examps_);
             // Redo the gain in comparison to the currently saved best score.
             // Given that ties might exist, it is safer to take the gain this way in case
@@ -121,9 +152,10 @@ double TuneMert::RunTuning(SparseMap & weights) {
             }
         }
         if(best_result.gain <= gain_threshold_) break;
+        // 4) Update based on the gradient
         weights += best_gradient * best_result.pos;
         best_score = best_result.after->ConvertToScore();
-        PRINT_DEBUG("Change: " << Dict::PrintSparseMap(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintSparseMap(weights) << endl << best_result.after->ConvertToString() << endl, 2);
+        PRINT_DEBUG("Gradient: " << Dict::PrintSparseMap(best_gradient) << endl << "Change: " << Dict::PrintSparseMap(best_gradient * best_result.pos) << endl << "After: " << Dict::PrintSparseMap(weights) << endl << best_result.after->ConvertToString() << endl, 2);
     }
 
     // Normalize so that weights add to 1
@@ -131,3 +163,34 @@ double TuneMert::RunTuning(SparseMap & weights) {
 
     return best_score;
 }
+
+void TuneMert::SetDirections(const std::string & str) {
+    // First reset all
+    use_coordinate_ = false;
+    num_random_ = 0;
+    xeval_scales_.clear();
+    BOOST_FOREACH(const std::string & col, Tokenize(str)) {
+        vector<string> lr = Tokenize(col, "=");
+        if(lr[0] == "coord") {
+            use_coordinate_ = true;
+        } else if(lr[0] == "rand" && lr.size() == 2) {
+            num_random_ = lexical_cast<int>(lr[1]);
+        } else if(lr[0] == "xeval" && lr.size() == 2) {
+            vector<string> range = Tokenize(lr[1], ":");
+            if(range.size() != 3)
+                THROW_ERROR("Bad MERT direction specification " << col << ", must specify the min:max:mult for the xeval scale (e.g. 0.01:1000:10)");
+            double min_sc = lexical_cast<double>(range[0]);
+            double max_sc = lexical_cast<double>(range[1]);
+            double mult_sc = lexical_cast<double>(range[2]);
+            if(mult_sc <= 1 || min_sc > max_sc)
+                THROW_ERROR("Bad MERT direction specification " << col << ", must specify valid range (min <= max) and multiplier (mult > 1) for xeval");
+            while(min_sc <= max_sc) {
+                xeval_scales_.push_back(min_sc);
+                min_sc *= mult_sc;
+            }
+        } else {
+            THROW_ERROR("Bad MERT direction specification " << col << ", valid: \"coord\", \"rand=NUM\", \"xeval=MIN_SCALE:MAX_SCALE:MULTIPLIER\"");
+        }
+    }
+}
+

@@ -27,16 +27,16 @@ using namespace boost;
 
 BatchTuneRunnerTask::BatchTuneRunnerTask(
         int task_id, const std::string & task_name,
-        Tune & tgm, const SparseMap & weights) :
-    task_id_(task_id), task_name_(task_name), tgm_(&tgm),
+        Tune & tune, const SparseMap & weights) :
+    task_id_(task_id), task_name_(task_name), tune_(&tune),
     weights_(weights), score_(-DBL_MAX) { }
 
 void BatchTuneRunnerTask::Run() {
-    score_ = tgm_->RunTuning(weights_);
+    score_ = tune_->RunTuning(weights_);
     PRINT_DEBUG(task_name_<<": " << Dict::PrintSparseMap(weights_) << " => " << score_ << endl, 1);
 }
 
-void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in) {
+void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tune, istream * stat_in) {
     string line;
     while(getline(sys_in, line)) {
         vector<string> columns = Tokenize(line, " ||| ");
@@ -59,17 +59,17 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tgm, istream * stat_in
             stats = eval_->CalculateCachedStats(ref, hyps, id);
         }
         // Add the example
-        while((int)tgm.NumExamples() <= id) {
+        while((int)tune.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            tgm.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
+            tune.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
-        ((TuningExampleNbest&)tgm.GetExample(id)).AddHypothesis(feat, stats);
+        ((TuningExampleNbest&)tune.GetExample(id)).AddHypothesis(feat, stats);
     }
     PRINT_DEBUG(endl, 1);
 }
 
-void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
+void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tune) {
     JSONTreeIO io;
     HyperGraph * curr_ptr;
     int id = 0;
@@ -80,15 +80,15 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tgm) {
         PRINT_DEBUG("Loading line " << id << endl, 1);
         const std::vector<Sentence> & ref = refs_[id];
         // Add the example
-        if((int)tgm.NumExamples() <= id) {
+        if((int)tune.NumExamples() <= id) {
             double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());
-            tgm.AddExample(
+            tune.AddExample(
                 shared_ptr<TuningExample>(
                     new TuningExampleForest(
                         eval_.get(),
                         ref, id, norm)));
         }
-        ((TuningExampleForest&)tgm.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
+        ((TuningExampleForest&)tune.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
         id++;
     }
 }
@@ -101,20 +101,23 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     int runs = config.GetInt("restarts")+2;
     
     // Chose the tuning method
-    shared_ptr<Tune> tgm;
+    shared_ptr<Tune> tune;
     if(config.GetString("algorithm") == "mert") {
-        tgm.reset(new TuneMert);
+        TuneMert *tm = new TuneMert;
+        tm->SetDirections(config.GetString("mert_directions"));
+        tune.reset(tm);
     } else if(config.GetString("algorithm") == "greedy-mert") {
-        tgm.reset(new TuneGreedyMert);
-        ((TuneGreedyMert&)*tgm).SetThreads(threads);
+        TuneGreedyMert *tgm = new TuneGreedyMert;
+        tgm->SetThreads(threads);
+        tune.reset(tgm);
         threads = 1; // Threading is done inside greedy mert
     } else if(config.GetString("algorithm") == "lbfgs") {
         GradientXeval * gx = new GradientXeval;
         gx->SetL2Coefficient(config.GetDouble("l2"));
         gx->SetEntCoefficient(config.GetDouble("ent"));
-        TuneLbfgs * tx = new TuneLbfgs(gx);
-        tx->SetL1Coefficient(config.GetDouble("l1"));
-        tgm.reset(tx);
+        TuneLbfgs * tl = new TuneLbfgs(gx);
+        tl->SetL1Coefficient(config.GetDouble("l1"));
+        tune.reset(tl);
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
@@ -122,7 +125,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         online->SetMarginScale(config.GetDouble("margin_scale"));
         if(config.GetString("algorithm") == "onlinepro")
             online->SetAlgorithm("pro");
-        tgm.reset(online);
+        tune.reset(online);
     }
 
     // Load the features from the weight file
@@ -147,12 +150,12 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
             WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
             double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
             double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
-            tgm->SetRange(id, min_score, max_score);
+            tune->SetRange(id, min_score, max_score);
         }
     }
 
     // Set other tuning options
-    tgm->SetGainThreshold(config.GetDouble("threshold"));
+    tune->SetGainThreshold(config.GetDouble("threshold"));
 
     // Open the n-best list if it exists
     bool use_nbest = config.GetString("nbest") != "";
@@ -191,12 +194,12 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
                 THROW_ERROR(stat_files[i] << " could not be opened for reading");
         }
         // Actually load the files
-        if(use_nbest) LoadNbests(sys_in, *tgm, stat_in.get());
-        else          LoadForests(sys_in, *tgm);
+        if(use_nbest) LoadNbests(sys_in, *tune, stat_in.get());
+        else          LoadForests(sys_in, *tune);
     }
 
     // If there is any shared initialization to be done, do it here
-    tgm->Init();
+    tune->Init(weights);
 
     // Build the thread pool
     ThreadPool pool(threads, threads*5);
@@ -204,11 +207,11 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     
     // Set up tasks for each amount of weights
     vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
-    tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tgm, weights));
+    tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tune, weights));
     pool.Submit(tasks[0].get());
 
     // Set up zeroed weights
-    tasks[1] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(1, "Zero", *tgm, SparseMap()));
+    tasks[1] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(1, "Zero", *tune, SparseMap()));
     pool.Submit(tasks[1].get());
     
     // Randomize if necessary
@@ -220,10 +223,10 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         // Randomize the weights
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
-            if(rw.first != tgm->GetScaleId())
+            if(rw.first != tune->GetScaleId())
                 rw.second *= rand()/(double)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
-        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tgm, rand_weights));
+        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tune, rand_weights));
         pool.Submit(tasks[i].get());
     }
     pool.Stop(true);

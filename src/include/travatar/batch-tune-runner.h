@@ -20,7 +20,7 @@ class BatchTuneRunnerTask : public Task {
 public:
     BatchTuneRunnerTask(
         int task_id, const std::string & task_name,
-        Tune & tgm, const SparseMap & weights);
+        Tune & tune, const SparseMap & weights);
 
     const SparseMap & GetWeights() { return weights_; }
     double GetScore() { return score_; }
@@ -30,7 +30,7 @@ public:
 private:
     int task_id_;
     std::string task_name_;
-    Tune * tgm_;
+    Tune * tune_;
     SparseMap weights_;
     double score_;
 
@@ -55,8 +55,8 @@ public:
 private:
 
     // Load n-best lists or forests
-    void LoadNbests(std::istream & sys_in, Tune & tgm, std::istream * stat_in);
-    void LoadForests(std::istream & sys_in, Tune & tgm);
+    void LoadNbests(std::istream & sys_in, Tune & tune, std::istream * stat_in);
+    void LoadForests(std::istream & sys_in, Tune & tune);
 
     // The evaluation measure to use
     int ref_len_;

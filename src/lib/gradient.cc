@@ -33,27 +33,29 @@ void Gradient::SparsifyWeights(const std::vector<double> & dense, SparseMap & sp
 
 double Gradient::CalcSparseGradient(const SparseMap & kv, SparseMap & d_xeval_dw) const {
     size_t n = dense2sparse_.size();
-    double* x = new double[n]; memset(x, 0, sizeof(double)*n);
+    vector<double> x(n, 0.0);
     BOOST_FOREACH(const SparseMap::value_type val, kv) {
         SparseIntMap::const_iterator it = sparse2dense_.find(val.first);
+        if(it == sparse2dense_.end())
+            THROW_ERROR("Attempting to transform value not in sparse2dense map: " << val.first << " (" << Dict::WSym(val.first) << ")" << endl);
         x[it->second] = val.second;
     }
-    double* g = new double[n]; memset(g, 0, sizeof(double)*n);
-    double ret = CalcGradient(n, x, g);
+    vector<double> g(n, 0.0);
+    double ret = CalcGradient(n, &x[0], &g[0]);
     for(size_t i = 0; i < n; i++)
         if(g[i] != 0.0)
             d_xeval_dw[dense2sparse_[i]] = g[i];
-    delete[] x;
-    delete[] g;
     return ret;
 }
 
-void Gradient::Init(const std::vector<boost::shared_ptr<TuningExample> > & examps) {
+void Gradient::Init(const SparseMap & init_weights, const std::vector<boost::shared_ptr<TuningExample> > & examps) {
     // If we are using a different example set, re-initialize
     if(examps_ptr_ != &examps) {
         set<WordId> potential;
         BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps)
             examp->CountWeights(potential);
+        BOOST_FOREACH(const SparseMap::value_type & val, init_weights)
+            potential.insert(val.first);
         potential.insert(scale_id_);
         BOOST_FOREACH(WordId val, potential) {
             sparse2dense_[val] = dense2sparse_.size();

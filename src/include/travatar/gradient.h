@@ -17,7 +17,7 @@ public:
     // Initialize the statistics necessary for gradient calculation
     // This should calculate all the statistics that are not influenced by the
     // weight vector itself
-    virtual void Init(const std::vector<boost::shared_ptr<TuningExample> > & examps);
+    virtual void Init(const SparseMap & init_weights, const std::vector<boost::shared_ptr<TuningExample> > & examps);
 
     // Calculate the gradient for particular weights using either the dense or sparse
     // representation
@@ -32,6 +32,7 @@ public:
     void SetAutoScale(bool auto_scale) { auto_scale_ = auto_scale; }
     void SetMult(double mult) { mult_ = mult; }
     double GetMult() const { return mult_; }
+    WordId GetScaleId() const { return scale_id_; }
 
 protected:
 

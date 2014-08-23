@@ -5,6 +5,7 @@
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
+#include <travatar/gradient-xeval.h>
 #include <boost/thread.hpp>
 #include <tr1/unordered_map>
 #include <vector>
@@ -53,19 +54,24 @@ public:
       std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
 
     // **** Non-static Members ****
-    TuneMert() { }
+    TuneMert();
 
     // Tune new weights using MERT
     virtual double RunTuning(SparseMap & weights);
 
     // Initialize
-    virtual void Init();
+    virtual void Init(const SparseMap & init_weights);
+
+    void SetDirections(const std::string & str);
 
     // void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
 protected:
-    std::vector<SparseMap> gradients_;
-    
+    std::set<WordId> potentials_;
+    bool use_coordinate_;
+    int num_random_;
+    std::vector<double> xeval_scales_;
+    GradientXeval xeval_gradient_;
 
 };
 
