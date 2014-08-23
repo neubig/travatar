@@ -129,10 +129,16 @@ double TuneMert::RunTuning(SparseMap & weights) {
             curr_grad++;
         }
         //  ** Xeval
-        BOOST_FOREACH(double scale, xeval_scales_) {
-            weights[xeval_gradient_.GetScaleId()] = scale;
-            xeval_gradient_.CalcSparseGradient(weights, gradients[curr_grad]);
-            curr_grad++;
+        if(xeval_scales_.size()) {
+            double sum = 0.0;
+            BOOST_FOREACH(SparseMap::value_type val, weights)
+                sum += val.second;
+            if(sum == 0.0) sum = 1.0;
+            BOOST_FOREACH(double scale, xeval_scales_) {
+                weights[xeval_gradient_.GetScaleId()] = scale/sum;
+                xeval_gradient_.CalcSparseGradient(weights, gradients[curr_grad]);
+                curr_grad++;
+            }
         }
         if(weights.find(xeval_gradient_.GetScaleId()) != weights.end())
             weights.erase(xeval_gradient_.GetScaleId());
