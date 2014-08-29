@@ -1,0 +1,114 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Travatar - Travatar Model Format</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="all">
+<div id="sidebar">
+
+<p>Travatar Main</p>
+<ul>
+<li><a href="index.html">Home</a></li>
+<li><a href="todo.html">Future Plans</a></li>
+</ul>
+
+<p>Training</p>
+<ul>
+<li><a href="training-guide.html">Training Guide</a></li>
+<li><a href="preprocessing.html">Preprocessing</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="training-options.html">Training Options</a></li>
+<li><a href="tree-converter.html">Tree Conversion</a></li>
+<li><a href="model-format.html">Model Format</a></li>
+</ul>
+
+<p>Translating</p>
+
+<ul>
+<li><a href="decoding-options.html">Decoding Options</a></li>
+<li><a href="evaluation.html">Evaluation</a></li>
+</ul>
+
+<p>Other</p>
+
+<ul>
+<li><a href="links.html">Links/ Acknowledgements</a></li>
+</ul>
+
+
+</div>
+<div id="main">
+
+<h1>Travatar Model Format</h1>
+
+<p>This page will tell you the basics of the Travatar model format, and give some tips about how to modify the model if necessary.</p>
+
+<h2>Model Format Basics</h2>
+
+<p>
+After training, the travatar model can be found in <tt>train/model/rule-table.gz</tt>, where "train" is the output directory specified at training time.
+The format of the rules in the table is as follows:
+</p>
+
+<pre>
+source ||| target ||| features ||| counts ||| alignments
+</pre>
+
+<p>
+Below is an example of a rule:
+</p>
+
+<pre>
+vp ( vbd ( "expected" ) x0:sbar ) ||| x0:sbar "予想" "し" "た" @ vp ||| fgep=-6.07 w=3 egfp=-4.52 fgel=-3.11 p=1 egfl=-13.28 lfreq=-2.22 ||| 1 10 47 ||| 0-0 0-1 0-2
+</pre>
+
+<ul>
+<li><b>source:</b> This is a source side subtree, representing the portion of a syntactic tree to be translated. The head of the tree comes first, followed by bracketed children. Strings surrounded with quotes are terminals, and strings like "x0:sbar" are places that connect to a child tree. The "x0" "x1" variables must be in ascending order.</li>
+<li><b>target:</b> This is in a similar form as the source, but with no brackets or tree structure. The ":sbar" after the x0 is optional. The "@ vp" at the end of the string indicates the syntactic head of the rule, and is also optional.</li>
+<li><b>features:</b> This is a list of "string=value" pairs. The string is the name of a feature, and the value is it's value. Travatar can handle sparse features during decoding, so it is possible to add features with any name you like.</li>
+<li><b>counts:</b> These are the number of times the rule appeared in the training corpus. The three numbers are counts of source-target, source, and target respectively. This field does not affect decoding.</li>
+<li><b>alignment:</b> This is an alignment between all terminals (words surrounded by quotes) in the source and target sides of the rule. This also has no effect on decoding.</li>
+</ul>
+
+<h2>Modifying Travatar Models</h2>
+
+<p>
+If you would like to modify the travatar model for whatever reason, it is in text format so you can do so directly. For example, let's say we really don't want to translate anything about apples, we can remove all rules that contain the string apple.
+</p>
+
+<pre>
+zcat train/model/rule-table.gz | grep -v apple | gzip &gt; train/model/no-apples.gz
+</pre>
+
+<p>
+It is also possible to add new rules.
+Let's say we want to add a rule to translate the proper noun "apple" into "アップル" (the company) and the regular noun "apple" into "りんご" (the fruit).
+We can do so by creating a file <tt>apple.txt</tt>:
+</p>
+<pre>
+echo 'nnp ( "apple" ) ||| "アップル" ||| apple_rule=1' &gt;&gt; apple.txt
+echo 'nn ( "apple" ) ||| "りんご" ||| apple_rule=1' &gt;&gt; apple.txt
+</pre>
+
+<p>
+We can then combine this file with our original rule table.
+Note that Travatar rule tables must be sorted, so we perform a sort on the newly concatenated table.
+</p>
+
+<pre>
+gzip apple.txt
+zcat train/model/rule-table.gz apple.txt.gz | LC_ALL=C sort | gzip &gt; train/model/with-apples.gz
+</pre>
+
+<p>
+After creating a new rule table, we can then modify the <tt>travatar.ini</tt> file to point to our new table.
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
