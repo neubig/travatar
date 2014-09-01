@@ -37,18 +37,18 @@ void TravatarRunnerTask::Run() {
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
     // Binarizer if necessary
     if(runner_->HasBinarizer()) {
-        shared_ptr<HyperGraph> bin_graph(runner_->GetBinarizer().TransformGraph(*tree_graph_));
+        boost::shared_ptr<HyperGraph> bin_graph(runner_->GetBinarizer().TransformGraph(*tree_graph_));
         tree_graph_.swap(bin_graph);
     }
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
-    shared_ptr<HyperGraph> rule_graph(runner_->GetTM().TransformGraph(*tree_graph_));
+    boost::shared_ptr<HyperGraph> rule_graph(runner_->GetTM().TransformGraph(*tree_graph_));
     rule_graph->ScoreEdges(runner_->GetWeights());
     rule_graph->ResetViterbiScores();
 
     // If we have an lm, score with the LM
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
     if(runner_->HasLM() && rule_graph->NumNodes() > 0) {
-        shared_ptr<HyperGraph> lm_graph(runner_->GetLM().TransformGraph(*rule_graph));
+        boost::shared_ptr<HyperGraph> lm_graph(runner_->GetLM().TransformGraph(*rule_graph));
         lm_graph.swap(rule_graph);
     }
 
@@ -72,7 +72,7 @@ void TravatarRunnerTask::Run() {
     // If we are printing the n-best list, print it
     if(nbest_collector_ != NULL) {
         ostringstream nbest_out;
-        BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
+        BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
             nbest_out
                 << sent_
                 << " ||| " << Dict::PrintWords(path->GetTrgData())
@@ -100,7 +100,7 @@ void TravatarRunnerTask::Run() {
     // If we are printing a forest, print it
     if(forest_collector_ != NULL) {
         // Trim if needed
-        shared_ptr<HyperGraph> out_for = rule_graph;
+        boost::shared_ptr<HyperGraph> out_for = rule_graph;
         if(runner_->HasTrimmer())
             out_for.reset(runner_->GetTrimmer().TransformGraph(*out_for));
         // Print
@@ -153,7 +153,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     } else {
         THROW_ERROR("Invalid value for tune_update: "<<config.GetString("tune_update"));
     }    
-    vector<shared_ptr<istream> > tune_ins;
+    vector<boost::shared_ptr<istream> > tune_ins;
     // If we need to do tuning
     if(do_tuning_) {
         if(threads_ > 1)
@@ -172,7 +172,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         if(ref_files.size() == 0)
             THROW_ERROR("When tuning, must specify at least one reference in tune_ref_files");
         BOOST_FOREACH(const string & file, ref_files)
-            tune_ins.push_back(shared_ptr<istream>(new ifstream(file.c_str())));
+            tune_ins.push_back(boost::shared_ptr<istream>(new ifstream(file.c_str())));
         // Set the weight ranges
         if(config.GetString("tune_weight_ranges") != "") {
             vector<string> ranges = Tokenize(config.GetString("tune_weight_ranges"), ' '), range_vals;
@@ -192,15 +192,15 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     binarizer_.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
 
     // Get the input format parser
-    shared_ptr<TreeIO> tree_io;
+    boost::shared_ptr<TreeIO> tree_io;
     if(config.GetString("in_format") == "penn")
-        tree_io = shared_ptr<TreeIO>(new PennTreeIO);
+        tree_io = boost::shared_ptr<TreeIO>(new PennTreeIO);
     else if(config.GetString("in_format") == "egret")
-        tree_io = shared_ptr<TreeIO>(new EgretTreeIO);
+        tree_io = boost::shared_ptr<TreeIO>(new EgretTreeIO);
     else if(config.GetString("in_format") == "moses")
-        tree_io = shared_ptr<TreeIO>(new MosesXMLTreeIO);
+        tree_io = boost::shared_ptr<TreeIO>(new MosesXMLTreeIO);
     else if(config.GetString("in_format") == "word") 
-        tree_io = shared_ptr<TreeIO>(new WordTreeIO);
+        tree_io = boost::shared_ptr<TreeIO>(new WordTreeIO);
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
@@ -294,13 +294,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     PRINT_DEBUG("Started translating [" << timer << " sec]" << endl, 1);
     while(1) {
         // Load the tree
-        shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
+        boost::shared_ptr<HyperGraph> tree_graph(tree_io->ReadTree(std::cin));
         if(tree_graph.get() == NULL) break;
 
         // If we are tuning load the next references and check the weights
         vector<Sentence> refs;
         if(do_tuning_) {
-            BOOST_FOREACH(const shared_ptr<istream> & in, tune_ins) {
+            BOOST_FOREACH(const boost::shared_ptr<istream> & in, tune_ins) {
                 string line;
                 if(!getline(*in, line)) THROW_ERROR("Reference file is too short");
                 refs.push_back(Dict::ParseWords(line));

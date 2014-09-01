@@ -74,17 +74,17 @@ int TestLookupTable::TestLookup(LookupTable & lookup) {
     exp_match_cnt[2] = 1;
     exp_match_cnt[4] = 1;
     exp_match_cnt[9] = 1;
-    vector<shared_ptr<LookupState> > old_states;
-    old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
+    vector<boost::shared_ptr<LookupState> > old_states;
+    old_states.push_back(boost::shared_ptr<LookupState>(lookup.GetInitialState()));
     for(int i = 0; i < 11; i++)
         act_match_cnt[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states).size();
     return CheckVector(exp_match_cnt, act_match_cnt);
 }
 
 int TestLookupTable::TestLookupRules(LookupTable & lookup) {
-    vector<vector<shared_ptr<LookupState> > > act_lookups(11);
-    vector<shared_ptr<LookupState> > old_states;
-    old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
+    vector<vector<boost::shared_ptr<LookupState> > > act_lookups(11);
+    vector<boost::shared_ptr<LookupState> > old_states;
+    old_states.push_back(boost::shared_ptr<LookupState>(lookup.GetInitialState()));
     for(int i = 0; i < 11; i++)
         act_lookups[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states);
     vector<TranslationRule*> exp_rules(7), act_rules(7);
@@ -144,10 +144,10 @@ int TestLookupTable::TestLookupRules(LookupTable & lookup) {
 
 int TestLookupTable::TestBuildRuleGraph(LookupTable & lookup) {
     // Make the rule graph
-    shared_ptr<HyperGraph> act_rule_graph(lookup.TransformGraph(*src1_graph));
-    vector<vector<shared_ptr<LookupState> > > act_lookups(11);
-    vector<shared_ptr<LookupState> > old_states;
-    old_states.push_back(shared_ptr<LookupState>(lookup.GetInitialState()));
+    boost::shared_ptr<HyperGraph> act_rule_graph(lookup.TransformGraph(*src1_graph));
+    vector<vector<boost::shared_ptr<LookupState> > > act_lookups(11);
+    vector<boost::shared_ptr<LookupState> > old_states;
+    old_states.push_back(boost::shared_ptr<LookupState>(lookup.GetInitialState()));
     for(int i = 0; i < 11; i++)
         act_lookups[i] = lookup.LookupSrc(*src1_graph->GetNode(i), old_states);
     // Create the rule graph
@@ -190,7 +190,7 @@ int TestLookupTable::TestBadInputHash() {
     rule_oss << "ROOT ( x0:S ) ||| x0" << endl;
     istringstream rule_iss_hash(rule_oss.str());
     try {
-        shared_ptr<LookupTableHash> temp(LookupTableHash::ReadFromRuleTable(rule_iss_hash));
+        boost::shared_ptr<LookupTableHash> temp(LookupTableHash::ReadFromRuleTable(rule_iss_hash));
         return 0;
     } catch(std::runtime_error e) {
         return 1;
@@ -203,7 +203,7 @@ int TestLookupTable::TestBadInputMarisa() {
     rule_oss << "ROOT ( x0:S ) ||| x0" << endl;
     istringstream rule_iss_marisa(rule_oss.str());
     try {
-        shared_ptr<LookupTableMarisa> temp(LookupTableMarisa::ReadFromRuleTable(rule_iss_marisa));
+        boost::shared_ptr<LookupTableMarisa> temp(LookupTableMarisa::ReadFromRuleTable(rule_iss_marisa));
         return 0;
     } catch(std::runtime_error e) {
         return 1;

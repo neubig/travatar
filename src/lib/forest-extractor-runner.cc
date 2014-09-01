@@ -63,10 +63,10 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     ifstream align_in(argv[2].c_str());
     if(!align_in) THROW_ERROR("Could not find align file: " << argv[2]);
     // Create rule filters
-    vector< shared_ptr<RuleFilter> > rule_filters;
-    rule_filters.push_back(shared_ptr<RuleFilter>(new PseudoNodeFilter));
-    rule_filters.push_back(shared_ptr<RuleFilter>(new CountFilter(config.GetDouble("partial_count_thresh"))));
-    rule_filters.push_back(shared_ptr<RuleFilter>(new RuleSizeFilter(config.GetInt("term_len"), config.GetInt("nonterm_len"))));
+    vector< boost::shared_ptr<RuleFilter> > rule_filters;
+    rule_filters.push_back(boost::shared_ptr<RuleFilter>(new PseudoNodeFilter));
+    rule_filters.push_back(boost::shared_ptr<RuleFilter>(new CountFilter(config.GetDouble("partial_count_thresh"))));
+    rule_filters.push_back(boost::shared_ptr<RuleFilter>(new RuleSizeFilter(config.GetInt("term_len"), config.GetInt("nonterm_len"))));
     // Get the lines
     string src_line, trg_line, align_line;
     int has_src, has_trg, has_align;
@@ -83,7 +83,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
                         <<", trg="<<has_trg<<", align="<<has_align);
         PRINT_DEBUG("Extracting from:" << endl << src_line << endl << trg_line << endl << align_line << endl, 1);
         // Parse into the appropriate data structures
-        shared_ptr<HyperGraph> src_graph;
+        boost::shared_ptr<HyperGraph> src_graph;
         try {
             istringstream src_iss(src_line);
             src_graph.reset(src_io->ReadTree(src_iss));
@@ -100,7 +100,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         LabeledSpans trg_labs;
         if(trg_io.get() != NULL) {
             istringstream trg_iss(trg_line);
-            shared_ptr<HyperGraph> trg_graph(trg_io->ReadTree(trg_iss));
+            boost::shared_ptr<HyperGraph> trg_graph(trg_io->ReadTree(trg_iss));
             trg_sent = trg_graph->GetWords();
             trg_labs = trg_graph->GetLabeledSpans();    
         } else {

@@ -96,7 +96,7 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     try {
     while(true) {
         // Parse into the appropriate data structures
-        shared_ptr<HyperGraph> src_graph(tree_in->ReadTree(*src_in));
+        boost::shared_ptr<HyperGraph> src_graph(tree_in->ReadTree(*src_in));
         if(src_graph.get() == NULL) break;
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
 

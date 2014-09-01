@@ -6,7 +6,6 @@
 #include <travatar/eval-measure.h>
 #include <travatar/tune.h>
 #include <boost/thread.hpp>
-#include <tr1/unordered_map>
 #include <vector>
 #include <cfloat>
 

@@ -52,7 +52,7 @@ void Gradient::Init(const SparseMap & init_weights, const std::vector<boost::sha
     // If we are using a different example set, re-initialize
     if(examps_ptr_ != &examps) {
         set<WordId> potential;
-        BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps)
+        BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps)
             examp->CountWeights(potential);
         BOOST_FOREACH(const SparseMap::value_type & val, init_weights)
             potential.insert(val.first);

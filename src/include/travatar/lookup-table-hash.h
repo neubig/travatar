@@ -2,7 +2,7 @@
 #define LOOKUP_TABLE_HASH_H__
 
 #include <travatar/lookup-table.h>
-#include <tr1/unordered_set>
+#include <boost/unordered_set.hpp>
 #include <vector>
 
 namespace travatar {
@@ -52,8 +52,8 @@ protected:
     void AddRule(const std::string & str, TranslationRule * rule);
 
 protected:
-    std::tr1::unordered_set<std::string> src_matches;
-    typedef std::tr1::unordered_map<std::string, std::vector<TranslationRule*> > RuleMap;
+    boost::unordered_set<std::string> src_matches;
+    typedef boost::unordered_map<std::string, std::vector<TranslationRule*> > RuleMap;
     typedef std::pair<const std::string, std::vector<TranslationRule*> > RulePair;
     RuleMap rules_;
 

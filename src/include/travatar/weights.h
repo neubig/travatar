@@ -82,7 +82,7 @@ public:
 
 protected:
     SparseMap current_;
-    typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;
+    typedef boost::unordered_map<WordId, std::pair<double,double> > RangeMap;
     RangeMap ranges_;
     int factor_;
 

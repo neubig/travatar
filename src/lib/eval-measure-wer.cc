@@ -1,12 +1,10 @@
 
 #include <travatar/global-debug.h>
 #include <travatar/eval-measure-wer.h>
-#include <tr1/unordered_map>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 
 using namespace std;
-using namespace std::tr1;
 using namespace travatar;
 using namespace boost;
 
@@ -29,14 +27,14 @@ int EvalMeasureWer::EditDistance(const Sentence & ref, const Sentence & sys) con
 }
 
 // Measure the score of the sys output according to the ref
-shared_ptr<EvalStats> EvalMeasureWer::CalculateStats(const Sentence & ref, const Sentence & sys) const {
+boost::shared_ptr<EvalStats> EvalMeasureWer::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
-    return shared_ptr<EvalStats>(new EvalStatsWer(EditDistance(ref,sys), ref.size(), reverse_));
+    return boost::shared_ptr<EvalStats>(new EvalStatsWer(EditDistance(ref,sys), ref.size(), reverse_));
 
 }
 
 // Read in the stats
-shared_ptr<EvalStats> EvalMeasureWer::ReadStats(const std::string & line) {
+boost::shared_ptr<EvalStats> EvalMeasureWer::ReadStats(const std::string & line) {
     EvalStatsPtr ret(new EvalStatsWer(0, 0, reverse_));
     ret->ReadStats(line);
     return ret;

@@ -4,10 +4,8 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <tr1/unordered_map>
 
 using namespace std;
-using namespace std::tr1;
 using namespace travatar;
 using namespace boost;
 
@@ -71,7 +69,7 @@ EvalStatsPtr EvalStatsInterp::Clone() const {
 // Measure the score of the sys output according to the ref
 EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sentence & sys) const {
     // Calculate all the stats independently and add them
-    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    typedef boost::shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
         stats.push_back(meas->CalculateStats(ref,sys));
@@ -80,7 +78,7 @@ EvalStatsPtr EvalMeasureInterp::CalculateStats(const Sentence & ref, const Sente
 
 EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
             const std::vector<Sentence> & refs, const std::vector<Sentence> & syss, int ref_cache_id, int sys_cache_id) {
-    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    typedef boost::shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
         stats.push_back(meas->CalculateCachedStats(refs,syss,ref_cache_id,sys_cache_id));
@@ -88,7 +86,7 @@ EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
 }
 EvalStatsPtr EvalMeasureInterp::CalculateCachedStats(
             const std::vector<Sentence> & refs, const CfgDataVector & syss, int ref_cache_id, int sys_cache_id) {
-    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    typedef boost::shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats;
     BOOST_FOREACH(const EvalMeasPtr & meas, measures_)
         stats.push_back(meas->CalculateCachedStats(refs,syss,ref_cache_id,sys_cache_id));
@@ -102,7 +100,7 @@ EvalStatsPtr EvalMeasureInterp::ReadStats(const std::string & line) {
     if(cols.size() != measures_.size())
         THROW_ERROR("Number of columns in input ("<<cols.size()<<") != number of evaluation measures (" << measures_.size() << ")");
     // Load the stats
-    typedef shared_ptr<EvalMeasure> EvalMeasPtr;
+    typedef boost::shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats(cols.size());
     for(int i = 0; i < (int)cols.size(); i++)
         stats[i] = measures_[i]->ReadStats(cols[i]);

@@ -3,7 +3,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -16,7 +16,7 @@ class SymbolSet {
 
 public:
 
-    typedef std::tr1::unordered_map<std::string,T> Map;
+    typedef boost::unordered_map<std::string,T> Map;
     typedef std::vector< std::string* > Vocab;
     typedef std::vector< T > Ids;
 

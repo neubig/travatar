@@ -7,7 +7,6 @@
 #include <travatar/eval-measure.h>
 #include <travatar/gradient-xeval.h>
 #include <boost/thread.hpp>
-#include <tr1/unordered_map>
 #include <vector>
 #include <cfloat>
 #include <set>

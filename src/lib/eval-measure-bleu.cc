@@ -3,6 +3,7 @@
 #include <travatar/global-debug.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 #include <cmath>
 
 using namespace std;
@@ -24,11 +25,11 @@ EvalMeasureBleu::NgramStats * EvalMeasureBleu::ExtractNgrams(const Sentence & se
     return all_ngrams;
 }
 
-shared_ptr<EvalMeasureBleu::NgramStats> EvalMeasureBleu::GetCachedStats(const Sentence & sent, int cache_id) {
-    if(cache_id == INT_MAX) return shared_ptr<NgramStats>(ExtractNgrams(sent));
+boost::shared_ptr<EvalMeasureBleu::NgramStats> EvalMeasureBleu::GetCachedStats(const Sentence & sent, int cache_id) {
+    if(cache_id == INT_MAX) return boost::shared_ptr<NgramStats>(ExtractNgrams(sent));
     StatsCache::const_iterator it = cache_.find(cache_id);
     if(it == cache_.end()) {
-        shared_ptr<NgramStats> new_stats(ExtractNgrams(sent));
+        boost::shared_ptr<NgramStats> new_stats(ExtractNgrams(sent));
         cache_.insert(make_pair(cache_id, new_stats));
         return new_stats;
     } else {
@@ -36,17 +37,17 @@ shared_ptr<EvalMeasureBleu::NgramStats> EvalMeasureBleu::GetCachedStats(const Se
     }
 }
 
-shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys) const {
-    shared_ptr<NgramStats> ref_s(ExtractNgrams(ref)), sys_s(ExtractNgrams(sys));
+boost::shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys) const {
+    boost::shared_ptr<NgramStats> ref_s(ExtractNgrams(ref)), sys_s(ExtractNgrams(sys));
     return CalculateStats(*ref_s, ref.size(), *sys_s, sys.size());
 }
 
 // Measure the score of the sys output according to the ref
-shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
+boost::shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const Sentence & ref, const Sentence & sys, int ref_cache_id, int sys_cache_id) {
     return CalculateStats(*GetCachedStats(ref, ref_cache_id), ref.size(), *GetCachedStats(sys, sys_cache_id), sys.size());
 }
 
-shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngrams, int ref_len,
+boost::shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngrams, int ref_len,
                                                       const NgramStats & sys_ngrams, int sys_len) const {
     int vals_n = 3*ngram_order_;
     vector<EvalStatsDataType> vals(vals_n);
@@ -72,7 +73,7 @@ shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & ref_ngr
 }
 
 // Read in the stats
-shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line) {
+boost::shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line) {
     EvalStatsPtr ret;
     if(scope_ == SENTENCE)
         ret.reset(new EvalStatsAverage);

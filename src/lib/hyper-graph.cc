@@ -237,7 +237,7 @@ SparseVector HyperPath::GetFeatures() {
 
 class PathScoreMore {
 public:
-    bool operator()(const shared_ptr<HyperPath> x, const shared_ptr<HyperPath> y) {
+    bool operator()(const boost::shared_ptr<HyperPath> x, const boost::shared_ptr<HyperPath> y) {
         if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() > y->GetScore();
         const vector<HyperEdge*> & xe = x->GetEdges(), ye = y->GetEdges();
         if(xe.size() != ye.size()) return xe.size() > ye.size();
@@ -248,16 +248,16 @@ public:
     }
 };
 
-vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
-    set<shared_ptr<HyperPath>, PathScoreMore> paths;
-    shared_ptr<HyperPath> init_path(new HyperPath);
+vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
+    set<boost::shared_ptr<HyperPath>, PathScoreMore> paths;
+    boost::shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
     init_path->AddScore(nodes_[0]->CalcViterbiScore());
     // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
     paths.insert(init_path);
-    vector<shared_ptr<HyperPath> > ret;
+    vector<boost::shared_ptr<HyperPath> > ret;
     while(paths.size() > 0 && (int)ret.size() < n) {
-        shared_ptr<HyperPath> curr_path = *paths.begin();
+        boost::shared_ptr<HyperPath> curr_path = *paths.begin();
         paths.erase(paths.begin());
         // cerr << " Processing " << *curr_path << endl;
         HyperNode * node = curr_path->PopNode();
@@ -270,7 +270,7 @@ vector<shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
             BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
                 // Create a new path that is a copy of the old one, and add
                 // the edge and its corresponding score
-                shared_ptr<HyperPath> next_path(new HyperPath(*curr_path));
+                boost::shared_ptr<HyperPath> next_path(new HyperPath(*curr_path));
                 next_path->AddEdge(edge);
                 next_path->AddScore(edge->GetScore());
                 BOOST_FOREACH(HyperNode * tail_node, edge->GetTails())

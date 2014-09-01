@@ -16,7 +16,7 @@ void WeightsPairwise::Adjust(EvalMeasure & eval,
     int oracle = -1;
     double oracle_eval = -DBL_MAX;
     for(int i = 0; i < (int)nbest.size(); i++) {
-        const shared_ptr<HyperPath> & path = nbest[i];
+        const boost::shared_ptr<HyperPath> & path = nbest[i];
         double my_eval = -DBL_MAX;
         BOOST_FOREACH(const Sentence & ref, refs)
             my_eval = max(my_eval, eval.CalculateStats(ref, path->GetTrgData()[factor_].words)->ConvertToScore());

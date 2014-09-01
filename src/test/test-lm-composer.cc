@@ -168,7 +168,7 @@ int TestLMComposer::TestLMComposerBU() {
     weights[Dict::WID("lmunk")] = -20;
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
-    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
     return exp_graph->CheckEqual(*act_graph);
 }
 
@@ -263,7 +263,7 @@ int TestLMComposer::TestLMComposerIncremental() {
     weights[Dict::WID("lmunk")] = -20;
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
-    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
     return act_graph.get() && exp_graph->CheckEqual(*act_graph);
 }
 
@@ -361,7 +361,7 @@ int TestLMComposer::TestLMComposerIncrementalTimesTwo() {
     HyperGraph my_rule_graph(*rule_graph_);
     BOOST_FOREACH(HyperEdge* edge, my_rule_graph.GetEdges())
         edge->SetScore(edge->GetScore()*2);
-    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(my_rule_graph));
+    boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(my_rule_graph));
     return act_graph.get() && exp_graph->CheckEqual(*act_graph);
 }
 
@@ -474,7 +474,7 @@ int TestLMComposer::TestReverseBU() {
     weights[Dict::WID("lmunk")] = -20;
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
-    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
     return act_graph.get() && exp_graph->CheckEqual(*act_graph);
 }
 
@@ -595,7 +595,7 @@ int TestLMComposer::TestReverseIncremental() {
     weights[Dict::WID("lmunk")] = -20;
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
-    shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
     return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
 }
 

@@ -34,11 +34,11 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     bool sent = config.GetBool("sent");
     
     // Load the evaluation measure
-    vector<shared_ptr<EvalMeasure> > eval_measures;
+    vector<boost::shared_ptr<EvalMeasure> > eval_measures;
     vector<string> eval_ids;
     algorithm::split(eval_ids, config.GetString("eval"), is_any_of(" "));
     BOOST_FOREACH(const string & eval, eval_ids)
-        eval_measures.push_back(shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(eval)));
+        eval_measures.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(eval)));
     int eval_count = eval_measures.size();
 
     // If we are doing bootstrap resampling to calculate statistical significance, create random sets
@@ -107,7 +107,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                 cout << total_stats[i]->ConvertToString();
                 // Add it to the bootstrap matrix and calculate all scores
                 if(bootstrap) {
-                    shared_ptr<vector<double> > my_vec(new vector<double>(bootstrap));
+                    boost::shared_ptr<vector<double> > my_vec(new vector<double>(bootstrap));
                     for(int j = 0; j < bootstrap; j++) {
                         PRINT_DEBUG(endl << "bootstrap_stats[" << i << "][" << j << "] == " << bootstrap_stats[i][j]->ConvertToString() << " @ " << bootstrap_scores.size() << endl, 3);
                         bootstrap_scores.push_back(bootstrap_stats[i][j]->ConvertToScore());

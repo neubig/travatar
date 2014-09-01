@@ -23,7 +23,7 @@ TestTune::TestTune() : examp_nbest() {
     slopeid = Dict::WID("slope");
     // Create the examples
     SparseVector feat10, feat11, feat12, feat20, feat21, feat22;
-    shared_ptr<TuningExample> examps1(new TuningExampleNbest()), examps2(new TuningExampleNbest());
+    boost::shared_ptr<TuningExample> examps1(new TuningExampleNbest()), examps2(new TuningExampleNbest());
     feat10.Add(valid,1); feat10.Add(slopeid,-1); ((TuningExampleNbest&)*examps1).AddHypothesis(feat10, EvalStatsPtr(new EvalStatsAverage(0.2, 1)));
     feat11.Add(valid,3); feat11.Add(slopeid,1 );  ((TuningExampleNbest&)*examps1).AddHypothesis(feat11, EvalStatsPtr(new EvalStatsAverage(0.1, 1)));
     feat12.Add(valid,1); feat12.Add(slopeid,1 );  ((TuningExampleNbest&)*examps1).AddHypothesis(feat12, EvalStatsPtr(new EvalStatsAverage(0.3, 1)));
@@ -236,7 +236,7 @@ int TestTune::TestMultipleForests() {
 
 int TestTune::TestForestUnk() {
     EvalMeasureBleu bleu(4, 1, SENTENCE);
-    shared_ptr<HyperGraph> rule_graph(new HyperGraph);
+    boost::shared_ptr<HyperGraph> rule_graph(new HyperGraph);
     vector<Sentence> exp_sent = Dict::ParseWordVector("wordA"), act_sent;
     rule_graph->SetWords(exp_sent[0]);
     HyperNode* n0 = new HyperNode(Dict::WID("A"), -1, make_pair(0,1)); rule_graph->AddNode(n0);
@@ -260,15 +260,15 @@ int TestTune::TestGradientXbleu() {
     // Create tuning examples and references
     GradientXeval gx;
     EvalMeasureBleu bleu;
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b c"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.02613552304645977 fb=-0.016376956750715835 fc=0.017252038293028495 fd=-0.02701060458877243";
@@ -282,14 +282,14 @@ int TestTune::TestScaleXbleu() {
     GradientXeval gx;
     gx.SetAutoScale(true);
     EvalMeasureBleu bleu;
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5); weights[Dict::WID("fc")] = log(0.5);
@@ -310,14 +310,14 @@ int TestTune::TestBigScaleXbleu() {
     GradientXeval gx;
     gx.SetAutoScale(true);
     EvalMeasureBleu bleu;
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Calculate the gradients
     string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
@@ -332,14 +332,14 @@ int TestTune::TestBigScaleXbleup1() {
     GradientXeval gx;
     gx.SetAutoScale(true);
     EvalMeasureBleu bleu(4, 1, SENTENCE);
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Add some weights
     SparseMap weights; weights[Dict::WID("fb")] = log(0.5)/2; weights[Dict::WID("fc")] = log(0.5)/2; weights[Dict::WID("__SCALE__")] = 2.0;
@@ -356,14 +356,14 @@ int TestTune::TestL2Xbleu() {
     gx.SetAutoScale(true);
     gx.SetL2Coefficient(0.01);
     EvalMeasureBleu bleu;
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fc=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("c"))); 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";
@@ -380,7 +380,7 @@ int TestTune::TestEntXbleu() {
     gx.SetAutoScale(true);
     gx.SetEntCoefficient(0.1);
     EvalMeasureBleu bleu;
-    vector<shared_ptr<TuningExample> > examps;
+    vector<boost::shared_ptr<TuningExample> > examps;
     TuningExampleNbest *nbest1 = new TuningExampleNbest, *nbest2 = new TuningExampleNbest;
     nbest1->AddHypothesis(Dict::ParseSparseVector("fa=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a b"))); 
     nbest1->AddHypothesis(Dict::ParseSparseVector("fb=1"), bleu.CalculateStats(Dict::ParseWords("a b"), Dict::ParseWords("a"))); 
@@ -388,8 +388,8 @@ int TestTune::TestEntXbleu() {
     nbest2->AddHypothesis(Dict::ParseSparseVector("fd=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d")));
     // Add another hypothesis with a really low weight to test NaNs 
     nbest2->AddHypothesis(Dict::ParseSparseVector("fe=1"), bleu.CalculateStats(Dict::ParseWords("a b c d"), Dict::ParseWords("a b c d"))); 
-    examps.push_back(shared_ptr<TuningExample>(nbest1));
-    examps.push_back(shared_ptr<TuningExample>(nbest2));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest1));
+    examps.push_back(boost::shared_ptr<TuningExample>(nbest2));
     gx.Init(SparseMap(), examps);
     // Calculate the gradients, plus regularization
     // string exp_feat_str = "fa=0.1012297191379721800 fb=-0.039870301660482028 fc=-0.061359417477490144 __SCALE__=0.01754177360234013500";

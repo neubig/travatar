@@ -27,7 +27,6 @@ install-sh
 libtool
 ltmain.sh
 gmon.out
-m4
 missing
 src/bin/travatar
 src/bin/rescorer

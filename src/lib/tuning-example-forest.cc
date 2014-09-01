@@ -33,7 +33,7 @@ const ExamplePair &
 
 // This function combines multiple forests into a single one via a shared
 // root node. This allows forests from multiple runs to be searched together
-void TuningExampleForest::AddHypothesis(const shared_ptr<HyperGraph> & hg) {
+void TuningExampleForest::AddHypothesis(const boost::shared_ptr<HyperGraph> & hg) {
     // Make the root node if necessary
     if(forest_.get() == NULL) {
         forest_.reset(new HyperGraph());
@@ -100,7 +100,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
 // Perform the inside step using memoized recursion
 const MertHull & TuningExampleForest::CalculateMertHull(
                         const MertHullWeightFunction & func,
-                        vector<shared_ptr<MertHull> > & hulls, 
+                        vector<boost::shared_ptr<MertHull> > & hulls, 
                         int node_id) const {
     if(hulls[node_id].get() == NULL) {
         hulls[node_id].reset(new MertHull);
@@ -144,7 +144,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
         ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_stats));
     // Otherwise, calculate the convex hull from the forest
     } else {
-        vector<shared_ptr<MertHull> > hulls(forest_->NumNodes());
+        vector<boost::shared_ptr<MertHull> > hulls(forest_->NumNodes());
         MertHullWeightFunction func(weights, gradient);
         CalculateMertHull(func, hulls, 0);
         MertHull top_hull = *hulls[0];

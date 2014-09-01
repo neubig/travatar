@@ -18,7 +18,7 @@ void TrimmerNbest::FindActive(const HyperGraph & hg,
     // Get the n-best
     // TODO: const_cast is a bit dangerous, but let's leave it for now
     NbestList nbest = const_cast<HyperGraph&>(hg).GetNbest(n_);;
-    BOOST_FOREACH(shared_ptr<HyperPath> & hyp, nbest) {
+    BOOST_FOREACH(boost::shared_ptr<HyperPath> & hyp, nbest) {
         BOOST_FOREACH(HyperEdge * edge, hyp->GetEdges()) {
             Trimmer::AddId(active_nodes, edge->GetHead()->GetId());
             Trimmer::AddId(active_edges, edge->GetId());

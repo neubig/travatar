@@ -46,7 +46,7 @@ TuneGreedyMert::TuneGreedyMert() : Tune(),
                        early_terminate_(false) { }
 
 void TuneGreedyMert::UpdateBest(const SparseMap &gradient, const LineSearchResult &result) {
-    mutex::scoped_lock lock(result_mutex_);
+    boost::mutex::scoped_lock lock(result_mutex_);
     if(best_result_.gain < result.gain) {
         best_gradient_ = gradient;
         best_result_ = result;
@@ -64,7 +64,7 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
     best_gradient_ = SparseMap();
     PRINT_DEBUG("Calculating potential gains..." << endl, 2);
     SparseMap potential;
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
+    BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps_) {
         potential += examp->CalculatePotentialGain(weights);
     }
     // Order the weights in descending order
@@ -76,8 +76,8 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
     sort(vals.begin(), vals.end());
 
     // Create the threads
-    shared_ptr<ThreadPool> thread_pool;
-    shared_ptr<OutputCollector> out_collect;
+    boost::shared_ptr<ThreadPool> thread_pool;
+    boost::shared_ptr<OutputCollector> out_collect;
     int task_id = 0;
     if(threads_) {
         thread_pool.reset(new ThreadPool(threads_, 1000));

@@ -6,14 +6,14 @@
 #include <travatar/sparse-map.h>
 #include <lm/left.hh>
 #include <lm/model.hh>
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 #include <string>
 #include <utility>
 
 namespace travatar {
 
 // A map from Travatar vocab to KenLM vocab
-typedef std::tr1::unordered_map<WordId, lm::WordIndex> VocabMap;
+typedef boost::unordered_map<WordId, lm::WordIndex> VocabMap;
 
 class MapEnumerateVocab : public lm::EnumerateVocab {
 public:
@@ -25,7 +25,7 @@ public:
 
     virtual void Add(lm::WordIndex index, const StringPiece &str);
 
-    std::tr1::unordered_map<WordId, lm::WordIndex> * GetAndFreeVocabMap() {
+    boost::unordered_map<WordId, lm::WordIndex> * GetAndFreeVocabMap() {
         VocabMap * ret = vocab_map_;
         vocab_map_ = NULL;
         return ret;

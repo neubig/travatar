@@ -59,7 +59,7 @@ protected:
     WordId scale_id_;
 
     // The range of the weights
-    typedef std::tr1::unordered_map<WordId, std::pair<double,double> > RangeMap;
+    typedef boost::unordered_map<WordId, std::pair<double,double> > RangeMap;
     RangeMap ranges_;
 
     // The examples to use

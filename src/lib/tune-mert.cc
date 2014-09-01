@@ -25,13 +25,13 @@ TuneMert::TuneMert() : use_coordinate_(true), num_random_(0) { }
 LineSearchResult TuneMert::LineSearch(
                 const SparseMap & weights,
                 const SparseMap & gradient,
-                vector<shared_ptr<TuningExample> > & examps,
+                vector<boost::shared_ptr<TuningExample> > & examps,
                 pair<double,double> range) {
     EvalStatsPtr base_stats;
     map<double,EvalStatsPtr> boundaries;
     typedef pair<double,EvalStatsPtr> DoublePair;
     // Create the search plane
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps) {
+    BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps) {
         // Calculate the convex hull
         ConvexHull convex_hull = examp->CalculateConvexHull(weights, gradient);
         PRINT_DEBUG("Convex hull size == " << convex_hull.size() << endl, 5);
@@ -92,7 +92,7 @@ LineSearchResult TuneMert::LineSearch(
 void TuneMert::Init(const SparseMap & init_weights) {
     if(!potentials_.size()) {
         // Get the coordinate-wise gradients
-        BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_)
+        BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps_)
             examp->CountWeights(potentials_);
         // Initialize the xeval if we are using it
         if(xeval_scales_.size())

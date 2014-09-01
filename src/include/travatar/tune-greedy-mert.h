@@ -12,7 +12,7 @@
 
 namespace travatar {
 
-class LineSearchResult;
+struct LineSearchResult;
 class TuningExample;
 class TuneGreedyMert;
 class OutputCollector;

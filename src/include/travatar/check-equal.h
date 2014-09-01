@@ -2,19 +2,9 @@
 #define _TRAVATAR_CHECK_EQUAL__
 
 #include <travatar/io-util.h>
-#include <tr1/unordered_map>
-// #include <boost/foreach.hpp>
-// #include <boost/shared_ptr.hpp>
-// #include <boost/algorithm/string.hpp>
+#include <boost/unordered_map.hpp>
 #include <cmath>
-// #include <vector>
-// #include <set>
 #include <map>
-// #include <string>
-// #include <sstream>
-// #include <stdexcept>
-// #include <algorithm>
-// #include <iostream>
 
 #define DEFAULT_ALMOST 1e-6
 
@@ -22,14 +12,14 @@ namespace std {
 
 // Unordered map equality function
 template < class K, class T >
-inline bool operator==(const std::tr1::unordered_map<K, T> & lhs, 
-                       const std::tr1::unordered_map<K, T> & rhs) {
+inline bool operator==(const boost::unordered_map<K, T> & lhs, 
+                       const boost::unordered_map<K, T> & rhs) {
     if(lhs.size() != rhs.size())
         return false;
-    for(typename std::tr1::unordered_map<K,T>::const_iterator it = lhs.begin();
+    for(typename boost::unordered_map<K,T>::const_iterator it = lhs.begin();
         it != lhs.end();
         it++) {
-        typename std::tr1::unordered_map<K,T>::const_iterator it2 = rhs.find(it->first);
+        typename boost::unordered_map<K,T>::const_iterator it2 = rhs.find(it->first);
         if(it2 == rhs.end() || it2->second != it->second)
             return false;
     }
@@ -56,12 +46,12 @@ inline bool ApproximateDoubleEquals(const std::vector<double> & a,
 }
 
 inline bool ApproximateDoubleEquals(
-    const std::tr1::unordered_map<std::string,double> & a,
-    const std::tr1::unordered_map<std::string,double> & b) {
+    const boost::unordered_map<std::string,double> & a,
+    const boost::unordered_map<std::string,double> & b) {
     if(a.size() != b.size())
         return false;
-    for(std::tr1::unordered_map<std::string,double>::const_iterator it = a.begin(); it != a.end(); it++) {
-        std::tr1::unordered_map<std::string,double>::const_iterator it2 = b.find(it->first);
+    for(boost::unordered_map<std::string,double>::const_iterator it = a.begin(); it != a.end(); it++) {
+        boost::unordered_map<std::string,double>::const_iterator it2 = b.find(it->first);
         if(it2 == b.end() || !ApproximateDoubleEquals(it->second, it2->second))
             return false;
     }
@@ -152,8 +142,8 @@ int CheckAlmostVector(const std::vector<T> & exp,
 }
 
 template<class K, class V>
-int CheckMap(const std::tr1::unordered_map<K,V> & exp, const std::tr1::unordered_map<K,V> & act) {
-    typedef std::tr1::unordered_map<K,V> MapType;
+int CheckMap(const boost::unordered_map<K,V> & exp, const boost::unordered_map<K,V> & act) {
+    typedef boost::unordered_map<K,V> MapType;
     typedef std::pair<K,V> MapPair;
     int ok = 1;
     BOOST_FOREACH(MapPair kv, exp) {
@@ -202,8 +192,8 @@ int CheckMap(const std::map<K,V> & exp, const std::map<K,V> & act) {
 }
 
 template<class K>
-int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act, double diff = DEFAULT_ALMOST) {
-    typedef std::tr1::unordered_map<K,double> MapType;
+int CheckAlmostMap(const boost::unordered_map<K,double> & exp, const boost::unordered_map<K,double> & act, double diff = DEFAULT_ALMOST) {
+    typedef boost::unordered_map<K,double> MapType;
     typedef std::pair<K,double> MapPair;
     int ok = 1;
     BOOST_FOREACH(MapPair kv, exp) {

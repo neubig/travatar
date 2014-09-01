@@ -50,7 +50,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tune, istream * stat_i
         SparseVector feat = Dict::ParseSparseVector(columns[3]);
         // Calculate the score
         const vector<Sentence> & ref = refs_[id];
-        shared_ptr<EvalStats> stats;
+        boost::shared_ptr<EvalStats> stats;
         if(stat_in) {
             if(!getline(*stat_in, line))
                 THROW_ERROR("Lines in statistic file and system input don't match");
@@ -62,7 +62,7 @@ void BatchTuneRunner::LoadNbests(istream & sys_in, Tune & tune, istream * stat_i
         while((int)tune.NumExamples() <= id) {
             if(id % 100 == 0)
                 PRINT_DEBUG(id << ".", 1);
-            tune.AddExample(shared_ptr<TuningExample>(new TuningExampleNbest()));
+            tune.AddExample(boost::shared_ptr<TuningExample>(new TuningExampleNbest()));
         }
         ((TuningExampleNbest&)tune.GetExample(id)).AddHypothesis(feat, stats);
     }
@@ -83,12 +83,12 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tune) {
         if((int)tune.NumExamples() <= id) {
             double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());
             tune.AddExample(
-                shared_ptr<TuningExample>(
+                boost::shared_ptr<TuningExample>(
                     new TuningExampleForest(
                         eval_.get(),
                         ref, id, norm)));
         }
-        ((TuningExampleForest&)tune.GetExample(id)).AddHypothesis(shared_ptr<HyperGraph>(curr_ptr));
+        ((TuningExampleForest&)tune.GetExample(id)).AddHypothesis(boost::shared_ptr<HyperGraph>(curr_ptr));
         id++;
     }
 }
@@ -101,7 +101,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     int runs = config.GetInt("restarts")+2;
     
     // Chose the tuning method
-    shared_ptr<Tune> tune;
+    boost::shared_ptr<Tune> tune;
     if(config.GetString("algorithm") == "mert") {
         TuneMert *tm = new TuneMert;
         tm->SetDirections(config.GetString("mert_directions"));
@@ -187,7 +187,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         if(!sys_in)
             THROW_ERROR(sys_files[i] << " could not be opened for reading");
         // Open the stats file
-        shared_ptr<ifstream> stat_in;
+        boost::shared_ptr<ifstream> stat_in;
         if(stat_files.size() > 0) {
             stat_in.reset(new ifstream(stat_files[i].c_str()));
             if(!*stat_in)
@@ -206,12 +206,12 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
     pool.SetDeleteTasks(false);
     
     // Set up tasks for each amount of weights
-    vector<shared_ptr<BatchTuneRunnerTask> > tasks(runs);
-    tasks[0] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tune, weights));
+    vector<boost::shared_ptr<BatchTuneRunnerTask> > tasks(runs);
+    tasks[0] = boost::shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(0, "Init", *tune, weights));
     pool.Submit(tasks[0].get());
 
     // Set up zeroed weights
-    tasks[1] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(1, "Zero", *tune, SparseMap()));
+    tasks[1] = boost::shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(1, "Zero", *tune, SparseMap()));
     pool.Submit(tasks[1].get());
     
     // Randomize if necessary
@@ -226,7 +226,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
             if(rw.first != tune->GetScaleId())
                 rw.second *= rand()/(double)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
-        tasks[i] = shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tune, rand_weights));
+        tasks[i] = boost::shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tune, rand_weights));
         pool.Submit(tasks[i].get());
     }
     pool.Stop(true);

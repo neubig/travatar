@@ -4,8 +4,6 @@
 #include <travatar/tune.h>
 #include <travatar/sparse-map.h>
 #include <travatar/eval-measure.h>
-#include <boost/thread.hpp>
-#include <tr1/unordered_map>
 #include <vector>
 #include <cfloat>
 

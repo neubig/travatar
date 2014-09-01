@@ -26,28 +26,28 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintSparseMap(kv) << endl, 2);
 
     // Create a weight adjuster
-    shared_ptr<Weights> weights;
+    boost::shared_ptr<Weights> weights;
     if(update_ == "perceptron") {
         WeightsPerceptron * ptr = new WeightsPerceptron;
         ptr->SetLearningRate(rate_);
         ptr->SetMarginScale(margin_scale_);
-        weights = shared_ptr<Weights>(ptr);
+        weights = boost::shared_ptr<Weights>(ptr);
     } else if(update_ == "avgperceptron") {
         WeightsAveragePerceptron * ptr = new WeightsAveragePerceptron;
         ptr->SetLearningRate(rate_);
         ptr->SetMarginScale(margin_scale_);
-        weights = shared_ptr<Weights>(ptr);
+        weights = boost::shared_ptr<Weights>(ptr);
     } else if(update_ == "adagrad") {
         WeightsAdagrad * ptr = new WeightsAdagrad;
         ptr->SetLearningRate(rate_);
         ptr->SetMarginScale(margin_scale_);
-        weights = shared_ptr<Weights>(ptr);
+        weights = boost::shared_ptr<Weights>(ptr);
     } else {
         THROW_ERROR("Unknown update type: " << update_);
     }
 
     if(algorithm_ == "pro") {
-        shared_ptr<Weights> old_weights = weights;
+        boost::shared_ptr<Weights> old_weights = weights;
         WeightsOnlinePro * wop = new WeightsOnlinePro(weights);
         wop->SetAlphaScale(examps_.size());
         weights.reset(wop);
@@ -62,7 +62,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     // First, get the stats
     vector<EvalStatsPtr> all_stats;
     EvalStatsPtr total_stats;
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
+    BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps_) {
         // Get the best hypothesis according to model score
         const ExamplePair & expair = examp->CalculateModelHypothesis(*weights);
         all_stats.push_back(expair.second);
@@ -116,7 +116,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
     // Finally, update the stats with the actual weights
     kv = weights->GetFinal();
     total_stats.reset((EvalStats*)NULL);
-    BOOST_FOREACH(const shared_ptr<TuningExample> & examp, examps_) {
+    BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps_) {
         const ExamplePair & expair = examp->CalculateModelHypothesis(*weights);
         if(total_stats.get()==NULL) total_stats=expair.second->Clone();
         else total_stats->PlusEquals(*expair.second);

@@ -3,12 +3,12 @@
 
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp>
 
 namespace travatar {
 
 // name -> value, description
-typedef std::tr1::unordered_map<std::string, std::pair<std::string,std::string> > ConfigMap;
+typedef boost::unordered_map<std::string, std::pair<std::string,std::string> > ConfigMap;
 
 class ConfigBase {
 

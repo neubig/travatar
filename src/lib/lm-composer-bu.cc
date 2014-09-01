@@ -109,7 +109,7 @@ double LMComposerBUFuncTemplate<LMType>::CalcFinalScore(const void * lm, const C
 
 const ChartEntry & LMComposerBU::BuildChartCubePruning(
                     const HyperGraph & parse,
-                    vector<shared_ptr<ChartEntry> > & chart,
+                    vector<boost::shared_ptr<ChartEntry> > & chart,
                     vector<vector<ChartState> > & states,
                     int id,
                     HyperGraph & rule_graph) const {
@@ -251,7 +251,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     //  contains one vector for each node in the old rule_graph
     //   each element of the vector is a node in the new rule_graph
     //   these must be sorted in ascending order of Viterbi probability
-    vector<shared_ptr<ChartEntry> > chart(nodes.size());
+    vector<boost::shared_ptr<ChartEntry> > chart(nodes.size());
     // This contains the chart states, indexed by node IDs in the new rule graph
     vector<vector<ChartState> > states;
     HyperGraph * ret = new HyperGraph;

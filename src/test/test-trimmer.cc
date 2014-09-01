@@ -50,7 +50,7 @@ TestTrimmer::~TestTrimmer() { }
 int TestTrimmer::TestNbest() {
     // The expected rule graph for n-best of size 1
     // Only edges 0, 2, and 4 should remain
-    shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+    boost::shared_ptr<HyperGraph> exp_graph(new HyperGraph);
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph->SetWords(ab);
     HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2));
@@ -62,14 +62,14 @@ int TestTrimmer::TestNbest() {
     HyperEdge * e4 = new HyperEdge(n2); exp_graph->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
     // Do the actual processing
     TrimmerNbest trim(1);
-    shared_ptr<HyperGraph> act_graph(trim.TransformGraph(*rule_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(trim.TransformGraph(*rule_graph_));
     return exp_graph->CheckEqual(*act_graph);
 }
 
 int TestTrimmer::TestNbestNode() {
     // The expected rule graph for n-best of size 1
     // Only edges 1 and nodes 0, 2 should remain
-    shared_ptr<HyperGraph> exp_graph(new HyperGraph);
+    boost::shared_ptr<HyperGraph> exp_graph(new HyperGraph);
     // Two option graph
     {
         HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,1)); exp_graph->AddNode(n0); n0->SetViterbiScore(-0.6);
@@ -79,7 +79,7 @@ int TestTrimmer::TestNbestNode() {
     }
     // Do the actual processing
     TrimmerNbest trim(1);
-    shared_ptr<HyperGraph> act_graph(trim.TransformGraph(*binary_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(trim.TransformGraph(*binary_graph_));
     return exp_graph->CheckEqual(*act_graph);
 }
 

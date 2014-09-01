@@ -72,8 +72,8 @@ TestLookupTableFSM::TestLookupTableFSM() {
 
 TestLookupTableFSM::~TestLookupTableFSM() { }
 
-shared_ptr<TranslationRuleHiero> TestLookupTableFSM::BuildRule(const string & src, const string & trg, const string & feat) {
-	return shared_ptr<TranslationRuleHiero>(new TranslationRuleHiero(
+boost::shared_ptr<TranslationRuleHiero> TestLookupTableFSM::BuildRule(const string & src, const string & trg, const string & feat) {
+	return boost::shared_ptr<TranslationRuleHiero>(new TranslationRuleHiero(
         Dict::ParseAnnotatedVector(trg),
         Dict::ParseSparseVector(feat),
         Dict::ParseAnnotatedWords(src)
@@ -83,7 +83,7 @@ shared_ptr<TranslationRuleHiero> TestLookupTableFSM::BuildRule(const string & sr
 HyperGraph * TestLookupTableFSM::CreateExpectedGraph() {
     vector<HyperNode*> node(10);
     vector<HyperEdge*> edge(15);
-    vector<shared_ptr<TranslationRuleHiero> > rules(11);
+    vector<boost::shared_ptr<TranslationRuleHiero> > rules(11);
 
     for (int i=0; i < (int)node.size(); ++i) {
         node[i] = new HyperNode;
@@ -262,7 +262,7 @@ bool TestLookupTableFSM::TestBuildRules(LookupTableFSM & lookup) {
     string inp = "I eat two hamburgers";
     Sentence c = Dict::ParseWords(inp);
 
-    shared_ptr<HyperGraph> input_graph(new HyperGraph);
+    boost::shared_ptr<HyperGraph> input_graph(new HyperGraph);
     BOOST_FOREACH(WordId word, Dict::ParseWords(inp)) 
         input_graph->AddWord(word);
 

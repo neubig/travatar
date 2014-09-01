@@ -155,13 +155,13 @@ CfgDataVector EvalMeasure::CalculateOracle(const HyperGraph & graph, const std::
     HyperGraph rescored_graph(graph);
     Weights empty_weights;
     rescored_graph.ScoreEdges(empty_weights);
-    shared_ptr<HyperGraph> lm_graph(bu.TransformGraph(rescored_graph));
+    boost::shared_ptr<HyperGraph> lm_graph(bu.TransformGraph(rescored_graph));
     // Create n-best list
     NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT);
     // Find the sentence in the n-best list with the highest score
     CfgDataVector ret; 
     double best_score = 0;
-    BOOST_FOREACH(const shared_ptr<HyperPath> & path, nbest_list) {
+    BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
         double score = this->CalculateCachedStats(refs, path->GetTrgData())->ConvertToScore();
         if(score > best_score) {
             ret = path->GetTrgData();

@@ -19,7 +19,7 @@ using namespace boost;
 // Use memoized recursion to find the best path from the current to the next
 MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys(
       const vector<Sentence> & ref_sents, const Sentence & sys_corpus,
-      shared_ptr<EvalMeasure> & eval_measure,
+      boost::shared_ptr<EvalMeasure> & eval_measure,
       pair<int,int> curr_refsys, MTSegmenterMemo & memo) {
     // Find if we have an answer for the current value and return it if so
     MTSegmenterMemo::iterator it = memo.find(curr_refsys);
@@ -73,7 +73,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
 // sys_sents
 void MTSegmenterRunner::SegmentMT(
         const vector<Sentence> & ref_sents, const Sentence & sys_corpus,
-        shared_ptr<EvalMeasure> & eval_measure,
+        boost::shared_ptr<EvalMeasure> & eval_measure,
         vector<Sentence> & sys_sents) {
     MTSegmenterMemo memo;
     pair<int,int> curr_refsys(0,0);
@@ -108,7 +108,7 @@ void MTSegmenterRunner::Run(const ConfigMTSegmenterRunner & config) {
     }
     
     // Load the evaluation measure
-    shared_ptr<EvalMeasure> eval_measure(
+    boost::shared_ptr<EvalMeasure> eval_measure(
         EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
 
     // Load the file to be split
