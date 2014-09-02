@@ -4,4 +4,4 @@ noinst_HEADERS = alignmentStruct.h bestShiftStruct.h documentStructure.h hashMap
 
 libter_la_SOURCES = alignmentStruct.cpp documentStructure.cpp hashMap.cpp hashMapInfos.cpp hashMapStringInfos.cpp infosHasher.cpp multiEvaluation.cpp multiTxtDocument.cpp segmentStructure.cpp sgmlDocument.cpp stringHasher.cpp stringInfosHasher.cpp terAlignment.cpp tercalc.cpp terShift.cpp tinystr.cpp tools.cpp xmlStructure.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp
 
-AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) -I$(srcdir)/.. 
+AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) $(BOOST_CPPFLAGS) -I$(srcdir)/.. 

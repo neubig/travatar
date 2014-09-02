@@ -53,11 +53,12 @@ AC_CHECK_HEADERS([ext/hash_map])
 
 # Check if we have rt/boost
 AC_CHECK_LIB([rt], [timer_create], [AC_SUBST(LIBRT, "-lrt")], [])
-AC_CHECK_LIB([boost_system-mt], [main], [AC_SUBST(BOOSTMT, "-mt")], [])
 
 BOOST_REQUIRE()
 BOOST_THREADS
 BOOST_REGEX
+BOOST_IOSTREAMS
+BOOST_PROGRAM_OPTIONS
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])

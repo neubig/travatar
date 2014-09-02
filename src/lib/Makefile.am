@@ -66,8 +66,7 @@ TRAVATARCPP = \
 	translation-rule-hiero.cc \
 	lookup-table-fsm.cc
 
-# AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/../tercpp -I$(srcdir)/../marisa -I$(srcdir)/../liblbfgs
-AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/..
+AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/..
 
 lib_LTLIBRARIES = libtravatar.la
 

@@ -1,7 +1,7 @@
 include $(top_srcdir)/common.am
 TRAVATARH = test-travatar.h test-base.h
 
-AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. -DPKGDATADIR='"$(pkgdatadir)"'
+AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. -DPKGDATADIR='"$(pkgdatadir)"'
 
 noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
@@ -54,8 +54,9 @@ test_travatar_LDADD = \
 	../tercpp/libter.la \
 	../marisa/libmarisa.la \
 	../liblbfgs/liblbfgs.la \
-	-lboost_thread${BOOSTMT} \
-	-lboost_regex${BOOSTMT} \
-	-lboost_iostreams${BOOSTMT} \
-	-lboost_system${BOOSTMT} \
+	$(BOOST_SYSTEM_LDFLAGS) \
+	$(BOOST_THREAD_LIBS) \
+	$(BOOST_REGEX_LIBS) \
+	$(BOOST_IOSTREAMS_LIBS) \
+	$(BOOST_SYSTEM_LIBS) \
 	-lz ${LIBRT}
