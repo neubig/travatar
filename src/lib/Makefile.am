@@ -5,6 +5,7 @@ TRAVATARCPP = \
 	binarizer.cc \
 	binarizer-cky.cc \
 	binarizer-directional.cc \
+	caser.cc \
 	config-base.cc \
 	dict.cc \
 	eval-measure-bleu.cc \

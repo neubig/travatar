@@ -10,6 +10,7 @@ nobase_include_HEADERS = \
 	test-alignment.h \
 	test-base.h \
 	test-binarizer.h \
+	test-caser.h \
 	test-dict.h \
 	test-eval-measure.h \
 	test-graph-transformer.h \
@@ -29,6 +30,7 @@ test_travatar_SOURCES = \
 	test-travatar.cc \
 	test-alignment.cc \
     test-binarizer.cc \
+    test-caser.cc \
     test-dict.cc \
     test-eval-measure.cc \
     test-graph-transformer.cc \

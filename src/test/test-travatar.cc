@@ -1,5 +1,6 @@
 #include "test-alignment.h"
 #include "test-binarizer.h"
+#include "test-caser.h"
 #include "test-dict.h"
 #include "test-eval-measure.h"
 #include "test-graph-transformer.h"
@@ -43,6 +44,7 @@ int main() {
     tests.push_back(new TestLMComposer());
     tests.push_back(new TestLookupTableFSM());
     tests.push_back(new TestRuleExtractor());
+    tests.push_back(new TestCaser());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
