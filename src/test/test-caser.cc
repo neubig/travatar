@@ -33,8 +33,13 @@ int TestCaser::TestWordTrueCase() {
 }
 
 int TestCaser::TestSentenceFirst() {
-    Sentence val = Dict::ParseWords("This is a test .");
-    vector<bool> exp_first(5, false); exp_first[0] = true;
+    Sentence val = Dict::ParseWords("Here are examples : sentence 1 . sentence 2 ? and sentence 3 ! yes");
+    vector<bool> exp_first(15, false);
+    exp_first[0] = true;
+    exp_first[4] = true;
+    exp_first[7] = true;
+    exp_first[10] = true;
+    exp_first[14] = true;
     vector<bool> act_first = caser_.SentenceFirst(val);
     return CheckVector(exp_first, act_first);
 }
@@ -47,10 +52,13 @@ int TestCaser::TestSentenceToLower() {
 }
 
 int TestCaser::TestSentenceToTitle() {
-    Sentence exp_val = Dict::ParseWords("This is a test .");
-    Sentence act_val = Dict::ParseWords("this is a test .");
-    caser_.ToTitle(act_val);
-    return CheckEqual(exp_val, act_val);
+    Sentence exp_val1 = Dict::ParseWords("This is a test .");
+    Sentence act_val1 = Dict::ParseWords("this is a test .");
+    Sentence exp_val2 = Dict::ParseWords("This is a test . And this also !");
+    Sentence act_val2 = Dict::ParseWords("this is a test . and this also !");
+    caser_.ToTitle(act_val1);
+    caser_.ToTitle(act_val2);
+    return CheckEqual(exp_val1, act_val1) && CheckEqual(exp_val2, act_val2);
 }
 
 int TestCaser::TestSentenceTrueCase() {

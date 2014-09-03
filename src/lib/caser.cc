@@ -15,6 +15,8 @@ namespace travatar {
 
 Caser::Caser() : type_(NONE) {
     loc_ = boost::locale::generator().generate("en_US.UTF-8");
+    BOOST_FOREACH(const std::string & str, Tokenize(". : ! ?"))
+        sentence_end_.insert(Dict::WID(str));
 }
 
 Caser::~Caser() { }
@@ -86,6 +88,9 @@ std::vector<bool> Caser::SentenceFirst(const Sentence & sent) const {
     vector<bool> first(sent.size(), false);
     if(sent.size())
         first[0] = true;
+    for(int i = 2; i < (int)sent.size(); i++)
+        if(sentence_end_.find(sent[i-1]) != sentence_end_.end())
+            first[i] = true;
     return first;
 }
 

@@ -4,6 +4,7 @@
 #include <travatar/sentence.h>
 #include <travatar/graph-transformer.h>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <boost/locale.hpp>
 #include <vector>
 
@@ -58,6 +59,7 @@ protected:
     std::string loc_name_;
     std::locale loc_;
     CaserType type_;
+    boost::unordered_set<WordId> sentence_end_;
 
 };
 
