@@ -23,6 +23,8 @@ public:
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
+    ~Weights() { }
+
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key) const {
         const SparseMap & current = GetCurrent();

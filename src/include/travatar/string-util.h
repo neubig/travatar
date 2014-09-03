@@ -32,6 +32,12 @@ inline std::vector<std::string> Tokenize(const std::string & str, const std::str
     vec.push_back(str.substr(prev, str.size()-prev));
     return vec;
 }
+inline std::string FirstToken(const std::string & str, char c = ' ') {
+    const char *end = &str[0];
+    while(*end != 0 && *end != c)
+        end++;
+    return std::string(&str[0], end);
+}
 
 inline std::string EscapeQuotes(std::string ret) {
     boost::replace_all(ret, "\\", "\\\\");

@@ -33,6 +33,7 @@ public:
         AddConfigEntry("compoundsplit_threshold", "0.01", "Words with unigram probability mass above this threshold will not be split");
         AddConfigEntry("compoundsplit_minchar", "3", "Mininimum required characters in subword for compound splitting");
         AddConfigEntry("binarize", "none", "How to binarize the trees (none/left/right/cky)");
+        AddConfigEntry("case", "none", "How to case the trees (none/low/title/true:model=FILE)");
         AddConfigEntry("flatten", "false", "Whether to flatten unary productions");
         AddConfigEntry("debug", "0", "How much debug output to produce");
 

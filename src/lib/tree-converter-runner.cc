@@ -9,6 +9,7 @@
 #include <travatar/unary-flattener.h>
 #include <travatar/word-splitter-compound.h>
 #include <travatar/word-splitter-regex.h>
+#include <travatar/caser.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <boost/scoped_ptr.hpp>
@@ -73,11 +74,16 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     // Create the binarizer
     scoped_ptr<GraphTransformer> binarizer;
     binarizer.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
+
     // Create the flattener
     scoped_ptr<GraphTransformer> flattener;
     if(config.GetBool("flatten")) {
         flattener.reset(new UnaryFlattener());
     }
+
+    // Create the caser
+    scoped_ptr<GraphTransformer> caser;
+    caser.reset(Caser::CreateCaserFromString(config.GetString("case")));
 
     // Open the file (or cin)
     const vector<string> & argv = config.GetMainArgs();
@@ -112,6 +118,9 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
         // Flattener if necessary
         if(flattener.get() != NULL)
             src_graph.reset(flattener->TransformGraph(*src_graph));
+        // Caser if necessary
+        if(caser.get() != NULL)
+            src_graph.reset(caser->TransformGraph(*src_graph));
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*src_graph, cerr); cerr << endl; }
         // Write out the tree
         if(tree_out.get() != NULL) {
