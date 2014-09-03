@@ -94,7 +94,7 @@ void Caser::AddTrueValue(const std::string & str) {
 }
 
 void Caser::LoadTrueCaseModel(const std::string & str) {
-    ifstream in(str);
+    ifstream in(str.c_str());
     string line;
     truecase_map_.clear();
     while(getline(in, line))
