@@ -17,6 +17,9 @@ Caser::Caser() : type_(NONE) {
     loc_ = boost::locale::generator().generate("en_US.UTF-8");
     BOOST_FOREACH(const std::string & str, Tokenize(". : ! ?"))
         sentence_end_.insert(Dict::WID(str));
+    BOOST_FOREACH(const std::string & str, Tokenize("( [ \" ' ` ``"))
+        delayed_sentence_start_.insert(Dict::WID(str));
+
 }
 
 Caser::~Caser() { }
@@ -88,9 +91,15 @@ std::vector<bool> Caser::SentenceFirst(const Sentence & sent) const {
     vector<bool> first(sent.size(), false);
     if(sent.size())
         first[0] = true;
-    for(int i = 1; i < (int)sent.size(); i++)
-        if(sentence_end_.find(sent[i-1]) != sentence_end_.end())
-            first[i] = true;
+    bool start = true;
+    for(int i = 0; i < (int)sent.size(); i++) {
+        if(sentence_end_.find(sent[i]) != sentence_end_.end()) {
+            start = true;
+        } else if(delayed_sentence_start_.find(sent[i]) == delayed_sentence_start_.end()) {
+            first[i] = start;
+            start = false;
+        }
+    }
     return first;
 }
 

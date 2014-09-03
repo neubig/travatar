@@ -59,7 +59,7 @@ protected:
     std::string loc_name_;
     std::locale loc_;
     CaserType type_;
-    boost::unordered_set<WordId> sentence_end_;
+    boost::unordered_set<WordId> sentence_end_, delayed_sentence_start_;
 
 };
 
