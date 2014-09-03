@@ -88,7 +88,7 @@ std::vector<bool> Caser::SentenceFirst(const Sentence & sent) const {
     vector<bool> first(sent.size(), false);
     if(sent.size())
         first[0] = true;
-    for(int i = 2; i < (int)sent.size(); i++)
+    for(int i = 1; i < (int)sent.size(); i++)
         if(sentence_end_.find(sent[i-1]) != sentence_end_.end())
             first[i] = true;
     return first;
