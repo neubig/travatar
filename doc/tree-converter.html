@@ -51,22 +51,29 @@ Travatar comes with a program <tt>tree-converter</tt> with the following options
 <h2>Options</h2>
 
 <pre>
- -input_format 	The format of the input (penn/json/egret)
- -output_format 	The format of the output (penn/json/egret/word)
- -split 	A regular expression to split words in the tree (e.g. "-")
- -compoundsplit 	The language model file for use in compound splitting
- -compoundsplit_filler 	Optional fillers for compound splitting, e.g. "e:es" for German
+ -input_format              The format of the input (penn/json/egret)
+ -output_format             The format of the output (penn/json/egret/word)
+ -split                     A regular expression to split words in the tree (e.g. "-")
+ -compoundsplit             The language model file for use in compound splitting
+ -compoundsplit_filler      Optional fillers for compound splitting, e.g. "e:es" for German
  -compoundsplit_threshold 	Words with unigram probability mass above this threshold will not be split
  -compoundsplit_minchar 	Mininimum required characters in subword for compound splitting
- -binarize 	How to binarize the trees (none/left/right/cky)
- -flatten 	Whether to flatten unary productions
- -debug 	How much debug output to produce
+ -binarize                  How to binarize the trees (none/left/right/cky)
+ -case                      How to case the trees (none/low/title/true:model=FILE)
+ -flatten                   Whether to flatten unary productions
+ -debug                     How much debug output to produce
 </pre>
 
 <h2>Binarization</h2>
 
 <p>
 Using the <tt>-binarize</tt> option allows the tree to be binarized according to a number of options.
+</p>
+
+<h2>Casing</h2>
+
+<p>
+Using the <tt>-case</tt> option allows the words in the tree to be all lowercased (low), the first word to be title cased (title), or the first word to be true cased according to a model (true).
 </p>
 
 <h2>Regex Splitting</h2>
