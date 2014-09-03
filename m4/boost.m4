@@ -819,6 +819,16 @@ BOOST_DEFUN([Program_Options],
 ])# BOOST_PROGRAM_OPTIONS
 
 
+# BOOST_LOCALE([PREFERRED-RT-OPT])
+# -----------------------------------------
+# Look for Boost.Locale.  For the documentation of PREFERRED-RT-OPT,
+# see the documentation of BOOST_FIND_LIB above.
+BOOST_DEFUN([Locale],
+[BOOST_FIND_LIB([locale], [$1],
+                [boost/locale.hpp],
+                [boost::locale::generator gen; std::locale loc = gen("");])
+])# BOOST_LOCALE
+
 
 # _BOOST_PYTHON_CONFIG(VARIABLE, FLAG)
 # ------------------------------------
@@ -1171,17 +1181,6 @@ m4_define([_BOOST_mingw_test],
   (defined WIN32 || defined WINNT || defined _WIN32 || defined __WIN32 \
          || defined __WIN32__ || defined __WINNT || defined __WINNT__) @ mgw$1$2"])dnl
 
-# _BOOST_clang_test(MAJOR, MINOR)
-#
-#
-m4_define([_BOOST_clang_test],
-["defined __clang__ && __clang_major__ == $1 && __clang_minor__ == $2 @ clang$1$2"])dnl
-
-# _BOOST_apple_clang_test(MAJOR, MINOR)
-#
-#
-m4_define([_BOOST_apple_clang_test],
-["defined __APPLE_CC__ && defined __clang__ && __GNUC__ == $1 && __GNUC_MINOR__ == $2 @ xgcc$1$2 -clang-darwin$1$2 "])dnl
 
 # _BOOST_FIND_COMPILER_TAG()
 # --------------------------
@@ -1209,19 +1208,6 @@ if test x$boost_cv_inc_path != xno; then
   # I'm not sure about my test for `il' (be careful: Intel's ICC pre-defines
   # the same defines as GCC's).
   for i in \
-    _BOOST_apple_clang_test(4, 2) \
-    _BOOST_clang_test(3, 5) \
-    _BOOST_clang_test(3, 4) \
-    _BOOST_clang_test(3, 3) \
-    _BOOST_clang_test(3, 2) \
-    _BOOST_clang_test(3, 1) \
-    _BOOST_clang_test(3, 0) \
-    _BOOST_mingw_test(4,11) \
-    _BOOST_gcc_test(4, 11) \
-    _BOOST_mingw_test(4,10) \
-    _BOOST_gcc_test(4, 10) \
-    _BOOST_mingw_test(4,9) \
-    _BOOST_gcc_test(4, 9) \
     _BOOST_mingw_test(4,8) \
     _BOOST_gcc_test(4, 8) \
     _BOOST_mingw_test(4,7) \

@@ -59,6 +59,7 @@ BOOST_THREADS
 BOOST_REGEX
 BOOST_IOSTREAMS
 BOOST_PROGRAM_OPTIONS
+BOOST_LOCALE
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])

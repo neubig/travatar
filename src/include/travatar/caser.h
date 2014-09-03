@@ -3,6 +3,8 @@
 
 #include <travatar/sentence.h>
 #include <boost/unordered_map.hpp>
+#include <boost/locale.hpp>
+#include <vector>
 
 namespace travatar {
 
@@ -12,26 +14,31 @@ class Caser {
 class HyperGraph;
 
 public:
-    Caser() { }
-    ~Caser() { }
+    Caser();
+    ~Caser();
 
-    WordId ToLower(const std::string & wid);
+    std::string ToLower(const std::string & wid);
     WordId ToLower(WordId wid);
     void ToLower(Sentence & sent);
     void ToLower(HyperGraph & graph);
 
-    WordId ToTitle(const std::string & wid);
+    std::string ToTitle(const std::string & wid);
     WordId ToTitle(WordId wid);
     void ToTitle(Sentence & sent);
     void ToTitle(HyperGraph & graph);
 
-    WordId TrueCase(const std::string & wid);
+    std::string TrueCase(const std::string & wid);
     WordId TrueCase(WordId wid);
     void TrueCase(Sentence & sent);
     void TrueCase(HyperGraph & graph);
 
+    std::vector<bool> SentenceFirst(const Sentence & sent);
+
+    void AddTrueValue(const std::string & str);
+
 protected:
-    boost::unordered_map<std::string, WordId> truecase_map_;
+    boost::unordered_map<std::string, std::string> truecase_map_;
+    std::locale loc_;
 
 };
 
