@@ -17,6 +17,7 @@ class TreeIO {
 public:
     virtual ~TreeIO() { };
     virtual HyperGraph * ReadTree(std::istream & in) = 0;
+    HyperGraph * ReadFromString(const std::string & str);
     virtual void WriteTree(const HyperGraph & tree, std::ostream & out) = 0;
 };
 

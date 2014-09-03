@@ -17,6 +17,11 @@ using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
 
+HyperGraph * TreeIO::ReadFromString(const std::string & str) {
+    istringstream iss(str);
+    return ReadTree(iss);
+}
+
 HyperGraph * WordTreeIO::ReadTree(istream & in) {
     string line;
     if(!getline(in,line)) return NULL;

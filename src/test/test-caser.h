@@ -20,6 +20,9 @@ public:
     int TestSentenceToLower();
     int TestSentenceToTitle(); 
     int TestSentenceTrueCase();
+    int TestHyperGraphToLower();
+    int TestHyperGraphToTitle(); 
+    int TestHyperGraphTrueCase();
 
 
     bool RunTest();

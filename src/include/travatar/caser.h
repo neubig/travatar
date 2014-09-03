@@ -8,10 +8,10 @@
 
 namespace travatar {
 
+class HyperGraph;
+
 // A class to perform various casing operation
 class Caser {
-
-class HyperGraph;
 
 public:
     Caser();
