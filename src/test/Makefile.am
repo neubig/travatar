@@ -62,4 +62,4 @@ test_travatar_LDADD = \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_LOCALE_LIBS) \
-	-lz ${LIBRT}
+	-lz

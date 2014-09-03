@@ -38,6 +38,7 @@ public:
 
 protected:
     boost::unordered_map<std::string, std::string> truecase_map_;
+    std::string loc_name_;
     std::locale loc_;
 
 };

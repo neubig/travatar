@@ -42,7 +42,8 @@ void Caser::ToTitle(Sentence & sent) {
 }
 
 std::string Caser::TrueCase(const std::string & wid) {
-    return wid;
+    boost::unordered_map<std::string, std::string>::const_iterator it = truecase_map_.find(ToLower(wid));
+    return (it != truecase_map_.end()) ? it->second : wid;
 }
 WordId Caser::TrueCase(WordId wid) {
     return Dict::WID(TrueCase(Dict::WSym(wid)));
@@ -63,7 +64,7 @@ std::vector<bool> Caser::SentenceFirst(const Sentence & sent) {
 }
 
 void Caser::AddTrueValue(const std::string & str) {
-    truecase_map_[boost::locale::to_lower(str, loc_)] = str;
+    truecase_map_[ToLower(str)] = str;
 }
 
 } // namespace travatar

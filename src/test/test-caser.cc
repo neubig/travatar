@@ -23,11 +23,11 @@ int TestCaser::TestWordToLower() {
 
 int TestCaser::TestWordToTitle() {
     std::string grussen = "grüßEN";
-    return CheckEqual(string("Grüßen"), caser_.ToLower("grÜßEN"));
+    return CheckEqual(string("Grüßen"), caser_.ToTitle("grÜßEN"));
 }
 
 int TestCaser::TestWordTrueCase() {
-    return CheckEqual(string("GrüßeN"), caser_.ToLower("grÜßEN"));
+    return CheckEqual(string("GrüßeN"), caser_.TrueCase("grÜßEN"));
 }
 
 int TestCaser::TestSentenceFirst() {
@@ -47,20 +47,20 @@ int TestCaser::TestSentenceToLower() {
 int TestCaser::TestSentenceToTitle() {
     Sentence exp_val = Dict::ParseWords("This is a test .");
     Sentence act_val = Dict::ParseWords("this is a test .");
-    caser_.ToLower(act_val);
+    caser_.ToTitle(act_val);
     return CheckEqual(exp_val, act_val);
 }
 
 int TestCaser::TestSentenceTrueCase() {
     Sentence exp_val1 = Dict::ParseWords("This is a test .");
     Sentence act_val1 = Dict::ParseWords("this is a test .");
-    caser_.ToLower(act_val1);
+    caser_.TrueCase(act_val1);
     Sentence exp_val2 = Dict::ParseWords("that is a test .");
     Sentence act_val2 = Dict::ParseWords("that is a test .");
-    caser_.ToLower(act_val2);
+    caser_.TrueCase(act_val2);
     Sentence exp_val3 = Dict::ParseWords("Black is a test .");
     Sentence act_val3 = Dict::ParseWords("Black is a test .");
-    caser_.ToLower(act_val3);
+    caser_.TrueCase(act_val3);
     return 
         CheckEqual(exp_val1, act_val1) &&
         CheckEqual(exp_val2, act_val2) &&
