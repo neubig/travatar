@@ -69,7 +69,7 @@ WordId Caser::TrueCase(WordId wid) const {
 void Caser::TrueCase(Sentence & sent) const {
     vector<bool> first = SentenceFirst(sent);
     for(int i = 0; i < (int)first.size(); i++) {
-        if(first[i])
+        if(first[i]) 
             sent[i] = TrueCase(sent[i]);
     }
 }
@@ -95,10 +95,12 @@ void Caser::AddTrueValue(const std::string & str) {
 
 void Caser::LoadTrueCaseModel(const std::string & str) {
     ifstream in(str);
+    if(!in)
+        THROW_ERROR("Could not open truecasing model " << str);
     string line;
     truecase_map_.clear();
     while(getline(in, line))
-        AddTrueValue(FirstToken(str));
+        AddTrueValue(FirstToken(line));
 }
 
 HyperGraph * Caser::TransformGraph(const HyperGraph & graph) const {
@@ -128,8 +130,9 @@ Caser * Caser::CreateCaserFromString(const std::string & str) {
     } else if(str == "title") {
         caser->SetType(Caser::TITLE);
     } else if(!str.compare(0, 11, "true:model=")) {
-        string file = str.substr(12);
+        string file = str.substr(11);
         caser->LoadTrueCaseModel(file);
+        caser->SetType(Caser::TRUE);
     } else {
         THROW_ERROR("Bad format for caser (must be low/title/true:model=FILE)");
     }
