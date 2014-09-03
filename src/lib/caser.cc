@@ -94,7 +94,7 @@ void Caser::AddTrueValue(const std::string & str) {
 }
 
 void Caser::LoadTrueCaseModel(const std::string & str) {
-    ifstream in(str);
+    ifstream in(str.c_str());
     if(!in)
         THROW_ERROR("Could not open truecasing model " << str);
     string line;
