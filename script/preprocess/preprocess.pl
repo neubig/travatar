@@ -377,10 +377,11 @@ sub run_truecase {
         $model = "$PREF/truecaser/$lang.truecaser";
         if(not -e $model) {
             safesystem("mkdir -p $PREF/truecaser") or die;
-            safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
+            # safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
+            safesystem("$TRAVATAR_DIR/src/bin/train-caser < $PREF/high/$lang > $model");
         }
-    }
-    run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
+    # run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
+    run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format word -output_format word -case 'true:model=$model' < INFILE > OUTFILE");
 }
 run_truecase($SRC, $TRUECASE_SRC_MODEL) if $TRUECASE_SRC;
 run_truecase($TRG, $TRUECASE_TRG_MODEL) if $TRUECASE_TRG;
