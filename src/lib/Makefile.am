@@ -61,6 +61,7 @@ TRAVATARCPP = \
 	forest-extractor-runner.cc \
 	mt-evaluator-runner.cc \
 	mt-segmenter-runner.cc \
+	train-caser-runner.cc \
 	tree-converter-runner.cc \
 	rescorer-runner.cc \
 	hiero-extractor-runner.cc \
