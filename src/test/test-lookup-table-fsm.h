@@ -17,8 +17,10 @@ public:
     boost::shared_ptr<TranslationRuleHiero> BuildRule(const std::string & src, const std::string & trg, const std::string & feat);
     HyperGraph * CreateExpectedGraph();
     HyperGraph * CreateUnkExpectedGraph(bool del_unk);
+    HyperGraph * CreateMultiHeadExpectedGraph();
     bool TestBuildRules(LookupTableFSM & lookup);
     bool TestUnkRules(LookupTableFSM & lookup, bool del_unk); 
+    bool TestMultiHead(LookupTableFSM & lookup);
     bool RunTest();
     
 private:
@@ -26,7 +28,7 @@ private:
     boost::scoped_ptr<LookupTableFSM> lookup_fsm_split;
     boost::scoped_ptr<LookupTableFSM> lookup_fsm_extra;
     boost::scoped_ptr<LookupTableFSM> lookup_fsm_c;
-    boost::scoped_ptr<LookupTableFSM> lookup_fsm_multi_head;
+    boost::scoped_ptr<LookupTableFSM> lookup_fsm_mhd;
 };
 }
 

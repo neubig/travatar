@@ -180,7 +180,8 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
         if(edges)
             _graph->AddEdge(edges);
     BOOST_FOREACH (HieroNodeMap::value_type nodes, node_map)
-        _graph->AddNode(nodes.second);
+        if (nodes.second->GetEdges().size() != 0)
+            _graph->AddNode(nodes.second);
     return _graph;
 }
 

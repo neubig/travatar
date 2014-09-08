@@ -74,7 +74,7 @@ TestLookupTableFSM::TestLookupTableFSM() {
     lookup_fsm_extra->SetDefaultSymbol(Dict::WID("X"));
     lookup_fsm_extra->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_extra));
 
-    // Load the rules
+    // Load the rules, c = complete
     ostringstream rule_oss_c, rule_glue;
     rule_oss_c << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
     rule_oss_c << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
@@ -97,6 +97,18 @@ TestLookupTableFSM::TestLookupTableFSM() {
     lookup_fsm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_c));
     lookup_fsm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_glue));
 
+    //Load the rule mhd = multi head
+    ostringstream rule_oss_mhd;
+    rule_oss_mhd << "\"the\" x0:NN x1:VP @ S ||| x1:NP x0:NN @ S ||| para=1" << endl;
+    rule_oss_mhd << "\"program\" @ NN ||| \"program\" @ NN ||| para=1" << endl;
+    rule_oss_mhd << "\"made\" \"by\" x0:PRP @ VP ||| x0:PRP$ @ NP ||| para=1" << endl;
+    rule_oss_mhd << "\"me\" @ PRP ||| \"my\" @ PRP$ ||| para=1" << endl;
+    istringstream rule_iss_mhd(rule_oss_mhd.str());
+    lookup_fsm_mhd.reset(new LookupTableFSM);
+    lookup_fsm_mhd->SetTrgFactors(1);
+    lookup_fsm_mhd->SetRootSymbol(Dict::WID("S"));
+    lookup_fsm_mhd->SetDefaultSymbol(Dict::WID("X"));
+    lookup_fsm_mhd->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_mhd));
 }
 
 TestLookupTableFSM::~TestLookupTableFSM() { }
@@ -133,8 +145,6 @@ HyperGraph * TestLookupTableFSM::CreateExpectedGraph() {
     rules[8] = BuildRule("\"two\" x0:X @ X", "\"futatsu\" \"no\" x0:X @ X", "Pegf=0.02 ppen=2.718");
     rules[9] = BuildRule("\"two\" @ X", "\"futatsu\" @ X", "Pegf=0.02 ppen=2.718");
     rules[10] = BuildRule("\"hamburgers\" @ X", "\"hanbaga\" @ X", "Pegf=0.02 ppen=2.718");
-
-    // TranslationRuleHiero* glue_rule = lookup.GetGlueRule();
 
     // Draw it. You will have an idea after you see the drawing.
     edge[0]->SetHead(node[0]);
@@ -211,12 +221,6 @@ HyperGraph * TestLookupTableFSM::CreateExpectedGraph() {
     {
         edge[14]->SetRule(rules[2].get(), rules[2]->GetFeatures());
     }
-    // edge[15]->SetHead(node[2]); edge[15]->AddTail(node[1]); edge[15]->AddTail(node[4]); edge[15]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
-    // edge[16]->SetHead(node[3]); edge[16]->AddTail(node[1]); edge[16]->AddTail(node[5]); edge[16]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
-    // edge[17]->SetHead(node[3]); edge[17]->AddTail(node[2]); edge[17]->AddTail(node[7]); edge[17]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
-    // edge[18]->SetHead(node[0]); edge[18]->AddTail(node[1]); edge[18]->AddTail(node[6]); edge[18]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
-    // edge[19]->SetHead(node[0]); edge[19]->AddTail(node[2]); edge[19]->AddTail(node[8]); edge[19]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
-    // edge[20]->SetHead(node[0]); edge[20]->AddTail(node[3]); edge[20]->AddTail(node[9]); edge[20]->SetRule(glue_rule.get(), glue_rule->GetFeatures());
    
     node[0]->SetSpan(pair<int,int>(0,4));
     {
@@ -224,9 +228,6 @@ HyperGraph * TestLookupTableFSM::CreateExpectedGraph() {
         node[0]->AddEdge(edge[9]);
         node[0]->AddEdge(edge[10]);
         node[0]->AddEdge(edge[11]);
-        // node[0]->AddEdge(edge[18]);
-        // node[0]->AddEdge(edge[19]);
-        // node[0]->AddEdge(edge[20]);
     }
     node[1]->SetSpan(pair<int,int>(0,1));
     {
@@ -235,14 +236,11 @@ HyperGraph * TestLookupTableFSM::CreateExpectedGraph() {
     node[2]->SetSpan(pair<int,int>(0,2));
     {
         node[2]->AddEdge(edge[13]);
-        // node[2]->AddEdge(edge[15]);
     }
     node[3]->SetSpan(pair<int,int>(0,3));
     {
         node[3]->AddEdge(edge[1]);
         node[3]->AddEdge(edge[12]);
-        // node[3]->AddEdge(edge[16]);
-        // node[3]->AddEdge(edge[17]);
     }
     node[4]->SetSpan(pair<int,int>(1,2));
     {
@@ -497,6 +495,83 @@ HyperGraph * TestLookupTableFSM::CreateUnkExpectedGraph(bool del_unk) {
     return expected_graph;
 }
 
+HyperGraph * TestLookupTableFSM::CreateMultiHeadExpectedGraph() {
+    vector<HyperNode*> node(7);
+    vector<HyperEdge*> edge(7);
+    vector<boost::shared_ptr<TranslationRuleHiero> > rules(13);
+
+    for (int i=0; i < (int)node.size(); ++i) {
+        node[i] = new HyperNode;
+        node[i]->SetSym(Dict::WID("X"));
+    }
+    for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
+    edge[0]->SetHead(node[4]);
+    edge[1]->SetHead(node[5]);
+    edge[2]->SetHead(node[6]);
+    edge[3]->SetHead(node[3]);
+    edge[4]->SetHead(node[1]);
+    {
+        edge[4]->AddTail(node[1]);
+    }
+    edge[5]->SetHead(node[2]);
+    {
+        edge[5]->AddTail(node[8]);
+    }
+    edge[6]->SetHead(node[0]);
+    {
+        edge[6]->AddTail(node[1]);
+        edge[6]->AddTail(node[2]);
+    }
+    node[0]->SetSpan(pair<int,int>(0,5));
+    {
+        node[0]->SetSym(Dict::WID("S"));
+        node[0]->AddEdge(edge[6]);
+    }
+    node[1]->SetSpan(pair<int,int>(2,5));
+    {
+        node[1]->SetSym(Dict::WID("VP"));
+        node[1]->AddEdge(edge[4]);
+    }
+    node[2]->SetSpan(pair<int,int>(1,2));
+    {
+        node[2]->SetSym(Dict::WID("NN"));
+        node[2]->AddEdge(edge[5]);
+    }
+    node[3]->SetSpan(pair<int,int>(4,5));
+    {
+        node[3]->SetSym(Dict::WID("PRP"));
+        node[3]->AddEdge(edge[1]);
+    }
+    node[4]->SetSpan(pair<int,int>(0,1));
+    {
+        node[4]->AddEdge(edge[0]);
+    }
+    node[5]->SetSpan(pair<int,int>(2,3));
+    {
+        node[5]->AddEdge(edge[1]);
+    }
+    node[6]->SetSpan(pair<int,int>(3,4));
+    {
+        node[6]->AddEdge(edge[2]);
+    }
+    
+    HyperGraph* expected_graph = new HyperGraph;
+    BOOST_FOREACH(HyperEdge* ed, edge) {
+        expected_graph->AddEdge(ed);
+    }
+
+    BOOST_FOREACH(HyperNode* nd, node) {
+        expected_graph->AddNode(nd);
+    }
+    string inp = "the program made by me";
+    Sentence c = Dict::ParseWords(inp);
+    BOOST_FOREACH(WordId w_id, c) {
+        expected_graph->AddWord(w_id);
+    }
+    return expected_graph;
+}
+
+
 bool TestLookupTableFSM::TestBuildRules(LookupTableFSM & lookup) {
     string inp = "I eat two hamburgers";
     Sentence c = Dict::ParseWords(inp);
@@ -506,7 +581,6 @@ bool TestLookupTableFSM::TestBuildRules(LookupTableFSM & lookup) {
         input_graph->AddWord(word);
 
     HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
-
     HyperGraph* expected_graph = CreateExpectedGraph();
 
     bool ret = expected_graph->CheckMaybeEqual(*actual_graph);
@@ -534,6 +608,20 @@ bool TestLookupTableFSM::TestUnkRules(LookupTableFSM & lookup, bool delete_unk) 
     return ret;
 }
 
+bool TestLookupTableFSM::TestMultiHead(LookupTableFSM & lookup) {
+    string inp = "the program made by me";
+    boost::shared_ptr<HyperGraph> input_graph(new HyperGraph);
+    BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
+        input_graph->AddWord(word);
+    
+    HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
+    HyperGraph* expected_graph = CreateMultiHeadExpectedGraph();
+    bool ret = expected_graph->CheckMaybeEqual(*actual_graph);
+    delete actual_graph;
+    delete expected_graph;
+    return ret;
+}
+
 bool TestLookupTableFSM::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestBuildRules(lookup_fsm)" << endl; if(TestBuildRules(*lookup_fsm)) succeeded++; else cout << "FAILED!!!" << endl;
@@ -541,6 +629,7 @@ bool TestLookupTableFSM::RunTest() {
     done++; cout << "TestUnkRules(lookup_fsm,delete_unk)" << endl; if(TestUnkRules(*lookup_fsm_c,true)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRules(lookup_fsm_split)" << endl; if(TestBuildRules(*lookup_fsm_split)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRules(lookup_fsm_extra)" << endl; if(TestBuildRules(*lookup_fsm_extra)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestMultiHead(lookup_fsm_mhd)" << endl; if (TestMultiHead(*lookup_fsm_mhd)) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestLookupTableFSM Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
 } 
