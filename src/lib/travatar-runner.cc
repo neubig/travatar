@@ -239,6 +239,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tm_.reset(marisa_tm_);
     }  else if (config.GetString("tm_storage") == "fsm") {
         LookupTableFSM * fsm_tm_ = LookupTableFSM::ReadFromFiles(tm_files);
+        fsm_tm_->SetTrgFactors(GlobalVars::trg_factors);
         fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
         fsm_tm_->SetDefaultSymbol(Dict::WID(config.GetString("default_symbol")));

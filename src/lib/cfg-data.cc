@@ -5,7 +5,7 @@
 using namespace std;
 using namespace travatar;
 
-std::vector<int> CfgData::GetNontermPositions() {
+const std::vector<int> CfgData::GetNontermPositions() const {
     std::vector<int> ret;
     for(int i = 0; i < (int)words.size(); i++)
         if(words[i] < 0)

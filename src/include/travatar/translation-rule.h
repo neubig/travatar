@@ -33,7 +33,7 @@ public:
         return !(*this == rhs);
     }
 
-    void Print(std::ostream & out) const;
+    virtual void Print(std::ostream & out) const;
 
     // const std::string & GetSrcStr() const { return src_str_; }
     const CfgDataVector & GetTrgData() const { return trg_data_; }

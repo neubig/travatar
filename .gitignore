@@ -36,6 +36,7 @@ src/bin/tree-converter
 src/bin/batch-tune
 src/bin/mt-evaluator
 src/bin/mt-segmenter
+src/bin/train-caser
 src/test/test-travatar
 src/include/travatar/stamp-h1
 src/include/travatar/config.h
