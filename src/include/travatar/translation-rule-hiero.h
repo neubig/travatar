@@ -4,22 +4,22 @@
 #include <travatar/translation-rule.h>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
+#include <travatar/generic-string.h>
 #include <string>
 #include <vector>
 
 namespace travatar {
+typedef GenericString<WordId> HieroHeadLabels;
 class TranslationRuleHiero : public TranslationRule {
 public: 
-
     TranslationRuleHiero(
-                    const CfgDataVector & trg_data = CfgDataVector(),
-                    const SparseVector & features = SparseVector(),
-                    const CfgData & src_data = Sentence()
-                    ) : TranslationRule(trg_data, features),
-                        src_data_(src_data) { }
+        const CfgDataVector & trg_data = CfgDataVector(),
+        const SparseVector & features = SparseVector(),
+        const CfgData & src_data = Sentence()
+        );
 
-    std::string ToString();
-
+    virtual void Print(std::ostream & out) const;
+   
     virtual bool operator==(const TranslationRuleHiero & rhs) const {
         return
             trg_data_ == rhs.trg_data_ &&
@@ -28,11 +28,15 @@ public:
     }
 
     // ACCESSOR
-    CfgData & GetSrcData() { return src_data_; }
-
+    const CfgData & GetSrcData() const { return src_data_; }
+    const HieroHeadLabels & GetHeadLabels() const { return head_labels_; }
+    const HieroHeadLabels & GetChildHeadLabels(int position) const { return child_head_labels_[position]; } 
+    WordId GetHeadLabelsString() const { return head_labels_string_; }
 protected:
 	CfgData src_data_;
+    HieroHeadLabels head_labels_;
+    std::vector<HieroHeadLabels > child_head_labels_;
+    WordId head_labels_string_;
 };
-
 }
 #endif

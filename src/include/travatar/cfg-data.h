@@ -24,11 +24,11 @@ public:
         return words == rhs.words && label == rhs.label && syms == rhs.syms;
     }
 
-    std::vector<int> GetNontermPositions();
+    const std::vector<int> GetNontermPositions() const;
 
     void Print(std::ostream & out) const;
 
-    WordId GetSym(int id) {
+    WordId GetSym(int id) const {
         return (id < (int)syms.size() ? syms[id] : -1);
     }
 
