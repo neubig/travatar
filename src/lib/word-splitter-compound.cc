@@ -3,6 +3,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/global-debug.h>
+#include <travatar/lm-composer.h>
 #include <lm/model.hh>
 #include <boost/foreach.hpp>
 
@@ -10,40 +11,64 @@ using namespace travatar;
 using namespace std;
 using namespace boost;
 
-vector<string> WordSplitterCompound::StringSplit(const std::string & str,
+
+vector<string> WordSplitterCompound::StringSplit(
+                        const std::string & str,
 						const std::string & pad) const {
+    switch(lm_->GetType()) {
+    case lm::ngram::PROBING:
+      return StringSplit(str, pad, *(lm::ngram::ProbingModel*)lm_->GetLM());
+    case lm::ngram::REST_PROBING:
+      return StringSplit(str, pad, *(lm::ngram::RestProbingModel*)lm_->GetLM());
+    case lm::ngram::TRIE:
+      return StringSplit(str, pad, *(lm::ngram::TrieModel*)lm_->GetLM());
+    case lm::ngram::QUANT_TRIE:
+      return StringSplit(str, pad, *(lm::ngram::QuantTrieModel*)lm_->GetLM());
+    case lm::ngram::ARRAY_TRIE:
+      return StringSplit(str, pad, *(lm::ngram::ArrayTrieModel*)lm_->GetLM());
+    case lm::ngram::QUANT_ARRAY_TRIE:
+      return StringSplit(str, pad, *(lm::ngram::QuantArrayTrieModel*)lm_->GetLM());
+    default:
+      THROW_ERROR("Unrecognized kenlm model type " << lm_->GetType());
+    }
+}
+
+template <class LMType>
+vector<string> WordSplitterCompound::StringSplit(
+                        const std::string & str,
+						const std::string & pad,
+                        const LMType & my_lm) const {
     vector<string> ret;
     ret.push_back(str);
     bool splitted = false;
 
-    lm::ngram::State null_state(lm_->NullContextState()), out_state;
-    const lm::ngram::Vocabulary &vocab = lm_->GetVocabulary(); 
-    float unigram_score =  lm_->Score(null_state, vocab.Index(str), out_state);
-    if (vocab.Index(str) == 0){
+    lm::ngram::State null_state(my_lm.NullContextState()), out_state;
+    float unigram_score =  my_lm.Score(null_state, my_lm.GetVocabulary().Index(str), out_state);
+    if (my_lm.GetVocabulary().Index(str) == 0){
       unigram_score = -99; // ensure unigram score of unknown word is extremely low
     }
 
     // Try to split if unigram score is low or if is an OOV word (and if word satisfies length restriction)
-    if ((str.length() > 2*min_char_) && ((unigram_score < logprob_threshold_) || (vocab.Index(str) == 0))){
+    if ((str.length() > 2*min_char_) && ((unigram_score < logprob_threshold_) || (my_lm.GetVocabulary().Index(str) == 0))){
 
       float best_score = unigram_score;
-      PRINT_DEBUG("Split candidate: " << str << "(" << vocab.Index(str) << ") unigram=" << unigram_score << "\n", 2);
+      PRINT_DEBUG("Split candidate: " << str << "(" << my_lm.GetVocabulary().Index(str) << ") unigram=" << unigram_score << "\n", 2);
 
       // Iterate through split position i, try possible fillers,
       // and replace with subwords if their mean probabability is better
       for (unsigned int i=min_char_;i<str.length()-min_char_+1;++i){
 	std::string subword1 = str.substr(0,i);
 
-	if (vocab.Index(subword1) != 0){
+	if (my_lm.GetVocabulary().Index(subword1) != 0){
 	  for (unsigned int f=0; f<fillers_.size();++f){
 	    int fillchar = fillers_[f].length();
 
 	    if (str.substr(i,fillchar) == fillers_[f]){
 	      std::string subword2 = str.substr(i+fillchar);
 
-	      if (vocab.Index(subword2) != 0){
-		float score1 = lm_->Score(null_state,vocab.Index(subword1),out_state);
-		float score2 = lm_->Score(null_state,vocab.Index(subword2),out_state);
+	      if (my_lm.GetVocabulary().Index(subword2) != 0){
+		float score1 = my_lm.Score(null_state,my_lm.GetVocabulary().Index(subword1),out_state);
+		float score2 = my_lm.Score(null_state,my_lm.GetVocabulary().Index(subword2),out_state);
 		float mean_score = (score1 + score2) / 2.0;
 		PRINT_DEBUG("  " << subword1 << " " << score1 << " + " \
 			    << "(" << fillers_[f] << ") +" << subword2 << " " << score2 \
@@ -74,9 +99,9 @@ vector<string> WordSplitterCompound::StringSplit(const std::string & str,
 
 WordSplitterCompound::WordSplitterCompound(const std::string & lm_file, unsigned int min_char, float threshold, const std::string & filler = "") : min_char_(min_char) { 
 
-    // Read Languaga Model file to get unigram statistics
+    // Read Language Model file to get unigram statistics
     // Although we only need unigram, kenlm assumes the file is bigram or above
-    lm_ =  new lm::ngram::Model(lm_file.c_str());
+    lm_ = new LMData(lm_file);
   
     // Setup fillers
     boost::regex delimeter(":");

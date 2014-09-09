@@ -4,7 +4,6 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/sentence.h>
 #include <travatar/word-splitter.h>
-#include <lm/model.hh>
 #include <string>
 #include <set>
 
@@ -12,6 +11,7 @@ namespace travatar {
 
 class HyperNode;
 class HyperGraph;
+class LMData;
 
 class WordSplitterCompound : public WordSplitter {
 
@@ -30,12 +30,17 @@ public:
     virtual std::vector<std::string> StringSplit(const std::string & str,
                                         const std::string & pad = "") const;
 
+    template <class LMType>
+    std::vector<std::string> StringSplit(const std::string & str,
+                                         const std::string & pad,
+                                         const LMType & lmtype) const;
+
 protected:
 
     // Fillers to delete during splitting e.g. ("es:s" in German "Arbeit+s+tier")
     std::vector<std::string> fillers_;
     // The language model used for computing splitting decisions
-    lm::ngram::Model * lm_; 
+    LMData * lm_; 
     // Threshold for considering as candidate for splitting
     float logprob_threshold_;
     // Subword should be at least of min_char_ characters (including filler length)
