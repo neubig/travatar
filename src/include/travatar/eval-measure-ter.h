@@ -11,23 +11,23 @@ namespace travatar {
 
 class EvalStatsTer : public EvalStatsAverage {
 public:
-    EvalStatsTer(double val, double denom = 1.0, bool reverse = false)
-        : EvalStatsAverage(val,denom), reverse_(reverse) { }
+    EvalStatsTer(double val, double denom = 1.0, bool inverse = false)
+        : EvalStatsAverage(val,denom), inverse_(inverse) { }
     virtual std::string GetIdString() const { return "TER"; }
     virtual double ConvertToScore() const {
         double score = vals_[1] ? vals_[0]/vals_[1] : 0;
-        return reverse_ ? 1-score : score;
+        return inverse_ ? 1-score : score;
     }
-    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsTer(vals_[0], vals_[1], reverse_)); }
+    EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsTer(vals_[0], vals_[1], inverse_)); }
 protected:
-    bool reverse_;
+    bool inverse_;
 };
 
 class EvalMeasureTer : public EvalMeasure {
 
 public:
 
-    EvalMeasureTer(bool reverse = false) : reverse_ (reverse) { }
+    EvalMeasureTer(bool inverse = false) : inverse_ (inverse) { }
     EvalMeasureTer(const std::string & str);
 
     // Calculate the stats for a single sentence
@@ -43,7 +43,7 @@ protected:
     
     // TER is better when it is lower, so for tuning we want to be able to
     // subtract TER from 1 to get a value that is better when it is higher
-    bool reverse_;
+    bool inverse_;
 
 };
 
