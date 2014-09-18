@@ -7,6 +7,7 @@ using namespace std;
 namespace travatar {
 
 TestEvalMeasure::TestEvalMeasure() :
+    eval_measure_bleu1_(EvalMeasure::CreateMeasureFromString("bleu:order=1")),
     eval_measure_bleup1_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1")),
     eval_measure_bleup1r_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0")),
     eval_measure_bleup1f_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0.5")),
@@ -52,6 +53,12 @@ int TestEvalMeasure::TestInterpIO() {
     string str = exp_stats->WriteStats();
     EvalStatsPtr act_stats = eval_measure_interp_->ReadStats(str);
     return CheckEqual(exp_stats->ConvertToString(), act_stats->ConvertToString()) && exp_stats->Equals(*act_stats);
+}
+
+int TestEvalMeasure::TestBleu1() {
+    double bleu_exp = 3.0/5.0;
+    double bleu_act = eval_measure_bleu1_->CalculateStats(ref1_sent_, sys1_sent_)->ConvertToScore();
+    return CheckAlmost(bleu_exp,bleu_act);
 }
 
 int TestEvalMeasure::TestBleuScore() {
@@ -132,6 +139,7 @@ bool TestEvalMeasure::RunTest() {
     done++; cout << "TestRibesIO()" << endl; if(TestRibesIO()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestTerIO()" << endl; if(TestTerIO()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestInterpIO()" << endl; if(TestInterpIO()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestBleu1()" << endl; if (TestBleu1()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBleuScore()" << endl; if(TestBleuScore()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBleuRecall()" << endl; if(TestBleuRecall()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBleuFmeas()" << endl; if(TestBleuFmeas()) succeeded++; else cout << "FAILED!!!" << endl;

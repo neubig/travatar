@@ -127,9 +127,9 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     if(log_bleu == 0)
         log_bleu = -DBL_MAX;
     else if(mean_ == GEOMETRIC)
-        log_bleu = log(log_bleu)/4;
+        log_bleu = log(log_bleu)/ngram_order;
     else
-        log_bleu = log(log_bleu/4);
+        log_bleu = log(log_bleu/ngram_order);
     // vals_[vals__n-1] is the ref length, vals_[1] is the test length
     report.sys_len = vals_[1];
     report.ref_len = vals_[2];

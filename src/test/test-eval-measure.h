@@ -17,6 +17,7 @@ public:
     int TestRibesIO();
     int TestTerIO();
     int TestInterpIO();
+    int TestBleu1();
     int TestBleuScore();
     int TestBleuRecall();
     int TestBleuFmeas();
@@ -27,7 +28,7 @@ public:
     bool RunTest();
 
 protected:
-    boost::shared_ptr<EvalMeasure> eval_measure_bleup1_, eval_measure_bleup1r_, eval_measure_bleup1f_, eval_measure_bleup1a_, eval_measure_ribes_, eval_measure_ter_, eval_measure_wer_, eval_measure_pincbleu_, eval_measure_interp_;
+    boost::shared_ptr<EvalMeasure> eval_measure_bleu1_, eval_measure_bleup1_, eval_measure_bleup1r_, eval_measure_bleup1f_, eval_measure_bleup1a_, eval_measure_ribes_, eval_measure_ter_, eval_measure_wer_, eval_measure_pincbleu_, eval_measure_interp_;
     Sentence ref1_sent_, sys1_sent_;
 
 };
