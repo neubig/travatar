@@ -217,7 +217,7 @@ int CheckAlmostMap(const boost::unordered_map<K,double> & exp, const boost::unor
 }
 
 inline int CheckAlmost(double exp, double act) {
-    if((act != act) || abs(exp - act) > DEFAULT_ALMOST) {
+    if((exp != act) && std::abs(exp - act) > DEFAULT_ALMOST) {
         std::cout << "CheckAlmost: " << exp << " != " << act << std::endl;
         return 0;
     }
