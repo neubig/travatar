@@ -14,6 +14,7 @@ TestEvalMeasure::TestEvalMeasure() :
     eval_measure_ribes_(EvalMeasure::CreateMeasureFromString("ribes")),
     eval_measure_ter_(EvalMeasure::CreateMeasureFromString("ter")),
     eval_measure_wer_(EvalMeasure::CreateMeasureFromString("wer")),
+    eval_measure_pincbleu_(EvalMeasure::CreateMeasureFromString("interp:0.5|bleu:factor=0,smooth=1|0.5|bleu:inverse=true,brev=false,factor=1,scope=sentence,mean=arith")),
     eval_measure_interp_(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes")),
     ref1_sent_(Dict::ParseWords("taro met hanako")),
     sys1_sent_(Dict::ParseWords("the taro met the hanako"))
@@ -114,6 +115,17 @@ int TestEvalMeasure::TestInterpScore() {
     return CheckAlmost(interp_exp, interp_act);
 }
 
+int TestEvalMeasure::TestPincScore() {
+    vector<Sentence> ref_sent = Dict::ParseWordVector("taro met hanako |COL| taro went to hanako 's house");
+    vector<Sentence> sys_sent = Dict::ParseWordVector("the taro met the hanako |COL| the taro met the hanako");
+    EvalStatsPtr act_stat = eval_measure_pincbleu_ -> CalculateCachedStats(ref_sent, sys_sent);
+    double bleu_exp = exp(log((3.0/5.0) * (2.0/5.0) * (1.0/4.0) * (1.0/3.0))/4);
+    double pinc_exp = 1.0 - 0.25 * ((2.0/5.0) + (0.0/4.0) + (0.0/3.0) + (0.0/2.0));
+    double exp_score = 0.5 * bleu_exp + 0.5 * pinc_exp;
+    double act_score = act_stat->ConvertToScore();
+    return CheckAlmost(exp_score, act_score); 
+}
+
 bool TestEvalMeasure::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestBleuIO()" << endl; if(TestBleuIO()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -126,6 +138,7 @@ bool TestEvalMeasure::RunTest() {
     done++; cout << "TestBleuArith()" << endl; if(TestBleuArith()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestWerScore()" << endl; if(TestWerScore()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestInterpScore()" << endl; if(TestInterpScore()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestPincScore()" << endl; if(TestPincScore()) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestEvalMeasure Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
 }

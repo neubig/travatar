@@ -65,7 +65,7 @@ boost::shared_ptr<EvalStats> EvalMeasureBleu::CalculateStats(const NgramStats & 
         }
     }
     // Create the stats for this sentence
-    EvalStatsPtr ret(new EvalStatsBleu(vals, smooth_val_, prec_weight_, mean_));
+    EvalStatsPtr ret(new EvalStatsBleu(vals, smooth_val_, prec_weight_, mean_, inverse_, calc_brev_));
     // If we are using sentence based, take the average immediately
     if(scope_ == SENTENCE)
         ret = EvalStatsPtr(new EvalStatsAverage(ret->ConvertToScore()));
@@ -78,7 +78,7 @@ boost::shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line
     if(scope_ == SENTENCE)
         ret.reset(new EvalStatsAverage);
     else
-        ret.reset(new EvalStatsBleu(std::vector<EvalStatsDataType>(), smooth_val_, prec_weight_, mean_));
+        ret.reset(new EvalStatsBleu(std::vector<EvalStatsDataType>(), smooth_val_, prec_weight_, mean_, inverse_, calc_brev_));
     ret->ReadStats(line);
     return ret;
 }
@@ -113,6 +113,9 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
         double sys = (vals_[3*i+1]+smooth);
         double ref = (vals_[3*i+2]+smooth);
         double fmeas = mat / (prec_weight_ * sys + (1-prec_weight_) * ref);
+        // To support PINC
+        if (inverse_)
+            fmeas = 1.0 - fmeas;
         // cerr << "i="<<i<<", mat="<<mat<<", sys="<<sys<<", ref="<<ref<<", fmeas="<<fmeas<<", pw="<<prec_weight_<<endl;
         report.scores.push_back(fmeas);
         if(mean_ == GEOMETRIC)
@@ -133,14 +136,14 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     // Calculate the brevity penalty
     report.ratio = (double)report.sys_len/report.ref_len;
     double log_bp = 1.0-(double)report.ref_len/report.sys_len;
-    if (log_bp < 0.0) {
+    if (calc_brev_ && log_bp < 0.0) {
         log_bleu += log_bp;
         report.brevity = exp(log_bp);
     } else {
         report.brevity = 1.0;
     }
     // Sanity check
-    if(log_bleu > 0) THROW_ERROR("Found a BLEU larger than one: " << exp(log_bleu))
+    if(log_bleu > 0) THROW_ERROR("Found a "<< GetIdString() <<" larger than one: " << exp(log_bleu))
     report.bleu = exp(log_bleu);
     return report;
 }
@@ -149,7 +152,7 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
 std::string EvalStatsBleu::ConvertToString() const {
     BleuReport report = CalcBleuReport();
     ostringstream oss;
-    oss << "BLEU = " << report.bleu << ", " << report.scores[0];
+    oss << GetIdString() << " = " << report.bleu << ", " << report.scores[0];
     for(int i = 1; i < (int)report.scores.size(); i++)
         oss << "/" << report.scores[i];
     oss << " (BP=" << report.brevity << ", ratio=" << report.ratio << ", hyp_len=" << report.sys_len << ", ref_len=" << report.ref_len << ")";
@@ -161,7 +164,7 @@ double EvalStatsBleu::ConvertToScore() const {
 }
 
 
-EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), smooth_val_(0), scope_(CORPUS), prec_weight_(1.0), mean_(GEOMETRIC) {
+EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), smooth_val_(0), scope_(CORPUS), prec_weight_(1.0), mean_(GEOMETRIC), inverse_(false), calc_brev_(true) {
     if(config.length() == 0) return;
     BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
         if(strs.first == "order") {
@@ -186,7 +189,23 @@ EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), 
             } else if(strs.second == "arith") {
                 mean_ = ARITHMETIC;
             } else {
-                THROW_ERROR("Bad BLEU scope: " << config);
+                THROW_ERROR("Bad BLEU mean: " << config);
+            }
+        } else if (strs.first == "inverse") {
+            if (strs.second == "false") {
+                inverse_ = false;
+            } else if (strs.second == "true") {
+                inverse_ = true;
+            } else {
+                THROW_ERROR("Bad BLEU inverse: " << config << " should be(\"false\"/\"true\")");
+            }
+        } else if (strs.first == "brev") {
+            if (strs.second == "false") {
+                calc_brev_ = false;
+            } else if (strs.second == "true") {
+                calc_brev_ = true;
+            } else {
+                THROW_ERROR("Bad BLEU brev: " << config << " should be (\"false\"/\"true\")");
             }
         } else {
             THROW_ERROR("Bad configuration string: " << config);
