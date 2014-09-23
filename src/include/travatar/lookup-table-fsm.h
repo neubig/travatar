@@ -85,7 +85,7 @@ public:
 protected:
     void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
         const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
-
+    
 private:
     void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
 };
@@ -100,7 +100,6 @@ protected:
     std::vector<RuleFSM*> rule_fsms_;
     bool delete_unknown_;
     int trg_factors_;
-    HieroHeadLabels default_symbol_;
     HieroHeadLabels root_symbol_;
 public:
     LookupTableFSM();
@@ -114,12 +113,10 @@ public:
     virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
     const HieroHeadLabels & GetRootSymbol() const { return root_symbol_; } 
-    const HieroHeadLabels & GetDefaultSymbol() const { return default_symbol_; }
     bool GetDeleteUnknown() const { return delete_unknown_; } 
 
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
-    void SetDefaultSymbol(WordId symbol) { default_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetSpanLimits(const std::vector<int>& limits);
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
     

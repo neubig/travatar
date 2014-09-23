@@ -14,11 +14,11 @@ public:
     TestLookupTableFSM();
     ~TestLookupTableFSM();
 
-    boost::shared_ptr<TranslationRuleHiero> BuildRule(const std::string & src, const std::string & trg, const std::string & feat);
-    HyperGraph * CreateExpectedGraph();
+    TranslationRuleHiero* BuildRule(const std::string & src, const std::string & trg, const std::string & feat);
+    HyperGraph * CreateExpectedGraph(bool extra=false);
     HyperGraph * CreateUnkExpectedGraph(bool del_unk);
     HyperGraph * CreateMultiHeadExpectedGraph();
-    bool TestBuildRules(LookupTableFSM & lookup);
+    bool TestBuildRules(LookupTableFSM & lookup,bool extra = false);
     bool TestUnkRules(LookupTableFSM & lookup, bool del_unk); 
     bool TestMultiHead(LookupTableFSM & lookup);
     bool RunTest();
