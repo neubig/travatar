@@ -40,7 +40,7 @@ public:
             : smooth_(smooth), prec_weight_(prec_weight), mean_(mean), inverse_(inverse), calc_brev_(calc_brev) {
         vals_ = vals;
     }
-    virtual std::string GetIdString() const { return (inverse_ ? "PINC" : "BLEU"); }
+    virtual std::string GetIdString() const { return (inverse_ ? "INV_BLEU" : "BLEU"); }
     virtual double ConvertToScore() const;
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_, prec_weight_, mean_)); }
@@ -109,7 +109,7 @@ public:
     void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }
     double GetSmoothVal() const { return smooth_val_; }
     void SetSmoothVal(double smooth_val) { smooth_val_ = smooth_val; }
-    std::string GetIdString() { return (inverse_ ? "PINC" : "BLEU"); }
+    std::string GetIdString() { return (inverse_ ? "INV_BLEU" : "BLEU"); }
 protected:
     // The order of BLEU n-grams
     int ngram_order_;
