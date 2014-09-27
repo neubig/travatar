@@ -19,29 +19,29 @@ boost::shared_ptr<EvalStats> EvalMeasureTer::CalculateStats(const Sentence & ref
   delete evaluation;
 
   ostringstream stats;
-  return boost::shared_ptr<EvalStats>(new EvalStatsTer(result.numEdits, ref.size(), reverse_));
+  return boost::shared_ptr<EvalStats>(new EvalStatsTer(result.numEdits, ref.size(), inverse_));
 
 }
 
 // Read in the stats
 boost::shared_ptr<EvalStats> EvalMeasureTer::ReadStats(const std::string & line) {
-    EvalStatsPtr ret(new EvalStatsTer(0, 0, reverse_));
+    EvalStatsPtr ret(new EvalStatsTer(0, 0, inverse_));
     ret->ReadStats(line);
     return ret;
 }
 
 
 EvalMeasureTer::EvalMeasureTer(const std::string & config)
-                        : reverse_(false) {
+                        : inverse_(false) {
     if(config.length() == 0) return;
     BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
-        if(strs.first == "reverse") {
+        if(strs.first == "inverse") {
             if(strs.second == "true")
-                reverse_ = true;
+                inverse_ = true;
             else if(strs.second == "false")
-                reverse_ = false;
+                inverse_ = false;
             else
-                THROW_ERROR("Bad reverse value: " << strs.second);
+                THROW_ERROR("Bad inverse value: " << strs.second);
         } else if(strs.first == "factor") {
             factor_ = boost::lexical_cast<int>(strs.second);
         } else {

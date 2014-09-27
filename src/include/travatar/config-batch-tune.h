@@ -30,7 +30,7 @@ public:
         AddConfigEntry("forest", "", "The pointer to a file containing translation forests");
         AddConfigEntry("algorithm", "mert", "Which tuning algorithm to use (mert)");
         AddConfigEntry("debug", "0", "What level of debugging output to print");
-        AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/ter)");
+        AddConfigEntry("eval", "bleu", "Which evaluation measure to use (bleu/ribes/interp/ter/wer/pinc)");
         AddConfigEntry("l1", "0.0", "Coefficient for L1 regularization");
         AddConfigEntry("l2", "0.0", "Coefficient for L2 regularization");
         AddConfigEntry("ent", "0.0", "Coefficient for Entropy regularization");

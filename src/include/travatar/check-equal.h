@@ -126,7 +126,7 @@ int CheckAlmostVector(const std::vector<T> & exp,
     for(int i = 0; i < (int)std::max(exp.size(), act.size()); i++) {
         if(i >= (int)exp.size() || 
            i >= (int)act.size() || 
-           abs(exp[i] - act[i]) > DEFAULT_ALMOST) {
+           std::abs(exp[i] - act[i]) > DEFAULT_ALMOST) {
            
             ok = 0;
             std::cout << "exp["<<i<<"] != act["<<i<<"] (";
@@ -201,7 +201,7 @@ int CheckAlmostMap(const boost::unordered_map<K,double> & exp, const boost::unor
         if(it == act.end()) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << std::endl;
             ok = 0;
-        } else if(abs(it->second - kv.second) > diff) {
+        } else if(std::abs(it->second - kv.second) > diff) {
             std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != "<<it->second<<")" << std::endl;
             ok = 0;
         }
@@ -217,7 +217,7 @@ int CheckAlmostMap(const boost::unordered_map<K,double> & exp, const boost::unor
 }
 
 inline int CheckAlmost(double exp, double act) {
-    if((act != act) || abs(exp - act) > DEFAULT_ALMOST) {
+    if((act != act) || std::abs(exp - act) > DEFAULT_ALMOST) {
         std::cout << "CheckAlmost: " << exp << " != " << act << std::endl;
         return 0;
     }

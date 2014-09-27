@@ -70,7 +70,7 @@ public:
     static RuleFSM * ReadFromRuleTable(std::istream & in);
 
     static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
-            std::vector<std::string> & target, SparseMap features);
+            std::vector<std::string> & target, SparseMap& features);
 
     virtual void AddRule(TranslationRuleHiero* rule);
 
@@ -121,19 +121,19 @@ public:
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetDefaultSymbol(WordId symbol) { default_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
-    void SetSpanLimits(const std::vector<int> limits);
+    void SetSpanLimits(const std::vector<int>& limits);
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
     
-    static TranslationRuleHiero* GetUnknownRule(WordId unknown_word, HieroHeadLabels head_labels);
+    static TranslationRuleHiero* GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels);
 
     static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
 
-    static HyperEdge* TransformRuleIntoEdge(HieroNodeMap* map, const int head_first, 
+    static HyperEdge* TransformRuleIntoEdge(HieroNodeMap& map, const int head_first, 
             const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule);
 
     static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
 
-    static HyperNode* FindNode(HieroNodeMap* map_ptr, const int span_begin, const int span_end, const HieroHeadLabels head_label);
+    static HyperNode* FindNode(HieroNodeMap& map, const int span_begin, const int span_end, const HieroHeadLabels& head_label);
     
 };
 }

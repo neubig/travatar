@@ -34,11 +34,13 @@ public:
     EvalStatsBleu(const std::vector<EvalStatsDataType> vals = std::vector<EvalStatsDataType>(),
                   double smooth = 0,
                   double prec_weight = 1.0,
-                  BleuMean mean = GEOMETRIC)
-            : smooth_(smooth), prec_weight_(prec_weight), mean_(mean) {
+                  BleuMean mean = GEOMETRIC,
+                  bool inverse = false,
+                  bool calc_brev = true)
+            : smooth_(smooth), prec_weight_(prec_weight), mean_(mean), inverse_(inverse), calc_brev_(calc_brev) {
         vals_ = vals;
     }
-    virtual std::string GetIdString() const { return "BLEU"; }
+    virtual std::string GetIdString() const { return (inverse_ ? "INV_BLEU" : "BLEU"); }
     virtual double ConvertToScore() const;
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_, prec_weight_, mean_)); }
@@ -53,6 +55,9 @@ private:
     double smooth_;
     double prec_weight_;
     BleuMean mean_;
+    // Flag
+    bool inverse_;
+    bool calc_brev_;
 };
 
 class EvalMeasureBleu : public EvalMeasure {
@@ -67,8 +72,8 @@ public:
 
     EvalMeasureBleu(int ngram_order = 4, double smooth_val = 0,
                     BleuScope scope = CORPUS, double prec_weight = 1.0,
-                    BleuMean mean = GEOMETRIC) : 
-        ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope), prec_weight_(prec_weight), mean_(mean) { }
+                    BleuMean mean = GEOMETRIC, bool inverse = false, bool calc_brevity = true) : 
+        ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope), prec_weight_(prec_weight), mean_(mean), inverse_(inverse), calc_brev_(calc_brevity) { }
     EvalMeasureBleu(const std::string & config);
 
     // Calculate the stats for a single sentence
@@ -104,7 +109,7 @@ public:
     void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }
     double GetSmoothVal() const { return smooth_val_; }
     void SetSmoothVal(double smooth_val) { smooth_val_ = smooth_val; }
-
+    std::string GetIdString() { return (inverse_ ? "INV_BLEU" : "BLEU"); }
 protected:
     // The order of BLEU n-grams
     int ngram_order_;
@@ -118,6 +123,10 @@ protected:
     double prec_weight_;
     // The type of mean, geometric or arithmetic (default geometric)
     BleuMean mean_;
+    // Whether we are calculating the inverse of BLEU (PINC) or not
+    bool inverse_;
+    // Whether we want to add brevity penalty or not
+    bool calc_brev_;
 
     // Get the stats that are in a cache
     boost::shared_ptr<NgramStats> GetCachedStats(const Sentence & sent, int cache_id);
