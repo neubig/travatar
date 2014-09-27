@@ -189,13 +189,14 @@ if((@ARGV == 3) and $SRC and $TRG) {
 -e "$PREF" or mkdir "$PREF";
 
 ###### Get and check the lengths #######
+my $file_len_func;
 my ($SRCLEN, $TRGLEN);
-$SRCLEN = file_len($ARGV[0]);
+$SRCLEN = &$file_len_func($ARGV[0]);
 my $len = int($SRCLEN/$THREADS+1);
 my $suflen = int(log($THREADS)/log(10)+1);
 my @suffixes = map { sprintf("%0${suflen}d", $_) } (0 .. $THREADS-1);
 if($TRG) {
-    $TRGLEN = file_len($ARGV[1]);
+    $TRGLEN = &$file_len_func($ARGV[1]);
     die "$SRC and $TRG lengths don't match ($SRCLEN != $TRGLEN)" if ($SRCLEN != $TRGLEN);
 }
 
@@ -274,7 +275,7 @@ sub run_tree_parsing {
         foreach my $i ("", map{".$_"} @suffixes) {
             if(not -e "$PREF/tree/$lang$i") {
                 safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != file_len("$PREF/tree/$lang$i"));
+                die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
             }
         }
     } elsif($lang eq "ja") {
@@ -289,7 +290,7 @@ sub run_tree_parsing {
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/edacfg/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if(file_len("$PREF/edacfg/$lang$i") != file_len("$PREF/tree/$lang$i"));
+                    die "Combining trees failed on $lang$i" if(file_len("$PREF/edacfg/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
                 }
             }
         } else {
@@ -311,7 +312,7 @@ sub run_tree_parsing {
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != file_len("$PREF/tree/$lang$i"));
+                    die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
                 }
             }
         } else {
@@ -380,6 +381,7 @@ sub run_truecase {
             # safesystem("$TRAVATAR_DIR/script/recaser/train-truecaser.pl --corpus $PREF/high/$lang --model $model");
             safesystem("$TRAVATAR_DIR/src/bin/train-caser < $PREF/high/$lang > $model");
         }
+    }
     # run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
     run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format word -output_format word -case 'true:model=$model' < INFILE > OUTFILE");
 }
@@ -413,7 +415,7 @@ if($ALIGN) {
             die "Invalid nile order $NILE_ORDER";
         }
         # Get the splits
-        my $CLEANLEN = file_len("$PREF/low/$NTRG");
+        my $CLEANLEN = &$file_len_func("$PREF/low/$NTRG");
         my $nilelen = int($CLEANLEN/$NILE_SEGMENTS+1);
         my $nilesuflen = int(log($NILE_SEGMENTS)/log(10)+1);
         my @nilesuffixes = map { sprintf("%0${nilesuflen}d", $_) } (0 .. $NILE_SEGMENTS-1);
@@ -495,8 +497,8 @@ sub run_parallel {
     }
     wait_done(map { "$out_dir/$_.DONE" } @files);
     cat_files("$out_dir/$prefix", map { "$out_dir/$_" } @files); 
-    my $old_lines = file_len("$in_dir/$prefix");
-    my $new_lines = file_len("$out_dir/$prefix");
+    my $old_lines = &$file_len_func("$in_dir/$prefix");
+    my $new_lines = &$file_len_func("$out_dir/$prefix");
     die "ERROR: while creating $out_dir/$prefix in parallel\nFile sizes don't match: $in_dir/$prefix=$old_lines, $out_dir/$prefix=$new_lines" if (not $nocheck) and ($old_lines != $new_lines);
     safesystem("touch $out_dir/$prefix.DONE");
     print "Successfully created $out_dir/$prefix\n";
@@ -561,7 +563,7 @@ sub split_lens {
         my $len = $lens->[$i];
         my $line;
         for(1 .. $len) {
-            my $line = <FILE0> or die "Ran out of lines to read in split";
+            defined($line = <FILE0>) or die "Ran out of lines to read in split";
             print FILE1 $line;
         }
         close FILE1; 
@@ -571,7 +573,7 @@ sub split_lens {
 
 # Get a file's length in lines
 my %file_lens;
-sub file_len {
+$file_len_func = sub {
     my $f = shift;
     return $file_lens{$f} if defined $file_lens{$f};
     my $len = `wc -l $f`; $len =~ s/[ \n].*//g;
