@@ -514,9 +514,6 @@ HyperGraph * TestLookupTableFSM::CreateMultiHeadExpectedGraph() {
         edge[4]->AddTail(node[1]);
     }
     edge[5]->SetHead(node[2]);
-    {
-        edge[5]->AddTail(node[8]);
-    }
     edge[6]->SetHead(node[0]);
     {
         edge[6]->AddTail(node[1]);

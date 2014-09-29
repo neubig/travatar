@@ -2,7 +2,6 @@
 #define WORD_SPLITTER_RIGHT_H__
 
 #include <travatar/graph-transformer.h>
-#include <travatar/generic-string.h>
 #include <travatar/sentence.h>
 #include <travatar/dict.h>
 #include <boost/unordered_map.hpp>

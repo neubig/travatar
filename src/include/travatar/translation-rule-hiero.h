@@ -4,12 +4,11 @@
 #include <travatar/translation-rule.h>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
-#include <travatar/generic-string.h>
 #include <string>
 #include <vector>
 
 namespace travatar {
-typedef GenericString<WordId> HieroHeadLabels;
+typedef std::vector<WordId> HieroHeadLabels;
 class TranslationRuleHiero : public TranslationRule {
 public: 
     TranslationRuleHiero(

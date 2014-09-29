@@ -7,7 +7,6 @@
 #include <travatar/weights.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule.h>
-#include <travatar/generic-string.h>
 #include <travatar/global-debug.h>
 #include <travatar/string-util.h>
 #include <travatar/io-util.h>
@@ -152,6 +151,7 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
 
 // Check to make sure two hypergraphs are equal
 int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
+    // Check if nodes and edges are equal
     if(!(edges_.size() == rhs.edges_.size() &&
          nodes_.size() == rhs.nodes_.size() &&
          CheckVector(words_, rhs.words_))) {
@@ -159,6 +159,14 @@ int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
         cerr << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
         return 0;
     }
+    // Check if tails are equal
+    vector<int> exp_tails, act_tails;
+    BOOST_FOREACH(const HyperEdge * edge, edges_) exp_tails.push_back(edge->GetTails().size());
+    BOOST_FOREACH(const HyperEdge * edge, rhs.edges_) act_tails.push_back(edge->GetTails().size());
+    sort(exp_tails.begin(), exp_tails.end());
+    sort(act_tails.begin(), act_tails.end());
+    if(!CheckVector(exp_tails, act_tails)) return 0;
+    // Check if scores are equal
     vector<double> l_scores(nodes_.size()), r_scores(nodes_.size());
     for(int i = 0; i < (int)nodes_.size(); i++) {
         l_scores[i] = nodes_[i]->GetViterbiScore();
@@ -356,11 +364,11 @@ void HyperGraph::ScoreEdges(const Weights & weights) {
 
 class QueueEntry {
 public:
-    QueueEntry(double score, double lm_score, const GenericString<int> & id) :
+    QueueEntry(double score, double lm_score, const vector<int> & id) :
         score_(score), lm_score_(lm_score), id_(id) { }
     // Score of the entry
     double score_, lm_score_;
-    GenericString<int> id_;
+    vector<int> id_;
 };
 
 void HyperEdge::SetRule(const TranslationRule * rule, const SparseVector & orig_features) {

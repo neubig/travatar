@@ -2,10 +2,10 @@
 #define BINARIZER_RIGHT_H__
 
 #include <travatar/graph-transformer.h>
-#include <travatar/generic-string.h>
 #include <travatar/sentence.h>
 #include <travatar/dict.h>
 #include <travatar/binarizer.h>
+#include <travatar/vector-hash.h>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <string>
@@ -28,7 +28,7 @@ public:
         BINARIZE_LEFT
     } Direction;
 
-    typedef boost::unordered_map<GenericString<int>, HyperNode*, GenericHash<GenericString<int> > > SNMap;
+    typedef boost::unordered_map<std::vector<int>, HyperNode*, VectorHash<int> > SNMap;
 
     BinarizerDirectional(Direction dir, bool raise_punc = false) 
             : dir_(dir), raise_punc_(raise_punc) {
@@ -65,7 +65,7 @@ protected:
         const HyperGraph & hg, 
         HyperGraph & ret,
         SNMap & snmap,
-        const GenericString<int> & str,
+        const std::vector<int> & str,
         WordId xbar) const;
 
 };

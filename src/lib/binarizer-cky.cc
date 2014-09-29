@@ -1,7 +1,6 @@
 #include <boost/unordered_map.hpp>
 #include <boost/foreach.hpp>
 #include <travatar/binarizer-cky.h>
-#include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 
@@ -10,16 +9,16 @@ using namespace std;
 using namespace boost;
 
 typedef BinarizerCKY::SNMap SNMap;
-HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & ret, SNMap & snmap, const GenericString<int> & str, WordId xbar) const {
+HyperNode * BinarizerCKY::FindIndexedNode(const HyperGraph & hg, HyperGraph & ret, SNMap & snmap, const vector<int> & str, WordId xbar) const {
     SNMap::const_iterator it = snmap.find(str);
     if(it != snmap.end()) return it->second;
     HyperNode * new_node = new HyperNode;
-    for(int i = 0; i < (int)str.length(); i++) {
+    for(int i = 0; i < (int)str.size(); i++) {
         const HyperNode* old_node = hg.GetNode(str[i]);
         new_node->AddSpan(old_node->GetSpan());
         new_node->SetSym(old_node->GetSym());
     }
-    if(str.length() > 1) new_node->SetSym(xbar);
+    if(str.size() > 1) new_node->SetSym(xbar);
     ret.AddNode(new_node);
     snmap.insert(make_pair(str, new_node));
     return new_node;
@@ -37,10 +36,10 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) const {
     BOOST_FOREACH(const HyperEdge * edge, hg.GetEdges()) {
         // Get the symbol for x-bar
         WordId xbar = Dict::WID(Dict::WSym(edge->GetHead()->GetSym())+"'");
-        GenericString<int> head_str(1);
+        vector<int> head_str(1);
         head_str[0] = edge->GetHead()->GetId();
         const vector<HyperNode*> & tails = edge->GetTails();
-        GenericString<int> tail_str(tails.size());
+        vector<int> tail_str(tails.size());
         for(int i = 0; i < (int)edge->GetTails().size(); i++)
             tail_str[i] = edge->GetTail(i)->GetId();
         // We need to deal with two cases: binarization is necessary or not
@@ -50,7 +49,7 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) const {
             new_edge->SetHead(FindIndexedNode(hg, *ret, built_nodes, head_str, xbar));
             for(int i = 0; i < (int)edge->GetTails().size(); i++) {
                 tail_str[i] = edge->GetTail(i)->GetId();
-                new_edge->GetTails()[i] = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(i, 1), xbar);
+                new_edge->GetTails()[i] = FindIndexedNode(hg, *ret, built_nodes, VectorSubstr(tail_str, i, 1), xbar);
             }
             ret->AddEdge(new_edge); 
             new_edge->GetHead()->AddEdge(new_edge);
@@ -64,7 +63,7 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) const {
         for(int j = 2; j <= (int)tails.size(); j++) {
             for(int i = 0; i < j-1; i++) {
                 bool is_top = (j-i == (int)tails.size());
-                GenericString<int> my_head_str = (is_top ? head_str : tail_str.substr(i, j-i));
+                vector<int> my_head_str = (is_top ? head_str : VectorSubstr(tail_str, i, j-i));
                 HyperNode* head = FindIndexedNode(hg, *ret, built_nodes, my_head_str, xbar);
                 // Skip nodes that have already been made
                 if(!is_top && head->GetEdges().size() > 0)
@@ -74,8 +73,8 @@ HyperGraph * BinarizerCKY::TransformGraph(const HyperGraph & hg) const {
                     // Skip the middle nodes
                     if(k != i+1) k = j-1;
                     // Find the left and right nodes
-                    HyperNode* left = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(i,k-i), xbar);
-                    HyperNode* right = FindIndexedNode(hg, *ret, built_nodes, tail_str.substr(k, j-k), xbar);
+                    HyperNode* left = FindIndexedNode(hg, *ret, built_nodes, VectorSubstr(tail_str, i, k-i), xbar);
+                    HyperNode* right = FindIndexedNode(hg, *ret, built_nodes, VectorSubstr(tail_str, k, j-k), xbar);
                     // Create the left and right edges
                     HyperEdge * next_edge = new HyperEdge(head);
                     next_edge->AddTail(left);

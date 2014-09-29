@@ -2,7 +2,6 @@
 #define WORD_SPLITTER_REGEX_H__
 
 #include <travatar/graph-transformer.h>
-#include <travatar/generic-string.h>
 #include <travatar/sentence.h>
 #include <travatar/dict.h>
 #include <travatar/word-splitter.h>

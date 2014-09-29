@@ -2,7 +2,6 @@
 #define LOOKUP_TABLE_FSM_H__
 #include <travatar/dict.h>
 #include <travatar/graph-transformer.h>
-#include <travatar/generic-string.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <travatar/translation-rule-hiero.h>

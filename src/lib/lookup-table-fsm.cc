@@ -311,8 +311,8 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap& map_ptr,
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels) 
 {
     CfgDataVector target;
-    for (int i=1; i < (int)head_labels.length(); ++i) 
-        target.push_back(CfgData(Sentence(1,unknown_word),head_labels.getImpl()->chars_[i]));
+    for (int i=1; i < (int)head_labels.size(); ++i) 
+        target.push_back(CfgData(Sentence(1,unknown_word),head_labels[i]));
     return new TranslationRuleHiero(
         target,
         Dict::ParseSparseVector("unk=1"),

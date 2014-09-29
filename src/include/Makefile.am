@@ -22,7 +22,6 @@ nobase_include_HEADERS = \
 	travatar/eval-measure-ter.h \
 	travatar/eval-measure.h \
 	travatar/forest-extractor-runner.h \
-	travatar/generic-string.h \
 	travatar/global-debug.h \
 	travatar/graph-transformer.h \
 	travatar/hyper-graph.h \
@@ -63,6 +62,7 @@ nobase_include_HEADERS = \
 	travatar/tuning-example-nbest.h \
 	travatar/tuning-example.h \
 	travatar/unary-flattener.h \
+	travatar/vector-hash.h \
 	travatar/weights-delayed-perceptron.h \
 	travatar/weights-pairwise.h \
 	travatar/weights-perceptron.h \

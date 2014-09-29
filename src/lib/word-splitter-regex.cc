@@ -1,5 +1,4 @@
 #include <travatar/word-splitter-regex.h>
-#include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <boost/foreach.hpp>

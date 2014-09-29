@@ -1,5 +1,4 @@
 #include <travatar/lm-composer-incremental.h>
-#include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/global-debug.h>
@@ -40,7 +39,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
     HyperNode * node = new HyperNode;
     hg->AddNode(node);
     // For remembering duplicate edges
-    map<GenericString<WordId>, HyperEdge*> node_memo;
+    map<vector<WordId>, HyperEdge*> node_memo;
     // For each edge, add a hyperedge to the graph
     PartialEdge best;
     HyperEdge *old_edge = NULL, *edge = NULL;
@@ -52,14 +51,14 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         // Add the new tails in *source* order 
         vector<HyperNode*> tails;
         Sentence wids;
-        GenericString<WordId> node_id;
+        vector<WordId> node_id;
         if(old_edge) {
             wids = old_edge->GetTrgData()[factor_].words;
-            node_id = GenericString<WordId>(old_edge->GetTails().size()+1);
+            node_id = vector<WordId>(old_edge->GetTails().size()+1);
             node_id[old_edge->GetTails().size()] = old_edge->GetId();
         } else{
             wids = Sentence(1,-1);
-            node_id = GenericString<WordId>(1);
+            node_id = vector<WordId>(1);
         }
         BOOST_FOREACH(WordId wid, wids) {
             if(wid < 0) {

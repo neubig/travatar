@@ -24,7 +24,7 @@ TranslationRuleHiero::TranslationRuleHiero(
         oss << "," << Dict::WSym(trg_data[i].label);
     }
     head_labels_string_ = Dict::WID(oss.str());
-    head_labels_ = GenericString<WordId>(head_label);
+    head_labels_ = vector<WordId>(head_label);
     int j=0;
     do {
         int label = src_data.GetSym(j);
@@ -34,7 +34,7 @@ TranslationRuleHiero::TranslationRuleHiero(
         head_label.push_back(label);
         for (int k=0; k < (int) trg_data.size(); ++k) 
             head_label.push_back(trg_data[k].GetSym(j));
-        child_head_labels_.push_back(GenericString<WordId>(head_label));
+        child_head_labels_.push_back(vector<WordId>(head_label));
         ++j;
     } while (1);
 }

@@ -1,8 +1,8 @@
 #include <travatar/lm-composer-bu.h>
-#include <travatar/generic-string.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
 #include <travatar/global-debug.h>
+#include <travatar/vector-hash.h>
 #include <boost/unordered_set.hpp>
 #include <boost/foreach.hpp>
 #include <lm/left.hh>
@@ -120,21 +120,21 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
     chart[id].reset(new ChartEntry);
     ChartEntry & my_chart = *chart[id].get();
     // The priority queue of values yet to be expanded
-    priority_queue<pair<double, GenericString<int> > > hypo_queue;
+    priority_queue<pair<double, vector<int> > > hypo_queue;
     // The hypothesis combination map
     map<vector<ChartState>, HyperNode*> hypo_comb;
     map<HyperNode*, vector<ChartState> > hypo_rev;
     // The set indicating already-expanded combinations
-    unordered_set<GenericString<int>, GenericHash<GenericString<int> > > finished;
+    unordered_set<vector<int>, VectorHash<int> > finished;
     // For each edge outgoing from this node, add its best hypothesis
     // to the chart
     const vector<HyperEdge*> & node_edges = nodes[id]->GetEdges();
     for(int i = 0; i < (int)node_edges.size(); i++) {
         HyperEdge * my_edge = node_edges[i];
-        GenericString<int> q_id(my_edge->GetTails().size()+1);
+        vector<int> q_id(my_edge->GetTails().size()+1);
         q_id[0] = i;
         double viterbi_score = my_edge->GetScore();
-        for(int j = 1; j < (int)q_id.length(); j++) {
+        for(int j = 1; j < (int)q_id.size(); j++) {
             q_id[j] = 0;
             const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
             // For empty nodes, break
@@ -154,7 +154,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         if(num_popped++ >= stack_pop_limit_) break;
         // Get the score, id string, and edge
         double top_score = hypo_queue.top().first;
-        GenericString<int> id_str = hypo_queue.top().second;
+        vector<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes[id]->GetEdge(id_str[0]);
         // cerr << "Processing ID string: " << id_str << endl;
         hypo_queue.pop();
@@ -175,7 +175,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
             next_edge->AddTail(chart_node);
             // If we have not gotten to the end, insert a new value into the queue
             if(edge_pos+1 < (int)my_entry.size()) {
-                GenericString<int> next_str = id_str;
+                vector<int> next_str = id_str;
                 next_str[curr_id+1]++;
                 if(finished.find(next_str) == finished.end()) {
                     finished.insert(next_str);
