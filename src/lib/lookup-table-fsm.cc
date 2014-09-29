@@ -303,6 +303,7 @@ HyperEdge* LookupTableFSM::TransformRuleIntoEdge(HieroNodeMap& node_map,
     HyperEdge* hedge = new HyperEdge;
     HyperNode* head = FindNode(node_map, head_first, head_second, rule->GetHeadLabels());
     hedge->SetHead(head);
+    hedge->SetSrcStr(Dict::PrintAnnotatedWords(rule->GetSrcData()));
     hedge->SetRule(rule);
     head->AddEdge(hedge);
     TailSpanKey tail_span;
