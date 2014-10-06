@@ -188,8 +188,18 @@ if((@ARGV == 3) and $SRC and $TRG) {
 }
 -e "$PREF" or mkdir "$PREF";
 
-###### Get and check the lengths #######
+# Get a file's length in lines
 my $file_len_func;
+my %file_lens;
+$file_len_func = sub {
+    my $f = shift;
+    return $file_lens{$f} if defined $file_lens{$f};
+    my $len = `wc -l $f`; $len =~ s/[ \n].*//g;
+    $file_lens{$f} = $len;
+    return $len;
+};
+
+###### Get and check the lengths #######
 my ($SRCLEN, $TRGLEN);
 $SRCLEN = &$file_len_func($ARGV[0]);
 my $len = int($SRCLEN/$THREADS+1);
@@ -275,7 +285,7 @@ sub run_tree_parsing {
         foreach my $i ("", map{".$_"} @suffixes) {
             if(not -e "$PREF/tree/$lang$i") {
                 safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
+                die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
             }
         }
     } elsif($lang eq "ja") {
@@ -290,7 +300,7 @@ sub run_tree_parsing {
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/edacfg/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if(file_len("$PREF/edacfg/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
+                    die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/edacfg/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
                 }
             }
         } else {
@@ -312,7 +322,7 @@ sub run_tree_parsing {
             foreach my $i ("", map{".$_"} @suffixes) {
                 if(not -e "$PREF/tree/$lang$i") {
                     safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if(file_len("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
+                    die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
                 }
             }
         } else {
@@ -359,7 +369,7 @@ sub run_forest_parsing {
     -e "$PREF/for" or mkdir "$PREF/for";
     foreach my $i ("", map{".$_"} @suffixes) {
         safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/treefor/$lang$i $PREF/egretfor/$lang$i $SPLIT_CMD > $PREF/for/$lang$i") if not -e "$PREF/for/$lang$i";
-        die "Combining forests failed on en$i" if(file_len("$PREF/for/$lang$i") == 0);
+        die "Combining forests failed on en$i" if( &$file_len_func("$PREF/for/$lang$i") == 0);
     }
 
     # Combine and lowercase the forest
@@ -569,14 +579,4 @@ sub split_lens {
         close FILE1; 
     }
     close FILE0;
-}
-
-# Get a file's length in lines
-my %file_lens;
-$file_len_func = sub {
-    my $f = shift;
-    return $file_lens{$f} if defined $file_lens{$f};
-    my $len = `wc -l $f`; $len =~ s/[ \n].*//g;
-    $file_lens{$f} = $len;
-    return $len;
 }
