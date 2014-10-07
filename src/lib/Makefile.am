@@ -35,6 +35,7 @@ TRAVATARCPP = \
 	timer.cc \
 	tokenizer.cc \
 	tokenizer-penn.cc \
+	tokenizer-runner.cc \
 	translation-rule.cc \
 	tree-io.cc \
 	trimmer.cc \

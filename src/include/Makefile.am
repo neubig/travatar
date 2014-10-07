@@ -10,6 +10,7 @@ nobase_include_HEADERS = \
 	travatar/config-forest-extractor-runner.h \
 	travatar/config-hiero-extractor-runner.h \
 	travatar/config-mt-evaluator-runner.h \
+	travatar/config-tokenizer-runner.h \
 	travatar/config-train-caser-runner.h \
 	travatar/config-travatar-runner.h \
 	travatar/config-travatar-trainer.h \
@@ -49,6 +50,7 @@ nobase_include_HEADERS = \
 	travatar/tokenizer.h \
 	travatar/tokenizer-identity.h \
 	travatar/tokenizer-penn.h \
+	travatar/tokenizer-runner.h \
 	travatar/train-caser-runner.h \
 	travatar/translation-rule-hiero.h \
 	travatar/translation-rule.h \
