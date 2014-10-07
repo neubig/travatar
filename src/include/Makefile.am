@@ -46,6 +46,9 @@ nobase_include_HEADERS = \
 	travatar/symbol-set.h \
 	travatar/thread-pool.h \
 	travatar/timer.h \
+	travatar/tokenizer.h \
+	travatar/tokenizer-identity.h \
+	travatar/tokenizer-penn.h \
 	travatar/train-caser-runner.h \
 	travatar/translation-rule-hiero.h \
 	travatar/translation-rule.h \

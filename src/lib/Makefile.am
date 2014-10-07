@@ -33,6 +33,8 @@ TRAVATARCPP = \
 	sparse-map.cc \
 	thread-pool.cc \
 	timer.cc \
+	tokenizer.cc \
+	tokenizer-penn.cc \
 	translation-rule.cc \
 	tree-io.cc \
 	trimmer.cc \
