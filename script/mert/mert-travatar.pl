@@ -54,7 +54,7 @@ GetOptions(
 
 # Sanity check
 if((not $TRAVATAR_CONFIG) or (not $SRC) or (not $REF) or (not $TRAVATAR_DIR) or (not $WORKING_DIR)) {
-    die "Must specify travatar-config, src, ref, travatar-dir, tm, and working-dir";
+    die "Must specify travatar-config, src, ref, travatar-dir, and working-dir";
 }
 ($MERT_SOLVER eq "moses") or ($MERT_SOLVER eq "batch-tune") or die "Bad MERT solver: $MERT_SOLVER";
 ($CAND_TYPE eq "nbest") or ($CAND_TYPE eq "forest") or ($CAND_TYPE eq "nbestgeo") or die "Bad candidate type: $CAND_TYPE";

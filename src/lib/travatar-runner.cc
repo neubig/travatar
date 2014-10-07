@@ -242,8 +242,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         fsm_tm_->SetTrgFactors(GlobalVars::trg_factors);
         fsm_tm_->SetDeleteUnknown(config.GetBool("delete_unknown"));
         fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
-        fsm_tm_->SetDefaultSymbol(Dict::WID(config.GetString("default_symbol")));
         fsm_tm_->SetSpanLimits(config.GetIntArray("hiero_span_limit"));
+        fsm_tm_->SetSaveSrcStr(save_src_str);
         tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));

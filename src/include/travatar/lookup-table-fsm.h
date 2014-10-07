@@ -58,6 +58,7 @@ protected:
     LookupNodeFSM* root_node_;
     UnaryMap unaries_;
     int span_length_;
+    bool save_src_str_;
 public:
 
     friend class LookupTableFSM;
@@ -80,12 +81,13 @@ public:
     LookupNodeFSM* GetRootNode() const { return root_node_; }
  
     // MUTATOR
-    void SetSpanLimit(int length) { span_length_ = length; }
-    
+    void SetSpanLimit(const int length) { span_length_ = length; }
+    void SetSaveSrcStr(const bool save_src_str) { save_src_str_ = save_src_str; }
+
 protected:
     void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
         const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
-
+    
 private:
     void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
 };
@@ -100,8 +102,8 @@ protected:
     std::vector<RuleFSM*> rule_fsms_;
     bool delete_unknown_;
     int trg_factors_;
-    HieroHeadLabels default_symbol_;
     HieroHeadLabels root_symbol_;
+    bool save_src_str_;
 public:
     LookupTableFSM();
     ~LookupTableFSM();
@@ -114,23 +116,22 @@ public:
     virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
     const HieroHeadLabels & GetRootSymbol() const { return root_symbol_; } 
-    const HieroHeadLabels & GetDefaultSymbol() const { return default_symbol_; }
     bool GetDeleteUnknown() const { return delete_unknown_; } 
 
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
-    void SetDefaultSymbol(WordId symbol) { default_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetSpanLimits(const std::vector<int>& limits);
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
-    
+    void SetSaveSrcStr(const bool save_src_str);
+
     static TranslationRuleHiero* GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels);
 
     static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
 
     static HyperEdge* TransformRuleIntoEdge(HieroNodeMap& map, const int head_first, 
-            const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule);
+            const int head_second, const std::vector<TailSpanKey > & tail_spans, TranslationRuleHiero* rule, bool save_src_str=false);
 
-    static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map);
+    static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map, bool save_src_str=false);
 
     static HyperNode* FindNode(HieroNodeMap& map, const int span_begin, const int span_end, const HieroHeadLabels& head_label);
     
