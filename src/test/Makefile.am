@@ -18,6 +18,7 @@ nobase_include_HEADERS = \
 	test-io-util.h \
 	test-lookup-table.h \
 	test-rule-extractor.h \
+	test-tokenizer.h \
 	test-travatar-runner.h \
 	test-tree-io.h \
 	test-trimmer.h \
@@ -41,6 +42,7 @@ test_travatar_SOURCES = \
     test-lookup-table.cc \
     test-lm-composer.cc \
     test-rule-extractor.cc \
+    test-tokenizer.cc \
     test-travatar-runner.cc \
     test-tree-io.cc \
     test-trimmer.cc \

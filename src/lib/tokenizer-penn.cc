@@ -34,6 +34,9 @@ TokenizerPenn::TokenizerPenn() {
     patterns_.push_back(pattern_type(regex_type(" \'([Tt])is "), " \'$1 is "));
     patterns_.push_back(pattern_type(regex_type(" \'([Tt])was "), " \'$1 was "));
     patterns_.push_back(pattern_type(regex_type(" ([Ww])anna "), " $1an na "));
+    patterns_.push_back(pattern_type(regex_type("^ +"), ""));
+    patterns_.push_back(pattern_type(regex_type(" +$"), ""));
+    patterns_.push_back(pattern_type(regex_type("  +"), " "));
 }
 
 string TokenizerPenn::Tokenize(const string & str) {
