@@ -16,8 +16,8 @@ TestTokenizer::TestTokenizer() { }
 TestTokenizer::~TestTokenizer() { }
 
 int TestTokenizer::TestPenn() {
-    string in = "\"Oh, no,\" she's saying, \"our $400 blender can't handle something this hard!\"";
-    string exp = "`` Oh , no , '' she 's saying , `` our $ 400 blender ca n't handle something this hard ! ''";
+    string in = "\"Oh, no,\" she's said. i.e. \"our $400 blender, it can't handle something this hard!\"";
+    string exp = "`` Oh , no , '' she 's said . i.e. `` our $ 400 blender , it ca n't handle something this hard ! ''";
     string act = tokenizer_penn_.Tokenize(in);
     return CheckEqual(exp, act);
 }
