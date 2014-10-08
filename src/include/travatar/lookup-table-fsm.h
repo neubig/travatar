@@ -63,7 +63,7 @@ public:
 
     friend class LookupTableFSM;
 
-    RuleFSM() : root_node_(new LookupNodeFSM), span_length_(20) { }
+    RuleFSM() : root_node_(new LookupNodeFSM), span_length_(20), save_src_str_(false) { }
 
     virtual ~RuleFSM() { delete root_node_; }
     

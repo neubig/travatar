@@ -481,24 +481,24 @@ HyperGraph * TestLookupTableFSM::CreateMultiHeadExpectedGraph() {
     node[0]->SetSpan(pair<int,int>(0,5));
     {
         node[0]->SetSym(Dict::WID("S"));
-        node[0]->AddEdge(edge[6]);
+        node[0]->AddEdge(edge[3]);
     }
     node[1]->SetSpan(pair<int,int>(2,5));
     {
         node[1]->SetSym(Dict::WID("VP"));
-        node[1]->AddEdge(edge[4]);
+        node[1]->AddEdge(edge[1]);
     }
     node[2]->SetSpan(pair<int,int>(1,2));
     {
         node[2]->SetSym(Dict::WID("NN"));
-        node[2]->AddEdge(edge[5]);
+        node[2]->AddEdge(edge[2]);
     }
     node[3]->SetSpan(pair<int,int>(4,5));
     {
         node[3]->SetSym(Dict::WID("PRP"));
-        node[3]->AddEdge(edge[1]);
+        node[3]->AddEdge(edge[0]);
     }
-   
+
     HyperGraph* expected_graph = new HyperGraph;
     BOOST_FOREACH(HyperEdge* ed, edge) {
         expected_graph->AddEdge(ed);
@@ -538,7 +538,7 @@ bool TestLookupTableFSM::TestUnkRules(LookupTableFSM & lookup, bool delete_unk) 
     boost::shared_ptr<HyperGraph> input_graph(new HyperGraph);
     BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
         input_graph->AddWord(word);
-    
+
     bool prev_del_unk = lookup.GetDeleteUnknown();
     lookup.SetDeleteUnknown(delete_unk);
     HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
@@ -555,7 +555,7 @@ bool TestLookupTableFSM::TestMultiHead(LookupTableFSM & lookup) {
     boost::shared_ptr<HyperGraph> input_graph(new HyperGraph);
     BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
         input_graph->AddWord(word);
-    
+
     HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
     HyperGraph* expected_graph = CreateMultiHeadExpectedGraph();
     bool ret = expected_graph->CheckMaybeEqual(*actual_graph);
