@@ -63,14 +63,14 @@ cd ~/travatar-tutorial
 
 <p>
 In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, a <b>word aligner</b>, and a <b>language model toolkit</b>.
-In this tutorial, in addition to Travatar, we will use the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
+In this tutorial, in addition to Travatar, we will use the <a href="http://github.com/odashi/Ckylark">Ckylark</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
 First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
 </p>
 
 <p>
 First, you must get the latest version of Travatar.
 Follow the directions on the <a href="index.html#download">download</a> page and place the compiled program in the <tt>travatar</tt> directory below <tt>travatar-tutorial</tt>.
-If you can run the following commands and get the help message, everythin should be working properly.
+If you can run the following commands and get the help message, everything should be working properly.
 </p>
 
 <pre>
@@ -79,11 +79,17 @@ travatar/src/bin/travatar --help
 </pre>
 
 <p>
-For the Stanford parser, you must have Java installed on your machine, but as long as you have Java you just need to unzip the archive. The tutorial will use the 2014-01-04 version, but other versions should work fine as well.
+For the Ckylark parser, first download the latest version from Github to the Ckylark directory.
+Then, enter the directory and compile the program, and unzip the WSJ parsing model that you will be using to parse English.
 </p>
 
 <pre>
-unzip stanford-parser*.zip
+cd Ckylark
+autoreconf -i
+./configure
+make
+gunzip model/wsj.*.gz
+cd ~/travatar-tutorial
 </pre>
 
 <p>KyTea can be compiled as follows (if you are not using KyTea 0.4.6, change the version number):</p>
@@ -138,13 +144,11 @@ mkdir data
 
 <p>
 The first thing we need to do is tokenize our data (in other words, divide it into words).
-For English, or other languages, there is a tokenizer included in the Stanford parser toolkit.
-Let's run it on the English training data as follows (we need the 'sed' command because the tokenizer sometimes fails to replace brackets in special cases).
-Note that you might have to change the path of the Stanford parser if it is not the 2014-01-04 version.
+For English, we can use the tokenizer included with Travatar.
 </p>
 
 <pre>
-java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-train.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-train.tok.en
+travatar/src/bin/tokenizer &lt; kftt-data-1.0/data/orig/kyoto-train.en &gt; data/kyoto-train.tok.en
 </pre>
 
 <p>
@@ -153,8 +157,8 @@ Next, we do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
 <pre>
-java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-dev.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-dev.tok.en
-java -cp stanford-parser-full-2014-01-04/stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines kftt-data-1.0/data/orig/kyoto-test.en | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; data/kyoto-test.tok.en
+travatar/src/bin/tokenizer &lt; kftt-data-1.0/data/orig/kyoto-dev.en &gt; data/kyoto-dev.tok.en
+travatar/src/bin/tokenizer &lt; kftt-data-1.0/data/orig/kyoto-test.en &gt; data/kyoto-test.tok.en
 </pre>
 
 <p>
@@ -206,11 +210,11 @@ If you want to do the tutorial with the full data set, just substitute <tt>kyoto
 <h3>Parsing</h3>
 
 <p>
-Next, we will use the Stanford parser to parse the source side English sentences.
+Next, we will use the Ckylark parser to parse the source side English sentences.
 </p>
 
 <pre>
-java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
+Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
 </pre>
 
 <p>
@@ -218,18 +222,16 @@ And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
 <pre>
-java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
+Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
 </pre>
 
 <pre>
-java -mx2000m -cp stanford-parser-full-2014-01-04/stanford-parser.jar:stanford-parser-full-2014-01-04/stanford-parser-3.3.1-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
+Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
 </pre>
 
 <p>
-There are a couple things that should be noted about parsing.
-The first is that it takes a long time to parse many sentences, which can be solved to some extent by using multiple cores or multiple machines.
-The second is that while the Stanford parser is robust and easy to use, there are other parsers that may achieve better accuracy than the Stanford parser, resulting in better translation accuracy.
-Both of these issues are discussed in more detail on the <a href="parsing.html">parsing page</a>.
+Note that parsing is slow, and thus these commands will take a while (an hour or two).
+More issues about parsing, including speeding things up, are discussed in more detail on the <a href="parsing.html">parsing page</a>.
 </p>
 
 <h2>Training the Language Model</h2>
