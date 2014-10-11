@@ -63,58 +63,51 @@ This page describes how to perform the parsing step on your own, which is useful
 
 <p>
 For parsing English, you can use any phrase structure parser of your choosing.
-One (somewhat old) data point to help you choose which parser to use is the following results for English-Japanese translation on the <a href="http://www.phontron.com/kftt">Kyoto Free Translation Task</a>.
+In particular, we recommend the <a href="http://github.com/odashi/Ckylark">Ckylark</a> parser for trees, or <a href="http://github.com/neubig/egret">Egret</a> parser for forests.
+Note that parsing has a large effect on translation results (<a href="http://phontron.com/paper/neubig14acl.pdf">Neubig&Duh ACL2014</a>), so it might be worth trying other newer parsers.
 </p>
 
-<table align=center>
-<tr><th>eval\parse</th><th>(Moses)<th>Stanford</th><th>Berkeley</th><th>Egret</th><th>Egret+Forest</th></tr>
-<tr><th>BLEU</th> <td>19.59</td> <td>19.36</td> <td>19.54</td> <td>20.00</td> <td>20.25</td></tr>
-<tr><th>RIBES</th><td>64.16</td> <td>65.17</td> <td>66.19</td> <td>66.83</td> <td>67.93</td></tr>
-</table>
-
-<p>Below we will describe about the Stanford and Egret parsers.</p>
-
-<h3>Stanford Parser</h3>
+<h3>Tokenization</h3>
 
 <p>
-As mentioned in the <a href="training-guide.html">training guide</a>, the <a href="http://nlp.stanford.edu/software/lex-parser.shtml#Download">Stanford Parser</a> is a good baseline parser for creating your parse trees.
-This is because it has tools for automatic tokenization, and also because it almost never fails at parsing, except on extremely long sentences.
-To install the parser, if you haven't already, download and unzip the parser archive.
-Next, we can use the parser to tokenize and parse our text.
-</p>
-
-<h4>Tokenization</h4>
-
-<p>
-Tokenization can be run on an English input file as follows.
-You will have to replace <tt>stanford-parser.jar</tt> with the full path to <tt>stanford-parser.jar</tt> in the parser distribution.
+Before parsing, you will have to tokenize your input.
+Travatar includes a tokenizer that does a reasonable job at tokenizing English, so you can use it on an input text <tt>input.txt</tt> as follows:
 </p>
 
 <pre>
-java -cp stanford-parser.jar edu.stanford.nlp.process.PTBTokenizer -preserveLines input.txt | sed 's/(/-LRB-/g; s/)/-RRB-/g' &gt; tokenized.txt
+cat input.txt | travatar/src/bin/tokenizer &gt; tokenized.txt
 </pre>
 
-<h4>Parsing</h4>
+<h3>Ckylark</h3>
 
 <p>
-Next, we will use the Stanford parser to parse the source side English sentences.
-Again, you will need to specify the full path to both parser jar files.
+As mentioned in the <a href="training-guide.html">training guide</a>, the <a href="http://github.com/odashi/Ckylark">Ckylark</a> parser is a good parser for generating trees, as it is accurate and will rarely fail at parsing.
+To install the parser, if you haven't already, clone it from github, and follow the installation directions.
+Then, if we want to parse English we will have to unzip the English parsing model (named WSJ, as it was trained on the Wall Street Journal section of the Penn Treebank).
 </p>
 
 <pre>
-java -mx2000m -cp stanford-parser.jar:stanford-parser-models.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz tokenized.txt &gt; stanford-parsed.txt
+gunzip Ckylark/model/wsj.*.gz
+</pre>
+
+<p>
+Next, we can use this model to parse English sentences using the following command.
+</p>
+
+<pre>
+cat tokenized.txt | Ckylark/src/ckylark --model Ckylark/model/wsj &gt; ckylark-parsed.txt
 </pre>
 
 <h3>Egret</h3>
 
 <p>
-<a href="http://code.google.com/p/egret-parser/">Egret</a> is a parser that is able to both achieve higher accuracy (in our experience) than that Stanford parser, and also output packed forests that can be used in translation.
+<a href="http://code.google.com/p/egret-parser/">Egret</a> is a parser that is able to output packed forests that can be used in translation.
 </p>
 
 <h4>Installation</h4>
 
 <p>
-Download Egret from the <a href="http://code.google.com/p/egret-parser/">official home page</a> and unzip it.
+Download Egret from the <a href="http://github.com/neubig/egret">github page</a> and unzip it.
 You can then run the following command in the top directory to compile:
 </p>
 <pre>
@@ -125,7 +118,6 @@ bash make-linux.sh
 
 <p>
 For Travatar training (currently) only 1-best trees are supported for rule learning, so we will first describe how to create 1-best trees.
-But first, before parsing, you must tokenize the text, which can be done with the Stanford parser.
 Given the tokenized file <tt>tokenized.txt</tt>, we then run Egret as follows, where <tt>$EGRET_DIR</tt> is the directory to which you downloaded Egret.
 </p>
 
@@ -136,11 +128,11 @@ $EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egre
 <p>
 Unfortunately, for some sentences, Egret's parsing fails and generates an empty tree "(())", maybe one in every 10000 or so sentences.
 This means that we will not be able to extract rules from, or translate any failed sentences.
-If we already have parse trees from the Stanford parser, which is less accurate but more robust, we can use the script <tt>replace-failed-parse.pl</tt> included with Travatar to replace only failed parses.
+If we already have parse trees from the Ckylark parser, we can use the script <tt>replace-failed-parse.pl</tt> included with Travatar to replace only failed parses.
 </p>
 
 <pre>
-$TRAVATAR_DIR/script/tree/replace-failed-parse.pl stanford-parsed.txt egret-parsed.txt &gt; egret-parsefixed.txt
+$TRAVATAR_DIR/script/tree/replace-failed-parse.pl ckylark-parsed.txt egret-parsed.txt &gt; egret-parsefixed.txt
 </pre>
 
 <p>
@@ -170,17 +162,17 @@ $EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar -nbest4th
 
 <p>
 Here <tt>nbest4threshold=100</tt> indicates that we will only keep nodes or edges that appear in the 100 best parse trees.
-This is generally a good setting, but you can increase or reduce this number if you want larger or smaller forests, or reference the Egret manual for other settings.
+This is generally a good setting, but larger forests can sometimes improve accuracy (<a href="http://phontron.com/paper/neubig14acl.pdf">Neubig&Duh ACL2014</a>).
 </p>
 
 <p>
-Again, as some parses may fail, you can replace them with parses from the Stanford parser.
-In order to do so, we first convert the Stanford trees to forests with the <tt>tree-converter</tt> tool provided with Travatar, and then use the <tt>replace-failed-parse.pl</tt> script as we did before.
+Again, as some parses may fail, you can replace them with parses from Ckylark.
+In order to do so, we first convert the Ckylark trees to forests with the <tt>tree-converter</tt> tool provided with Travatar, and then use the <tt>replace-failed-parse.pl</tt> script as we did before.
 </p>
 
 <pre>
-$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret &lt; stanford-parse.txt &gt; stanford-forest.txt
-$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret stanford-forest.txt egret-forest.txt &gt; egret-forestfixed.txt
+$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret &lt; ckylark-parse.txt &gt; ckylark-forest.txt
+$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret ckylark-forest.txt egret-forest.txt &gt; egret-forestfixed.txt
 </pre>
 
 <p>

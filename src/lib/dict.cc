@@ -141,15 +141,16 @@ Sentence Dict::ParseWords(const std::string & str) {
     Sentence ret;
     while(iss >> buff)
         ret.push_back(WID(buff));
+    if(ret.capacity() > ret.size())
+        Sentence(ret).swap(ret);
     return ret;
 }
 
 std::vector<Sentence> Dict::ParseWordVector(const std::string & str) {
-    std::vector<Sentence> ret;
     vector<string> columns = Tokenize(str, " |COL| ");
-    BOOST_FOREACH(const std::string & col, columns) {
-        ret.push_back(ParseWords(col));
-    }
+    std::vector<Sentence> ret(columns.size());
+    for(int i = 0; i < (int)columns.size(); i++)
+        ret[i] = ParseWords(columns[i]);
     return ret;
 }
 
@@ -197,9 +198,8 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
 CfgDataVector Dict::ParseAnnotatedVector(const std::string & str) {
     vector<string> columns = Tokenize(str, " |COL| ");
     CfgDataVector ret(columns.size());
-    for(size_t i = 0; i < columns.size(); i++) {
+    for(size_t i = 0; i < columns.size(); i++)
         ret[i] = ParseAnnotatedWords(columns[i]);
-    }
     return ret;
 }
 
