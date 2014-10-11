@@ -17,6 +17,7 @@ TestEvalMeasure::TestEvalMeasure() :
     eval_measure_wer_(EvalMeasure::CreateMeasureFromString("wer")),
     eval_measure_pincbleu_(EvalMeasure::CreateMeasureFromString("interp:0.5|bleu:factor=0,smooth=1|0.5|bleu:inverse=true,brev=false,factor=1,scope=sentence,mean=arith")),
     eval_measure_interp_(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes")),
+    eval_measure_adv_interp_(EvalMeasure::CreateMeasureFromString("ainterp:A|bleu:smooth=1|B|ribes|2*A*B/(A+B)")),
     ref1_sent_(Dict::ParseWords("taro met hanako")),
     sys1_sent_(Dict::ParseWords("the taro met the hanako"))
 { }
@@ -122,6 +123,25 @@ int TestEvalMeasure::TestInterpScore() {
     return CheckAlmost(interp_exp, interp_act);
 }
 
+int TestEvalMeasure::TestAdvInterpScore() {
+    string ref2 = "he was the smallest man", sys2 = "the smallest man he was";
+    Sentence ref2_sent = Dict::ParseWords(ref2), sys2_sent = Dict::ParseWords(sys2);
+    // Eval stats pointer
+    EvalStatsPtr bs1 = eval_measure_bleup1_->CalculateStats(ref1_sent_, sys1_sent_),
+                 bs2 = eval_measure_bleup1_->CalculateStats(ref2_sent, sys2_sent),
+                 rs1 = eval_measure_ribes_->CalculateStats(ref1_sent_, sys1_sent_),
+                 rs2 = eval_measure_ribes_->CalculateStats(ref2_sent, sys2_sent),
+                 is1 = eval_measure_adv_interp_->CalculateStats(ref1_sent_, sys1_sent_),
+                 is2 = eval_measure_adv_interp_->CalculateStats(ref2_sent, sys2_sent);
+    // Add the scores together
+    double bleu_act = bs1->Plus(*bs2)->ConvertToScore();
+    double ribes_act = rs1->Plus(*rs2)->ConvertToScore();
+    double interp_exp = 2*bleu_act*ribes_act/(bleu_act+ribes_act);
+    double interp_act = is1->Plus(*is2)->ConvertToScore();
+    // Check that values are almost the same
+    return CheckAlmost(interp_exp, interp_act);
+}
+
 int TestEvalMeasure::TestPincScore() {
     vector<Sentence> ref_sent = Dict::ParseWordVector("taro met hanako |COL| taro went to hanako 's house");
     vector<Sentence> sys_sent = Dict::ParseWordVector("the taro met the hanako |COL| the taro met the hanako");
@@ -146,6 +166,7 @@ bool TestEvalMeasure::RunTest() {
     done++; cout << "TestBleuArith()" << endl; if(TestBleuArith()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestWerScore()" << endl; if(TestWerScore()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestInterpScore()" << endl; if(TestInterpScore()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestAdvInterpScore()" << endl; if(TestAdvInterpScore()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestPincScore()" << endl; if(TestPincScore()) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestEvalMeasure Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;

@@ -4,6 +4,7 @@
 #include <lm/model.hh>
 #include <travatar/hyper-graph.h>
 #include <travatar/eval-measure.h>
+#include <travatar/eval-measure-adv-interp.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
 #include <travatar/eval-measure-ter.h>
@@ -189,6 +190,8 @@ EvalMeasure * EvalMeasure::CreateMeasureFromString(const string & str) {
         return new EvalMeasureWer(config);
     else if(eval == "interp")
         return new EvalMeasureInterp(config);
+    else if(eval == "ainterp")
+        return new EvalMeasureAdvInterp(config);
     else
         THROW_ERROR("Unknown evaluation measure: " << eval);
     return NULL;

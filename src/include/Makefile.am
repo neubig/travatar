@@ -17,6 +17,7 @@ nobase_include_HEADERS = \
 	travatar/config-tree-converter-runner.h \
 	travatar/config.h \
 	travatar/dict.h \
+	travatar/eval-measure-adv-interp.h \
 	travatar/eval-measure-bleu.h \
 	travatar/eval-measure-interp.h \
 	travatar/eval-measure-ribes.h \
@@ -34,6 +35,7 @@ nobase_include_HEADERS = \
 	travatar/lookup-table-hash.h \
 	travatar/lookup-table-marisa.h \
 	travatar/lookup-table.h \
+	travatar/math-query.h \
 	travatar/mert-geometry.h \
 	travatar/mt-evaluator-runner.h \
 	travatar/nbest-list.h \
@@ -71,4 +73,4 @@ nobase_include_HEADERS = \
 	travatar/weights-delayed-perceptron.h \
 	travatar/weights-pairwise.h \
 	travatar/weights-perceptron.h \
-	travatar/weights.h
+	travatar/weights.h 
