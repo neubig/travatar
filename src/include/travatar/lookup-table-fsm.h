@@ -1,10 +1,11 @@
 #ifndef LOOKUP_TABLE_FSM_H__
 #define LOOKUP_TABLE_FSM_H__
-#include <travatar/dict.h>
+
 #include <travatar/graph-transformer.h>
-#include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
+#include <travatar/sparse-map.h>
 #include <travatar/translation-rule-hiero.h>
+#include <marisa/marisa.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <map>
@@ -18,8 +19,8 @@ class LookupNodeFSM;
 class TranslationRuleHiero;
 
 typedef std::vector<std::pair<int,int> > HieroRuleSpans;
-typedef std::pair<HieroHeadLabels, std::pair<int,int> > HieroNodeKey;
-typedef std::map<HieroNodeKey, HyperNode*> HieroNodeMap;
+typedef std::map<HieroHeadLabels, HyperNode*> HeadNodePairs;
+typedef std::map<std::pair<int,int>, HeadNodePairs> HieroNodeMap;
 typedef std::vector<HyperEdge* > EdgeList;
 typedef std::pair<int, std::pair<int,int> > TailSpanKey;
 typedef std::map<HieroHeadLabels,std::set<HieroHeadLabels> > UnaryMap;
@@ -48,14 +49,21 @@ public:
     virtual void Print(std::ostream &out, WordId label, int indent, char prefix) const; 
 }; 
 
-inline std::ostream &operator<<( std::ostream &out, const LookupNodeFSM &L ) {
-    L.Print(out,Dict::WID("ROOT"),0,'-');
-    return out;
-}
+// inline std::ostream &operator<<( std::ostream &out, const LookupNodeFSM &L ) {
+//     L.Print(out,Dict::WID("ROOT"),0,'-');
+//     return out;
+// }
 
 class RuleFSM {
 protected:
-    LookupNodeFSM* root_node_;
+    typedef std::vector<TranslationRuleHiero*> RuleVec;
+    typedef std::vector<RuleVec> RuleSet; 
+
+    // The trie indexing the rules, and the rules
+    marisa::Trie trie_;
+    RuleSet rules_;
+
+    // Other statistics
     UnaryMap unaries_;
     int span_length_;
     bool save_src_str_;
@@ -63,22 +71,21 @@ public:
 
     friend class LookupTableFSM;
 
-    RuleFSM() : root_node_(new LookupNodeFSM), span_length_(20), save_src_str_(false) { }
+    RuleFSM() : span_length_(20), save_src_str_(false) { }
 
-    virtual ~RuleFSM() { delete root_node_; }
+    virtual ~RuleFSM();
     
     static RuleFSM * ReadFromRuleTable(std::istream & in);
 
     static TranslationRuleHiero * BuildRule(travatar::TranslationRuleHiero * rule, std::vector<std::string> & source, 
             std::vector<std::string> & target, SparseMap& features);
 
-    virtual void AddRule(TranslationRuleHiero* rule);
-
-    virtual void Print(std::ostream & out) const { out << *root_node_; }
-
     // ACCESSOR
     int GetSpanLimit() const { return span_length_; } 
-    LookupNodeFSM* GetRootNode() const { return root_node_; }
+    const RuleSet & GetRules() const { return rules_; }
+    const marisa::Trie & GetTrie() const { return trie_; }
+    RuleSet & GetRules() { return rules_; }
+    marisa::Trie & GetTrie() { return trie_; }
  
     // MUTATOR
     void SetSpanLimit(const int length) { span_length_ = length; }
@@ -86,16 +93,18 @@ public:
 
 protected:
     void BuildHyperGraphComponent(HieroNodeMap & node_map, EdgeList & edge_set,
-        const Sentence & input, LookupNodeFSM* node, int position, HieroRuleSpans & spans) const;
-    
+        const Sentence & input, const std::string & state, int position, HieroRuleSpans & spans) const;
+
+    static std::string CreateKey(const CfgData & src_data,
+                                 const std::vector<CfgData> & trg_data);
 private:
-    void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
+    // void AddRule(int position, LookupNodeFSM* target_node, TranslationRuleHiero* rule);
 };
 
-inline std::ostream &operator<<( std::ostream &out, const RuleFSM &L ) {
-    L.Print(out);
-    return out;
-}
+// inline std::ostream &operator<<( std::ostream &out, const RuleFSM &L ) {
+//     L.Print(out);
+//     return out;
+// }
 
 class LookupTableFSM : public GraphTransformer {
 protected:
@@ -103,6 +112,7 @@ protected:
     bool delete_unknown_;
     int trg_factors_;
     HieroHeadLabels root_symbol_;
+    HieroHeadLabels unk_symbol_;
     bool save_src_str_;
 public:
     LookupTableFSM();
@@ -116,6 +126,7 @@ public:
     virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
 
     const HieroHeadLabels & GetRootSymbol() const { return root_symbol_; } 
+    const HieroHeadLabels & GetUnkSymbol() const { return unk_symbol_; } 
     bool GetDeleteUnknown() const { return delete_unknown_; } 
 
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }

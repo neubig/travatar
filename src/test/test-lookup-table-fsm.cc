@@ -29,6 +29,8 @@ TestLookupTableFSM::TestLookupTableFSM() {
     lookup_fsm->SetRootSymbol(Dict::WID("X"));
     lookup_fsm->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
 
+    cerr << endl;
+
     // Load the rules
     ostringstream rule_oss1, rule_oss2;
     rule_oss1 << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
@@ -567,8 +569,8 @@ bool TestLookupTableFSM::TestMultiHead(LookupTableFSM & lookup) {
 bool TestLookupTableFSM::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestBuildRules(lookup_fsm)" << endl; if(TestBuildRules(*lookup_fsm)) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestUnkRules(lookup_fsm)" << endl; if(TestUnkRules(*lookup_fsm_c,false)) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestUnkRules(lookup_fsm,delete_unk)" << endl; if(TestUnkRules(*lookup_fsm_c,true)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestUnkRules(lookup_fsm_c)" << endl; if(TestUnkRules(*lookup_fsm_c,false)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestUnkRules(lookup_fsm_c,delete_unk)" << endl; if(TestUnkRules(*lookup_fsm_c,true)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRules(lookup_fsm_split)" << endl; if(TestBuildRules(*lookup_fsm_split)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRules(lookup_fsm_extra)" << endl; if(TestBuildRules(*lookup_fsm_extra,true)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestMultiHead(lookup_fsm_mhd)" << endl; if (TestMultiHead(*lookup_fsm_mhd)) succeeded++; else cout << "FAILED!!!" << endl;

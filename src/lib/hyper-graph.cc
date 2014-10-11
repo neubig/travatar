@@ -156,7 +156,12 @@ int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
          nodes_.size() == rhs.nodes_.size() &&
          CheckVector(words_, rhs.words_))) {
         cerr << "edges: " << edges_.size() << " == " << rhs.edges_.size() << endl;
-        cerr << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
+        BOOST_FOREACH(HyperEdge* edge, this->GetEdges()) { edge->Print(cerr); cerr << endl; }
+        BOOST_FOREACH(HyperEdge* edge, rhs.GetEdges())   { edge->Print(cerr); cerr << endl; }
+        cerr << endl << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
+        BOOST_FOREACH(HyperNode* node, this->GetNodes()) { node->Print(cerr); cerr << endl; }
+        BOOST_FOREACH(HyperNode* node, rhs.GetNodes())   { node->Print(cerr); cerr << endl; }
+        cerr << endl;
         return 0;
     }
     // Check if tails are equal
