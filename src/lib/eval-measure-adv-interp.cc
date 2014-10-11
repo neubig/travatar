@@ -18,6 +18,7 @@ std::string EvalStatsAdvInterp::ConvertToString() const {
         var_map.insert(make_pair(vars_[i],stats_[i]->ConvertToScore()));
     MathQuery mq(query_,var_map);
     mq.Print(oss);
+    oss << "=" << MathQuery::Evaluate(mq);
     return oss.str();
 }
 

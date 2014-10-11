@@ -23,6 +23,7 @@ public:
     virtual ~MathQuery();
 
     static double Evaluate(const std::map<WordId,double>& var_map, const std::string& query);
+    static double Evaluate(const MathQuery& mq);
     virtual void Print(std::ostream& oss) const;
 };
 

@@ -63,6 +63,10 @@ MathQuery::~MathQuery() {
 
 double MathQuery::Evaluate(const std::map<WordId,double> & var_map, const std::string & query_str) {
     MathQuery query(query_str, var_map);
+    return Evaluate(query);
+}
+
+double MathQuery::Evaluate(const MathQuery& query) {
     stack<MathToken*> temp;
     vector<MathToken*> postfix;
     
