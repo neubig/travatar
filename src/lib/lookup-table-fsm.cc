@@ -228,6 +228,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
         EdgeList::iterator it = edge_list.begin();
         while(it != edge_list.end()) {
             if ((*it)->GetId() != VALID_NODE) {
+                delete *it;
                 it = edge_list.erase(it);
             } else {
                 ++it;
@@ -257,6 +258,8 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
             if(head_node.second->GetId() == VALID_NODE) {
                 head_node.second->SetId(-1);
                 _graph->AddNode(head_node.second);
+            } else if (head_node.second != root_node) {
+                delete head_node.second;
             }
         }
     }
@@ -437,7 +440,7 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap& map_ptr,
         return ret;
     } else {
         HeadNodePairs::iterator it2 = it->second.find(head_label);
-        if (it == map_ptr.end()) {
+        if (it2 == it->second.end()) {
             // Fresh New Node!
             HyperNode* ret = new HyperNode;
             ret->SetSpan(make_pair(span_begin,span_end));

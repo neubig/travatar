@@ -572,7 +572,7 @@ bool TestLookupTableFSM::RunTest() {
     done++; cout << "TestUnkRules(lookup_fsm_c)" << endl; if(TestUnkRules(*lookup_fsm_c,false)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestUnkRules(lookup_fsm_c,delete_unk)" << endl; if(TestUnkRules(*lookup_fsm_c,true)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRules(lookup_fsm_split)" << endl; if(TestBuildRules(*lookup_fsm_split)) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestBuildRules(lookup_fsm_extra)" << endl; if(TestBuildRules(*lookup_fsm_extra,true)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestBuildRules(lookup_fsm_extra)" << endl; if(TestBuildRules(*lookup_fsm_extra)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestMultiHead(lookup_fsm_mhd)" << endl; if (TestMultiHead(*lookup_fsm_mhd)) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestLookupTableFSM Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
