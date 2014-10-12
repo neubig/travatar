@@ -25,7 +25,8 @@ nobase_include_HEADERS = \
 	test-tune.h \
 	test-weights.h \
 	test-hiero.h \
-	test-lookup-table-fsm.h
+	test-lookup-table-fsm.h \
+	test-math-query.h
 
 test_travatar_SOURCES = \
 	test-travatar.cc \
@@ -48,6 +49,7 @@ test_travatar_SOURCES = \
     test-trimmer.cc \
     test-tune.cc \
     test-weights.cc \
+	test-math-query.cc
 	${TRAVATARH}
 
 test_travatar_LDADD = \

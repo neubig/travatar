@@ -17,6 +17,7 @@
 #include "test-trimmer.h"
 #include "test-tune.h"
 #include "test-weights.h"
+#include "test-math-query.h"
 
 #include "test-base.h"
 
@@ -47,6 +48,7 @@ int main() {
     tests.push_back(new TestTrimmer());
     tests.push_back(new TestTune());
     tests.push_back(new TestWeights());
+    tests.push_back(new TestMathQuery());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
