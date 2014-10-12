@@ -28,14 +28,10 @@ public:
 
     // ACCESSOR
     const CfgData & GetSrcData() const { return src_data_; }
-    const HieroHeadLabels & GetHeadLabels() const { return head_labels_; }
-    const HieroHeadLabels & GetChildHeadLabels(int position) const { return child_head_labels_[position]; } 
-    WordId GetHeadLabelsString() const { return head_labels_string_; }
+    HieroHeadLabels GetHeadLabels() const;
+    HieroHeadLabels GetChildHeadLabels(int position) const;
 protected:
 	CfgData src_data_;
-    HieroHeadLabels head_labels_;
-    std::vector<HieroHeadLabels > child_head_labels_;
-    WordId head_labels_string_;
 };
 }
 #endif
