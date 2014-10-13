@@ -184,67 +184,18 @@ When running <tt>mert-travatar.pl</tt>, this can be done using "<tt>-decoder-opt
 <h2>Parsing Japanese</h2>
 
 <p>
-The following directions are for parsing Japanese.
-In Japanese, dependency parsers are the most widely used method for parsing, so we first create a dependency parse, then use heuristic rules to convert this into the format used by Travatar.
-We have found that the <a href="http://www.ar.media.kyoto-u.ac.jp/members/flannery/eda/index_en.html">Eda dependency parser</a> gives good results, so we will use it here.
-</p>
-
-<h3>Eda</h3>
-
-<p>
-To perform parsing with <a href="http://www.ar.media.kyoto-u.ac.jp/members/flannery/eda/index_en.html">Eda</a>, you will first have to install both Eda and <a href="http://www.phontron.com/kytea">KyTea</a>, a Japanese tokenizer and POS tagger.
-</p>
-
-<h4>Installation</h4>
-
-<p>
-Download each of the tools from the website.
-Install KyTea using the following commands:
+Before parsing Japanese, it is necessary to tokenize the text.
+This can be done using the <a href="http://www.phontron.com/kytea">KyTea</a> segmenter.
+Install it according to the directions on the site, then tokenize using the following command (<tt>notags</tt> turns of POS tagging, and <tt>wsconst</tt> prevents dividing numbers): 
 </p>
 
 <pre>
-tar -xzf kytea-X.X.X.tar.gz
-cd kytea-X.X.X
-./configure
-make
-sudo make install
+kytea -notags -wsconst D &lt; input.txt &gt; tokenized.txt
 </pre>
 
 <p>
-Next, build Eda:
-</p>
-
-<pre>
-tar -xzf eda-X.X.X.tar.gz
-cd eda
-make
-</pre>
-
-<p>
-And we will assume that <tt>$EDA_DIR</tt> is set to the directory that Eda is installed to.
-</p>
-
-<h4>Parsing</h4>
-
-<p>
-Parsing Japanese with Eda and turning it into a format usable by Travatar is a string of several commands, but can be done in a single step.
-</p>
-
-<pre>
-cat input.txt |
-    kytea -wsconst D -out eda | 
-    $EDA_DIR/src/eda/eda \
-      -v $EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat \
-      -w $EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat |
-    $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl |
-    $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl &gt;
-        eda-parse.txt
-</pre>
-
-<p>
-Describing each of these commands briefly, <tt>kytea</tt> performs word segmentation and POS tagging, <tt>treeify.py</tt> converts KyTea's output to a format that eda can read, and <tt>eda</tt> performs dependency parsing.
-<tt>ja-adjust-dep.pl</tt> adjusts some peculiarities of Japanese dependency annotation (most notably making punctuation and auxiliary verbs children instead of heads), and <tt>ja-dep2cfg.pl</tt> converts dependency trees to CFG trees and performs binarization according to some linguistically motivated head rules.
-The output of this sequence of commands should be sufficient for using as input to Travatar.
+For parsing Japanese, it is possible to use Ckylark and Egret like for English.
+The Japanese model in Ckylark is labeled <tt>jdc</tt>, and the Japanese model in Egret is labeled <tt>jpn_grammar</tt>.
 </p>
 
 <a name="chinese"/>
