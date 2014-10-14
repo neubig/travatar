@@ -62,7 +62,7 @@ Below is an example of a rule:
 </p>
 
 <pre>
-vp ( vbd ( "expected" ) x0:sbar ) ||| x0:sbar "予想" "し" "た" @ vp ||| fgep=-6.07 w=3 egfp=-4.52 fgel=-3.11 p=1 egfl=-13.28 lfreq=-2.22 ||| 1 10 47 ||| 0-0 0-1 0-2
+vp ( vbd ( "expected" ) x0:sbar ) ||| x0:sbar "予想" "し" "た" @ vp ||| fgep=-6.07 w=3 egfp=-4.52 fgel=-3.11 p=1 egfl=-13.28 lfreq=2.22 ||| 1 10 47 ||| 0-0 0-1 0-2
 </pre>
 
 <ul>
@@ -71,6 +71,18 @@ vp ( vbd ( "expected" ) x0:sbar ) ||| x0:sbar "予想" "し" "た" @ vp ||| fgep
 <li><b>features:</b> This is a list of "string=value" pairs. The string is the name of a feature, and the value is it's value. Travatar can handle sparse features during decoding, so it is possible to add features with any name you like.</li>
 <li><b>counts:</b> These are the number of times the rule appeared in the training corpus. The three numbers are counts of source-target, source, and target respectively. This field does not affect decoding.</li>
 <li><b>alignment:</b> This is an alignment between all terminals (words surrounded by quotes) in the source and target sides of the rule. This also has no effect on decoding.</li>
+</ul>
+
+<p>
+In particular, with regards to the features, these are the standard dense features used in standard machine translation systems (take a look at Philipp Koehn's "Statistical Machine Translation" for more details). They are described briefly below:
+</p>
+
+<ul>
+<li><b>egfp, fgep:</b> These are log conditional probabilities "log P(e|f)" and "log P(f|e)".</li>
+<li><b>egfl, fgel:</b> These are log lexical probabilities, where the probability of each word is calculated separately: "log P<sub>l</sub>(e|f)" and "log P<sub>l</sub>(f|e)".</li>
+<li><b>lfreq:</b> This is the log frequency "log c(e,f)".</li>
+<li><b>w:</b> The number of words on the target side.</li>
+<li><b>p:</b> This is the phrase count feature, it will always be one.</li>
 </ul>
 
 <h2>Modifying Travatar Models</h2>
