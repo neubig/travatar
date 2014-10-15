@@ -9,7 +9,7 @@ using namespace travatar;
 
 // Build composed edges
 void RuleComposer::BuildComposedEdges(int id,
-                        const vector<vector<HyperEdge*> > & min_edges,
+                        const vector<vector<RuleEdge*> > & min_edges,
                         vector<vector<RuleComposer::SizedEdge> > & composed_edges,
                         HyperGraph * ret) const {
     if(composed_edges[id].size() != 0) return;
@@ -17,7 +17,7 @@ void RuleComposer::BuildComposedEdges(int id,
     std::pair<int,int> node_span = ret->GetNode(id)->GetSpan();
     int node_len = node_span.second-node_span.first;
     // For each edge coming from this node
-    BOOST_FOREACH(HyperEdge* min_edge, min_edges[id]) {
+    BOOST_FOREACH(RuleEdge* min_edge, min_edges[id]) {
         int start = composed_edges[id].size();
         composed_edges[id].push_back(make_pair(1, min_edge));
         // Compose all edges from all tails
@@ -34,7 +34,7 @@ void RuleComposer::BuildComposedEdges(int id,
                     // Compose and add the edge in the standard fashion
                     if(sum <= order_ || 
                        (node_len <= src_lex_span_ && above.second->NumTails() == 1 && below.second->NumTails() == 0)) {
-                        HyperEdge * comp = RuleComposer::ComposeEdge(
+                        RuleEdge * comp = RuleComposer::ComposeEdge(
                                             *above.second, *below.second,
                                             above.second->NumTails()-tail_left);
                         ret->AddEdge(comp);
@@ -54,14 +54,20 @@ void RuleComposer::BuildComposedEdges(int id,
 
 // Binarize the graph to the right
 HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
+    if(hg.GetEdgeType() != HyperGraph::RULE_EDGE)
+        THROW_ERROR("Can only compose graphs with rule edges");
     HyperGraph * ret = new HyperGraph(hg);
     if(order_ == 1 && src_lex_span_ == 0) return ret;
     // Create the edges
-    vector<vector<HyperEdge*> > min_edges;
+    vector<vector<RuleEdge*> > min_edges;
     vector<vector<SizedEdge> > composed_edges(ret->NumNodes());
     // Create sets to remove duplicates
-    BOOST_FOREACH(HyperNode * node, ret->GetNodes())
-        min_edges.push_back(node->GetEdges());
+    BOOST_FOREACH(HyperNode * node, ret->GetNodes()) {
+        vector<RuleEdge*> rule_edges(node->GetEdges().size());
+        for(int i = 0; i < (int)rule_edges.size(); i++)
+            rule_edges[i] = static_cast<RuleEdge*>(node->GetEdge(i));
+        min_edges.push_back(rule_edges);
+    }
     if(min_edges.size() > 0)
         BuildComposedEdges(0, min_edges, composed_edges, ret);
     return ret;
@@ -69,16 +75,16 @@ HyperGraph * RuleComposer::TransformGraph(const HyperGraph & hg) const {
 
 // Compose two edges together.
 // child must be an edge rooted at the tail_id'th tail of parent
-HyperEdge * RuleComposer::ComposeEdge(const HyperEdge & parent,
-                                      const HyperEdge & child,
-                                      int tail_id) {
+RuleEdge * RuleComposer::ComposeEdge(const RuleEdge & parent,
+                                     const RuleEdge & child,
+                                     int tail_id) {
     // Sanity check
     if(parent.GetTail(tail_id) != child.GetHead())
         THROW_ERROR("ComposeEdge parent tail != child head: " << *parent.GetTail(tail_id) << " != " << *child.GetHead());
     if(parent.GetTrgData().size() != child.GetTrgData().size())
         THROW_ERROR("Number of factors in parent and child is not equal: " << parent.GetTrgData().size() << " != " << child.GetTrgData().size());
     int factors = parent.GetTrgData().size();
-    HyperEdge * composed = new HyperEdge;
+    RuleEdge * composed = new RuleEdge;
     // do not set id_
     // cover head_
     composed->SetHead(parent.GetHead());

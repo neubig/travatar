@@ -18,12 +18,15 @@ class HyperNode;
 class HyperGraph;
 class TranslationRule;
 class Weights;
+class RuleEdge;
 
 typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
 typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
+public:
+    friend class RuleEdge;
 protected:
     NodeId id_;
     HyperNode* head_;
@@ -32,12 +35,9 @@ protected:
     std::string src_str_;
     CfgDataVector trg_data_;
     SparseVector features_;
-    // A pointer to edges in a separate hypergraph that are
-    // matched by a rule represented by this edge (for use in rule graphs)
-    std::vector<HyperEdge*> fragment_edges_;
 public:
     HyperEdge(HyperNode* head = NULL) : id_(-1), head_(head), score_(0.0) { };
-    ~HyperEdge() { };
+    virtual ~HyperEdge() { };
 
     // Refresh the pointers to head and tail nodes so they point to
     // nodes in a new HyperGraph. Useful when copying edges
@@ -45,8 +45,7 @@ public:
 
     // Adder
     void AddTail(HyperNode* tail);
-    void AddFragmentEdge(HyperEdge* edge) {
-        fragment_edges_.push_back(edge);
+    virtual void AddFragmentEdge(HyperEdge* edge) {
         score_ += edge->GetScore();
     }   
 
@@ -65,9 +64,6 @@ public:
     std::vector<HyperNode*> & GetTails() { return tails_; }
     int NumTails() const { return tails_.size(); }
     void SetTails(const std::vector<HyperNode*> & tails) { tails_ = tails; }
-    const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
-    std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
-    void SetFragmentEdges(const std::vector<HyperEdge*> & fragment_edges) { fragment_edges_ = fragment_edges; }
     // const TranslationRule * GetRule() const { return rule_; }
     // Set the translation rule, including the features in the edges covered by the rule
     void SetRule(const TranslationRule * rule, const SparseVector & orig_features = SparseVector());
@@ -88,7 +84,7 @@ public:
     }
 
     // Operators
-    bool operator==(const HyperEdge & rhs) const;
+    virtual bool operator==(const HyperEdge & rhs) const;
     bool operator!=(const HyperEdge & rhs) const {
         return !(*this == rhs);
     }
@@ -101,6 +97,32 @@ inline std::ostream &operator<<( std::ostream &out, const HyperEdge &L ) {
     L.Print(out);
     return out;
 }
+
+class RuleEdge : public HyperEdge {
+
+protected:
+    // A pointer to edges in a separate hypergraph that are
+    // matched by a rule represented by this edge (for use in rule graphs)
+    std::vector<HyperEdge*> fragment_edges_;
+
+public:
+    RuleEdge(HyperNode* head = NULL) : HyperEdge(head) { }
+    virtual ~RuleEdge() { }
+
+    virtual void AddFragmentEdge(HyperEdge* edge) {
+        fragment_edges_.push_back(edge);
+        score_ += edge->GetScore();
+    }   
+    
+    virtual bool operator==(const RuleEdge & rhs) const;
+    bool operator!=(const RuleEdge & rhs) const {
+        return !(*this == rhs);
+    }
+
+    const std::vector<HyperEdge*> & GetFragmentEdges() const { return fragment_edges_; }
+    std::vector<HyperEdge*> & GetFragmentEdges() { return fragment_edges_; }
+    void SetFragmentEdges(const std::vector<HyperEdge*> & fragment_edges) { fragment_edges_ = fragment_edges; }
+};
 
 // A hypernode in the hypergraph
 class HyperNode {
@@ -295,13 +317,19 @@ inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
 
 // The hypergraph
 class HyperGraph {
+public: 
+    typedef enum {
+        HYPER_EDGE = 'H',
+        RULE_EDGE = 'R'
+    } EdgeType;
 protected:
     std::vector<HyperNode*> nodes_;
     std::vector<HyperEdge*> edges_;
     Sentence words_;
+    EdgeType edge_type_;
 public:
 
-    HyperGraph() { };
+    HyperGraph() : edge_type_(HYPER_EDGE) { };
     // First copy the edges and nodes, then refresh the pointers
     HyperGraph(const HyperGraph & rhs);
     ~HyperGraph();
@@ -364,6 +392,8 @@ public:
     const Sentence & GetWords() const { return words_; }
     Sentence & GetWords() { return words_; }
     void SetWords(const Sentence & words) { words_ = words; }
+    EdgeType GetEdgeType() const { return edge_type_; }
+    void SetEdgeType(EdgeType edge_type) { edge_type_ = edge_type; }
 
 };
 

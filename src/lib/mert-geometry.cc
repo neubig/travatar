@@ -169,7 +169,7 @@ void MertLine::ConstructTranslation(const vector<WordId> & sent, vector<Sentence
     }
     for(int factor = 0; factor < (int)cur->edge->GetTrgData().size(); factor++) {
         size_t ant_size = ant_trans.size();
-        assert(ant_size == (int)cur->edge->GetTails().size());
+        assert(ant_size == cur->edge->GetTails().size());
         BOOST_FOREACH(WordId id, cur->edge->GetTrgData()[factor].words) {
             if(id == unk_id) {
                 pair<int,int> span = cur->edge->GetHead()->GetSpan();

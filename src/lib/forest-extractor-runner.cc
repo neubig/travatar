@@ -127,6 +127,9 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
         // If we want to normalize to partial counts, do so
         if(config.GetBool("normalize_probs"))
             rule_graph->InsideOutsideNormalize();
+        // Sanity check
+        if(rule_graph->GetEdgeType() != HyperGraph::RULE_EDGE)
+            THROW_ERROR("Extraction must result in a rule graph");
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         // Print each of the rules as long as they pass the filter
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
@@ -136,7 +139,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
                 rule_filters[filt]->PassesFilter(*edge, src_graph->GetWords(), trg_sent);
                 filt++);
             if(filt == (int)rule_filters.size()) {
-                cout << extractor.RuleToString(*edge, 
+                cout << extractor.RuleToString(*static_cast<RuleEdge*>(edge), 
                                                src_graph->GetWords(), 
                                                trg_sent,
                                                align,

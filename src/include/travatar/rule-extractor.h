@@ -13,6 +13,7 @@ namespace travatar {
 class HyperGraph;
 class HyperNode;
 class HyperEdge;
+class RuleEdge;
 class Alignment;
 
 typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
@@ -31,7 +32,7 @@ public:
     // Take an edge that represents a rule and the corresponding target sentence
     // and return a string version of the rule
     std::string RuleToString(
-        const HyperEdge & rule,
+        const RuleEdge & rule,
         const Sentence & src_sent,
         const Sentence & trg_sent,
         const Alignment & align,

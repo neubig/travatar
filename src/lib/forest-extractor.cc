@@ -24,10 +24,11 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
     // Calculate spans and the frontier set (GHKM)
     src_parse.CalculateFrontiers(align.GetSrcAlignments());
     // Contains a rule and the as-of-yet-unexpanded nodes
-    typedef pair<HyperEdge*,deque<HyperNode*> > FragFront;
+    typedef pair<RuleEdge*,deque<HyperNode*> > FragFront;
     // First, build a graph of nodes that contain the same spans as the original nodes
     HyperGraph* ret = new HyperGraph;
     ret->SetWords(src_parse.GetWords());
+    ret->SetEdgeType(HyperGraph::RULE_EDGE);
     map<int,int> old_new_ids;
     BOOST_FOREACH(HyperNode * v, src_parse.GetNodes()) {
         if(v->IsFrontier() == HyperNode::IS_FRONTIER) {
@@ -45,7 +46,7 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
         HyperNode* new_node = ret->GetNode(old_new_ids[v->GetId()]);
         // Create the queue of nodes to process
         stack<FragFront> open;
-        HyperEdge* frag = new HyperEdge(new_node);
+        RuleEdge* frag = new RuleEdge(new_node);
         deque<HyperNode*> front; front.push_back(v);
         open.push(FragFront(frag, front));
         // Continue processing until the queue is empty
@@ -66,12 +67,13 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
                     continue;
                 }
                 // Otherwise process all hyperedges of u
-                BOOST_FOREACH(HyperEdge* e, u->GetEdges()) {
+                BOOST_FOREACH(HyperEdge* e_hyp, u->GetEdges()) {
+                    RuleEdge* e = static_cast<RuleEdge*>(e_hyp);
                     // Calculate the nodes that still need to be expanded
                     // We want to push these on the stack backwards so we can process
                     // in ascending order
                     deque<HyperNode*> new_front;
-                    HyperEdge * new_frag(new HyperEdge(*frag_front.first));
+                    RuleEdge * new_frag(new RuleEdge(*frag_front.first));
                     BOOST_FOREACH(HyperNode* t, e->GetTails()) {
                         // If this is not a frontier node, push it on the queue
                         if(t->IsFrontier() != HyperNode::IS_FRONTIER)
@@ -96,6 +98,8 @@ HyperGraph* ForestExtractor::ExtractMinimalRules(
 HyperGraph * ForestExtractor::AttachNullsTop(const HyperGraph & rule_graph,
                                            const Alignment & align,
                                            int trg_len) {
+    if(rule_graph.GetEdgeType() != HyperGraph::RULE_EDGE)
+        THROW_ERROR("Can only attach nulls to rule graphs.");
     HyperGraph * ret = new HyperGraph(rule_graph);
     if(ret->NumNodes() > 0) {
         vector<bool> nulls(trg_len, true);
@@ -131,6 +135,8 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
                                            const HyperGraph & rule_graph,
                                            const Alignment & align,
                                            int trg_len) {
+    if(rule_graph.GetEdgeType() != HyperGraph::RULE_EDGE)
+        THROW_ERROR("Can only attach nulls to rule graphs.");
     HyperGraph * ret = new HyperGraph(rule_graph);
     if(rule_graph.NumNodes() == 0) return ret;
     ret->DeleteNodes();
@@ -146,7 +152,7 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
     GetExpandedNodes(nulls, *rule_graph.GetNode(0), new_nodes, max_attach_);
     // Add the links from the pseudo-node to the root
     BOOST_FOREACH( SpanNodeVector::value_type & val, new_nodes[0] ) {
-        HyperEdge * edge = new HyperEdge(ret->GetNode(0));
+        RuleEdge * edge = new RuleEdge(ret->GetNode(0));
         edge->AddTail(val.second);
         ret->GetNode(0)->AddEdge(edge);
         ret->AddEdge(edge);
@@ -155,8 +161,8 @@ HyperGraph * ForestExtractor::AttachNullsExhaustive(
     BOOST_FOREACH( SpanNodeVector & vec, new_nodes ) {
         BOOST_FOREACH( SpanNodeVector::value_type & val, vec ) {
             ret->AddNode(val.second);
-            BOOST_FOREACH( HyperEdge * edge, val.second->GetEdges() ) {
-                ret->AddEdge(edge);
+            BOOST_FOREACH(HyperEdge * edge, val.second->GetEdges() ) {
+                ret->AddEdge(static_cast<RuleEdge*>(edge));
             }
         }
     }
@@ -178,12 +184,13 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
     // Expand the node itself
     expanded[old_id] = ExpandNode(nulls, old_node, my_attach);
     // Create the stack of partially processed tails
-    typedef boost::tuple<set<int>, const HyperEdge*, HyperEdge*, int, int > q_tuple;
+    typedef boost::tuple<set<int>, const RuleEdge*, RuleEdge*, int, int > q_tuple;
     queue< q_tuple > open_queue;
     // If the node has edges, expand the edges for each node
     BOOST_FOREACH(const SpanNodeVector::value_type & val, expanded[old_id]) {
-        BOOST_FOREACH(const HyperEdge* edge, old_node.GetEdges()) {
-            HyperEdge * new_edge = new HyperEdge(*edge);
+        BOOST_FOREACH(const HyperEdge* edge_hyp, old_node.GetEdges()) {
+            const RuleEdge * edge = static_cast<const RuleEdge*>(edge_hyp);
+            RuleEdge * new_edge = new RuleEdge(*edge);
             new_edge->SetHead(val.second);
             new_edge->SetId(-1);
             new_edge->GetTails().resize(0);
@@ -221,7 +228,7 @@ const ForestExtractor::SpanNodeVector & ForestExtractor::GetExpandedNodes(
                 }
                 // If we are OK, create a new edge and add it
                 if(ok) {
-                    HyperEdge * next_edge = new HyperEdge(*trip.get<2>());
+                    RuleEdge * next_edge = new RuleEdge(*trip.get<2>());
                     next_edge->SetId(-1);
                     next_edge->AddTail(val.second);
                     open_queue.push(q_tuple(new_set, trip.get<1>(), next_edge, trip.get<3>(), trip.get<4>()));
@@ -302,7 +309,7 @@ inline WordId GetSpanLabel(const LabeledSpans & trg_labs, const pair<int,int> & 
 }
 
 // Creating a rule
-string RuleExtractor::RuleToString(const HyperEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const Alignment & align, const LabeledSpans * trg_labs) const {
+string RuleExtractor::RuleToString(const RuleEdge & rule, const Sentence & src_sent, const Sentence & trg_sent, const Alignment & align, const LabeledSpans * trg_labs) const {
     // Get the target span for the top node
     const std::set<int> & trg_span = rule.GetHead()->GetTrgSpan();
     if(trg_span.size() == 0)

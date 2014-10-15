@@ -100,7 +100,6 @@ EvalStatsPtr EvalMeasureAdvInterp::ReadStats(const std::string & line) {
     if(cols.size() != measures_.size())
         THROW_ERROR("Number of columns in input ("<<cols.size()<<") != number of evaluation measures (" << measures_.size() << ")");
     // Load the stats
-    typedef boost::shared_ptr<EvalMeasure> EvalMeasPtr;
     vector<EvalStatsPtr> stats(cols.size());
     for(int i = 0; i < (int)cols.size(); i++)
         stats[i] = measures_[i]->ReadStats(cols[i]);

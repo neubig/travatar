@@ -8,6 +8,7 @@
 
 namespace travatar {
 
+class RuleEdge;
 class HyperEdge;
 class HyperGraph;
 
@@ -20,7 +21,7 @@ class RuleComposer : public GraphTransformer {
 public:
 
     // An edge, annotated with the size of the original edges composed
-    typedef std::pair<int, HyperEdge*>  SizedEdge;
+    typedef std::pair<int, RuleEdge*>  SizedEdge;
 
     RuleComposer(int order, int src_lex_span = 0)
             : order_(order), src_lex_span_(src_lex_span) { }
@@ -31,15 +32,15 @@ public:
 
     // Compose two edges together.
     // child must be an edge rooted at the tail_id'th tail of parent
-    static HyperEdge * ComposeEdge(const HyperEdge & parent,
-                                   const HyperEdge & child,
+    static RuleEdge * ComposeEdge(const RuleEdge & parent,
+                                   const RuleEdge & child,
                                    int tail_id);
 
 protected:
 
     // Compose two edges together
     void BuildComposedEdges(int id,
-                            const std::vector<std::vector<HyperEdge*> > & min_edges,
+                            const std::vector<std::vector<RuleEdge*> > & min_edges,
                             std::vector<std::vector<SizedEdge> > & composed_edges,
                             HyperGraph * ret) const;
 

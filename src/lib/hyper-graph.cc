@@ -48,6 +48,30 @@ bool HyperEdge::operator==(const HyperEdge & rhs) const {
     if(id_ != rhs.id_ ||
        (head_==NULL) != (rhs.head_==NULL) ||
        (head_!=NULL && head_->GetId() != rhs.head_->GetId()) ||
+       (tails_.size() != rhs.tails_.size()))
+        return false;
+    for(int i = 0; i < (int)tails_.size(); i++)
+       if((tails_[i]==NULL) != (rhs.tails_[i]==NULL) ||
+          (tails_[i]!=NULL && tails_[i]->GetId() != rhs.tails_[i]->GetId()))
+          return false;
+    if(features_ != rhs.features_)
+        return false;
+    if(src_str_ != rhs.src_str_)
+        return false;
+    for(int i = 0; i < (int)trg_data_.size(); i++)
+        if(trg_data_ != rhs.trg_data_)
+            return false;
+    if(abs(score_ - rhs.score_) > abs(score_*1e-4))
+        return false;
+    return true;
+}
+
+// This is a Bad copy and paste
+// TODO: fix it
+bool RuleEdge::operator==(const RuleEdge & rhs) const {
+    if(id_ != rhs.id_ ||
+       (head_==NULL) != (rhs.head_==NULL) ||
+       (head_!=NULL && head_->GetId() != rhs.head_->GetId()) ||
        (fragment_edges_.size() != rhs.fragment_edges_.size()) ||
        (tails_.size() != rhs.tails_.size()))
         return false;
@@ -88,11 +112,11 @@ void HyperEdge::Print(std::ostream & out) const {
         out << ", \"features\": " << features_;
     if(src_str_.size())
         out << ", \"src_str\": \"" << EscapeQuotes(src_str_) << '"';
-    if(fragment_edges_.size()) {
-        out << ", \"fragment_edges\": [";
-        for(int i = 0; i < (int)fragment_edges_.size(); i++)
-            out << fragment_edges_[i]->GetId() << ((i == (int)fragment_edges_.size()-1) ? "]" : ", ");
-    }
+    // if(fragment_edges_.size()) {
+    //     out << ", \"fragment_edges\": [";
+    //     for(int i = 0; i < (int)fragment_edges_.size(); i++)
+    //         out << fragment_edges_[i]->GetId() << ((i == (int)fragment_edges_.size()-1) ? "]" : ", ");
+    // }
     if(score_ != 0)
         out << ", \"score\": " << score_;
     out << "}";
@@ -464,12 +488,17 @@ double HyperNode::CalcViterbiScore() {
 }
 
 // First copy the edges and nodes, then refresh the pointers
-HyperGraph::HyperGraph(const HyperGraph & rhs) {
-    words_ = rhs.words_;
+HyperGraph::HyperGraph(const HyperGraph & rhs) : words_(rhs.words_), edge_type_(rhs.edge_type_) {
     BOOST_FOREACH(HyperNode * node, rhs.nodes_)
         nodes_.push_back(new HyperNode(*node));
-    BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
-        edges_.push_back(new HyperEdge(*edge));
+    edge_type_ = rhs.edge_type_;
+    if(edge_type_ == HYPER_EDGE) {
+        BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
+            edges_.push_back(new HyperEdge(*edge));
+    } else if (edge_type_ == RULE_EDGE) {
+        BOOST_FOREACH(HyperEdge * edge, rhs.edges_)
+            edges_.push_back(new RuleEdge(*static_cast<RuleEdge*>(edge)));
+    }
     BOOST_FOREACH(HyperNode * node, nodes_)
         node->RefreshPointers(*this);
     BOOST_FOREACH(HyperEdge * edge, edges_)
