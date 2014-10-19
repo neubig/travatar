@@ -1,6 +1,8 @@
-
-#include <travatar/global-debug.h>
 #include <travatar/eval-measure-interp.h>
+
+#include <travatar/eval-measure-loader.h>
+#include <travatar/global-debug.h>
+
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -113,7 +115,7 @@ EvalMeasureInterp::EvalMeasureInterp(const std::string & config) {
         THROW_ERROR("Bad configuration in interpreted evaluation measure: " << config);
     for(int i = 0; i < (int)strs.size(); i += 2) {
         coeffs_.push_back(boost::lexical_cast<double>(strs[i]));
-        measures_.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(strs[i+1])));
+        measures_.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasureLoader::CreateMeasureFromString(strs[i+1])));
     }
 }
 

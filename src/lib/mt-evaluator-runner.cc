@@ -4,6 +4,7 @@
 #include <travatar/config-mt-evaluator-runner.h>
 #include <travatar/dict.h>
 #include <travatar/eval-measure.h>
+#include <travatar/eval-measure-loader.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
@@ -36,7 +37,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     vector<string> eval_ids;
     algorithm::split(eval_ids, config.GetString("eval"), is_any_of(" "));
     BOOST_FOREACH(const string & eval, eval_ids)
-        eval_measures.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(eval)));
+        eval_measures.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasureLoader::CreateMeasureFromString(eval)));
     int eval_count = eval_measures.size();
 
     // If we are doing bootstrap resampling to calculate statistical significance, create random sets

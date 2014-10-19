@@ -4,6 +4,7 @@
 #include <travatar/input-file-stream.h>
 #include <travatar/global-debug.h>
 #include <travatar/eval-measure.h>
+#include <travatar/eval-measure-loader.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/tree-io.h>
 #include <travatar/string-util.h>
@@ -126,7 +127,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
 
     // Create an evaluation measure for MBR if necessary
     if(config.GetString("mbr_eval") != "") {
-        mbr_eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("mbr_eval")));
+        mbr_eval_.reset(EvalMeasureLoader::CreateMeasureFromString(config.GetString("mbr_eval")));
         mbr_scale_ = config.GetDouble("mbr_scale");
         mbr_hyp_cnt_ = config.GetInt("mbr_hyp_cnt");
     }

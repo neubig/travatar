@@ -23,6 +23,7 @@ nobase_include_HEADERS = \
 	travatar/eval-measure-ribes.h \
 	travatar/eval-measure-ter.h \
 	travatar/eval-measure.h \
+    travatar/eval-measure-loader.h \
 	travatar/forest-extractor-runner.h \
 	travatar/global-debug.h \
 	travatar/graph-transformer.h \
