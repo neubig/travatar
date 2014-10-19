@@ -3,9 +3,7 @@
 #include <travatar/mt-evaluator-runner.h>
 #include <travatar/config-mt-evaluator-runner.h>
 #include <travatar/dict.h>
-#include <travatar/eval-measure-bleu.h>
-#include <travatar/eval-measure-ribes.h>
-#include <travatar/eval-measure-ter.h>
+#include <travatar/eval-measure.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
