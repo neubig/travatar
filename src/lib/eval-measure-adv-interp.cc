@@ -1,8 +1,10 @@
+#include <travatar/eval-measure-adv-interp.h>
 
+#include <travatar/eval-measure-loader.h>
 #include <travatar/global-debug.h>
 #include <travatar/dict.h>
-#include <travatar/eval-measure-adv-interp.h>
 #include <travatar/math-query.h>
+
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -116,7 +118,7 @@ EvalMeasureAdvInterp::EvalMeasureAdvInterp(const std::string & config) {
             THROW_ERROR("Variable should be within A-Z (inclusive)");
         WordId var = Dict::WID(strs[i]);
         vars_.push_back(var);
-        measures_.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasure::CreateMeasureFromString(strs[i+1])));
+        measures_.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasureLoader::CreateMeasureFromString(strs[i+1])));
     }
     query_ = strs[strs.size()-1];
 }

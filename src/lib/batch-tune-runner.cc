@@ -1,5 +1,7 @@
-#include <travatar/config-batch-tune.h>
 #include <travatar/batch-tune-runner.h>
+
+#include <travatar/eval-measure-loader.h>
+#include <travatar/config-batch-tune.h>
 #include <travatar/input-file-stream.h>
 #include <travatar/tune-mert.h>
 #include <travatar/tune-greedy-mert.h>
@@ -15,9 +17,11 @@
 #include <travatar/dict.h>
 #include <travatar/global-debug.h>
 #include <travatar/string-util.h>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <fstream>
 
 using namespace travatar;
@@ -291,7 +295,7 @@ void BatchTuneRunner::Run(const ConfigBatchTune & config) {
     }
 
     // Create the evaluation measure
-    eval_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
+    eval_.reset(EvalMeasureLoader::CreateMeasureFromString(config.GetString("eval")));
     
     // Figure out whether we are tuning or calculating sentence statistics
     string stat_out_filename = config.GetString("stat_out");

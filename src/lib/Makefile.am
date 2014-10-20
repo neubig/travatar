@@ -8,8 +8,9 @@ TRAVATARCPP = \
 	caser.cc \
 	config-base.cc \
 	dict.cc \
-	eval-measure-bleu.cc \
 	eval-measure.cc \
+    eval-measure-loader.cc \
+	eval-measure-bleu.cc \
 	eval-measure-interp.cc \
 	eval-measure-ribes.cc \
 	eval-measure-ter.cc \

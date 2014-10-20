@@ -127,9 +127,6 @@ public:
     // Parse a pair of strings
     static std::vector<StringPair> ParseConfig(const std::string & config);
 
-    // Create measure from string
-    static EvalMeasure * CreateMeasureFromString(const std::string & eval);
-    
     // Find the oracle sentence for this evaluation measure
     // TODO: This is totally a hack, doing very ugly things like writing a file to
     //       a specific place on disk, not accounting for sentence brevity, etc.

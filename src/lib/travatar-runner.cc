@@ -18,6 +18,7 @@
 #include <travatar/lm-composer-incremental.h>
 #include <travatar/binarizer.h>
 #include <travatar/eval-measure.h>
+#include <travatar/eval-measure-loader.h>
 #include <travatar/timer.h>
 #include <travatar/input-file-stream.h>
 #include <travatar/config-travatar-runner.h>
@@ -166,7 +167,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         if(!weight_out)
             THROW_ERROR("Could open tune_weight_out file: " << config.GetString("tune_weight_out"));
         // Set the evaluation measure to be used
-        tune_eval_measure_.reset(EvalMeasure::CreateMeasureFromString(config.GetString("tune_loss")));
+        tune_eval_measure_.reset(EvalMeasureLoader::CreateMeasureFromString(config.GetString("tune_loss")));
         // And open the reference files
         vector<string> ref_files = config.GetStringArray("tune_ref_files");
         if(ref_files.size() == 0)

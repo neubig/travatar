@@ -5,9 +5,8 @@
 #include <travatar/mt-segmenter-runner.h>
 #include <travatar/config-mt-segmenter-runner.h>
 #include <travatar/dict.h>
-#include <travatar/eval-measure-bleu.h>
-#include <travatar/eval-measure-ribes.h>
-#include <travatar/eval-measure-ter.h>
+#include <travatar/eval-measure.h>
+#include <travatar/eval-measure-loader.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
@@ -109,7 +108,7 @@ void MTSegmenterRunner::Run(const ConfigMTSegmenterRunner & config) {
     
     // Load the evaluation measure
     boost::shared_ptr<EvalMeasure> eval_measure(
-        EvalMeasure::CreateMeasureFromString(config.GetString("eval")));
+        EvalMeasureLoader::CreateMeasureFromString(config.GetString("eval")));
 
     // Load the file to be split
     const string & filename = config.GetMainArg(0);
