@@ -67,20 +67,12 @@ cp GIZA++-v2/{GIZA++,plain2snt.out,snt2cooc.out,snt2plain.out,trainGIZA++.sh} mk
 </pre>
 </li>
 
-<li><a href="http://nlp.stanford.edu/software/lex-parser.shtml">Stanford Parser</a> (en, zh, de, fr): Unzip, then run the following commands to normalize version numbers:
-<pre>
-ln -s `pwd`/stanford-parser-* stanford-parser
-cd stanford-parser
-ln -s `pwd`/stanford-parser-*-models.jar stanford-parser-models.jar
-</pre>
-</li>
+<li><a href="http://github.com/odashi/Ckylark">Ckylark parser</a> (en, zh, ja): Clone from git, enter the directory, <tt>autoreconf -i</tt>, <tt>./configure</tt>, <tt>make</tt>.
 
-<li><a href="http://github.com/neubig/egret">Egret Parser</a> (en, zh): Unzip, run <tt>bash make-linux.sh</tt>.</li>
+<li><a href="http://github.com/neubig/egret">Egret Parser</a> (en, zh, ja): Unzip, run <tt>bash make-linux.sh</tt>.</li>
 
 <li><a href="http://phontron.com/kytea">KyTea Morphological Analyzer</a> (ja): Unzip, enter the directory, <tt>./configure</tt>, <tt>make</tt> and <tt>sudo make install</tt>.
 </li>
-
-<li><a href="http://plata.ar.media.kyoto-u.ac.jp/tool/EDA">Eda Parser</a> (ja): Unzip, enter the directory, <tt>make</tt>.</li>
 
 <li><a href="http://code.google.com/p/nile/">Nile</a> (optional): Requires several libraries, etc. Follow the install directions.</li>
 </ul>

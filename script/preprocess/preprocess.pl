@@ -31,30 +31,30 @@
 # Before running the script you should install:
 #
 # English:
-#  Stanford Parser: http://nlp.stanford.edu/software/lex-parser.shtml
+#  Ckylark: http://github.com/Odashi/Ckylark
 #  Egret:  http://code.google.com/p/egret-parser/
 #
 # Japanese:
 #  KyTea:  http://www.phontron.com/kytea/
-#  Eda:    http://plata.ar.media.kyoto-u.ac.jp/tool/EDA/home_en.html
-#
-# Chinese:
-#  Stanford Segmenter: http://nlp.stanford.edu/software/segmenter.shtml
-#  Stanford Parser: http://nlp.stanford.edu/software/lex-parser.shtml
+#  Ckylark: http://github.com/Odashi/Ckylark
 #  Egret:  http://code.google.com/p/egret-parser/
 #
-# French/German:
-#  Stanford Parser: http://nlp.stanford.edu/software/lex-parser.shtml
+# Chinese:
+#  KyTea:  http://www.phontron.com/kytea/
+#  Ckylark: http://github.com/Odashi/Ckylark
+#  Egret:  http://code.google.com/p/egret-parser/
+#
+# # French/German:
+# #  Stanford Parser: http://nlp.stanford.edu/software/lex-parser.shtml
 #
 # Aligner:
 #  GIZA++: http://code.google.com/p/giza-pp/
 #  Nile:   http://code.google.com/p/nile/
 #
 # If you install KyTea using "make install" and install all other tools to
-# ~/usr/local and remove version numbers from the directory names, and move
-# the Stanford Parser model file from stanford-parser-models-VERSION.jar to
-# stanford-parser-models.jar, this script can be run without any extra path
-# settings. Otherwise, you will need to specify the paths using the command line
+# ~/usr/local and remove version numbers from the directory names, this
+# script can be run without any extra path settings. Otherwise, you will
+# need to specify the paths using the command line
 
 use Env;
 use IO::File;
@@ -67,14 +67,16 @@ my $CLEAN_LEN = 0;
 # Directories and settings
 my $PROGRAM_DIR = $ENV{"HOME"}."/usr/local";
 my $TRAVATAR_DIR;
-my $STANFORD_DIR;
-my $STANFORD_SEG_DIR;
-my $STANFORD_POS_DIR;
-my $STANFORD_JARS;
+my $CKYLARK_DIR;
+my $CKYLARK_SRC_MODEL;
+my $CKYLARK_TRG_MODEL;
 my $EGRET_DIR;
 my $EGRET_SRC_MODEL;
 my $EGRET_TRG_MODEL;
 my $EGRET_FOREST_OPT = "-nbest4threshold=100";
+my $KYTEA_DIR;
+my $KYTEA_SRC_MODEL;
+my $KYTEA_TRG_MODEL;
 my $SPLIT_WORDS_SRC;
 my $SPLIT_WORDS_TRG;
 my $TRUECASE_SRC;
@@ -86,9 +88,6 @@ my $TRUECASE_TRG_MODEL;
 # with widely different sentence lengths (such as when you
 # concatenate a corpus and a dictionary)
 my $SPLIT_TYPE = "consecutive";
-my $EDA_DIR;
-my $EDA_VOCAB;
-my $EDA_WEIGHT;
 my $GIZA_DIR;
 my $NILE_DIR;
 my $NILE_GIZATYPE = "intersect";
@@ -97,7 +96,6 @@ my $NILE_BINARIZE = "rightrp";
 my $NILE_SEGMENTS = 200;
 my $NILE_BEAM = 64;
 my $NILE_ORDER = "srctrg";
-my $KYTEA = "kytea";
 my $FOREST_SRC;
 my $FOREST_TRG;
 my $ALIGN;
@@ -118,17 +116,19 @@ binmode STDERR, ":utf8";
 GetOptions(
     "align" => \$ALIGN,
     "clean-len=i" => \$CLEAN_LEN,
-    "eda-dir=s" => \$EDA_DIR,
-    "eda-vocab=s" => \$EDA_VOCAB,
-    "eda-weight=s" => \$EDA_WEIGHT,
     "egret-dir=s" => \$EGRET_DIR,
     "egret-forest-opt=s" => \$EGRET_FOREST_OPT,
     "egret-src-model=s" => \$EGRET_SRC_MODEL,
     "egret-trg-model=s" => \$EGRET_TRG_MODEL,
+    "ckylark-dir=s" => \$CKYLARK_DIR,
+    "ckylark-src-model=s" => \$CKYLARK_SRC_MODEL,
+    "ckylark-trg-model=s" => \$CKYLARK_TRG_MODEL,
     "forest-src" => \$FOREST_SRC,
     "forest-trg" => \$FOREST_TRG,
     "giza-dir=s" => \$GIZA_DIR,
-    "kytea=s" => \$KYTEA,
+    "kytea-dir=s" => \$KYTEA_DIR,
+    "kytea-src-model=s" => \$KYTEA_SRC_MODEL,
+    "kytea-trg-model=s" => \$KYTEA_TRG_MODEL,
     "nile-beam=i" => \$NILE_BEAM,
     "nile-dir=s" => \$NILE_DIR,
     "nile-model=s" => \$NILE_MODEL,
@@ -140,7 +140,6 @@ GetOptions(
     "split-words-trg=s" => \$SPLIT_WORDS_TRG,
     "split-type=s" => \$SPLIT_TYPE,
     "src=s" => \$SRC,
-    "stanford-jars=s" => \$STANFORD_JARS,
     "threads=s" => \$THREADS,
     "travatar-dir=s" => \$TRAVATAR_DIR,
     "truecase-src-model=s" => \$TRUECASE_SRC_MODEL,
@@ -149,17 +148,14 @@ GetOptions(
     "truecase-trg" => \$TRUECASE_TRG,
     "trg=s" => \$TRG,
 );
-$STANFORD_DIR = "$PROGRAM_DIR/stanford-parser" if not $STANFORD_DIR;
-$STANFORD_SEG_DIR = "$PROGRAM_DIR/stanford-segmenter" if not $STANFORD_SEG_DIR;
-$STANFORD_POS_DIR = "$PROGRAM_DIR/stanford-postagger" if not $STANFORD_POS_DIR;
-$STANFORD_JARS = "$STANFORD_DIR/stanford-parser.jar:$STANFORD_DIR/stanford-parser-models.jar" if not $STANFORD_JARS;
-$EDA_DIR = "$PROGRAM_DIR/eda" if not $EDA_DIR;
-$EGRET_DIR = "$PROGRAM_DIR/Egret" if not $EGRET_DIR;
-$EDA_VOCAB = "$EDA_DIR/data/jp-0.1.0-utf8-vocab-small.dat" if not $EDA_VOCAB;
-$EDA_WEIGHT = "$EDA_DIR/data/jp-0.1.0-utf8-weight-small.dat" if not $EDA_WEIGHT;
+$CKYLARK_DIR = "$PROGRAM_DIR/Ckylark" if not $EGRET_DIR;
+$EGRET_DIR = "$PROGRAM_DIR/egret" if not $EGRET_DIR;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
+$KYTEA_DIR = "$PROGRAM_DIR/kytea" if not $KYTEA_DIR;
 $NILE_DIR = "$PROGRAM_DIR/nile" if not $NILE_DIR;
-my %EGRET_DEFAULT_MODEL = ( "en" => "$EGRET_DIR/eng_grammar",  "zh" => "$EGRET_DIR/chn_grammar" );
+my %CKYLARK_DEFAULT_MODEL = ( "en" => "$CKYLARK_DIR/model/wsj",  "ja" => "$CKYLARK_DIR/model/jdc" );
+my %EGRET_DEFAULT_MODEL = ( "en" => "$EGRET_DIR/eng_grammar",  "ja" => "$EGRET_DIR/jpn_grammar", "zh" => "$EGRET_DIR/chn_grammar" );
+my %KYTEA_DEFAULT_MODEL = ( "ja" => "$KYTEA_DIR/data/model.bin" );
 
 ### Sanity check
 foreach my $f ($NILE_MODEL, $EGRET_SRC_MODEL, $EGRET_TRG_MODEL, $TRUECASE_SRC_MODEL, $TRUECASE_TRG_MODEL) {
@@ -227,14 +223,16 @@ if(-e "$PREF/orig") {
 
 ###### Tokenization and Lowercasing #######
 sub tokenize_cmd {
-    if($_[0] =~ /^(en|de)$/) { return "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
-    elsif($_[0] eq "fr") { return "java -cp $STANFORD_JARS edu.stanford.nlp.process.PTBTokenizer -options asciiQuotes -preserveLines INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
-    elsif($_[0] eq "ja") { return "$KYTEA -notags -wsconst D INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
-    elsif($_[0] eq "zh") { return "$STANFORD_SEG_DIR/segment.sh ctb INFILE UTF-8 0 | sed \"s/(/-LRB-/g; s/)/-RRB-/g; s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE"; }
+    if($_[0] =~ /^(en|de|fr)$/) { return "cat INFILE | $TRAVATAR_DIR/src/bin/tokenizer > OUTFILE"; }
+    elsif($_[0] =~ /^(ja|zh)$/) { 
+        my $mod = ($_[1] ? $_[1] : $KYTEA_DEFAULT_MODEL{$_[0]});
+        die "Must specify a KyTea model for $_[0]" if(not $mod);
+        return "$KYTEA_DIR/src/bin/kytea -notags -wsconst D -model $mod INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE";
+    }
     else { die "Cannot tokenize $_[0]"; }
 }
-run_parallel("$PREF/orig", "$PREF/tok", $SRC, tokenize_cmd($SRC));
-run_parallel("$PREF/orig", "$PREF/tok", $TRG, tokenize_cmd($TRG)) if $TRG;
+run_parallel("$PREF/orig", "$PREF/tok", $SRC, tokenize_cmd($SRC, $KYTEA_SRC_MODEL));
+run_parallel("$PREF/orig", "$PREF/tok", $TRG, tokenize_cmd($TRG, $KYTEA_TRG_MODEL)) if $TRG;
 
 ###### Cleaning #######
 if($CLEAN_LEN == 0) {
@@ -251,84 +249,18 @@ if($CLEAN_LEN == 0) {
 }
 
 ###### 1-best Parsing ######
-# TODO: clean this up
 sub run_tree_parsing {
     my $lang = shift;
     my $split_words = shift;
     my $is_src = shift;
-    my $EGRET_MODEL = ($is_src ? $EGRET_SRC_MODEL : $EGRET_TRG_MODEL);
+    my $CKYLARK_MODEL = ($is_src ? $CKYLARK_SRC_MODEL : $CKYLARK_TRG_MODEL);
+    if(not $CKYLARK_MODEL) { $CKYLARK_MODEL = $CKYLARK_DEFAULT_MODEL{$lang}; }
+    (-e "$CKYLARK_MODEL.grammar") or die "Could not find Ckylark model \"$CKYLARK_MODEL\" for $lang";
     my $SPLIT_CMD = "";
     $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
-    if($lang =~ /^(en|zh)$/) {
-        if($lang eq "en") {
-            # EN Parsing with Stanford Parser
-            run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz INFILE 2> OUTFILE.log > OUTFILE");
-    
-            # EN Parsing with Egret
-            $EGRET_MODEL = "$EGRET_DIR/eng_grammar" if not $EGRET_MODEL;
-            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
-        } else {
 
-            # ZH Convert to GB encoding, same as the penn treebank
-            run_parallel("$PREF/clean", "$PREF/cleangb", $lang, "iconv -sc -f UTF-8 -t GB18030 < INFILE | sed \"s/^[ \t]*\$/FAILED/g\" > OUTFILE");
-
-            # ZH Parsing with Stanford Parser
-            run_parallel("$PREF/cleangb", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -tLPP \"edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams\" -chineseFactored -encoding GB18030 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz INFILE 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
-    
-            # ZH Parsing with Egret
-            $EGRET_MODEL = "$EGRET_DIR/chn_grammar" if not $EGRET_MODEL;
-            run_parallel("$PREF/cleangb", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log | iconv -f GB18030 -t UTF-8 > OUTFILE");
-        }
-    
-        # Combine Stanford and Egret (for now this is not parallel)
-        -e "$PREF/tree" or mkdir "$PREF/tree";
-        foreach my $i ("", map{".$_"} @suffixes) {
-            if(not -e "$PREF/tree/$lang$i") {
-                safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
-            }
-        }
-    } elsif($lang eq "ja") {
-        # JA Parsing with Eda
-        run_parallel("$PREF/clean", "$PREF/edain", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/han2zen.pl -nospace -remtab | $KYTEA -nows -in tok -out eda > OUTFILE", 1);
-        run_parallel("$PREF/edain", "$PREF/eda", $lang, "$EDA_DIR/src/eda/eda -e INFILE -v $EDA_VOCAB -w $EDA_WEIGHT > OUTFILE");
-        if($EGRET_MODEL) {
-            run_parallel("$PREF/eda", "$PREF/edacfg", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
-            run_parallel("$PREF/clean", "$PREF/egret", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
-            # Combine Eda and Egret (for now this is not parallel)
-            -e "$PREF/tree" or mkdir "$PREF/tree";
-            foreach my $i ("", map{".$_"} @suffixes) {
-                if(not -e "$PREF/tree/$lang$i") {
-                    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/edacfg/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/edacfg/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
-                }
-            }
-        } else {
-            run_parallel("$PREF/eda", "$PREF/tree", $lang, "cat INFILE | $TRAVATAR_DIR/script/tree/ja-adjust-dep.pl | $TRAVATAR_DIR/script/tree/ja-dep2cfg.pl > OUTFILE", 1);
-        }
-    } elsif($lang =~ /^(fr|de)$/) {
-        my $model;
-        if($lang eq "fr") { $model = "frenchFactored"; }
-        elsif($lang eq "de") { $model = "germanPCFG"; }
-        if($EGRET_MODEL) {
-            # Parsing with Stanford Parser
-            run_parallel("$PREF/clean", "$PREF/stanford", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
-    
-            # Parsing with Egret
-            run_parallel("$PREF/clean", "$PREF/egret", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE");
-
-            # Combine Stanford and Egret (for now this is not parallel)
-            -e "$PREF/tree" or mkdir "$PREF/tree";
-            foreach my $i ("", map{".$_"} @suffixes) {
-                if(not -e "$PREF/tree/$lang$i") {
-                    safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl $PREF/stanford/$lang$i $PREF/egret/$lang$i $SPLIT_CMD > $PREF/tree/$lang$i") ;
-                    die "Combining trees failed on $lang$i" if( &$file_len_func("$PREF/stanford/$lang$i") != &$file_len_func("$PREF/tree/$lang$i"));
-                }
-            }
-        } else {
-            run_parallel("$PREF/clean", "$PREF/tree", $lang, "java -mx2000m -cp $STANFORD_JARS edu.stanford.nlp.parser.lexparser.LexicalizedParser -encoding utf-8 -tokenized -sentences newline -outputFormat oneline edu/stanford/nlp/models/lexparser/$model.ser.gz INFILE 2> OUTFILE.log $SPLIT_CMD > OUTFILE");
-        }
-    } else { die "Cannot parse $lang"; }
+    # Parse
+    run_parallel("$PREF/clean", "$PREF/tree", $lang, "cat INFILE | $CKYLARK_DIR/src/ckylark --add-root-tag --model $CKYLARK_MODEL > OUTFILE");
 
     # Lowercase and print
     run_parallel("$PREF/tree", "$PREF/treelow", $lang, "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
@@ -355,6 +287,8 @@ sub run_forest_parsing {
     run_parallel("$PREF/tree", "$PREF/treefor", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret < INFILE 2> OUTFILE.log > OUTFILE", 1);
     
     if($lang eq "zh") {
+        # ZH Convert to GB encoding, same as the penn treebank
+        run_parallel("$PREF/clean", "$PREF/cleangb", $lang, "iconv -sc -f UTF-8 -t GB18030 < INFILE | sed \"s/^[ \t]*\$/FAILED/g\" > OUTFILE");
         # ZH Parse with Egret
         run_parallel("$PREF/cleangb", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log  | iconv -f GB18030 -t UTF-8 | sed \"s/\\^g//g\" > OUTFILE", 1);
     } elsif($lang eq "ja") {
@@ -365,7 +299,7 @@ sub run_forest_parsing {
         run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log | sed \"s/\\^g//g\" > OUTFILE", 1);
     }
     
-    # ZH Combine Stanford and Egret (for now this is not parallel)
+    # ZH Combine tree and Egret (for now this is not parallel)
     -e "$PREF/for" or mkdir "$PREF/for";
     foreach my $i ("", map{".$_"} @suffixes) {
         safesystem("$TRAVATAR_DIR/script/tree/replace-failed-parse.pl -format egret $PREF/treefor/$lang$i $PREF/egretfor/$lang$i $SPLIT_CMD > $PREF/for/$lang$i") if not -e "$PREF/for/$lang$i";
@@ -495,6 +429,7 @@ sub safesystem {
 
 # Run a command in parallel over several files
 sub run_parallel {
+    die "Illegal command to run_parallel @_" if @_ < 4;
     my ($in_dir, $out_dir, $prefix, $cmd, $nocheck) = @_;
     return if -e "$out_dir/$prefix.DONE";
     my @files = map { "$prefix.$_" } @suffixes;
