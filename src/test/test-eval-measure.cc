@@ -1,23 +1,24 @@
 #include "test-eval-measure.h"
 #include <travatar/dict.h>
 #include <travatar/check-equal.h>
+#include <travatar/eval-measure-loader.h>
 
 using namespace std;
 
 namespace travatar {
 
 TestEvalMeasure::TestEvalMeasure() :
-    eval_measure_bleu1_(EvalMeasure::CreateMeasureFromString("bleu:order=1")),
-    eval_measure_bleup1_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1")),
-    eval_measure_bleup1r_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0")),
-    eval_measure_bleup1f_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,prec=0.5")),
-    eval_measure_bleup1a_(EvalMeasure::CreateMeasureFromString("bleu:smooth=1,mean=arith")),
-    eval_measure_ribes_(EvalMeasure::CreateMeasureFromString("ribes")),
-    eval_measure_ter_(EvalMeasure::CreateMeasureFromString("ter")),
-    eval_measure_wer_(EvalMeasure::CreateMeasureFromString("wer")),
-    eval_measure_pincbleu_(EvalMeasure::CreateMeasureFromString("interp:0.5|bleu:factor=0,smooth=1|0.5|bleu:inverse=true,brev=false,factor=1,scope=sentence,mean=arith")),
-    eval_measure_interp_(EvalMeasure::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes")),
-    eval_measure_adv_interp_(EvalMeasure::CreateMeasureFromString("ainterp:A|bleu:smooth=1|B|ribes|2*A*B/(A+B)")),
+    eval_measure_bleu1_(EvalMeasureLoader::CreateMeasureFromString("bleu:order=1")),
+    eval_measure_bleup1_(EvalMeasureLoader::CreateMeasureFromString("bleu:smooth=1")),
+    eval_measure_bleup1r_(EvalMeasureLoader::CreateMeasureFromString("bleu:smooth=1,prec=0")),
+    eval_measure_bleup1f_(EvalMeasureLoader::CreateMeasureFromString("bleu:smooth=1,prec=0.5")),
+    eval_measure_bleup1a_(EvalMeasureLoader::CreateMeasureFromString("bleu:smooth=1,mean=arith")),
+    eval_measure_ribes_(EvalMeasureLoader::CreateMeasureFromString("ribes")),
+    eval_measure_ter_(EvalMeasureLoader::CreateMeasureFromString("ter")),
+    eval_measure_wer_(EvalMeasureLoader::CreateMeasureFromString("wer")),
+    eval_measure_pincbleu_(EvalMeasureLoader::CreateMeasureFromString("interp:0.5|bleu:factor=0,smooth=1|0.5|bleu:inverse=true,brev=false,factor=1,scope=sentence,mean=arith")),
+    eval_measure_interp_(EvalMeasureLoader::CreateMeasureFromString("interp:0.4|bleu:smooth=1|0.6|ribes")),
+    eval_measure_adv_interp_(EvalMeasureLoader::CreateMeasureFromString("ainterp:A|bleu:smooth=1|B|ribes|2*A*B/(A+B)")),
     ref1_sent_(Dict::ParseWords("taro met hanako")),
     sys1_sent_(Dict::ParseWords("the taro met the hanako"))
 { }
