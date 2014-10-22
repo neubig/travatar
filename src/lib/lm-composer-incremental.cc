@@ -20,7 +20,7 @@ using namespace boost;
 using namespace lm;
 using namespace search;
 
-LMComposerIncremental::LMComposerIncremental(const std::string & str) :
+LMComposerIncremental::LMComposerIncremental(const std::vector<std::string> & str) :
     LMComposer(str), stack_pop_limit_(0), edge_limit_(1000) {
     if(lm_data_.size() != 1)
         THROW_ERROR("Cannot perform search using 'inc' when using more than one language model. Try using 'cp' instead.");

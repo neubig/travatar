@@ -88,7 +88,7 @@ protected:
     std::vector<LMData*> lm_data_;
 
 public:
-    LMComposer(const std::string & str);
+    LMComposer(const std::vector<std::string> & str);
     LMComposer(void * model, lm::ngram::ModelType type, VocabMap* vocab_map) {
         LMData * data = new LMData(model, type, vocab_map);
         lm_data_.push_back(data);

@@ -34,6 +34,7 @@ using namespace boost;
 using namespace lm::ngram;
 
 void TravatarRunnerTask::Run() {
+    typedef shared_ptr<GraphTransformer> GTPtr;
     PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
     // Binarizer if necessary
@@ -49,8 +50,10 @@ void TravatarRunnerTask::Run() {
     // If we have an lm, score with the LM
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
     if(runner_->HasLM() && rule_graph->NumNodes() > 0) {
-        boost::shared_ptr<HyperGraph> lm_graph(runner_->GetLM().TransformGraph(*rule_graph));
-        lm_graph.swap(rule_graph);
+        BOOST_FOREACH(GTPtr lm, runner_->GetLMs()) {
+            boost::shared_ptr<HyperGraph> lm_graph(lm->TransformGraph(*rule_graph));
+            lm_graph.swap(rule_graph);
+        }
     }
 
     // Calculate the n-best list
@@ -205,23 +208,29 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
 
-    // Load the language model
+    // Load the language model(s)
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
-    if(config.GetString("lm_file") != "") {
-        // Set the LM Composer
-        if(config.GetString("search") == "cp") {
-            LMComposerBU * bu = new LMComposerBU(config.GetString("lm_file"));
-            bu->SetStackPopLimit(config.GetInt("pop_limit"));
-            bu->SetChartLimit(config.GetInt("chart_limit"));
-            bu->UpdateWeights(weights_->GetCurrent());
-            lm_.reset(bu);
-        } else if(config.GetString("search") == "inc") {
-            LMComposerIncremental * inc = new LMComposerIncremental(config.GetString("lm_file"));
-            inc->SetStackPopLimit(config.GetInt("pop_limit"));
-            inc->UpdateWeights(weights_->GetCurrent());
-            lm_.reset(inc);
+    vector<string> lm_files = Tokenize(config.GetString("lm_file"), " ");
+    vector<int> pop_limits = config.GetIntArray("pop_limit");
+    if(lm_files.size() > 0) {
+        string multi_type = config.GetString("lm_multi_type");
+        if(multi_type == "joint") {
+            if(pop_limits.size() != 1)
+                THROW_ERROR("Must specify exactly one pop limit when jointly decoding LMs");
+            lms_.push_back(CreateLMComposer(config,
+                                            lm_files,
+                                            pop_limits[0],
+                                            weights_->GetCurrent()));
+        } else if(multi_type == "consec") {
+            if(pop_limits.size() != lm_files.size())
+                THROW_ERROR("Must specify one pop limit for each LM when consecutively decoding LMs");
+            for(int i = 0; i < (int)lm_files.size(); i++)
+                lms_.push_back(CreateLMComposer(config,
+                                                vector<string>(1, lm_files[i]),
+                                                pop_limits[i],
+                                                weights_->GetCurrent()));
         } else {
-            THROW_ERROR("Unknown search algorithm: " << config.GetString("search"));
+            THROW_ERROR("Illegal lm_multi_type option " << multi_type);
         }
     }
 
@@ -333,3 +342,28 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }
 
 }
+
+
+shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
+        const ConfigTravatarRunner & config, const vector<string> & lm_files,
+        int pop_limit, const SparseMap & weights) {
+    // Set the LM Composer
+    shared_ptr<GraphTransformer> lm;
+    string search = config.GetString("search"); 
+    if(search == "cp") {
+        LMComposerBU * bu = new LMComposerBU(lm_files);
+        bu->SetStackPopLimit(pop_limit);
+        bu->SetChartLimit(config.GetInt("chart_limit"));
+        bu->UpdateWeights(weights);
+        lm.reset(bu);
+    } else if(search == "inc") {
+        LMComposerIncremental * inc = new LMComposerIncremental(lm_files);
+        inc->SetStackPopLimit(pop_limit);
+        inc->UpdateWeights(weights);
+        lm.reset(inc);
+    } else {
+        THROW_ERROR("Illegal search type " << search);
+    }
+    return lm;
+}
+

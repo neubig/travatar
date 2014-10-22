@@ -86,7 +86,7 @@ protected:
     int edge_limit_;
 
 public:
-    LMComposerIncremental(const std::string & str);
+    LMComposerIncremental(const std::vector<std::string> & str);
     LMComposerIncremental(void * lm, lm::ngram::ModelType type, VocabMap * vocab_map, int factor = 0) :
         LMComposer(lm, type, vocab_map), stack_pop_limit_(0), edge_limit_(1000) { }
     virtual ~LMComposerIncremental() { }

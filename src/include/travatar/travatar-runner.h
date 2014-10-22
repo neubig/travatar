@@ -3,6 +3,7 @@
 
 #include <travatar/task.h>
 #include <travatar/output-collector.h>
+#include <travatar/sparse-map.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -57,8 +58,8 @@ public:
     const GraphTransformer & GetBinarizer() const { return *binarizer_; }
     bool HasTM() const { return tm_.get() != NULL; }
     const GraphTransformer & GetTM() const { return *tm_; }
-    bool HasLM() const { return lm_.get() != NULL; }
-    const GraphTransformer & GetLM() const { return *lm_; }
+    bool HasLM() const { return lms_.size() > 0; }
+    const std::vector<boost::shared_ptr<GraphTransformer> > & GetLMs() const { return lms_; }
     bool HasTrimmer() const { return trimmer_.get() != NULL; }
     const GraphTransformer & GetTrimmer() const { return *trimmer_; }
     bool HasWeights() const { return weights_.get() != NULL; }
@@ -71,9 +72,16 @@ public:
     bool GetDoTuning() const { return do_tuning_; } 
 
 private:
+
+    boost::shared_ptr<GraphTransformer> CreateLMComposer(
+        const ConfigTravatarRunner & config,
+        const std::vector<std::string> & lm_files,
+        int pop_limit,
+        const SparseMap & weights);
+
     boost::shared_ptr<GraphTransformer> binarizer_;
     boost::shared_ptr<GraphTransformer> tm_;
-    boost::shared_ptr<GraphTransformer> lm_;
+    std::vector<boost::shared_ptr<GraphTransformer> > lms_;
     boost::shared_ptr<GraphTransformer> trimmer_;
     boost::shared_ptr<Weights> weights_;
     boost::shared_ptr<EvalMeasure> tune_eval_measure_;

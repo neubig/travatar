@@ -162,7 +162,7 @@ int TestLMComposer::TestLMComposerBU() {
     e_root_ay->AddTrgWord(-1);
 
     // Intersect the graph with the LM
-    LMComposerBU lm(file_name_.c_str());
+    LMComposerBU lm(vector<string>(1, file_name_));
     lm.SetStackPopLimit(3);
     SparseMap weights;
     weights[Dict::WID("lmunk")] = -20;
@@ -257,7 +257,7 @@ int TestLMComposer::TestLMComposerIncremental() {
     e_root_ay->AddTrgWord(-1);
 
     // Intersect the graph with the LM
-    LMComposerIncremental lm(file_name_);
+    LMComposerIncremental lm(vector<string>(1, file_name_));
     lm.SetStackPopLimit(3);
     SparseMap weights;
     weights[Dict::WID("lmunk")] = -20;
@@ -352,7 +352,7 @@ int TestLMComposer::TestLMComposerIncrementalTimesTwo() {
     e_root_ay->AddTrgWord(-1);
 
     // Intersect the graph with the LM
-    LMComposerIncremental lm(file_name_);
+    LMComposerIncremental lm(vector<string>(1, file_name_));
     lm.SetStackPopLimit(3);
     SparseMap weights;
     weights[Dict::WID("lmunk")] = -40;
@@ -468,7 +468,7 @@ int TestLMComposer::TestReverseBU() {
     e_root_xb->AddTail(n_02_xb);
     e_root_xb->AddTrgWord(-1);
     // Intersect the graph with the LM
-    LMComposerBU lm(file_name_.c_str());
+    LMComposerBU lm(vector<string>(1, file_name_));
     lm.SetStackPopLimit(5);
     SparseMap weights;
     weights[Dict::WID("lmunk")] = -20;
@@ -589,7 +589,7 @@ int TestLMComposer::TestReverseIncremental() {
     e_root_ay->AddTrgWord(-1);
 
     // Intersect the graph with the LM
-    LMComposerIncremental lm(file_name_.c_str());
+    LMComposerIncremental lm(vector<string>(1, file_name_));
     lm.SetStackPopLimit(5);
     SparseMap weights;
     weights[Dict::WID("lmunk")] = -20;

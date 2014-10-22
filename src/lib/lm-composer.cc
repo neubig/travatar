@@ -106,10 +106,10 @@ LMData::LMData(const std::string & str) :
     vocab_map_ = lm_save.GetAndFreeVocabMap();    
 }
 
-LMComposer::LMComposer(const std::string & str) : lm_data_() {
-    std::vector<std::string> params = Tokenize(str, ' ');
-    BOOST_FOREACH(const std::string & param, params)
+LMComposer::LMComposer(const std::vector<std::string> & params) : lm_data_() {
+    BOOST_FOREACH(const std::string & param, params) {
         lm_data_.push_back(new LMData(param));
+    }
 }
 
 LMComposer::~LMComposer() {

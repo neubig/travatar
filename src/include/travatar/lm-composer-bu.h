@@ -44,7 +44,7 @@ protected:
     std::vector<LMComposerBUFunc*> funcs_;
 
 public:
-    LMComposerBU(const std::string & str) :
+    LMComposerBU(const std::vector<std::string> & str) :
             LMComposer(str), stack_pop_limit_(0), chart_limit_(0) {
         for(int i = 0; i < (int)lm_data_.size(); i++)
             funcs_.push_back(LMComposerBUFunc::CreateFromType(lm_data_[i]->GetType()));
@@ -62,7 +62,7 @@ public:
     virtual HyperGraph * TransformGraph(const HyperGraph & hg) const;
 
     int GetStackPopLimit() const { return stack_pop_limit_; }
-    void SetStackPopLimit(double stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
+    void SetStackPopLimit(int stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
     int GetChartLimit() const { return chart_limit_; }
     void SetChartLimit(double chart_limit) { chart_limit_ = chart_limit; }
 
