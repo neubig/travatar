@@ -210,9 +210,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the language model(s)
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
-    vector<string> lm_files = Tokenize(config.GetString("lm_file"), " ");
     vector<int> pop_limits = config.GetIntArray("pop_limit");
-    if(lm_files.size() > 0) {
+    string lm_string = config.GetString("lm_file");
+    if(lm_string != "") {
+        vector<string> lm_files = Tokenize(lm_string, " ");
         string multi_type = config.GetString("lm_multi_type");
         if(multi_type == "joint") {
             if(pop_limits.size() != 1)
