@@ -14,6 +14,7 @@ public:
     ~TestTreeIO();
 
     int TestReadPenn();
+    int TestReadPennEmpty();
     int TestReadRule();
     int TestReadEgret();
     int TestWriteEgret();

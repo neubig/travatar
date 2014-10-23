@@ -56,7 +56,7 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
         IoUtil::Trim(in, WHITE_SPACE);
         in >> next_char;
         if(!in) break;
-        // If the next character is a close parenthesis, close the noe on the top of the stack
+        // If the next character is a close parenthesis, close the node on the top of the stack
         if(next_char == ')') {
             if(!stack.size()) { getline(in, line); THROW_ERROR("Unmatched close parenthesis at )" << line); }
             HyperNode * child = *stack.rbegin(); stack.pop_back();
@@ -68,6 +68,13 @@ HyperGraph * PennTreeIO::ReadTree(istream & in) {
             parent->GetEdge(0)->AddTail(child);
         // Otherwise, open a new node
         } else if(next_char == '(') {
+            // If we are at the beginning of the sentence, check for empty sentences
+            if(stack.size() == 0) {
+                if(in.peek() == ')') {
+                    in >> next_char;
+                    return hg;
+                }
+            }
             // Read the symbol
             string sym = IoUtil::ReadUntil(in, WHITE_SPACE, "()");
             // TODO: Make this die properly

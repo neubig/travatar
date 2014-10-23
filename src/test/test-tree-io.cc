@@ -170,6 +170,19 @@ int TestTreeIO::TestReadPenn() {
     return tree_exp.CheckEqual(*hg_act) && left_act == left_exp;
 }
 
+int TestTreeIO::TestReadPennEmpty() {
+    PennTreeIO io;
+    HyperGraph hg_exp;
+    // Two types of empty trees 
+    istringstream instr1("()");
+    boost::scoped_ptr<HyperGraph> hg_act1(io.ReadTree(instr1));
+    return hg_exp.CheckEqual(*hg_act1);
+    // // Check that both values are equal
+    // istringstream instr2("(())");
+    // boost::scoped_ptr<HyperGraph> hg_act2(io.ReadTree(instr2));
+    // return hg_exp.CheckEqual(*hg_act1) && hg_exp.CheckEqual(*hg_act2);
+}
+
 int TestTreeIO::TestReadRule() {
     // Use this rule_str
     istringstream instr(rule_str);
@@ -291,6 +304,7 @@ int TestTreeIO::TestReadWord() {
 bool TestTreeIO::RunTest() {
     int done = 0, succeeded = 0;
     done++; cout << "TestReadPenn()" << endl; if(TestReadPenn()) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestReadPennEmpty()" << endl; if(TestReadPennEmpty()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestReadRule()" << endl; if(TestReadRule()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestReadEgret()" << endl; if(TestReadEgret()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestReadJSON()" << endl; if(TestReadJSON()) succeeded++; else cout << "FAILED!!!" << endl;
