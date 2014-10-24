@@ -18,7 +18,7 @@ using namespace travatar;
 //  Mark Hopkins and Jonathan May
 //  EMNLP 2012
 // and tune the weights using online learning
-void WeightsOnlinePro::Adjust(
+void WeightsOnlinePro::AdjustNbest(
         const std::vector<std::pair<double,double> > & scores,
         const std::vector<SparseVector*> & features) {
     boost::mt19937 gen(time(0));

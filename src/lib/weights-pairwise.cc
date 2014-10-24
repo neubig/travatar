@@ -9,8 +9,9 @@ using namespace boost;
 using namespace travatar;
 
 // Adjust the weights according to the n-best list
-void WeightsPairwise::Adjust(EvalMeasure & eval,
+void WeightsPairwise::Adjust(const Sentence & src,
                              const std::vector<Sentence> & refs,
+                             const EvalMeasure & eval,
                              const NbestList & nbest) {
     // Find the oracle
     int oracle = -1;

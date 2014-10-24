@@ -34,7 +34,7 @@ using namespace boost;
 using namespace lm::ngram;
 
 void TravatarRunnerTask::Run() {
-    typedef shared_ptr<GraphTransformer> GTPtr;
+    typedef boost::shared_ptr<GraphTransformer> GTPtr;
     PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
     // Binarizer if necessary
@@ -344,26 +344,26 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 }
 
 
-shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
+boost::shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
         const ConfigTravatarRunner & config, const vector<string> & lm_files,
         int pop_limit, const SparseMap & weights) {
     // Set the LM Composer
-    shared_ptr<GraphTransformer> lm;
+    boost::shared_ptr<GraphTransformer> ret;
     string search = config.GetString("search"); 
     if(search == "cp") {
         LMComposerBU * bu = new LMComposerBU(lm_files);
         bu->SetStackPopLimit(pop_limit);
         bu->SetChartLimit(config.GetInt("chart_limit"));
         bu->UpdateWeights(weights);
-        lm.reset(bu);
+        ret.reset(bu);
     } else if(search == "inc") {
         LMComposerIncremental * inc = new LMComposerIncremental(lm_files);
         inc->SetStackPopLimit(pop_limit);
         inc->UpdateWeights(weights);
-        lm.reset(inc);
+        ret.reset(inc);
     } else {
         THROW_ERROR("Illegal search type " << search);
     }
-    return lm;
+    return ret;
 }
 
