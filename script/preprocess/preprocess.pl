@@ -326,8 +326,13 @@ sub run_truecase {
             safesystem("$TRAVATAR_DIR/src/bin/train-caser < $PREF/high/$lang > $model");
         }
     }
-    # run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/script/recaser/truecase.pl --model $model < INFILE > OUTFILE");
     run_parallel("$PREF/high", "$PREF/true", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format word -output_format word -case 'true:model=$model' < INFILE > OUTFILE");
+    if(-e "$PREF/tree/$lang") {
+        run_parallel("$PREF/tree", "$PREF/treetrue", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format penn -case 'true:model=$model' < INFILE > OUTFILE");
+    }
+    if(-e "$PREF/for/$lang") {
+        run_parallel("$PREF/for", "$PREF/fortrue", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format egret -output_format egret -case 'true:model=$model' < INFILE > OUTFILE");
+    }
 }
 run_truecase($SRC, $TRUECASE_SRC_MODEL) if $TRUECASE_SRC;
 run_truecase($TRG, $TRUECASE_TRG_MODEL) if $TRUECASE_TRG;
