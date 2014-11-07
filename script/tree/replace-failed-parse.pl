@@ -46,13 +46,12 @@ if($FORMAT eq "penn") {
     }
 } elsif ($FORMAT eq "egret") {
     while(1) {
-        my $correct = &get_egret(\*FILE0);
-        my $sketchy = &get_egret(\*FILE1);
-        die "Found sentence in suspicious file, but not correct: $sketchy\n" if $sketchy and not $correct;
-        last if not $correct;
+        my ($corok, $correct) = &get_egret(\*FILE0);
+        my ($skeok, $sketchy) = &get_egret(\*FILE1);
+        last if((not $correct) and (not $sketchy));
         my @arr = ($sketchy ? split(/\n/, $sketchy) : ());
         print STDERR "WARNING: removing overly large forest: size ".scalar(@arr)." > limit $MAX_FOREST\n" if @arr > $MAX_FOREST;
-        if($sketchy and ((not $MAX_FOREST) or (@arr <= $MAX_FOREST))) {
+        if($skeok and ((not $MAX_FOREST) or (@arr <= $MAX_FOREST))) {
             print $sketchy;
         } else {
             print $correct;
@@ -69,7 +68,7 @@ sub get_egret {
         $buf =~ /^sentence/ or die "Bad forest header: $buf";
         $ret .= $buf;
     } else {
-        return undef;
+        return (0, "");
     }
     defined($buf = <$handle>) or die "Stopped in the middle of a forest";
     $ret .= $buf;
@@ -79,12 +78,12 @@ sub get_egret {
     # Failed parses get no tree!
     if(not $buf) {
         $buf = <$handle>;
-        return undef;
+        return (0, "$ret\n");
     }
     while($buf = <$handle>) {
         $ret .= $buf;
         chomp $buf;
         last if not $buf;
     }
-    return $ret;
+    return (1, $ret);
 }
