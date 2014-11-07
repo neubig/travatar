@@ -6,13 +6,13 @@ using namespace travatar;
 
 // The pairwise weight update rule
 void WeightsAdagrad::Update(
-    const SparseMap & oracle, double oracle_score, double oracle_eval,
-    const SparseMap & system, double system_score, double system_eval
+    const SparseVector & oracle, double oracle_score, double oracle_eval,
+    const SparseVector & system, double system_score, double system_eval
 ) {
     curr_iter_++;
     if(system_score + (oracle_eval-system_eval)*margin_scale_ >= oracle_score) {
-        SparseMap change = oracle - system;
-        BOOST_FOREACH(SparseMap::value_type change_val, change) {
+        SparseVector change = oracle - system;
+        BOOST_FOREACH(const SparsePair & change_val, change.GetImpl()) {
             if(change_val.second == 0) continue;
             double new_val = GetCurrent(change_val.first);
             varinv_[change_val.first] += change_val.second * change_val.second;

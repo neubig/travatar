@@ -17,12 +17,12 @@ const SparseMap & WeightsPerceptron::GetFinal() {
 
 // The pairwise weight update rule
 void WeightsPerceptron::Update(
-    const SparseMap & oracle, double oracle_score, double oracle_loss,
-    const SparseMap & system, double system_score, double system_loss
+    const SparseVector & oracle, double oracle_score, double oracle_loss,
+    const SparseVector & system, double system_score, double system_loss
 ) {
     if(system_score >= oracle_score) {
-        SparseMap change = (oracle - system);
-        BOOST_FOREACH(SparseMap::value_type change_val, change) {
+        SparseVector change = (oracle - system);
+        BOOST_FOREACH(const SparsePair & change_val, change.GetImpl()) {
             // Update the value
             double new_val = GetCurrent(change_val.first) + change_val.second * rate_;
             // And ensure we are in the correct range

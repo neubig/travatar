@@ -13,11 +13,11 @@ public:
 
     // The pairwise weight update rule
     virtual void Update(
-        const SparseMap & oracle, double oracle_score, double oracle_loss,
-        const SparseMap & system, double system_score, double system_loss
+        const SparseVector & oracle, double oracle_score, double oracle_loss,
+        const SparseVector & system, double system_score, double system_loss
     ) {
         if(system_score >= oracle_score) {
-            final_ += (oracle - system);
+            final_ = final_ + (oracle - system);
         }
     }
 

@@ -13,8 +13,8 @@ public:
 
     // The pairwise weight update rule
     virtual void Update(
-        const SparseMap & oracle, double oracle_model, double oracle_eval,
-        const SparseMap & system, double system_model, double system_eval
+        const SparseVector & oracle, double oracle_model, double oracle_eval,
+        const SparseVector & system, double system_model, double system_eval
     );
 
 protected:

@@ -13,8 +13,9 @@ public:
     WeightsPairwise(const SparseMap & current) : Weights(current) { }
 
     // Adjust the weights according to the n-best list
-    virtual void Adjust(EvalMeasure & eval,
+    virtual void Adjust(const Sentence & src,
                         const std::vector<Sentence> & refs,
+                        const EvalMeasure & eval,
                         const NbestList & nbest);
 
 protected:

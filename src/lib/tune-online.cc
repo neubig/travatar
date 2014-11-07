@@ -99,7 +99,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
             }
 
             // Actually adjust the weights
-            weights->Adjust(scores, feats);
+            weights->AdjustNbest(scores, feats);
             PRINT_DEBUG("AFTER:   " << Dict::PrintSparseMap(weights->GetCurrent()) << endl, 3);
 
             // Re-add the stats for the current example

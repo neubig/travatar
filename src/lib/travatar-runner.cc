@@ -34,7 +34,7 @@ using namespace boost;
 using namespace lm::ngram;
 
 void TravatarRunnerTask::Run() {
-    typedef shared_ptr<GraphTransformer> GTPtr;
+    typedef boost::shared_ptr<GraphTransformer> GTPtr;
     PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
     // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*tree_graph_, cerr); cerr << endl; }
     // Binarizer if necessary
@@ -210,9 +210,10 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 
     // Load the language model(s)
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
-    vector<string> lm_files = Tokenize(config.GetString("lm_file"), " ");
     vector<int> pop_limits = config.GetIntArray("pop_limit");
-    if(lm_files.size() > 0) {
+    string lm_string = config.GetString("lm_file");
+    if(lm_string != "") {
+        vector<string> lm_files = Tokenize(lm_string, " ");
         string multi_type = config.GetString("lm_multi_type");
         if(multi_type == "joint") {
             if(pop_limits.size() != 1)
@@ -344,26 +345,26 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
 }
 
 
-shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
+boost::shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
         const ConfigTravatarRunner & config, const vector<string> & lm_files,
         int pop_limit, const SparseMap & weights) {
     // Set the LM Composer
-    shared_ptr<GraphTransformer> lm;
+    boost::shared_ptr<GraphTransformer> ret;
     string search = config.GetString("search"); 
     if(search == "cp") {
         LMComposerBU * bu = new LMComposerBU(lm_files);
         bu->SetStackPopLimit(pop_limit);
         bu->SetChartLimit(config.GetInt("chart_limit"));
         bu->UpdateWeights(weights);
-        lm.reset(bu);
+        ret.reset(bu);
     } else if(search == "inc") {
         LMComposerIncremental * inc = new LMComposerIncremental(lm_files);
         inc->SetStackPopLimit(pop_limit);
         inc->UpdateWeights(weights);
-        lm.reset(inc);
+        ret.reset(inc);
     } else {
         THROW_ERROR("Illegal search type " << search);
     }
-    return lm;
+    return ret;
 }
 

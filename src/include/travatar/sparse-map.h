@@ -64,7 +64,11 @@ SparseVector operator-(const SparseVector & lhs, const SparseVector & rhs);
 double operator*(const SparseVector & lhs, const SparseVector & rhs);
 SparseVector operator*(const SparseVector & lhs, double rhs);
 
-double operator*(const SparseMap & lhs, const SparseVector & rhs);
+double operator*(const SparseMap & lhs,    const SparseVector & rhs);
+SparseMap & operator+=(SparseMap & lhs,    const SparseVector & rhs);
+SparseMap & operator-=(SparseMap & lhs,    const SparseVector & rhs);
+SparseMap operator+(const SparseMap & lhs, const SparseVector & rhs);
+SparseMap operator-(const SparseMap & lhs, const SparseVector & rhs);
 
 }
 

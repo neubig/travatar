@@ -23,7 +23,7 @@ public:
         ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
     }
 
-    ~Weights() { }
+    virtual ~Weights() { }
 
     // Get the current values of the weights at this point in learning
     virtual double GetCurrent(const SparseMap::key_type & key) const {
@@ -58,7 +58,7 @@ public:
 
     // Adjust the weights according to the n-best list
     // Scores are current model scores and evaluation scores
-    virtual void Adjust(
+    virtual void AdjustNbest(
             const std::vector<std::pair<double,double> > & scores,
             const std::vector<SparseVector*> & features);
 

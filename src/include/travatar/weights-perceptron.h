@@ -14,15 +14,15 @@ public:
 
     // The pairwise weight update rule
     virtual void Update(
-        const SparseMap & oracle, double oracle_model, double oracle_eval,
-        const SparseMap & system, double system_model, double system_eval
+        const SparseVector & oracle, double oracle_model, double oracle_eval,
+        const SparseVector & system, double system_model, double system_eval
     );
 
     // Adjust the weights according to the n-best list
     // Scores are current model scores and evaluation scores
-    virtual void Adjust(
+    virtual void AdjustNbest(
             const std::vector<std::pair<double,double> > & scores,
-            const std::vector<SparseMap*> & features) {
+            const std::vector<SparseVector*> & features) {
         int oracle = 0, system = 0;
         double best_score = -DBL_MAX;
         for(int i = 0; i < (int)scores.size(); i++) {
