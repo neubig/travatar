@@ -120,7 +120,7 @@ void PennTreeIO::WriteNode(const vector<WordId> & words,
 
 void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     if(tree.GetNodes().size() == 0) {
-        out << "()" << endl;
+        out << "()";
     } else {
         WriteNode(tree.GetWords(), *tree.GetNode(0), out);
     }
