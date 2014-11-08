@@ -365,14 +365,18 @@ inline void PrintNodeEgret(const HyperNode * node, ostream & out) {
 
 void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     out << "sentence :" << endl << Dict::PrintWords(tree.GetWords()) << endl;
-    BOOST_REVERSE_FOREACH(const HyperEdge * edge, tree.GetEdges()) {
-        PrintNodeEgret(edge->GetHead(), out);
-        out << " =>";
-        BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
-            out << " ";
-            PrintNodeEgret(tail, out);
+    if(tree.GetEdges().size() > 0) {
+        BOOST_REVERSE_FOREACH(const HyperEdge * edge, tree.GetEdges()) {
+            PrintNodeEgret(edge->GetHead(), out);
+            out << " =>";
+            BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
+                out << " ";
+                PrintNodeEgret(tail, out);
+            }
+            out << " ||| " << edge->GetScore() << endl;
         }
-        out << " ||| " << edge->GetScore() << endl;
+    } else {
+        out << endl;
     }
 }
 

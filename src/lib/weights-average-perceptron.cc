@@ -28,16 +28,16 @@ const SparseMap & WeightsAveragePerceptron::GetFinal() {
 
 // The pairwise weight update rule
 void WeightsAveragePerceptron::Update(
-    const SparseMap & oracle, double oracle_model, double oracle_eval,
-    const SparseMap & system, double system_model, double system_eval) {
+    const SparseVector & oracle, double oracle_model, double oracle_eval,
+    const SparseVector & system, double system_model, double system_eval) {
     ++curr_iter_;
     if(system_eval < oracle_eval) {
         if(l1_coeff_ != 0) THROW_ERROR("Non-zero regularization in averaged perceptron not accounted for yet");
-        SparseMap change = (oracle - system);
-        PRINT_DEBUG("ORACLE: " << Dict::PrintSparseMap(oracle) << endl << 
-                    "SYSTEM: " << Dict::PrintSparseMap(system) << endl << 
-                    "CHANGE: " << Dict::PrintSparseMap(change) << endl, 4);
-        BOOST_FOREACH(SparseMap::value_type change_val, change) {
+        SparseVector change = (oracle - system);
+        PRINT_DEBUG("ORACLE: " << Dict::PrintSparseVector(oracle) << endl << 
+                    "SYSTEM: " << Dict::PrintSparseVector(system) << endl << 
+                    "CHANGE: " << Dict::PrintSparseVector(change) << endl, 4);
+        BOOST_FOREACH(const SparsePair & change_val, change.GetImpl()) {
             // Save the old value and get the new value in the range
             int prev_iter = last_update_[change_val.first];
             double avg_val = final_[change_val.first];

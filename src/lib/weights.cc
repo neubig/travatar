@@ -8,7 +8,7 @@
 using namespace std;
 using namespace travatar;
 
-void Weights::Adjust(
+void Weights::AdjustNbest(
         const std::vector<std::pair<double,double> > & scores,
         const std::vector<SparseVector*> & features) {
     THROW_ERROR("Standard weights cannot be adjusted");
@@ -38,7 +38,7 @@ void Weights::Adjust(const Sentence & src,
         scores.push_back(score);
         features.push_back(new SparseVector(path->GetFeatures()));
     }
-    Adjust(scores,features);
+    AdjustNbest(scores,features);
     BOOST_FOREACH(SparseVector * feat, features)
         delete feat;
 }

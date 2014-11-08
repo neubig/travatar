@@ -19,12 +19,12 @@ public:
 
     // Adjust the weights according to the n-best list
     // Scores are current model scores and evaluation scores
-    virtual void Adjust(
+    virtual void AdjustNbest(
             const std::vector<std::pair<double,double> > & scores,
             const std::vector<SparseVector*> & features);
 
     virtual const SparseMap & GetCurrent() const { return weights_->GetCurrent(); }
-    virtual const SparseMap & GetFinal() const { return weights_->GetFinal(); }
+    virtual const SparseMap & GetFinal() { return weights_->GetFinal(); }
     virtual void SetCurrent(const SparseMap & weights) { weights_->SetCurrent(weights); }
 
 protected:

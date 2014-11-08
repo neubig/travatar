@@ -326,6 +326,46 @@ double operator*(const SparseMap & lhs, const SparseVector & rhs) {
     return ret;
 }
 
+
+SparseMap & operator+=(SparseMap & lhs, const SparseVector & rhs) {
+    BOOST_FOREACH(const SparsePair & val, rhs.GetImpl())
+        if(val.second != 0) {
+            lhs[val.first] += val.second;
+            if(lhs[val.first] == 0) lhs.erase(val.first);
+        }
+    return lhs;
+}
+
+SparseMap & operator-=(SparseMap & lhs, const SparseVector & rhs) {
+    BOOST_FOREACH(const SparsePair & val, rhs.GetImpl())
+        if(val.second != 0) {
+            lhs[val.first] -= val.second;
+            if(lhs[val.first] == 0) lhs.erase(val.first);
+        }
+    return lhs;
+}
+
+SparseMap operator+(const SparseMap & lhs, const SparseVector & rhs) {
+    SparseMap ret(lhs);
+    BOOST_FOREACH(const SparsePair & val, rhs.GetImpl())
+        if(val.second != 0) {
+            ret[val.first] += val.second;
+            if(ret[val.first] == 0) ret.erase(val.first);
+        }
+    return ret;
+}
+
+SparseMap operator-(const SparseMap & lhs, const SparseVector & rhs) {
+    SparseMap ret(lhs);
+    BOOST_FOREACH(const SparsePair & val, rhs.GetImpl()) {
+        if(val.second != 0) {
+            ret[val.first] -= val.second;
+            if(ret[val.first] == 0) ret.erase(val.first);
+        }
+    }
+    return ret;
+}
+
 SparseMap SparseVector::ToMap() {
     SparseMap ret;
     BOOST_FOREACH(SparsePair val, impl_)
