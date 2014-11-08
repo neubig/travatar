@@ -223,8 +223,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                                             pop_limits[0],
                                             weights_->GetCurrent()));
         } else if(multi_type == "consec") {
-            if(pop_limits.size() != lm_files.size())
-                THROW_ERROR("Must specify one pop limit for each LM when consecutively decoding LMs");
+            while(pop_limits.size() < lm_files.size())
+                pop_limits.push_back(pop_limits[0]);
             for(int i = 0; i < (int)lm_files.size(); i++)
                 lms_.push_back(CreateLMComposer(config,
                                                 vector<string>(1, lm_files[i]),
