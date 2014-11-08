@@ -119,7 +119,11 @@ void PennTreeIO::WriteNode(const vector<WordId> & words,
 }
 
 void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+    if(tree.GetNodes().size() == 0) {
+        out << "()" << endl;
+    } else {
+        WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+    }
 }
 
 HyperGraph * RuleTreeIO::ReadTree(istream & in) {
@@ -307,9 +311,10 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // If we have a failed parse, return the source words
     if(lines.size() == 0) {
         getline(in,line);
-        WordTreeIO wtio;
-        istringstream iss(wordstring);
-        return wtio.ReadTree(iss);
+        // WordTreeIO wtio;
+        // istringstream iss(wordstring);
+        // return wtio.ReadTree(iss);
+        return ret;
     }
     // Save the parse ID, and also vectors of scores
     WordId parse_id = Dict::WID("parse");
