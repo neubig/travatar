@@ -28,6 +28,7 @@ public:
     int TestCalculateFrontierForest();
     int TestNbestPath();
     int TestNbestTied();
+    int TestNbestUniq();
     int TestPathTranslation();
 //    int TestLMIntersection();
     int TestAppend();
@@ -37,7 +38,7 @@ public:
 
 private:
     PennTreeIO tree_io;
-    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, rule_graph_;
+    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, rule_graph_, rule_graph_dup_;
     Sentence trg1_sent, trg2_sent, trg3_sent;
     Alignment align1, align2, align3;
     boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
