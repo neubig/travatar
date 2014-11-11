@@ -158,9 +158,9 @@ void SparseVector::Add(int k, double v) {
         }
     }
 }
-void SparseVector::Add(const string & str, double v) {
-    Add(Dict::WID(str), v);
-}
+// void SparseVector::Add(const string & str, double v) {
+//     Add(Dict::WID(str), v);
+// }
 
 bool operator==(const SparseVector & lhs, const SparseVector & rhs) {
     const vector<SparsePair> &limpl = lhs.GetImpl(), &rimpl = rhs.GetImpl();

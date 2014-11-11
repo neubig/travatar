@@ -21,11 +21,11 @@ int TestWeights::TestPerceptronUpdate() {
     weights_act.SetCurrent(Dict::WID("b"), 0.5);
     // Set the values of the examples
     SparseVector oracle, sys_d, sys_f;
-    oracle.Add("c",0.5);
-    oracle.Add("e",0.5);
-    sys_d.Add("d",0.5);
-    sys_d.Add("e",0.5);
-    sys_f.Add("f",0.5);
+    oracle.Add(Dict::WID("c"),0.5);
+    oracle.Add(Dict::WID("e"),0.5);
+    sys_d.Add(Dict::WID("d"),0.5);
+    sys_d.Add(Dict::WID("e"),0.5);
+    sys_f.Add(Dict::WID("f"),0.5);
     // The expected weights should be the difference between the examples
     weights_exp.SetCurrent(Dict::WID("a"), 0.5);
     weights_exp.SetCurrent(Dict::WID("b"), 0.5);
@@ -45,11 +45,11 @@ int TestWeights::TestAvgPerceptronUpdate() {
     weights_act.SetCurrent(Dict::WID("b"), 0.5);
     // Set the values of the examples
     SparseVector oracle, sys_d, sys_f;
-    oracle.Add("c",0.5);
-    oracle.Add("e",0.5);
-    sys_d.Add("d",0.5);
-    sys_d.Add("e",0.5);
-    sys_f.Add("f",0.5);
+    oracle.Add(Dict::WID("c"),0.5);
+    oracle.Add(Dict::WID("e"),0.5);
+    sys_d.Add(Dict::WID("d"),0.5);
+    sys_d.Add(Dict::WID("e"),0.5);
+    sys_f.Add(Dict::WID("f"),0.5);
     // In the first update, sys_d's score is higher than the oracle
     weights_act.Update(oracle, 0.5, 1.0, sys_d, 1.0, 0.5);
     // In the second update, sys_f's score is also higher

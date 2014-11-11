@@ -27,9 +27,3 @@ void TranslationRule::Print(std::ostream & out) const {
     out << "}";
 }
 
-// void TranslationRule::AddFeature(int id, double feat) { 
-//     features_.insert(make_pair(id, feat));
-// }
-// void TranslationRule::AddFeature(const std::string & str, double feat) { 
-//     features_.insert(make_pair(Dict::WID(str), feat));
-// }

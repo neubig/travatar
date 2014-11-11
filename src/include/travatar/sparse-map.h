@@ -39,7 +39,7 @@ public:
 
     // Add a single value
     void Add(int k, double v);
-    void Add(const std::string & str, double v);
+    // void Add(const std::string & str, double v);
 
     // Return the actual vector
     SparseVectorImpl & GetImpl() { return impl_; }
