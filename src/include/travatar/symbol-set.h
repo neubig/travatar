@@ -24,13 +24,12 @@ protected:
     
     Map map_;
     Vocab vocab_;
-    Ids reuse_;
     boost::shared_mutex mutex_;
 
 public:
-    SymbolSet() : map_(), vocab_(), reuse_(), mutex_() { }
+    SymbolSet() : map_(), vocab_(), mutex_() { }
     SymbolSet(const SymbolSet & ss) : 
-                map_(ss.map_), vocab_(ss.vocab_), reuse_(ss.reuse_), mutex_() {
+                map_(ss.map_), vocab_(ss.vocab_), mutex_() {
         for(typename Vocab::iterator it = vocab_.begin(); 
                                                 it != vocab_.end(); it++) 
             if(*it)
@@ -56,13 +55,8 @@ public:
         else if(add) {
             // boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
             T id;
-            if(reuse_.size() != 0) {
-                id = reuse_.back(); reuse_.pop_back();
-                vocab_[id] = new std::string(sym);
-            } else {
-                id = vocab_.size();
-                vocab_.push_back(new std::string(sym));
-            }
+            id = vocab_.size();
+            vocab_.push_back(new std::string(sym));
             map_.insert(std::make_pair(sym,id));
             return id;
         }
@@ -71,16 +65,9 @@ public:
     T GetId(const std::string & sym) const {
         return const_cast< SymbolSet<T>* >(this)->GetId(sym,false);
     }
-    size_t size() const { return vocab_.size() - reuse_.size(); }
+    size_t size() const { return vocab_.size(); }
     size_t capacity() const { return vocab_.size(); }
     size_t hashCapacity() const { return map_.size(); }
-    void removeId(const T id) {
-        boost::unique_lock< boost::shared_mutex > lock(mutex_);
-        map_.erase(*vocab_[id]);
-        delete vocab_[id];
-        vocab_[id] = 0;
-        reuse_.push_back(id);
-    }
     
     void ToStream(std::ostream & out) {
         boost::unique_lock< boost::shared_mutex >  lock(mutex_);
