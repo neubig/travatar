@@ -80,7 +80,7 @@ TestHyperGraph::TestHyperGraph() {
     HyperNode * n0_dup = rule_graph_dup_->GetNode(0);
     HyperNode * n1_dup = rule_graph_dup_->GetNode(1);
     HyperNode * n2_dup = rule_graph_dup_->GetNode(2);
-    HyperEdge * e7 = new HyperEdge(n0_dup); rule_graph_->AddEdge(e7); e7->AddTail(n1_dup); e7->AddTail(n2_dup); e7->SetScore(-0.4); e7->SetRule(rule_01.get()); n0_dup->AddEdge(e7);
+    HyperEdge * e7 = new HyperEdge(n0_dup); rule_graph_dup_->AddEdge(e7); e7->AddTail(n1_dup); e7->AddTail(n2_dup); e7->SetScore(-0.4); e7->SetRule(rule_01.get()); n0_dup->AddEdge(e7);
     e7->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
 }
 

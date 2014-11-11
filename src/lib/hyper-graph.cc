@@ -329,6 +329,8 @@ vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
 
 // Check to make sure that two hyperpaths are equal
 bool HyperPath::operator==(const HyperPath & rhs) const {
+    if(edges_.size() != rhs.edges_.size() || remaining_nodes_.size() != rhs.remaining_nodes_.size())
+        return false;
     for(int i = 0; i < (int)edges_.size(); i++)
        if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
           (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))

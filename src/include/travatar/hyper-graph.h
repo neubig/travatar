@@ -257,7 +257,7 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
 // A single scored path through a hypergraph
 class HyperPath {
 public:
-    HyperPath() : score_(0) { }
+    HyperPath() : edges_(), data_(), score_(0), loss_(0), remaining_nodes_() { }
     
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
     void PushNode(HyperNode * node) { remaining_nodes_.push_back(node); }
