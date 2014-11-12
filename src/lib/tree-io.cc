@@ -119,7 +119,11 @@ void PennTreeIO::WriteNode(const vector<WordId> & words,
 }
 
 void PennTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
-    WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+    if(tree.GetNodes().size() == 0) {
+        out << "()";
+    } else {
+        WriteNode(tree.GetWords(), *tree.GetNode(0), out);
+    }
 }
 
 HyperGraph * RuleTreeIO::ReadTree(istream & in) {
@@ -307,9 +311,10 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // If we have a failed parse, return the source words
     if(lines.size() == 0) {
         getline(in,line);
-        WordTreeIO wtio;
-        istringstream iss(wordstring);
-        return wtio.ReadTree(iss);
+        // WordTreeIO wtio;
+        // istringstream iss(wordstring);
+        // return wtio.ReadTree(iss);
+        return ret;
     }
     // Save the parse ID, and also vectors of scores
     WordId parse_id = Dict::WID("parse");
@@ -365,14 +370,18 @@ inline void PrintNodeEgret(const HyperNode * node, ostream & out) {
 
 void EgretTreeIO::WriteTree(const HyperGraph & tree, ostream & out) {
     out << "sentence :" << endl << Dict::PrintWords(tree.GetWords()) << endl;
-    BOOST_REVERSE_FOREACH(const HyperEdge * edge, tree.GetEdges()) {
-        PrintNodeEgret(edge->GetHead(), out);
-        out << " =>";
-        BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
-            out << " ";
-            PrintNodeEgret(tail, out);
+    if(tree.GetEdges().size() > 0) {
+        BOOST_REVERSE_FOREACH(const HyperEdge * edge, tree.GetEdges()) {
+            PrintNodeEgret(edge->GetHead(), out);
+            out << " =>";
+            BOOST_FOREACH(const HyperNode * tail, edge->GetTails()) {
+                out << " ";
+                PrintNodeEgret(tail, out);
+            }
+            out << " ||| " << edge->GetScore() << endl;
         }
-        out << " ||| " << edge->GetScore() << endl;
+    } else {
+        out << endl;
     }
 }
 
