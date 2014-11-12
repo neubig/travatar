@@ -3,6 +3,7 @@
 
 #include <travatar/lm-composer.h>
 #include <travatar/hyper-graph.h>
+#include <travatar/sentence.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -22,10 +23,18 @@ class Forest {
 public:
 
     // Constructor
-    Forest(double lm_weight, double lm_unk_weight, int factor) : hg(new travatar::HyperGraph),
-                lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight), factor_(factor) {
+    Forest(travatar::WordId lm_id, double lm_weight,
+           travatar::WordId lm_unk_id, double lm_unk_weight,
+           travatar::WordId root_sym, int factor) : hg(new travatar::HyperGraph),
+                lm_id_(lm_id), lm_weight_(lm_weight), lm_unk_id_(lm_unk_id),
+                lm_unk_weight_(lm_unk_weight), root_sym_(root_sym), factor_(factor) {
         hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
     }
+    // // Constructor
+    // Forest(double lm_weight, double lm_unk_weight, int factor) : hg(new travatar::HyperGraph),
+    //             lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight), factor_(factor) {
+    //     hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
+    // }
 
     // Destructor. Destroy the hypergraph if it still exists.
     ~Forest() {
@@ -57,10 +66,14 @@ public:
 
   private:
     travatar::HyperGraph* hg;
-    double lm_weight_, lm_unk_weight_;
+    travatar::WordId lm_id_;
+    double lm_weight_;
+    travatar::WordId lm_unk_id_;
+    double lm_unk_weight_;
     std::vector<int> lm_unks_;
-    util::Pool pool_;
+    travatar::WordId root_sym_;
     int factor_;
+    util::Pool pool_;
 };
 
 } // namespace search

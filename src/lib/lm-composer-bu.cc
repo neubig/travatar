@@ -258,7 +258,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
     ret->SetWords(parse.GetWords());
     // Add the root node and its corresponding state
     int len = (nodes.size() > 0) ? nodes[0]->GetSpan().second : 0;
-    HyperNode * root = new HyperNode(Dict::WID("LMROOT"), -1, make_pair(0,len));
+    HyperNode * root = new HyperNode(root_sym_, -1, make_pair(0,len));
     ret->AddNode(root);
     if(parse.NumNodes() == 0) return ret;
     states.resize(1);

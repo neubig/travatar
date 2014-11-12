@@ -106,7 +106,7 @@ LMData::LMData(const std::string & str) :
     vocab_map_ = lm_save.GetAndFreeVocabMap();    
 }
 
-LMComposer::LMComposer(const std::vector<std::string> & params) : lm_data_() {
+LMComposer::LMComposer(const std::vector<std::string> & params) : lm_data_(), root_sym_(Dict::WID("LMROOT")) {
     BOOST_FOREACH(const std::string & param, params) {
         lm_data_.push_back(new LMData(param));
     }

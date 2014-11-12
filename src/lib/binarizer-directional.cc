@@ -35,7 +35,7 @@ HyperGraph * BinarizerDirectional::TransformGraph(const HyperGraph & hg) const {
     BOOST_FOREACH(const HyperNode * ehead_node, hg.GetNodes()) {
     BOOST_FOREACH(const HyperEdge * edge, ehead_node->GetEdges()) {
         // Get the symbol for x-bar
-        WordId xbar = Dict::WID(Dict::WSym(edge->GetHead()->GetSym())+"'");
+        WordId xbar = GetBarredSymbol(edge->GetHead()->GetSym());
         // Get the head node in the new graph
         vector<int> head_str(2);
         head_str[0] = ehead_node->GetSym();

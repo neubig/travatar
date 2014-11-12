@@ -12,7 +12,7 @@ using namespace std;
 using namespace boost;
 
 bool Dict::add_ = true;
-SymbolSet<WordId> travatar::Dict::wids_ = SymbolSet<WordId>();
+SymbolSet<WordId> travatar::Dict::wids_ = SymbolSet<WordId>(true);
 
 std::string Dict::PrintSparseMap(const SparseMap & feats) {
     std::ostringstream oss;

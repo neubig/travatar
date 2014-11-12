@@ -33,8 +33,6 @@ void Forest::Add(std::vector<PartialEdge> &existing, PartialEdge add) const {
 
 // Convert all of the edges together into a node
 NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
-    WordId lm_id = Dict::WID("lm");
-    WordId lm_unk_id = Dict::WID("lmunk");
     // For each vector, create a node
     HyperNode * node = new HyperNode;
     hg->AddNode(node);
@@ -91,9 +89,9 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         edge->SetTails(tails);
         hg->AddEdge(edge); node->AddEdge(edge);
         double lm_score = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
-        edge->GetFeatures().Add(lm_id, lm_score);
+        edge->GetFeatures().Add(lm_id_, lm_score);
         if(lm_unk)
-            edge->GetFeatures().Add(lm_unk_id, lm_unk);
+            edge->GetFeatures().Add(lm_unk_id_, lm_unk);
         edge->SetScore(edge_score);
     }
     // Set the span for either the internal or final nodes
@@ -102,7 +100,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         node->SetSym(old_edge->GetHead()->GetSym());
     } else {
         node->SetSpan(edge->GetTail(0)->GetSpan());
-        node->SetSym(Dict::WID("LMROOT"));
+        node->SetSym(root_sym_);
     }
     node->SetViterbiScore(best.GetScore());
     // Return the n-best
@@ -257,7 +255,8 @@ HyperGraph * LMComposerIncremental::TransformGraphTemplate(const HyperGraph & pa
     LMData* data = lm_data_[0];
     search::Config config(data->GetWeight(), stack_pop_limit_, nconfig);
     search::Context<LMType> context(config, *static_cast<LMType*>(data->GetLM()));
-    search::Forest best(data->GetWeight(), data->GetUnkWeight(), data->GetFactor());
+    search::Forest best(data->GetFeatureName(), data->GetWeight(), data->GetUnkFeatureName(), data->GetUnkWeight(), root_sym_, data->GetFactor());
+    // search::Forest best(data->GetWeight(), data->GetUnkWeight(), data->GetFactor());
 
     // Create the search graph
     vector<search::Vertex*> vertices(parse.NumNodes() + 1);

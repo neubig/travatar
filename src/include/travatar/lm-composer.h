@@ -4,6 +4,7 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
+#include <travatar/dict.h>
 #include <lm/left.hh>
 #include <lm/model.hh>
 #include <boost/unordered_map.hpp>
@@ -86,12 +87,14 @@ class LMComposer : public GraphTransformer {
     
 protected:
     std::vector<LMData*> lm_data_;
+    WordId root_sym_;
 
 public:
     LMComposer(const std::vector<std::string> & str);
     LMComposer(void * model, lm::ngram::ModelType type, VocabMap* vocab_map) {
         LMData * data = new LMData(model, type, vocab_map);
         lm_data_.push_back(data);
+        root_sym_ = Dict::WID("LMROOT");
     }
         
     std::vector<LMData*> & GetData() { return lm_data_; }

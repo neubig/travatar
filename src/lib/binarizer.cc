@@ -23,3 +23,11 @@ Binarizer * Binarizer::CreateBinarizerFromString(const std::string & bin) {
     }
     return NULL;
 }
+
+WordId Binarizer::GetBarredSymbol(WordId sym) const {
+    map<int,int>::const_iterator it = barred_map_.find(sym);
+    if(it != barred_map_.end()) return it->second;
+    WordId ret = Dict::WID(Dict::WSym(sym)+"'");
+    const_cast<map<int,int>& >(barred_map_).insert(make_pair(sym, ret));
+    return ret;
+}
