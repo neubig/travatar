@@ -60,7 +60,7 @@ void TravatarRunnerTask::Run() {
     NbestList nbest_list;
     if(rule_graph->NumNodes() > 0) {
         PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
-        nbest_list = rule_graph->GetNbest(runner_->GetNbestCount());
+        nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), runner_->GetNbestUniq());
     }
 
     // Print the best answer. This will generally be the answer with the highest score
@@ -129,6 +129,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     GlobalVars::trg_factors = config.GetInt("trg_factors");
     bool save_src_str = (config.GetString("trace_out") != "");
     nbest_count_ = config.GetInt("nbest");
+    nbest_uniq_ = config.GetBool("nbest_uniq");
     threads_ = config.GetInt("threads");
 
     // Create the timer
