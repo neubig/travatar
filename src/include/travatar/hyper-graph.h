@@ -341,7 +341,7 @@ public:
     void ScoreEdges(const Weights & weights);
 
     // Get the n-best paths through the graph
-    NbestList GetNbest(int n);
+    NbestList GetNbest(int n, bool uniq = false);
 
     // Calculate frontier nodes and alignments for the whole graph
     void CalculateFrontiers(const std::vector<std::set<int> > & src_spans) {

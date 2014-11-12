@@ -24,6 +24,16 @@ public:
         return words == rhs.words && label == rhs.label && syms == rhs.syms;
     }
 
+    bool operator<(const CfgData & rhs) const {
+        if(label != rhs.label) {
+            return label < rhs.label;
+        } else if (syms != rhs.syms) {
+            return syms < rhs.syms;
+        } else {
+            return words < rhs.words;
+        }
+    }
+
     const std::vector<int> GetNontermPositions() const;
 
     void Print(std::ostream & out) const;

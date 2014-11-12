@@ -275,17 +275,17 @@ SparseVector HyperPath::GetFeatures() {
 class PathScoreMore {
 public:
     bool operator()(const boost::shared_ptr<HyperPath> x, const boost::shared_ptr<HyperPath> y) {
-        if(abs(x->GetScore() - y->GetScore()) > 1e-6) return x->GetScore() > y->GetScore();
+        if(abs(x->GetScore() - y->GetScore()) > 1e-6) { return x->GetScore() > y->GetScore(); }
         const vector<HyperEdge*> & xe = x->GetEdges(), ye = y->GetEdges();
-        if(xe.size() != ye.size()) return xe.size() > ye.size();
+        if(xe.size() != ye.size()) { return xe.size() > ye.size(); }
         for(int i = 0; i < (int)xe.size(); i++)
             if(xe[i]->GetId() != ye[i]->GetId())
                 return xe[i]->GetId() < ye[i]->GetId();
-        return 0;
+        return false;
     }
 };
 
-vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
+vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
     set<boost::shared_ptr<HyperPath>, PathScoreMore> paths;
     boost::shared_ptr<HyperPath> init_path(new HyperPath);
     init_path->PushNode(nodes_[0]);
@@ -293,14 +293,22 @@ vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
     // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
     paths.insert(init_path);
     vector<boost::shared_ptr<HyperPath> > ret;
+    set<CfgDataVector> uniq_sents;
     while(paths.size() > 0 && (int)ret.size() < n) {
         boost::shared_ptr<HyperPath> curr_path = *paths.begin();
         paths.erase(paths.begin());
-        // cerr << " Processing " << *curr_path << endl;
+        // cerr << " Processing " << *curr_path << "    size: " << paths.size() << endl;
         HyperNode * node = curr_path->PopNode();
         if(node == NULL) {
-            curr_path->SetTrgData(curr_path->CalcTranslations());
-            ret.push_back(curr_path);
+            CfgDataVector trg = curr_path->CalcTranslations();
+            // cerr << "  Attempting to add " << Dict::PrintWords(trg) << endl;
+            curr_path->SetTrgData(trg);
+            if(!uniq) {
+                ret.push_back(curr_path);
+            } else if(uniq_sents.find(trg) == uniq_sents.end()) {
+                uniq_sents.insert(trg);
+                ret.push_back(curr_path);
+            }
         } else {
             curr_path->AddScore(-1*node->CalcViterbiScore());
             // Expand each different edge
@@ -317,9 +325,11 @@ vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n) {
                 BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
                     next_path->PushNode(tail);
                 paths.insert(next_path);
+                // cerr << "  Pushed " << *next_path << "   size: " << paths.size() << endl;
             }
-            while((int)paths.size() > n)
-                paths.erase(boost::prior(paths.end()));
+            if(!uniq)
+                while((int)paths.size() > n)
+                    paths.erase(boost::prior(paths.end()));
         }
         
     }

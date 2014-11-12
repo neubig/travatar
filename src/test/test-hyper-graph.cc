@@ -316,13 +316,13 @@ int TestHyperGraph::TestNbestUniq() {
     exp_nonu.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_nonu[1]->AddEdge(rule_graph_dup_->GetEdge(7)); exp_nonu[1]->AddEdge(rule_graph_dup_->GetEdge(2)); exp_nonu[1]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_nonu[1]->SetScore(-0.7);
     exp_nonu.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_nonu[2]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_nonu[2]->AddEdge(rule_graph_dup_->GetEdge(3)); exp_nonu[2]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_nonu[2]->SetScore(-0.8);
     act_nonu = rule_graph_dup_->GetNbest(3);
-    // // Get the three-best edge values
-    // vector<boost::shared_ptr<HyperPath> > exp_uniq, act_uniq;
-    // exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(2)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_uniq[0]->SetScore(-0.6);
-    // exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(3)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_uniq[1]->SetScore(-0.8);
-    // exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(2)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(5)); exp_uniq[2]->SetScore(-0.9);
-    // act_uniq = rule_graph_dup_->GetNbest(3, true);
-    return CheckPtrVector(exp_nonu, act_nonu); // && CheckPtrVector(exp_uniq, act_uniq);
+    // Get the three-best edge values
+    vector<boost::shared_ptr<HyperPath> > exp_uniq, act_uniq;
+    exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(2)); exp_uniq[0]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_uniq[0]->SetScore(-0.6);
+    exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(3)); exp_uniq[1]->AddEdge(rule_graph_dup_->GetEdge(4)); exp_uniq[1]->SetScore(-0.8);
+    exp_uniq.push_back(boost::shared_ptr<HyperPath>(new HyperPath)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(0)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(2)); exp_uniq[2]->AddEdge(rule_graph_dup_->GetEdge(5)); exp_uniq[2]->SetScore(-0.9);
+    act_uniq = rule_graph_dup_->GetNbest(3, true);
+    return CheckPtrVector(exp_nonu, act_nonu) && CheckPtrVector(exp_uniq, act_uniq);
 }
 
 int TestHyperGraph::TestPathTranslation() {
