@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#define UNLABELED -1 
+
 namespace travatar {
 
 class CfgData {
@@ -14,7 +16,7 @@ public:
     Sentence syms;
 
     CfgData(const Sentence & _words = Sentence(),
-            WordId _label = -1,
+            WordId _label = UNLABELED,
             const Sentence & _syms = Sentence())
         : words(_words), label(_label), syms(_syms) { }
     
@@ -39,8 +41,10 @@ public:
     void Print(std::ostream & out) const;
 
     WordId GetSym(int id) const {
-        return (id < (int)syms.size() ? syms[id] : -1);
+        return (id < (int)syms.size() ? syms[id] : UNLABELED);
     }
+
+    size_t GetSymSize() const { return syms.size(); }
 
 };
 

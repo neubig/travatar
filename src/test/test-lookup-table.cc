@@ -63,6 +63,53 @@ TestLookupTable::TestLookupTable() {
     istringstream rule_iss_marisa(rule_oss.str());
     lookup_marisa.reset(LookupTableMarisa::ReadFromRuleTable(rule_iss_marisa));
     lookup_marisa->SetSaveSrcStr(true);
+
+    string src2_tree = 
+"{\"nodes\": ["
+    "{\"sym\": \"S\", \"span\": [0, 4], \"id\": 0, \"edges\": [0]},"
+    "{\"sym\": \"NP\", \"span\": [0, 1], \"id\": 1, \"edges\": [1]},"
+    "{\"sym\": \"PRP\", \"span\": [0, 1], \"id\": 2, \"edges\": [2]},"
+    "{\"sym\": \"i\", \"span\": [0, 1], \"id\": 3},"
+    "{\"sym\": \"VP\", \"span\": [1, 4], \"id\": 4, \"edges\": [3]},"
+    "{\"sym\": \"VP\", \"span\": [1, 2], \"id\": 5, \"edges\": [4]},"
+    "{\"sym\": \"VBZ\", \"span\": [1, 2], \"id\": 6, \"edges\": [5]},"
+    "{\"sym\": \"eat\", \"span\": [1, 2], \"id\": 7},"
+    "{\"sym\": \"NP\", \"span\": [2, 4], \"id\": 8, \"edges\": [6]},"
+    "{\"sym\": \"DT\", \"span\": [2, 3], \"id\": 9, \"edges\": [7]},"
+    "{\"sym\": \"a\", \"span\": [2, 3], \"id\": 10},"
+    "{\"sym\": \"NN\", \"span\": [3, 4], \"id\": 11, \"edges\":[8]},"
+    "{\"sym\": \"banana\", \"span\": [3, 4], \"id\": 12}"
+"], \"edges\": ["
+    "{\"id\": 0, \"head\": 0, \"tails\": [1, 4]},"
+   "{\"id\": 1, \"head\": 1, \"tails\": [2]},"
+   "{\"id\": 2, \"head\": 2, \"tails\": [3]},"
+   "{\"id\": 3, \"head\": 4, \"tails\": [5, 8]},"
+   "{\"id\": 4, \"head\": 5, \"tails\": [6]},"
+   "{\"id\": 5, \"head\": 6, \"tails\": [7]},"
+   "{\"id\": 6, \"head\": 8, \"tails\": [9, 11]},"
+   "{\"id\": 7, \"head\": 9, \"tails\": [10]},"
+   "{\"id\": 8, \"head\": 11, \"tails\": [12]}"
+"], \"words\": ["
+    "\"i\","
+   "\"eat\","
+   "\"a\","
+    "\"banana\""
+"]}";
+    istringstream iss2(src2_tree);
+    src2_graph.reset(tree_io.ReadTree(iss2));
+    ostringstream rule_trg_oss;
+    rule_trg_oss << "ROOT ( x0:S ) ||| x0:S @ ROOT ||| Pegf=0.05 ppen=2.718" << endl;
+    rule_trg_oss << "S ( x0:NP VP ( VP ( x1:VBZ ) x2:NP ) ) ||| x2:NP \"was\" x1:VBN \"by\" x0:NP @ S ||| Pegf=0.1 ppen=2.718" << endl;
+    rule_trg_oss << "NP ( x0:PRP ) ||| x0:PRP @ NP ||| Pegf=0.4 ppen=2.718" << endl;
+    rule_trg_oss << "PRP ( \"i\" ) ||| \"me\" @ PRP ||| Pegf=0.5 ppen=2.718" << endl;
+    rule_trg_oss << "VP ( x0:VBZ ) ||| x0:VBZ @ VP ||| Pegf=0.5 ppen=2.718" << endl;
+    rule_trg_oss << "VBZ ( \"eat\" ) ||| \"eaten\" @ VBN ||| Pegf=0.6 ppen=2.718" << endl;
+    rule_trg_oss << "VBZ ( \"eat\" ) ||| \"eat\" @ VBZ ||| Pegf=0.6 ppen=2.718" << endl;
+    rule_trg_oss << "NP ( DT ( \"a\" ) x0:NN ) ||| x0:NN @ NP ||| Pegf=0.7 ppen=2.718" << endl;
+    rule_trg_oss << "NN ( \"banana\" ) ||| \"banana\" @ NN ||| Pegf=0.7 ppen=2.718" << endl;
+    istringstream rule_iss_trg(rule_trg_oss.str());
+    lookup_trg.reset(LookupTableMarisa::ReadFromRuleTable(rule_iss_trg));
+    lookup_trg->SetConsiderTrg(true);
 }
 
 TestLookupTable::~TestLookupTable() { }
@@ -184,6 +231,61 @@ int TestLookupTable::TestBuildRuleGraph(LookupTable & lookup) {
     return exp_rule_graph.CheckEqual(*act_rule_graph);
 }
 
+int TestLookupTable::TestBuildRuleTrg(LookupTable & lookup) {
+    boost::shared_ptr<HyperGraph> actual_graph(lookup.TransformGraph(*src2_graph));
+    string expected_tree =     
+"{\"nodes\": ["
+    "{\"id\": 0, \"sym\": \"χ\", \"span\": [0, 4], \"edges\": [17]},"
+    "{\"id\": 1, \"sym\": \"χ\", \"span\": [0, 1], \"edges\": [3]},"
+    "{\"id\": 2, \"sym\": \"χ\", \"span\": [0, 1], \"edges\": [1]},"
+    "{\"id\": 3, \"sym\": \"χ\", \"span\": [1, 4], \"edges\": [15]},"
+    "{\"id\": 4, \"sym\": \"χ\", \"span\": [1, 2], \"edges\": [9]},"
+    "{\"id\": 5, \"sym\": \"χ\", \"span\": [1, 2], \"edges\": [6, 7]},"
+    "{\"id\": 6, \"sym\": \"χ\", \"span\": [2, 4], \"edges\": [14]},"
+    "{\"id\": 7, \"sym\": \"χ\", \"span\": [2, 3], \"edges\": [10]},"
+    "{\"id\": 8, \"sym\": \"χ\", \"span\": [3, 4], \"edges\": [12]},"
+    "{\"id\": 9, \"sym\": \"S\", \"span\": [0, 4], \"edges\": [16]},"
+    "{\"id\": 10, \"sym\": \"NP\", \"span\": [0, 1], \"edges\": [2]},"
+    "{\"id\": 11, \"sym\": \"PRP\", \"span\": [0, 1], \"edges\": [0]},"
+    "{\"id\": 12, \"sym\": \"VP\", \"span\": [1, 2], \"edges\": [8]},"
+    "{\"id\": 13, \"sym\": \"VBZ\", \"span\": [1, 2], \"edges\": [5]},"
+    "{\"id\": 14, \"sym\": \"VBZ\", \"span\": [1, 2], \"edges\": [4]},"
+    "{\"id\": 15, \"sym\": \"NP\", \"span\": [2, 4], \"edges\": [13]},"
+    "{\"id\": 16, \"sym\": \"NN\", \"span\": [3, 4], \"edges\": [11]}"
+"], \"edges\": ["
+    "{\"id\": 0, \"head\": 11, \"trg\": [{\"label\": 47, \"words\": [\"me\"]}], \"features\": {\"Pegf\": 0.5, \"ppen\": 2.718}},"
+    "{\"id\": 1, \"head\": 2, \"tails\": [11], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 2, \"head\": 10, \"tails\": [11], \"trg\": [{\"label\": 46, \"words\": [-1], \"syms\": [\"PRP\"]}], \"features\": {\"Pegf\": 0.4, \"ppen\": 2.718}},"
+    "{\"id\": 3, \"head\": 1, \"tails\": [10], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 4, \"head\": 14, \"trg\": [{\"label\": 79, \"words\": [\"eaten\"]}], \"features\": {\"Pegf\": 0.6, \"ppen\": 2.718}},"
+    "{\"id\": 5, \"head\": 13, \"trg\": [{\"label\": 75, \"words\": [\"eat\"]}], \"features\": {\"Pegf\": 0.6, \"ppen\": 2.718}},"
+    "{\"id\": 6, \"head\": 5, \"tails\": [13], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 7, \"head\": 5, \"tails\": [14], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 8, \"head\": 12, \"tails\": [13], \"trg\": [{\"label\": 49, \"words\": [-1], \"syms\": [\"VBZ\"]}], \"features\": {\"Pegf\": 0.5, \"ppen\": 2.718}},"
+    "{\"id\": 9, \"head\": 4, \"tails\": [12], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 10, \"head\": 7, \"trg\": [{\"label\": -1, \"words\": [\"a\"]}], \"features\": {\"unk\": 1}},"
+    "{\"id\": 11, \"head\": 16, \"trg\": [{\"label\": 64, \"words\": [\"banana\"]}], \"features\": {\"Pegf\": 0.7, \"ppen\": 2.718}},"
+    "{\"id\": 12, \"head\": 8, \"tails\": [16], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 13, \"head\": 15, \"tails\": [16], \"trg\": [{\"label\": 46, \"words\": [-1], \"syms\": [\"NN\"]}], \"features\": {\"Pegf\": 0.7, \"ppen\": 2.718}},"
+    "{\"id\": 14, \"head\": 6, \"tails\": [15], \"trg\": [{\"label\": -1, \"words\": [-1]}]},"
+    "{\"id\": 15, \"head\": 3, \"tails\": [4, 6], \"trg\": [{\"label\": -1, \"words\": [-1, -2]}], \"features\": {\"unk\": 1}},"
+    "{\"id\": 16, \"head\": 9, \"tails\": [10, 14, 15], \"trg\": [{\"label\": 45, \"words\": [-3, \"was\", -2, \"by\", -1], \"syms\": [\"NP\", \"VBN\", \"NP\"]}], \"features\": {\"Pegf\": 0.1, \"ppen\": 2.718}},"
+    "{\"id\": 17, \"head\": 0, \"tails\": [9], \"trg\": [{\"label\": -1, \"words\": [-1]}]}"
+"], \"words\": ["
+    "\"i\","
+    "\"eat\","
+    "\"a\","
+    "\"banana\""
+"]}";
+    istringstream iss(expected_tree);
+    BOOST_FOREACH(HyperNode* node, actual_graph->GetNodes())
+        cerr << *node << endl;
+    BOOST_FOREACH(HyperEdge* edge, actual_graph->GetEdges())
+        cerr << *edge << endl;
+    scoped_ptr<HyperGraph> expected_graph(tree_io.ReadTree(iss));
+    return expected_graph->CheckMaybeEqual(*actual_graph);
+}
+
 int TestLookupTable::TestBadInputHash() {
     // Load the rules
     ostringstream rule_oss;
@@ -220,6 +322,7 @@ bool TestLookupTable::RunTest() {
     done++; cout << "TestBadInputMarisa()" << endl; if(TestBadInputMarisa()) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRuleGraph(lookup_hash)" << endl; if(TestBuildRuleGraph(*lookup_hash)) succeeded++; else cout << "FAILED!!!" << endl;
     done++; cout << "TestBuildRuleGraph(lookup_maris)" << endl; if(TestBuildRuleGraph(*lookup_marisa)) succeeded++; else cout << "FAILED!!!" << endl;
+    done++; cout << "TestBuildRuleTrg(lookup_trg)" << endl; if (TestBuildRuleTrg(*lookup_trg)) succeeded++; else cout << "FAILED!!!" << endl;
     cout << "#### TestLookupTable Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
     return done == succeeded;
 }
