@@ -299,7 +299,7 @@ HyperGraph * LookupTable::TransformGraphSrcTrg(const HyperGraph & parse) const {
             ret->AddNode(node.second);
         }
     }
-    
+
     return ret;
 }
 
@@ -310,7 +310,15 @@ bool SpannedStateComparator::operator() (const SpannedState& lhs, const SpannedS
     pair<int,int> p1 = lhs.second->GetSpan();
     pair<int,int> p2 = rhs.second->GetSpan();
     int result = (p1.second - p1.first) - (p2.second - p2.first);
-    if (result == 0)  
-        result = (p1.second - p2.second) > 0;
+    if (result == 0) {
+        result = (p1.second - p2.second);
+        if (result == 0) {
+            int node1 = lhs.second->GetId();
+            int node2 = rhs.second->GetId();
+            result = (node1 - node2) < 0;
+        } else {
+            result = result > 0;
+        }
+    }
     return result > 0;
 }
