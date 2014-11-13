@@ -13,11 +13,11 @@ using namespace boost;
 // Measure the score of the sys output according to the ref
 boost::shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & ref, const Sentence & sys) const {
 
-    // check reference length, raise RuntimeError if no words are found.
+    // check reference length, if zero, return 1 only if system is also empty
     if(ref.size() == 0)
-        THROW_ERROR("Reference has no words");
+        return boost::shared_ptr<EvalStats>(new EvalStatsRibes((sys.size() == 0 ? 1 : 0), 1));
 
-    // check sysothesis length, return "zeros" if no words are found
+    // check hypothesis length, return "zeros" if no words are found
     if(sys.size() == 0)
         return boost::shared_ptr<EvalStats>(new EvalStatsRibes(0, 1));
     
@@ -42,11 +42,6 @@ boost::shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & r
         // Get matched words
         const vector<int> & ref_match = ref_count[sys[i]];
         const vector<int> & sys_match = sys_count[sys[i]];
-        // cerr << "i=" << i << ", ref_match=";
-        // BOOST_FOREACH(int val, ref_match) cerr << val << " ";
-        // cerr << " sys_match=";
-        // BOOST_FOREACH(int val, sys_match) cerr << val << " ";
-        // cerr << endl;
 
         // if we can determine one-to-one word correspondence by only unigram
         // one-to-one correspondence
