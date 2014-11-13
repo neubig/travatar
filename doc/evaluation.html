@@ -103,10 +103,10 @@ It is also possible (mainly for tuning) to linearly interpolate two or more eval
 For more advanced usage, Travatar supports advanced interpolation measure that takes other evaluation measures as variables and combine them with single math expression.
 
 <ul>
-<li><b>Advanced Interpolation</b> (indicator string: <tt>ainterp:A|bleu:order5|B|ribes|2*A*B/(A+B)</tt>)</li>
+<li><b>Advanced Interpolation</b> (indicator string: <tt>ainterp:A|bleu:order=5|B|ribes|2*A*B/(A+B)</tt>)</li>
 </ul>
 
-Here we are counting the harmonic mean of 5-BLEU and RIBES together. Currently, Travatar supports upto 26 variables (A-Z inclusive) and standard mathematic binary operator (+,-,/,*) and rounded parentheses. 
+Here we are counting the harmonic mean of 5-BLEU and RIBES together. Currently, Travatar supports up to 26 variables (A-Z inclusive) and standard mathematic binary operator (+,-,/,*) and rounded parentheses. 
 
 <a name="significance">
 <h2>Significance Testing</h2>
