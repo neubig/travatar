@@ -278,10 +278,6 @@ int TestLookupTable::TestBuildRuleTrg(LookupTable & lookup) {
     "\"banana\""
 "]}";
     istringstream iss(expected_tree);
-    BOOST_FOREACH(HyperNode* node, actual_graph->GetNodes())
-        cerr << *node << endl;
-    BOOST_FOREACH(HyperEdge* edge, actual_graph->GetEdges())
-        cerr << *edge << endl;
     scoped_ptr<HyperGraph> expected_graph(tree_io.ReadTree(iss));
     return expected_graph->CheckMaybeEqual(*actual_graph);
 }

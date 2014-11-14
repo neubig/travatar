@@ -215,7 +215,7 @@ HyperGraph * LookupTable::TransformGraphSrcTrg(const HyperGraph & parse) const {
                 // check if all nt can be found so the rule is legal
                 if (child_ok) {
                     SparseVector feat = state->GetFeatures();
-                    if (penalty > 0) feat.Add("unmatch_trg", penalty);
+                    if (penalty > 0) feat.Add(Dict::WID("unmatch_trg"), penalty);
                     next_edge->SetRule(rule, feat);
                     if (save_src_str_) next_edge->SetSrcStr(state->GetString());
                     head_node->AddEdge(next_edge);
