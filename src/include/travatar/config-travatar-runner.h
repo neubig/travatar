@@ -32,6 +32,7 @@ public:
         AddConfigEntry("binarize", "right", "How to binarize the trees (none/left/right)");
         AddConfigEntry("buffer", "true", "Whether to buffer the output. Turn off if you want file output in real time.");
         AddConfigEntry("chart_limit", "100", "The number of elements in any particular chart cell");
+        AddConfigEntry("consider_trg", "false", "Whether lookup t2s consider about target side or not.");
         AddConfigEntry("debug", "1", "What level of debugging output to print");
         AddConfigEntry("forest_out", "", "Forest output file location");
         AddConfigEntry("forest_nbest_trim", "0", "Trim the forest so it only includes edges in the n-best");

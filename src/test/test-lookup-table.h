@@ -20,6 +20,7 @@ public:
     int TestLookup(LookupTable & lookup);
     int TestLookupRules(LookupTable & lookup);
     int TestBuildRuleGraph(LookupTable & lookup);
+    int TestBuildRuleTrg(LookupTable & lookup);
     int TestBadInputHash();
     int TestBadInputMarisa();
     
@@ -30,6 +31,8 @@ private:
     boost::scoped_ptr<LookupTableHash> lookup_hash;
     boost::scoped_ptr<LookupTableMarisa> lookup_marisa;
     boost::scoped_ptr<HyperGraph> src1_graph;
+    boost::scoped_ptr<HyperGraph> src2_graph;
+    boost::scoped_ptr<LookupTable> lookup_trg;
     Sentence trg1_sent;
     Alignment align1;
 };
