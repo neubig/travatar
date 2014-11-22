@@ -43,7 +43,7 @@ public:
     virtual std::string GetIdString() const { return (inverse_ ? "INV_BLEU" : "BLEU"); }
     virtual double ConvertToScore() const;
     virtual std::string ConvertToString() const;
-    virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_, prec_weight_, mean_)); }
+    virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_, prec_weight_, mean_,inverse_,calc_brev_)); }
     BleuReport CalcBleuReport() const;
     double GetAvgLogPrecision() const;
     double GetLengthRatio() const;

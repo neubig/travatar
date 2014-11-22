@@ -444,6 +444,8 @@ sub run_parallel {
         $my_cmd =~ s/INFILE/$in_dir\/$f/g;
         $my_cmd =~ s/OUTFILE/$out_dir\/$f/g;
         safesystem("bash -c '$my_cmd; touch $out_dir/$f.DONE' &") if not -e "$out_dir/$f";
+        # Sleep for 100 milliseconds
+        select(undef, undef, undef, 0.1);
     }
     wait_done(map { "$out_dir/$_.DONE" } @files);
     cat_files("$out_dir/$prefix", map { "$out_dir/$_" } @files); 

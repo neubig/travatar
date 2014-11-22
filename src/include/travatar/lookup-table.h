@@ -37,6 +37,15 @@ protected:
     std::string curr_string_;
 };
 
+typedef std::pair<std::vector<boost::shared_ptr<LookupState> >, const HyperNode*> SpannedState;
+
+// Class to compare State, basically comparison is based on the span length.
+// The shorter comes first.
+class SpannedStateComparator {
+public:
+    bool operator() (const SpannedState& lhs, const SpannedState& rhs) const;
+};
+
 // An implementation of a GraphTransformer that takes as input
 // a parse forest of the original sentence, looks up rules, and
 // outputs a rule graph in the target language
@@ -65,7 +74,8 @@ public:
     bool GetMatchAllUnk() { return match_all_unk_; }
     void SetSaveSrcStr(bool save_src_str) { save_src_str_ = save_src_str; }
     bool GetSaveSrcStr() { return save_src_str_; }
-
+    void SetConsiderTrg(bool consider_trg) { consider_trg_ = consider_trg; }
+    bool GetConsiderTrg() { return consider_trg_; } 
 protected:
 
     // Match a single node
@@ -90,7 +100,12 @@ protected:
     bool match_all_unk_;
     // Save the source string in the graph or not (default false)
     bool save_src_str_;
+    // Whether to consider target side head or not
+    bool consider_trg_;
 
+    // Basic Transform Graph
+    virtual HyperGraph * TransformGraphSrc(const HyperGraph & parse) const;
+    virtual HyperGraph * TransformGraphSrcTrg(const HyperGraph & parse) const;
 };
 
 }
