@@ -260,7 +260,7 @@ sub run_tree_parsing {
     $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
 
     # Parse
-    run_parallel("$PREF/clean", "$PREF/tree", $lang, "cat INFILE | $CKYLARK_DIR/src/bin/ckylark --add-root-tag --model $CKYLARK_MODEL > OUTFILE");
+    run_parallel("$PREF/clean", "$PREF/tree", $lang, "cat INFILE | $CKYLARK_DIR/src/bin/ckylark --add-root-tag --model $CKYLARK_MODEL $SPLIT_CMD > OUTFILE");
 
     # Lowercase and print
     run_parallel("$PREF/tree", "$PREF/treelow", $lang, "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
