@@ -70,7 +70,7 @@ sub number_ok {
 
 # Make sure that no content word is translated into a single Hiragana
 sub trgpart_ok {
-    return 1 if (($_[$SRC_COL] !~ /^[^pit][^ ]* \( "/) and ($_[$SRC_COL] !~ / [^pit][^ ]* \( "/));
+    return 1 if (($_[$SRC_COL] !~ /^[^pitd,\.][^ ]* \( "/) and ($_[$SRC_COL] !~ / [^pitd,\.][^ ]* \( "/));
     my $size = 0;
     my $str;
     while($_[$TRG_COL] =~ /"([^" ]+)"/g) { $size++; $str = $1; }
