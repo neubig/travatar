@@ -9,7 +9,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS, $NO_FILTER_RT);
-my ($STAT_GENERATOR);
+my ($STAT_GENERATOR,$TRACE);
 
 my $MERT_SOLVER = "batch-tune"; # Can be set to "moses" to use Moses's MERT solver
 my $EVAL = "bleu"; # The evaluation measure to use
@@ -41,6 +41,7 @@ GetOptions(
     "eval=s" => \$EVAL,
     "threads=i" => \$THREADS,
     "no-filter-rt!" => \$NO_FILTER_RT,
+    "trace!" => \$TRACE,
     "trg-factors=i" => \$TRG_FACTORS,
     "stat-generator=s" => \$STAT_GENERATOR,
     # "=s" => \$,
@@ -97,7 +98,8 @@ foreach $iter (1 .. $MAX_ITERS) {
     elsif($CAND_TYPE eq "forest") { $CAND_OPTIONS = "-forest_out $prev.forest -forest_nbest_trim $NBEST"; }
     # Do the decoding
     my $format = ($IN_FORMAT ? "-in_format $IN_FORMAT" : "");
-    safesystem("$TRAVATAR -threads $THREADS $format -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    my $trace = ($TRACE ? "-trace_out $prev.trace -buffer false" : "");
+    safesystem("$TRAVATAR -threads $THREADS $format $trace -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {
