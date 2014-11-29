@@ -72,7 +72,8 @@ TRAVATARCPP = \
 	translation-rule-hiero.cc \
 	lookup-table-fsm.cc \
 	eval-measure-adv-interp.cc \
-	math-query.cc
+	math-query.cc \
+	output-collector.cc
 
 
 AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/..
