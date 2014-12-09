@@ -87,18 +87,24 @@ void TravatarRunnerTask::Run() {
     }
     
     // If we are printing a trace, create it
-    if(trace_collector_ != NULL && nbest_list.size() > 0) {
-        ostringstream trace_out;
-        BOOST_FOREACH(const HyperEdge * edge, nbest_list[best_answer]->GetEdges()) {
-            trace_out
-                << sent_
-                << " ||| " << edge->GetHead()->GetSpan()
-                << " ||| " << edge->GetSrcStr() 
-                << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
-                << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
-                << endl;
+    if(trace_collector_ != NULL) {
+        // if there is some output print the trace
+        if (nbest_list.size() != 0) {
+            ostringstream trace_out;
+            BOOST_FOREACH(const HyperEdge * edge, nbest_list[best_answer]->GetEdges()) {
+                trace_out
+                    << sent_
+                    << " ||| " << edge->GetHead()->GetSpan()
+                    << " ||| " << edge->GetSrcStr() 
+                    << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
+                    << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
+                    << endl;
+            }
+            trace_collector_->Write(sent_, trace_out.str(), "");
+        } else {
+            // Skip this sentence
+            trace_collector_->Skip();
         }
-        trace_collector_->Write(sent_, trace_out.str(), "");
     }
 
     // If we are printing a forest, print it
@@ -333,6 +339,15 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         cerr << (sent%100==0?'!':'.'); cerr.flush();
     }
     pool.Stop(true);
+    // Make sure all the collector flushed their output
+    if (trace_collector.get() != NULL) 
+        trace_collector->Flush();
+    if (nbest_collector.get() != NULL) 
+        nbest_collector->Flush();
+    if (forest_collector.get() != NULL)
+        forest_collector->Flush();
+
+    // Finished translating
     PRINT_DEBUG(endl << "Done translating [" << timer << " sec]" << endl, 1);
     
     if(do_tuning_) {
