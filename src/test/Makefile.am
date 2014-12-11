@@ -19,7 +19,6 @@ nobase_include_HEADERS = \
 	test-lookup-table.h \
 	test-rule-extractor.h \
 	test-tokenizer.h \
-	test-travatar-runner.h \
 	test-tree-io.h \
 	test-trimmer.h \
 	test-tune.h \
@@ -30,27 +29,26 @@ nobase_include_HEADERS = \
 
 test_travatar_SOURCES = \
 	test-travatar.cc \
-	test-alignment.cc \
-    test-binarizer.cc \
-    test-caser.cc \
-    test-dict.cc \
-    test-eval-measure.cc \
-    test-graph-transformer.cc \
-    test-hiero.cc \
-    test-hyper-graph.cc \
-    test-io-util.cc \
-    test-lookup-table-fsm.cc \
-    test-lookup-table.cc \
-    test-lm-composer.cc \
-    test-rule-extractor.cc \
-    test-tokenizer.cc \
-    test-travatar-runner.cc \
-    test-tree-io.cc \
-    test-trimmer.cc \
-    test-tune.cc \
-    test-weights.cc \
-	test-math-query.cc
+	test-tokenizer.cc \
+    test-alignment.cc \
 	${TRAVATARH}
+##    test-binarizer.cc \
+##    test-caser.cc \
+##    test-dict.cc \
+##    test-eval-measure.cc \
+##    test-graph-transformer.cc \
+##    test-hiero.cc \
+##    test-hyper-graph.cc \
+##    test-io-util.cc \
+##    test-lookup-table-fsm.cc \
+##    test-lookup-table.cc \
+##    test-lm-composer.cc \
+##    test-rule-extractor.cc \
+##    test-tree-io.cc \
+##    test-trimmer.cc \
+##    test-tune.cc \
+##    test-weights.cc \
+##	test-math-query.cc
 
 test_travatar_LDADD = \
 	../lib/libtravatar.la \
@@ -66,4 +64,5 @@ test_travatar_LDADD = \
 	$(BOOST_IOSTREAMS_LIBS) \
 	$(BOOST_SYSTEM_LIBS) \
 	$(BOOST_LOCALE_LIBS) \
+	$(BOOST_UNIT_TEST_FRAMEWORK_LIBS) \
 	-lz

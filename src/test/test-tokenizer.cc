@@ -1,33 +1,30 @@
-#include "test-tokenizer.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
-#include <travatar/dict.h>
-#include <travatar/check-equal.h>
-#include <travatar/tree-io.h>
-#include <travatar/hyper-graph.h>
-
-#include <vector>
+#include <travatar/tokenizer-penn.h>
 
 using namespace std;
 using namespace boost;
+using namespace travatar;
 
-namespace travatar {
+// ****** The fixture *******
+struct TestTokenizer {
 
-TestTokenizer::TestTokenizer() { }
-TestTokenizer::~TestTokenizer() { }
+    TestTokenizer() { }
+    ~TestTokenizer() { }
 
-int TestTokenizer::TestPenn() {
+    TokenizerPenn tokenizer_penn_;
+
+};
+
+// ****** The tests *******
+BOOST_AUTO_TEST_SUITE(tokenizer)
+
+BOOST_FIXTURE_TEST_CASE(TestPenn, TestTokenizer) {
     string in = "\"Oh, no,\" she's said. i.e. \"our $400 blender, it can't handle something this hard!\"";
     string exp = "`` Oh , no , '' she 's said . i.e. `` our $ 400 blender , it ca n't handle something this hard ! ''";
     string act = tokenizer_penn_.Tokenize(in);
-    return CheckEqual(exp, act);
+    BOOST_CHECK_EQUAL(exp, act);
 }
 
-bool TestTokenizer::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestPenn()" << endl; if(TestPenn()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestTokenizer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

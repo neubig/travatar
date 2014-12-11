@@ -51,6 +51,11 @@ private:
 
 };
 
+inline std::ostream &operator<<( std::ostream &out, const Alignment &L ) {
+    out << L.ToString();
+    return out;
+}
+
 }
 
 #endif
