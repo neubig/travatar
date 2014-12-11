@@ -1,38 +1,48 @@
-#include "test-caser.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
-#include <travatar/dict.h>
+#include <travatar/caser.h>
 #include <travatar/check-equal.h>
+#include <travatar/dict.h>
 #include <travatar/tree-io.h>
 #include <travatar/hyper-graph.h>
 
-#include <vector>
-
 using namespace std;
 using namespace boost;
+using namespace travatar;
 
-namespace travatar {
+// ****** The fixture *******
+struct TestCaser {
 
-TestCaser::TestCaser() {
-    caser_.AddTrueValue("GrüßeN");
-    caser_.AddTrueValue("This");
-    caser_.AddTrueValue("that");
+    TestCaser() {
+        caser_.AddTrueValue("GrüßeN");
+        caser_.AddTrueValue("This");
+        caser_.AddTrueValue("that");
+    }
+
+    ~TestCaser() { }
+
+    Caser caser_;
+
+};
+
+// ****** The tests *******
+BOOST_FIXTURE_TEST_SUITE(caser, TestCaser)
+
+BOOST_AUTO_TEST_CASE(TestWordToLower) {
+    BOOST_CHECK(CheckEqual(string("grüßen"), caser_.ToLower("grÜßEN")));
 }
-TestCaser::~TestCaser() { }
 
-int TestCaser::TestWordToLower() {
-    return CheckEqual(string("grüßen"), caser_.ToLower("grÜßEN"));
-}
-
-int TestCaser::TestWordToTitle() {
+BOOST_AUTO_TEST_CASE(TestWordToTitle) {
     std::string grussen = "grüßEN";
-    return CheckEqual(string("Grüßen"), caser_.ToTitle("grÜßEN"));
+    BOOST_CHECK(CheckEqual(string("Grüßen"), caser_.ToTitle("grÜßEN")));
 }
 
-int TestCaser::TestWordTrueCase() {
-    return CheckEqual(string("GrüßeN"), caser_.TrueCase("grÜßEN"));
+BOOST_AUTO_TEST_CASE(TestWordTrueCase) {
+    BOOST_CHECK(CheckEqual(string("GrüßeN"), caser_.TrueCase("grÜßEN")));
 }
 
-int TestCaser::TestSentenceFirst() {
+BOOST_AUTO_TEST_CASE(TestSentenceFirst) {
     Sentence val = Dict::ParseWords("Here are examples : sentence 1 . sentence 2 ? and sentence 3 ! yes");
     vector<bool> exp_first(15, false);
     exp_first[0] = true;
@@ -41,27 +51,27 @@ int TestCaser::TestSentenceFirst() {
     exp_first[10] = true;
     exp_first[14] = true;
     vector<bool> act_first = caser_.SentenceFirst(val);
-    return CheckVector(exp_first, act_first);
+    BOOST_CHECK(CheckVector(exp_first, act_first));
 }
 
-int TestCaser::TestSentenceToLower() {
+BOOST_AUTO_TEST_CASE(TestSentenceToLower) {
     Sentence exp_val = Dict::ParseWords("this is a test .");
     Sentence act_val = Dict::ParseWords("This is a test .");
     caser_.ToLower(act_val);
-    return CheckEqual(exp_val, act_val);
+    BOOST_CHECK(CheckVector(exp_val, act_val));
 }
 
-int TestCaser::TestSentenceToTitle() {
+BOOST_AUTO_TEST_CASE(TestSentenceToTitle) {
     Sentence exp_val1 = Dict::ParseWords("This is a test .");
     Sentence act_val1 = Dict::ParseWords("this is a test .");
     Sentence exp_val2 = Dict::ParseWords("This is a test . And this also !");
     Sentence act_val2 = Dict::ParseWords("this is a test . and this also !");
     caser_.ToTitle(act_val1);
     caser_.ToTitle(act_val2);
-    return CheckEqual(exp_val1, act_val1) && CheckEqual(exp_val2, act_val2);
+    BOOST_CHECK(CheckVector(exp_val1, act_val1) && CheckVector(exp_val2, act_val2));
 }
 
-int TestCaser::TestSentenceTrueCase() {
+BOOST_AUTO_TEST_CASE(TestSentenceTrueCase) {
     Sentence exp_val1 = Dict::ParseWords("This is a test .");
     Sentence act_val1 = Dict::ParseWords("thiS is a test .");
     caser_.TrueCase(act_val1);
@@ -71,33 +81,32 @@ int TestCaser::TestSentenceTrueCase() {
     Sentence exp_val3 = Dict::ParseWords("Black is a test .");
     Sentence act_val3 = Dict::ParseWords("Black is a test .");
     caser_.TrueCase(act_val3);
-    return 
-        CheckEqual(exp_val1, act_val1) &&
-        CheckEqual(exp_val2, act_val2) &&
-        CheckEqual(exp_val3, act_val3);
+    BOOST_CHECK(CheckVector(exp_val1, act_val1));
+    BOOST_CHECK(CheckVector(exp_val2, act_val2));
+    BOOST_CHECK(CheckVector(exp_val3, act_val3));
 }
 
-int TestCaser::TestHyperGraphToLower() {
+BOOST_AUTO_TEST_CASE(TestHyperGraphToLower) {
     PennTreeIO io;
     string exp_str("(S (NP (PRP this)) (VP (VB is) (NP (DT a) (NN test))) (. .))");
     boost::shared_ptr<HyperGraph> exp_val(io.ReadFromString(exp_str));
     string act_str("(S (NP (PRP This)) (VP (VB is) (NP (DT a) (NN TEST))) (. .))");
     boost::shared_ptr<HyperGraph> act_val(io.ReadFromString(act_str));
     caser_.ToLower(*act_val);
-    return exp_val->CheckEqual(*act_val);
+    BOOST_CHECK(exp_val->CheckEqual(*act_val));
 }
 
-int TestCaser::TestHyperGraphToTitle() {
+BOOST_AUTO_TEST_CASE(TestHyperGraphToTitle) {
     PennTreeIO io;
     string exp_str("(S (NP (PRP This)) (VP (VB is) (NP (DT a) (NN TEST))) (. .))");
     boost::shared_ptr<HyperGraph> exp_val(io.ReadFromString(exp_str));
     string act_str("(S (NP (PRP this)) (VP (VB is) (NP (DT a) (NN TEST))) (. .))");
     boost::shared_ptr<HyperGraph> act_val(io.ReadFromString(act_str));
     caser_.ToTitle(*act_val);
-    return exp_val->CheckEqual(*act_val);
+    BOOST_CHECK(exp_val->CheckEqual(*act_val));
 }
 
-int TestCaser::TestHyperGraphTrueCase() {
+BOOST_AUTO_TEST_CASE(TestHyperGraphTrueCase) {
     PennTreeIO io;
     string exp_str1("(S (NP (PRP This)) (VP (VB is) (NP (DT a) (NN TEST))) (. .))");
     boost::shared_ptr<HyperGraph> exp_val1(io.ReadFromString(exp_str1));
@@ -114,28 +123,10 @@ int TestCaser::TestHyperGraphTrueCase() {
     caser_.TrueCase(*act_val1);
     caser_.TrueCase(*act_val2);
     caser_.TrueCase(*act_val3);
-    return 
-        exp_val1->CheckEqual(*act_val1) &&
-        exp_val2->CheckEqual(*act_val2) &&
-        exp_val3->CheckEqual(*act_val3);
+    BOOST_CHECK(exp_val1->CheckEqual(*act_val1));
+    BOOST_CHECK(exp_val2->CheckEqual(*act_val2));
+    BOOST_CHECK(exp_val3->CheckEqual(*act_val3));
 }
 
 
-bool TestCaser::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestWordToLower()" << endl; if(TestWordToLower()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordToTitle()" << endl; if(TestWordToTitle()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordTrueCase()" << endl; if(TestWordTrueCase()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestSentenceFirst()" << endl; if(TestSentenceFirst()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestSentenceToLower()" << endl; if(TestSentenceToLower()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestSentenceToTitle()" << endl; if(TestSentenceToTitle()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestSentenceTrueCase()" << endl; if(TestSentenceTrueCase()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestHyperGraphToLower()" << endl; if(TestHyperGraphToLower()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestHyperGraphToTitle()" << endl; if(TestHyperGraphToTitle()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestHyperGraphTrueCase()" << endl; if(TestHyperGraphTrueCase()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestCaser Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

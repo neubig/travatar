@@ -7,12 +7,7 @@ noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
 
 nobase_include_HEADERS = \
-	test-alignment.h \
 	test-base.h \
-	test-binarizer.h \
-	test-caser.h \
-	test-dict.h \
-	test-eval-measure.h \
 	test-graph-transformer.h \
 	test-hyper-graph.h \
 	test-io-util.h \
@@ -31,11 +26,11 @@ test_travatar_SOURCES = \
 	test-travatar.cc \
 	test-tokenizer.cc \
     test-alignment.cc \
+    test-binarizer.cc \
+    test-caser.cc \
+    test-dict.cc \
+    test-eval-measure.cc \
 	${TRAVATARH}
-##    test-binarizer.cc \
-##    test-caser.cc \
-##    test-dict.cc \
-##    test-eval-measure.cc \
 ##    test-graph-transformer.cc \
 ##    test-hiero.cc \
 ##    test-hyper-graph.cc \

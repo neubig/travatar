@@ -1,5 +1,6 @@
-#include "test-dict.h"
-// #include <travatar/util.h>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
 #include <travatar/sentence.h>
 #include <travatar/dict.h>
 #include <travatar/check-equal.h>
@@ -7,13 +8,11 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+BOOST_AUTO_TEST_SUITE(dict)
 
-TestDict::TestDict() {}
-TestDict::~TestDict() {}
-
-int TestDict::TestParseWords() {
+BOOST_AUTO_TEST_CASE(TestParseWords) {
     // Parse the vector
     vector<WordId> ids = Dict::ParseWords("a b a c");
     vector<string> strs_act;
@@ -24,25 +23,16 @@ int TestDict::TestParseWords() {
     strs_exp[1] = "b";
     strs_exp[2] = "a";
     strs_exp[3] = "c";
-    return CheckVector(strs_exp, strs_act);
+    BOOST_CHECK(CheckVector(strs_exp, strs_act));
 }
 
-int TestDict::TestParseSparseMap() {
+BOOST_AUTO_TEST_CASE(TestParseSparseMap) {
     // Parse the vector
     SparseMap feat_act = Dict::ParseSparseMap("a=1.5 b=2");
     SparseMap feat_exp;
     feat_exp[Dict::WID("a")] = 1.5;
     feat_exp[Dict::WID("b")] = 2;
-    return CheckMap(feat_exp, feat_act);
+    BOOST_CHECK(CheckMap(feat_exp, feat_act));
 }
 
-bool TestDict::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestParseWords()" << endl; if(TestParseWords()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestParseSparseMap()" << endl; if(TestParseSparseMap()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestDict Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()
