@@ -1,13 +1,15 @@
-#include "test-io-util.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
+#include <travatar/io-util.h>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+// ****** The tests *******
+BOOST_AUTO_TEST_SUITE(io_util)
 
-TestIOUtil::TestIOUtil() { }
-TestIOUtil::~TestIOUtil() { }
-
-int TestIOUtil::TestTrim() {
+BOOST_AUTO_TEST_CASE(TestTrim) {
     // Test to make sure that trimming whitespace works properly
     stringstream str;
     string line;
@@ -16,10 +18,10 @@ int TestIOUtil::TestTrim() {
     getline(str, line);
     int ret = (line == "AAA");
     if(!ret) cerr << "Expected AAA but got "<<line<<endl;
-    return ret;
+    BOOST_CHECK(ret);
 }
 
-int TestIOUtil::TestReadUntil() {
+BOOST_AUTO_TEST_CASE(TestReadUntil) {
     // Test to make sure that trimming whitespace works properly
     stringstream str;
     string s1, s2;
@@ -29,16 +31,7 @@ int TestIOUtil::TestReadUntil() {
     int ret = (s1 == "ABCD") && (s2 == " XYZ");
     if(!ret) 
         cerr << "s1==" << s1 <<", s2==" << s2 << endl;
-    return ret;
+    BOOST_CHECK(ret);
 }
 
-bool TestIOUtil::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestTrim()" << endl; if(TestTrim()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestReadUntil()" << endl; if(TestReadUntil()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestIOUtil Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

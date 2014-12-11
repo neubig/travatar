@@ -1,51 +1,99 @@
-#include "test-hiero.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include <travatar/dict.h>
+#include <travatar/hiero-extractor.h>
+#include <travatar/alignment.h>
+#include <travatar/sentence.h>
 #include <boost/foreach.hpp>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+// ****** The fixture *******
+struct TestHiero {
 
-TestHiero::TestHiero() {
-    extractor = HieroExtractor();
-    extractor.SetMaxInitialPhrase(10);
-    extractor.SetMaxTerminals(5);
-
-    english.push_back(Dict::ParseWords("I eat rice"));
-    japan.push_back(Dict::ParseWords("watashi wa gohan o tabemasu"));
-    align.push_back(Alignment::FromString("0-0 1-4 2-2"));
-
-    english.push_back(Dict::ParseWords("the hotel front desk"));
-    japan.push_back(Dict::ParseWords("hoteru no uketsuke"));
-    align.push_back(Alignment::FromString("1-0 2-2 3-2"));
-}
-
-// Test phrase extraction using the current settings of the phrase extraction
-int TestHiero::PhraseTest(std::vector<set<string> > & exp) {
-    for (int i=0; i < (int)exp.size(); ++i) {
-        HieroExtractor::PhrasePairs pps = extractor.ExtractPhrase(align[i],english[i],japan[i]);
-        BOOST_FOREACH(HieroExtractor::PhrasePair pp, pps) {
-            string sentence = HieroExtractor::PrintPhrasePair(pp,english[i],japan[i]);
-            if (exp[i].find(sentence) == exp[i].end()) {
-                cerr << "Could not find phrase-pair: \"" + sentence + "\" in expected sentences" << endl;
-                return 0;
-            } else {
-                exp[i].erase(sentence);
-            }
-        }
-        if(exp[i].size() != (unsigned) 0) {
-            cerr << "There are some underived phrases from phrase extraction:" << endl;
-            BOOST_FOREACH(string k, exp[i]) {
-                cerr << "  " << k << endl;
-            }
-            return 0;
-        }
+    TestHiero() {
+        extractor = HieroExtractor();
+        extractor.SetMaxInitialPhrase(10);
+        extractor.SetMaxTerminals(5);
+    
+        english.push_back(Dict::ParseWords("I eat rice"));
+        japan.push_back(Dict::ParseWords("watashi wa gohan o tabemasu"));
+        align.push_back(Alignment::FromString("0-0 1-4 2-2"));
+    
+        english.push_back(Dict::ParseWords("the hotel front desk"));
+        japan.push_back(Dict::ParseWords("hoteru no uketsuke"));
+        align.push_back(Alignment::FromString("1-0 2-2 3-2"));
     }
-    return 1;
-}
+    ~TestHiero() { }
 
-int TestHiero::TestPhraseExtraction() {
+    int PhraseTest(std::vector<set<string> > & exp) {
+        for (int i=0; i < (int)exp.size(); ++i) {
+            HieroExtractor::PhrasePairs pps = extractor.ExtractPhrase(align[i],english[i],japan[i]);
+            BOOST_FOREACH(HieroExtractor::PhrasePair pp, pps) {
+                string sentence = HieroExtractor::PrintPhrasePair(pp,english[i],japan[i]);
+                if (exp[i].find(sentence) == exp[i].end()) {
+                    cerr << "Could not find phrase-pair: \"" + sentence + "\" in expected sentences" << endl;
+                    return 0;
+                } else {
+                    exp[i].erase(sentence);
+                }
+            }
+            if(exp[i].size() != (unsigned) 0) {
+                cerr << "There are some underived phrases from phrase extraction:" << endl;
+                BOOST_FOREACH(string k, exp[i]) {
+                    cerr << "  " << k << endl;
+                }
+                return 0;
+            }
+        }
+        return 1;
+    }
+
+    int RuleTest(std::vector<set<string> > & exp) {
+        // TESTING
+        for (int i=0; i < (int)exp.size(); ++i) {
+            std::vector< vector<HieroRule*> > rules = extractor.ExtractHieroRule(align[i],english[i],japan[i]);
+            
+            std::set<string> checked = std::set<string>();
+    
+            BOOST_FOREACH(vector<HieroRule*> rule , rules) {
+                BOOST_FOREACH(HieroRule* r , rule) {
+                    string rule_key = r->ToString();
+                    set<string>::iterator it = exp[i].find(rule_key);
+    
+                    if (it == exp[i].end() && checked.find(rule_key) == checked.end()) {
+                        cerr << "Could not find rule: " + rule_key + " in expected rules" << endl;
+                        return 0;
+                    } else {
+                        exp[i].erase(rule_key);
+                        checked.insert(rule_key);
+                    }
+                    delete r;
+                }
+            }
+            if (exp[i].size() > (unsigned)0) {
+                cerr << "There are some underived rules from rule extraction:" << endl;
+                BOOST_FOREACH(string k, exp[i]) {
+                    cerr << "  " << k << endl;
+                }
+                return 0;
+            }
+        }
+        return 1;
+    }
+
+    HieroExtractor extractor;
+    std::vector<Sentence> english;
+    std::vector<Sentence> japan;
+    std::vector<Alignment> align;
+};
+
+// ****** The tests *******
+BOOST_FIXTURE_TEST_SUITE(hiero, TestHiero)
+
+BOOST_AUTO_TEST_CASE(TestPhraseExtraction) {
     // EXPECTED
     std::vector< set<string> > exp;
 
@@ -72,10 +120,10 @@ int TestHiero::TestPhraseExtraction() {
     exp[1].insert("front desk ||| uketsuke");
     exp[1].insert("front desk ||| no uketsuke");
 
-    return PhraseTest(exp);
+    BOOST_CHECK(PhraseTest(exp));
 }
 
-int TestHiero::TestPhraseExtractionLimit() {
+BOOST_AUTO_TEST_CASE(TestPhraseExtractionLimit) {
     // EXPECTED
     std::vector< set<string> > exp;
 
@@ -103,43 +151,10 @@ int TestHiero::TestPhraseExtractionLimit() {
      
     int ret = PhraseTest(exp);
     extractor.SetMaxInitialPhrase(10);
-    return ret;
+    BOOST_CHECK(ret);
 }
 
-int TestHiero::RuleTest(std::vector<set<string> > & exp) {
-    // TESTING
-    for (int i=0; i < (int)exp.size(); ++i) {
-        std::vector< vector<HieroRule*> > rules = extractor.ExtractHieroRule(align[i],english[i],japan[i]);
-        
-        std::set<string> checked = std::set<string>();
-
-        BOOST_FOREACH(vector<HieroRule*> rule , rules) {
-            BOOST_FOREACH(HieroRule* r , rule) {
-                string rule_key = r->ToString();
-                set<string>::iterator it = exp[i].find(rule_key);
-
-                if (it == exp[i].end() && checked.find(rule_key) == checked.end()) {
-                    cerr << "Could not find rule: " + rule_key + " in expected rules" << endl;
-                    return 0;
-                } else {
-                    exp[i].erase(rule_key);
-                    checked.insert(rule_key);
-                }
-                delete r;
-            }
-        }
-        if (exp[i].size() > (unsigned)0) {
-            cerr << "There are some underived rules from rule extraction:" << endl;
-            BOOST_FOREACH(string k, exp[i]) {
-                cerr << "  " << k << endl;
-            }
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int TestHiero::TestRuleExtraction() {
+BOOST_AUTO_TEST_CASE(TestRuleExtraction) {
      // EXPECTED
     std::vector<set<string> > exp;
 
@@ -190,10 +205,10 @@ int TestHiero::TestRuleExtraction() {
     // exp[1].insert("\"front\" \"desk\" @ X ||| \"uketsuke\" @ X [0-0 1-0]");
 
 
-    return RuleTest(exp);
+    BOOST_CHECK(RuleTest(exp));
 }
 
-int TestHiero::TestRuleExtractionInitial() {
+BOOST_AUTO_TEST_CASE(TestRuleExtractionInitial) {
      // EXPECTED
     std::vector<set<string> > exp;
 
@@ -229,10 +244,10 @@ int TestHiero::TestRuleExtractionInitial() {
     int ret = RuleTest(exp);
     extractor.SetMaxInitialPhrase(10);
     
-    return ret;
+    BOOST_CHECK(ret);
 }
 
-int TestHiero::TestRuleExtractionLen() {
+BOOST_AUTO_TEST_CASE(TestRuleExtractionLen) {
      // EXPECTED
     std::vector<set<string> > exp;
 
@@ -267,22 +282,7 @@ int TestHiero::TestRuleExtractionLen() {
 
     int ret = RuleTest(exp);
     extractor.SetMaxTerminals(5);
-    return ret;
+    BOOST_CHECK(ret);
 }
     
-
-TestHiero::~TestHiero() { }
-
-bool TestHiero::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestPhraseExtraction()" << endl; if(TestPhraseExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestPhraseExtractionLimit()" << endl; if(TestPhraseExtractionLimit()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRuleExtraction()" << endl; if(TestRuleExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRuleExtractionInitial()" << endl; if(TestRuleExtractionInitial()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRuleExtractionLen()" << endl; if(TestRuleExtractionLen()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestHieroExtraction Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

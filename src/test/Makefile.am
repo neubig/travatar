@@ -7,20 +7,7 @@ noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
 
 nobase_include_HEADERS = \
-	test-base.h \
-	test-graph-transformer.h \
-	test-hyper-graph.h \
-	test-io-util.h \
-	test-lookup-table.h \
-	test-rule-extractor.h \
-	test-tokenizer.h \
-	test-tree-io.h \
-	test-trimmer.h \
-	test-tune.h \
-	test-weights.h \
-	test-hiero.h \
-	test-lookup-table-fsm.h \
-	test-math-query.h
+	test-base.h
 
 test_travatar_SOURCES = \
 	test-travatar.cc \
@@ -30,12 +17,12 @@ test_travatar_SOURCES = \
     test-caser.cc \
     test-dict.cc \
     test-eval-measure.cc \
+    test-graph-transformer.cc \
+    test-hiero.cc \
+    test-hyper-graph.cc \
+    test-io-util.cc \
+    test-lookup-table-fsm.cc \
 	${TRAVATARH}
-##    test-graph-transformer.cc \
-##    test-hiero.cc \
-##    test-hyper-graph.cc \
-##    test-io-util.cc \
-##    test-lookup-table-fsm.cc \
 ##    test-lookup-table.cc \
 ##    test-lm-composer.cc \
 ##    test-rule-extractor.cc \

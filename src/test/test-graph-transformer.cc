@@ -1,4 +1,6 @@
-#include "test-graph-transformer.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
 #include <travatar/check-equal.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/dict.h>
@@ -6,51 +8,65 @@
 #include <travatar/unary-flattener.h>
 #include <travatar/word-splitter-regex.h>
 #include <travatar/word-splitter-compound.h>
+#include <travatar/tree-io.h>
 #include <fstream>
 #include <sstream>
 #include <utility>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+// ***** The fixture *****
+struct TestGraphTransformer {
 
-TestGraphTransformer::TestGraphTransformer() {
-    // Example unary graph
-    unary_graph_.reset(new HyperGraph);
-    {
-        src_.resize(1); src_[0] = Dict::WID("s");
-        unary_graph_->SetWords(src_);
-        HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,1));   unary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
-        HyperNode * nb = new HyperNode; nb->SetSpan(make_pair(0,1)); unary_graph_->AddNode(nb); nb->SetSym(Dict::WID("B"));
-        HyperEdge * e = new HyperEdge(na); unary_graph_->AddEdge(e); e->AddTail(nb); na->AddEdge(e);
+    TestGraphTransformer() {
+        // Example unary graph
+        unary_graph_.reset(new HyperGraph);
+        {
+            src_.resize(1); src_[0] = Dict::WID("s");
+            unary_graph_->SetWords(src_);
+            HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,1));   unary_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
+            HyperNode * nb = new HyperNode; nb->SetSpan(make_pair(0,1)); unary_graph_->AddNode(nb); nb->SetSym(Dict::WID("B"));
+            HyperEdge * e = new HyperEdge(na); unary_graph_->AddEdge(e); e->AddTail(nb); na->AddEdge(e);
+        }
+        // Example rule graph
+        rule_graph_.reset(new HyperGraph);
+        vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
+        rule_graph_->SetWords(ab);
+        HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
+        HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
+        HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
+        rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
+        HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
+        e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
+        rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
+        HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
+        rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
+        HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
+        rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
+        HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
+        rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
+        HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
+        rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
+        HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
+        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
+        HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
     }
-    // Example rule graph
-    rule_graph_.reset(new HyperGraph);
-    vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
-    rule_graph_->SetWords(ab);
-    HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
-    HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
-    HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
-    rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
-    HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
-    e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
-    rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
-    HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
-    rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
-    HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
-    rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
-    HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
-    rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
-    HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
-    rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
-    HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-    rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
-    HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
-}
 
-TestGraphTransformer::~TestGraphTransformer() { }
+    ~TestGraphTransformer() { }
 
-int TestGraphTransformer::TestUnaryFlatten() {
+    PennTreeIO tree_io_;
+    JSONTreeIO json_tree_io_;
+    std::vector<WordId> src_;
+    boost::scoped_ptr<HyperGraph> rule_graph_, unary_graph_;
+    boost::scoped_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10;
+
+};
+
+// ****** The tests *******
+BOOST_FIXTURE_TEST_SUITE(graph_transformer, TestGraphTransformer)
+
+BOOST_AUTO_TEST_CASE(TestUnaryFlatten) {
     UnaryFlattener flat;
     std::istringstream iss("(A (B s))");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -58,10 +74,10 @@ int TestGraphTransformer::TestUnaryFlatten() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A_B s)", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestUnaryFlatten2() {
+BOOST_AUTO_TEST_CASE(TestUnaryFlatten2) {
     UnaryFlattener flat;
     std::istringstream iss("(A s)");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -69,10 +85,10 @@ int TestGraphTransformer::TestUnaryFlatten2() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A s)", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestWordSplit() {
+BOOST_AUTO_TEST_CASE(TestWordSplit) {
     WordSplitterRegex splitter("(\\-+|\\\\/)");
     std::istringstream iss("(A x\\/y)");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -80,10 +96,10 @@ int TestGraphTransformer::TestWordSplit() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A (A x) (A \\/) (A y))", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestWordSplitConnected() {
+BOOST_AUTO_TEST_CASE(TestWordSplitConnected) {
     WordSplitterRegex splitter;
     std::istringstream iss("(A x--y)");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -91,10 +107,10 @@ int TestGraphTransformer::TestWordSplitConnected() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A (A x) (A -) (A -) (A y))", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestWordSplitInitFinal() {
+BOOST_AUTO_TEST_CASE(TestWordSplitInitFinal) {
     WordSplitterRegex splitter;
     std::istringstream iss("(A -x-)");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -102,10 +118,10 @@ int TestGraphTransformer::TestWordSplitInitFinal() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A (A -) (A x) (A -))", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestWordSplitSingle() {
+BOOST_AUTO_TEST_CASE(TestWordSplitSingle) {
     WordSplitterRegex splitter("(a|b)");
     std::istringstream iss("(A a)");
     boost::scoped_ptr<HyperGraph> un_graph(tree_io_.ReadTree(iss));
@@ -113,10 +129,10 @@ int TestGraphTransformer::TestWordSplitSingle() {
     ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(A a)", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestCompoundWordSplit() {
+BOOST_AUTO_TEST_CASE(TestCompoundWordSplit) {
     std::string file_name = "/tmp/test-compoundsplit.arpa";
     std::ofstream arpa_out(file_name.c_str());
     arpa_out << ""
@@ -154,10 +170,10 @@ int TestGraphTransformer::TestCompoundWordSplit() {
     std::ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(s (nn (nn auto) (nn fahrer)) (nn autobahn))", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-int TestGraphTransformer::TestCompoundWordSplitFiller() {
+BOOST_AUTO_TEST_CASE(TestCompoundWordSplitFiller) {
 
     std::string file_name = "/tmp/test-compoundsplit2.arpa";
     std::ofstream arpa_out(file_name.c_str());
@@ -196,22 +212,7 @@ int TestGraphTransformer::TestCompoundWordSplitFiller() {
     std::ostringstream oss;
     tree_io_.WriteTree(*act_graph, oss);
     std::string exp_str = "(s (nn (nn promotion) (nn zeit)) (nn (nn jahr) (nn zeit)))", act_str = oss.str();
-    return CheckEqual(exp_str, act_str);
+    BOOST_CHECK(CheckEqual(exp_str, act_str));
 }
 
-bool TestGraphTransformer::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestUnaryFlatten()" << endl; if(TestUnaryFlatten()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestUnaryFlatten2()" << endl; if(TestUnaryFlatten2()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordSplit()" << endl; if(TestWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordSplitConnected()" << endl; if(TestWordSplitConnected()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordSplitInitFinal()" << endl; if(TestWordSplitInitFinal()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestWordSplitSingle()" << endl; if(TestWordSplitSingle()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestCompoundWordSplit()" << endl; if(TestCompoundWordSplit()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestCompoundWordSplitFiller()" << endl; if(TestCompoundWordSplitFiller()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestGraphTransformer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()
