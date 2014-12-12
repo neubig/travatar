@@ -1,83 +1,100 @@
-#include "test-lm-composer.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
 #include <travatar/lm-composer-incremental.h>
 #include <travatar/lm-composer-bu.h>
 #include <travatar/dict.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/translation-rule.h>
+#include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
+#include <string>
 #include <fstream>
 #include <utility>
 
 using namespace std;
 using namespace boost;
+using namespace travatar;
 
-namespace travatar {
+struct TestLMComposer {
 
-TestLMComposer::TestLMComposer() {
-    {
-        // Example rule graph
-        rule_graph_.reset(new HyperGraph);
-        vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
-        rule_graph_->SetWords(ab);
-        HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
-        HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
-        HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
-        HyperNode * n3 = new HyperNode; n3->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n3);
-        // Rules for n0
-        rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
-        HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
-        e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
-        rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
-        HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
-        // Rules for n1
-        rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
-        HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
-        rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
-        HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
-        // Rules for n2
-        rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
-        HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
-        rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
-        HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
-        rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
-        HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
-        // A rule with an empty node. This should just be ignored.
-        rule_01bad.reset(new TranslationRule); rule_01bad->AddTrgWord(-1); rule_01bad->AddTrgWord(-2);
-        HyperEdge * e7 = new HyperEdge(n0); rule_graph_->AddEdge(e7); e7->AddTail(n1); e7->AddTail(n3); e7->SetScore(-0.3); e7->SetRule(rule_01bad.get()); n0->AddEdge(e7);
+    TestLMComposer() {
+        {
+            // Example rule graph
+            rule_graph_.reset(new HyperGraph);
+            vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
+            rule_graph_->SetWords(ab);
+            HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); rule_graph_->AddNode(n0);
+            HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); rule_graph_->AddNode(n1);
+            HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n2);
+            HyperNode * n3 = new HyperNode; n3->SetSpan(make_pair(1,2)); rule_graph_->AddNode(n3);
+            // Rules for n0
+            rule_01.reset(new TranslationRule); rule_01->AddTrgWord(-1); rule_01->AddTrgWord(-2);
+            HyperEdge * e0 = new HyperEdge(n0); rule_graph_->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);
+            e0->GetFeatures().Add(Dict::WID("toy_feature"), 1.5);
+            rule_10.reset(new TranslationRule); rule_10->AddTrgWord(-2); rule_10->AddTrgWord(-1);
+            HyperEdge * e1 = new HyperEdge(n0); rule_graph_->AddEdge(e1); e1->AddTail(n1); e1->AddTail(n2); e1->SetScore(-0.7); e1->SetRule(rule_10.get()); n0->AddEdge(e1);
+            // Rules for n1
+            rule_a.reset(new TranslationRule); rule_a->AddTrgWord(Dict::WID("a")); rule_a->AddTrgWord(Dict::WID("b"));
+            HyperEdge * e2 = new HyperEdge(n1); rule_graph_->AddEdge(e2); e2->SetScore(-0.1); e2->SetRule(rule_a.get()); n1->AddEdge(e2);
+            rule_b.reset(new TranslationRule); rule_b->AddTrgWord(Dict::WID("a")); rule_b->AddTrgWord(Dict::WID("c"));
+            HyperEdge * e3 = new HyperEdge(n1); rule_graph_->AddEdge(e3); e3->SetScore(-0.3); e3->SetRule(rule_b.get()); n1->AddEdge(e3);
+            // Rules for n2
+            rule_x.reset(new TranslationRule); rule_x->AddTrgWord(Dict::WID("x"));
+            HyperEdge * e4 = new HyperEdge(n2); rule_graph_->AddEdge(e4); e4->SetScore(-0.2); e4->SetRule(rule_x.get()); n2->AddEdge(e4);
+            rule_y.reset(new TranslationRule); rule_y->AddTrgWord(Dict::WID("y"));
+            HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
+            rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
+            HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
+            // A rule with an empty node. This should just be ignored.
+            rule_01bad.reset(new TranslationRule); rule_01bad->AddTrgWord(-1); rule_01bad->AddTrgWord(-2);
+            HyperEdge * e7 = new HyperEdge(n0); rule_graph_->AddEdge(e7); e7->AddTail(n1); e7->AddTail(n3); e7->SetScore(-0.3); e7->SetRule(rule_01bad.get()); n0->AddEdge(e7);
+        }
+    
+        // Create the n-gram model
+        file_name_ = "/tmp/test-hyper-graph-lm.arpa";
+        ofstream arpa_out(file_name_.c_str());
+        arpa_out << ""
+    "\\data\\\n"
+    "ngram 1=7\n"
+    "ngram 2=8\n"
+    "\n"
+    "\\1-grams:\n"
+    "-0.6368221	</s>\n"
+    "-99	<s>	-0.30103\n"
+    "-0.6368221	a	-0.4771213\n"
+    "-0.6368221	b	-0.30103\n"
+    "-0.7368221	c	-0.30103\n"
+    "-0.8129134	x	-0.30103\n"
+    "-0.8129134	y	-0.30103\n"
+    "\n"
+    "\\2-grams:\n"
+    "-0.4372497	<s> a\n"
+    "-0.4855544	<s> y\n"
+    "-0.1286666	a b\n"
+    "-0.1786666	a c\n"
+    "-0.4372497	b </s>\n"
+    "-0.4855544	b x\n"
+    "-0.2108534	x </s>\n"
+    "-0.2108534	y a" 
+    "\n"
+    "\\end\\\n" << endl;
+        arpa_out.close();
     }
+    
+    ~TestLMComposer() { }
 
-    // Create the n-gram model
-    file_name_ = "/tmp/test-hyper-graph-lm.arpa";
-    ofstream arpa_out(file_name_.c_str());
-    arpa_out << ""
-"\\data\\\n"
-"ngram 1=7\n"
-"ngram 2=8\n"
-"\n"
-"\\1-grams:\n"
-"-0.6368221	</s>\n"
-"-99	<s>	-0.30103\n"
-"-0.6368221	a	-0.4771213\n"
-"-0.6368221	b	-0.30103\n"
-"-0.7368221	c	-0.30103\n"
-"-0.8129134	x	-0.30103\n"
-"-0.8129134	y	-0.30103\n"
-"\n"
-"\\2-grams:\n"
-"-0.4372497	<s> a\n"
-"-0.4855544	<s> y\n"
-"-0.1286666	a b\n"
-"-0.1786666	a c\n"
-"-0.4372497	b </s>\n"
-"-0.4855544	b x\n"
-"-0.2108534	x </s>\n"
-"-0.2108534	y a" 
-"\n"
-"\\end\\\n" << endl;
-    arpa_out.close();
-}
+    std::string file_name_;
+    boost::shared_ptr<HyperGraph> rule_graph_;
+    boost::shared_ptr<TranslationRule> rule_a, rule_b, rule_x, rule_y, rule_unk, rule_01, rule_10, rule_01bad;
+    boost::shared_ptr<HyperGraph> exp_graph;
 
-TestLMComposer::~TestLMComposer() { }
+};
 
-int TestLMComposer::TestLMComposerBU() {
+// ****** The tests *******
+BOOST_FIXTURE_TEST_SUITE(lm_composer, TestLMComposer)
+
+BOOST_AUTO_TEST_CASE(TestLMComposerBU) {
     // Create the expected graph
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph.reset(new HyperGraph);
@@ -169,10 +186,10 @@ int TestLMComposer::TestLMComposerBU() {
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
     boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-    return exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(exp_graph->CheckEqual(*act_graph));
 }
 
-int TestLMComposer::TestLMComposerIncremental() {
+BOOST_AUTO_TEST_CASE(TestLMComposerIncremental) {
     // Create the expected graph
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph.reset(new HyperGraph);
@@ -264,10 +281,10 @@ int TestLMComposer::TestLMComposerIncremental() {
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
     boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-    return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(act_graph.get() && exp_graph->CheckEqual(*act_graph));
 }
 
-int TestLMComposer::TestLMComposerIncrementalTimesTwo() {
+BOOST_AUTO_TEST_CASE(TestLMComposerIncrementalTimesTwo) {
     // Create the expected graph
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph.reset(new HyperGraph);
@@ -362,10 +379,10 @@ int TestLMComposer::TestLMComposerIncrementalTimesTwo() {
     BOOST_FOREACH(HyperEdge* edge, my_rule_graph.GetEdges())
         edge->SetScore(edge->GetScore()*2);
     boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(my_rule_graph));
-    return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(act_graph.get() && exp_graph->CheckEqual(*act_graph));
 }
 
-int TestLMComposer::TestReverseBU() {
+BOOST_AUTO_TEST_CASE(TestReverseBU) {
     // Create the expected graph
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph.reset(new HyperGraph);
@@ -475,10 +492,10 @@ int TestLMComposer::TestReverseBU() {
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
     boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-    return act_graph.get() && exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(act_graph.get() && exp_graph->CheckEqual(*act_graph));
 }
 
-int TestLMComposer::TestReverseIncremental() {
+BOOST_AUTO_TEST_CASE(TestReverseIncremental) {
     // Create the expected graph
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph.reset(new HyperGraph);
@@ -596,19 +613,7 @@ int TestLMComposer::TestReverseIncremental() {
     weights[Dict::WID("lm")] = 1;
     lm.UpdateWeights(weights);
     boost::shared_ptr<HyperGraph> act_graph(lm.TransformGraph(*rule_graph_));
-    return act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph);
+    BOOST_CHECK(act_graph.get() && exp_graph->CheckMaybeEqual(*act_graph));
 }
 
-bool TestLMComposer::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestLMComposerBU()" << endl; if(TestLMComposerBU()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestLMComposerIncremental()" << endl; if(TestLMComposerIncremental()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestLMComposerIncrementalTimesTwo()" << endl; if(TestLMComposerIncrementalTimesTwo()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestReverseBU()" << endl; if(TestReverseBU()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestReverseIncremental()" << endl; if(TestReverseIncremental()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestLMComposer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

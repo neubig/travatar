@@ -1,4 +1,5 @@
-#include "test-weights.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
@@ -7,14 +8,12 @@
 #include <travatar/check-equal.h>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+// ****** The tests *******
+BOOST_AUTO_TEST_SUITE(weights)
 
-TestWeights::TestWeights() { }
-
-TestWeights::~TestWeights() { }
-
-int TestWeights::TestPerceptronUpdate() {
+BOOST_AUTO_TEST_CASE(TestPerceptronUpdate) {
     WeightsPerceptron weights_act, weights_exp;
     // Set the initial weights
     weights_act.SetCurrent(Dict::WID("a"), 0.5);
@@ -35,10 +34,10 @@ int TestWeights::TestPerceptronUpdate() {
     weights_act.Update(oracle, 0.5, 1.0, sys_d, 1.0, 0.5);
     // In the second update, sys_f's score is lower -> no update
     weights_act.Update(oracle, 0.5, 1.0, sys_f, 0.3, 0.5);
-    return CheckMap(weights_exp.GetFinal(), weights_act.GetFinal());
+    BOOST_CHECK(CheckMap(weights_exp.GetFinal(), weights_act.GetFinal()));
 }
 
-int TestWeights::TestAvgPerceptronUpdate() {
+BOOST_AUTO_TEST_CASE(TestAvgPerceptronUpdate) {
     WeightsAveragePerceptron weights_act, weights_exp;
     // Set the initial weights
     weights_act.SetCurrent(Dict::WID("a"), 0.5);
@@ -61,16 +60,7 @@ int TestWeights::TestAvgPerceptronUpdate() {
     weights_exp.SetCurrent(Dict::WID("d"), -0.5);
     weights_exp.SetCurrent(Dict::WID("e"), 0.25);
     weights_exp.SetCurrent(Dict::WID("f"), -0.25);
-    return CheckMap(weights_exp.GetFinal(), weights_act.GetFinal());
+    BOOST_CHECK(CheckMap(weights_exp.GetFinal(), weights_act.GetFinal()));
 }
 
-bool TestWeights::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestPerceptronUpdate()" << endl; if(TestPerceptronUpdate()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestAvgPerceptronUpdate()" << endl; if(TestAvgPerceptronUpdate()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestWeights Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()

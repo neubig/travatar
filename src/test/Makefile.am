@@ -1,17 +1,12 @@
 include $(top_srcdir)/common.am
-TRAVATARH = test-travatar.h test-base.h
 
 AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. -DPKGDATADIR='"$(pkgdatadir)"'
 
 noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
 
-nobase_include_HEADERS = \
-	test-base.h
-
 test_travatar_SOURCES = \
-	test-travatar.cc \
-	test-tokenizer.cc \
+    test-travatar.cc \
     test-alignment.cc \
     test-binarizer.cc \
     test-caser.cc \
@@ -21,16 +16,16 @@ test_travatar_SOURCES = \
     test-hiero.cc \
     test-hyper-graph.cc \
     test-io-util.cc \
+    test-lm-composer.cc \
     test-lookup-table-fsm.cc \
-	${TRAVATARH}
-##    test-lookup-table.cc \
-##    test-lm-composer.cc \
-##    test-rule-extractor.cc \
-##    test-tree-io.cc \
-##    test-trimmer.cc \
-##    test-tune.cc \
-##    test-weights.cc \
-##	test-math-query.cc
+    test-lookup-table.cc \
+    test-math-query.cc \
+    test-rule-extractor.cc \
+    test-tokenizer.cc \
+    test-tree-io.cc \
+    test-trimmer.cc \
+    test-tune.cc \
+    test-weights.cc
 
 test_travatar_LDADD = \
 	../lib/libtravatar.la \

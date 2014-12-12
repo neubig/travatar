@@ -1,111 +1,131 @@
-#include "test-rule-extractor.h"
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
 #include <travatar/global-debug.h>
 #include <travatar/check-equal.h>
+#include <travatar/forest-extractor.h>
+#include <travatar/hyper-graph.h>
+#include <travatar/hiero-extractor.h>
+#include <travatar/alignment.h>
+#include <travatar/rule-composer.h>
+#include <travatar/tree-io.h>
+#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <sstream>
 
 using namespace std;
+using namespace travatar;
 
-namespace travatar {
+struct TestRuleExtractor {
 
-TestRuleExtractor::TestRuleExtractor() {
-    // Use the example from Galley et al.
-    std::string src1_tree = "(ROOT (S (NP (PRP he)) (VP (AUX does) (RB not) (VB go))))";
-    std::string trg1_str  = "il ne va pas";
-    std::string trg1_tree = "(ROOT (S (NP (PRP il)) (VP (RB ne) (VB va) (AUX pas))))";
-    std::string align1_str = "0-0 1-1 1-3 2-1 2-3 3-2";
-    istringstream iss1(src1_tree);
-    src1_graph.reset(tree_io.ReadTree(iss1));
-    istringstream iss1_trg(trg1_tree);
-    trg1_graph.reset(tree_io.ReadTree(iss1_trg));
-    trg1_sent = Dict::ParseWords(trg1_str);
-    align1 = Alignment::FromString(align1_str);
-    // also an example of a forest
-    src2_graph.reset(new HyperGraph);
-    HyperNode* node0 = new HyperNode(Dict::WID("ROOT"), -1,    make_pair(0,2)); src2_graph->AddNode(node0);
-    HyperNode* node1 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,2)); src2_graph->AddNode(node1);
-    HyperNode* node2 = new HyperNode(Dict::WID("NP"), -1,      make_pair(0,2)); src2_graph->AddNode(node2);
-    HyperNode* node3 = new HyperNode(Dict::WID("JJ"), -1,      make_pair(0,1)); src2_graph->AddNode(node3);
-    HyperNode* node4 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,1)); src2_graph->AddNode(node4);
-    HyperNode* node5 = new HyperNode(Dict::WID("VPG"), -1,     make_pair(0,1)); src2_graph->AddNode(node5);
-    HyperNode* node6 = new HyperNode(Dict::WID("running"), -1, make_pair(0,1)); src2_graph->AddNode(node6);
-    HyperNode* node7 = new HyperNode(Dict::WID("NP"), -1,      make_pair(1,2)); src2_graph->AddNode(node7);
-    HyperNode* node8 = new HyperNode(Dict::WID("NN"), -1,      make_pair(1,2)); src2_graph->AddNode(node8);
-    HyperNode* node9 = new HyperNode(Dict::WID("water"), -1,   make_pair(1,2)); src2_graph->AddNode(node9);
-    HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); src2_graph->AddEdge(edge0);
-    HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); src2_graph->AddEdge(edge1);
-    HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); src2_graph->AddEdge(edge2);
-    HyperEdge* edge3 = new HyperEdge(node2); edge3->AddTail(node3); edge3->AddTail(node8); node2->AddEdge(edge3); src2_graph->AddEdge(edge3);
-    HyperEdge* edge4 = new HyperEdge(node3); edge4->AddTail(node6); node3->AddEdge(edge4); src2_graph->AddEdge(edge4);
-    HyperEdge* edge5 = new HyperEdge(node4); edge5->AddTail(node5); node4->AddEdge(edge5); src2_graph->AddEdge(edge5);
-    HyperEdge* edge6 = new HyperEdge(node5); edge6->AddTail(node6); node5->AddEdge(edge6); src2_graph->AddEdge(edge6);
-    HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); src2_graph->AddEdge(edge7);
-    HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); src2_graph->AddEdge(edge8);
-    src2_graph->SetWords(Dict::ParseWords("running water"));
-    std::string trg2_str  = "mizu no nagare"; // Handle this translation with caution :)
-    std::string align2_str = "0-2 1-0";
-    trg2_sent = Dict::ParseWords(trg2_str);
-    align2 = Alignment::FromString(align2_str);
-    // An example of a tree with source and target side null words
-    std::string src3_tree = "(ROOT (VP (VBD ate) (NP (NN rice))))";
-    std::string trg3_str  = "gohan o tabeta";
-    std::string align3_str = "0-2 1-0";
-    istringstream iss3(src3_tree);
-    src3_graph.reset(tree_io.ReadTree(iss3));
-    trg3_sent = Dict::ParseWords(trg3_str);
-    align3 = Alignment::FromString(align3_str);
-    // An example of a tree that caused problems
-    std::string src4_tree =
-"{\"nodes\": ["
-    "{\"sym\": \"root\", \"span\": [0, 5], \"id\": 0, \"edges\": [0]},"
-    "{\"sym\": \"np\", \"span\": [0, 5], \"id\": 1, \"edges\": [1]},"
-    "{\"sym\": \"np\", \"span\": [0, 1], \"id\": 2, \"edges\": [2]},"
-    "{\"sym\": \"prn\", \"span\": [1, 5], \"id\": 3, \"edges\": [5, 6]},"
-    "{\"sym\": \"nnp\", \"span\": [0, 1], \"id\": 4, \"edges\": [3]},"
-    "{\"sym\": \"landscape\", \"span\": [0, 1], \"id\": 5},"
-    "{\"sym\": \"prn'\", \"span\": [1, 4], \"id\": 6, \"edges\": [4]},"
-    "{\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 7, \"edges\": [8]},"
-    "{\"sym\": \"np\", \"span\": [2, 4], \"id\": 8, \"edges\": [9]},"
-    "{\"sym\": \"prn'\", \"span\": [2, 5], \"id\": 9, \"edges\": [7]},"
-    "{\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 10, \"edges\": [12]},"
-    "{\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 11},"
-    "{\"sym\": \"nnp\", \"span\": [2, 3], \"id\": 12, \"edges\": [10]},"
-    "{\"sym\": \"nnp\", \"span\": [3, 4], \"id\": 13, \"edges\": [11]},"
-    "{\"sym\": \"private\", \"span\": [2, 3], \"id\": 14},"
-    "{\"sym\": \"collection\", \"span\": [3, 4], \"id\": 15},"
-    "{\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 16}"
-"], \"edges\": ["
-    "{\"id\": 0, \"head\": 0, \"tails\": [1]},"
-    "{\"id\": 1, \"head\": 1, \"tails\": [2, 3]},"
-    "{\"id\": 2, \"head\": 2, \"tails\": [4]},"
-    "{\"id\": 3, \"head\": 4, \"tails\": [5]},"
-    "{\"id\": 4, \"head\": 6, \"tails\": [7, 8]},"
-    "{\"id\": 5, \"head\": 3, \"tails\": [7, 9]},"
-    "{\"id\": 6, \"head\": 3, \"tails\": [6, 10]},"
-    "{\"id\": 7, \"head\": 9, \"tails\": [8, 10]},"
-    "{\"id\": 8, \"head\": 7, \"tails\": [11]},"
-    "{\"id\": 9, \"head\": 8, \"tails\": [12, 13]},"
-    "{\"id\": 10, \"head\": 12, \"tails\": [14]},"
-    "{\"id\": 11, \"head\": 13, \"tails\": [15]},"
-    "{\"id\": 12, \"head\": 10, \"tails\": [16]}"
-"], \"words\": ["
-    "\"landscape\","
-    "\"-lrb-\","
-    "\"private\","
-    "\"collection\","
-    "\"-rrb-\""
-"]}";
-    std::string trg4_str = "sansui zu ( kojin zo )";
-    std::string align4_str = "0-0 0-1 1-2 2-3 2-4 3-3 4-5";
-    istringstream iss4(src4_tree);
-    src4_graph.reset(json_io.ReadTree(iss4));
-    trg4_sent = Dict::ParseWords(trg4_str);
-    align4 = Alignment::FromString(align4_str);
-}
+    TestRuleExtractor() {
+        // Use the example from Galley et al.
+        std::string src1_tree = "(ROOT (S (NP (PRP he)) (VP (AUX does) (RB not) (VB go))))";
+        std::string trg1_str  = "il ne va pas";
+        std::string trg1_tree = "(ROOT (S (NP (PRP il)) (VP (RB ne) (VB va) (AUX pas))))";
+        std::string align1_str = "0-0 1-1 1-3 2-1 2-3 3-2";
+        istringstream iss1(src1_tree);
+        src1_graph.reset(tree_io.ReadTree(iss1));
+        istringstream iss1_trg(trg1_tree);
+        trg1_graph.reset(tree_io.ReadTree(iss1_trg));
+        trg1_sent = Dict::ParseWords(trg1_str);
+        align1 = Alignment::FromString(align1_str);
+        // also an example of a forest
+        src2_graph.reset(new HyperGraph);
+        HyperNode* node0 = new HyperNode(Dict::WID("ROOT"), -1,    make_pair(0,2)); src2_graph->AddNode(node0);
+        HyperNode* node1 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,2)); src2_graph->AddNode(node1);
+        HyperNode* node2 = new HyperNode(Dict::WID("NP"), -1,      make_pair(0,2)); src2_graph->AddNode(node2);
+        HyperNode* node3 = new HyperNode(Dict::WID("JJ"), -1,      make_pair(0,1)); src2_graph->AddNode(node3);
+        HyperNode* node4 = new HyperNode(Dict::WID("VP"), -1,      make_pair(0,1)); src2_graph->AddNode(node4);
+        HyperNode* node5 = new HyperNode(Dict::WID("VPG"), -1,     make_pair(0,1)); src2_graph->AddNode(node5);
+        HyperNode* node6 = new HyperNode(Dict::WID("running"), -1, make_pair(0,1)); src2_graph->AddNode(node6);
+        HyperNode* node7 = new HyperNode(Dict::WID("NP"), -1,      make_pair(1,2)); src2_graph->AddNode(node7);
+        HyperNode* node8 = new HyperNode(Dict::WID("NN"), -1,      make_pair(1,2)); src2_graph->AddNode(node8);
+        HyperNode* node9 = new HyperNode(Dict::WID("water"), -1,   make_pair(1,2)); src2_graph->AddNode(node9);
+        HyperEdge* edge0 = new HyperEdge(node0); edge0->AddTail(node1); node0->AddEdge(edge0); src2_graph->AddEdge(edge0);
+        HyperEdge* edge1 = new HyperEdge(node0); edge1->AddTail(node2); node0->AddEdge(edge1); src2_graph->AddEdge(edge1);
+        HyperEdge* edge2 = new HyperEdge(node1); edge2->AddTail(node4); edge2->AddTail(node7); node1->AddEdge(edge2); src2_graph->AddEdge(edge2);
+        HyperEdge* edge3 = new HyperEdge(node2); edge3->AddTail(node3); edge3->AddTail(node8); node2->AddEdge(edge3); src2_graph->AddEdge(edge3);
+        HyperEdge* edge4 = new HyperEdge(node3); edge4->AddTail(node6); node3->AddEdge(edge4); src2_graph->AddEdge(edge4);
+        HyperEdge* edge5 = new HyperEdge(node4); edge5->AddTail(node5); node4->AddEdge(edge5); src2_graph->AddEdge(edge5);
+        HyperEdge* edge6 = new HyperEdge(node5); edge6->AddTail(node6); node5->AddEdge(edge6); src2_graph->AddEdge(edge6);
+        HyperEdge* edge7 = new HyperEdge(node7); edge7->AddTail(node8); node7->AddEdge(edge7); src2_graph->AddEdge(edge7);
+        HyperEdge* edge8 = new HyperEdge(node8); edge8->AddTail(node9); node8->AddEdge(edge8); src2_graph->AddEdge(edge8);
+        src2_graph->SetWords(Dict::ParseWords("running water"));
+        std::string trg2_str  = "mizu no nagare"; // Handle this translation with caution :)
+        std::string align2_str = "0-2 1-0";
+        trg2_sent = Dict::ParseWords(trg2_str);
+        align2 = Alignment::FromString(align2_str);
+        // An example of a tree with source and target side null words
+        std::string src3_tree = "(ROOT (VP (VBD ate) (NP (NN rice))))";
+        std::string trg3_str  = "gohan o tabeta";
+        std::string align3_str = "0-2 1-0";
+        istringstream iss3(src3_tree);
+        src3_graph.reset(tree_io.ReadTree(iss3));
+        trg3_sent = Dict::ParseWords(trg3_str);
+        align3 = Alignment::FromString(align3_str);
+        // An example of a tree that caused problems
+        std::string src4_tree =
+    "{\"nodes\": ["
+        "{\"sym\": \"root\", \"span\": [0, 5], \"id\": 0, \"edges\": [0]},"
+        "{\"sym\": \"np\", \"span\": [0, 5], \"id\": 1, \"edges\": [1]},"
+        "{\"sym\": \"np\", \"span\": [0, 1], \"id\": 2, \"edges\": [2]},"
+        "{\"sym\": \"prn\", \"span\": [1, 5], \"id\": 3, \"edges\": [5, 6]},"
+        "{\"sym\": \"nnp\", \"span\": [0, 1], \"id\": 4, \"edges\": [3]},"
+        "{\"sym\": \"landscape\", \"span\": [0, 1], \"id\": 5},"
+        "{\"sym\": \"prn'\", \"span\": [1, 4], \"id\": 6, \"edges\": [4]},"
+        "{\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 7, \"edges\": [8]},"
+        "{\"sym\": \"np\", \"span\": [2, 4], \"id\": 8, \"edges\": [9]},"
+        "{\"sym\": \"prn'\", \"span\": [2, 5], \"id\": 9, \"edges\": [7]},"
+        "{\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 10, \"edges\": [12]},"
+        "{\"sym\": \"-lrb-\", \"span\": [1, 2], \"id\": 11},"
+        "{\"sym\": \"nnp\", \"span\": [2, 3], \"id\": 12, \"edges\": [10]},"
+        "{\"sym\": \"nnp\", \"span\": [3, 4], \"id\": 13, \"edges\": [11]},"
+        "{\"sym\": \"private\", \"span\": [2, 3], \"id\": 14},"
+        "{\"sym\": \"collection\", \"span\": [3, 4], \"id\": 15},"
+        "{\"sym\": \"-rrb-\", \"span\": [4, 5], \"id\": 16}"
+    "], \"edges\": ["
+        "{\"id\": 0, \"head\": 0, \"tails\": [1]},"
+        "{\"id\": 1, \"head\": 1, \"tails\": [2, 3]},"
+        "{\"id\": 2, \"head\": 2, \"tails\": [4]},"
+        "{\"id\": 3, \"head\": 4, \"tails\": [5]},"
+        "{\"id\": 4, \"head\": 6, \"tails\": [7, 8]},"
+        "{\"id\": 5, \"head\": 3, \"tails\": [7, 9]},"
+        "{\"id\": 6, \"head\": 3, \"tails\": [6, 10]},"
+        "{\"id\": 7, \"head\": 9, \"tails\": [8, 10]},"
+        "{\"id\": 8, \"head\": 7, \"tails\": [11]},"
+        "{\"id\": 9, \"head\": 8, \"tails\": [12, 13]},"
+        "{\"id\": 10, \"head\": 12, \"tails\": [14]},"
+        "{\"id\": 11, \"head\": 13, \"tails\": [15]},"
+        "{\"id\": 12, \"head\": 10, \"tails\": [16]}"
+    "], \"words\": ["
+        "\"landscape\","
+        "\"-lrb-\","
+        "\"private\","
+        "\"collection\","
+        "\"-rrb-\""
+    "]}";
+        std::string trg4_str = "sansui zu ( kojin zo )";
+        std::string align4_str = "0-0 0-1 1-2 2-3 2-4 3-3 4-5";
+        istringstream iss4(src4_tree);
+        src4_graph.reset(json_io.ReadTree(iss4));
+        trg4_sent = Dict::ParseWords(trg4_str);
+        align4 = Alignment::FromString(align4_str);
+    }
+    
+    ~TestRuleExtractor() { }
 
-TestRuleExtractor::~TestRuleExtractor() { }
+    PennTreeIO tree_io;
+    JSONTreeIO json_io;
+    boost::scoped_ptr<HyperGraph> src1_graph, src2_graph, src3_graph, src4_graph, trg1_graph;
+    Sentence trg1_sent, trg2_sent, trg3_sent, trg4_sent;
+    Alignment align1, align2, align3, align4;
+};
 
-int TestRuleExtractor::TestTreeExtraction() {
+// ****** The tests *******
+BOOST_FIXTURE_TEST_SUITE(rule_extractor, TestRuleExtractor)
+
+BOOST_AUTO_TEST_CASE(TestTreeExtraction) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
@@ -183,10 +203,10 @@ int TestRuleExtractor::TestTreeExtraction() {
     // vb7_edge->AddTrgWord(Dict::WID("va"));
     vb7_node->AddEdge(vb7_edge);
     // Check to make sure that these are equal
-    return frags_exp.CheckEqual(*frags_act);
+    BOOST_CHECK(frags_exp.CheckEqual(*frags_act));
 }
 
-int TestRuleExtractor::TestForestExtraction() {
+BOOST_AUTO_TEST_CASE(TestForestExtraction) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     src2_graph->GetEdge(0)->SetScore(log(0.5));
@@ -200,10 +220,10 @@ int TestRuleExtractor::TestForestExtraction() {
     // The only two edges that are 0.5 are the split edges on top
     scores_exp[0] = log(0.5); scores_exp[1] = log(0.5);
     // Check to make sure that these are equal
-    return CheckAlmostVector(scores_exp, scores_act);
+    BOOST_CHECK(CheckAlmostVector(scores_exp, scores_act));
 }
 
-int TestRuleExtractor::TestForestExtractionBinarized() {
+BOOST_AUTO_TEST_CASE(TestForestExtractionBinarized) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src4_graph, align4));
@@ -227,10 +247,10 @@ int TestRuleExtractor::TestForestExtractionBinarized() {
     rule_exp.push_back("np ( nnp ( \"private\" ) nnp ( \"collection\" ) ) ||| \"kojin\" \"zo\" ||| 1 ||| 0-0 0-1 1-0");
     sort(rule_exp.begin(), rule_exp.end());
     sort(rule_act.begin(), rule_act.end());
-    return CheckVector(rule_exp, rule_act);
+    BOOST_CHECK(CheckVector(rule_exp, rule_act));
 }
 
-int TestRuleExtractor::TestTopNullExtraction() {
+BOOST_AUTO_TEST_CASE(TestTopNullExtraction) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> frags_min(forest_ext.ExtractMinimalRules(*src3_graph, align3));
@@ -291,10 +311,10 @@ int TestRuleExtractor::TestTopNullExtraction() {
     frags_exp.AddEdge(nn5_edge);
     nn5_edge->AddFragmentEdge(src1_graph->GetEdge(4));
     nn5_node->AddEdge(nn5_edge);
-    return frags_exp.CheckEqual(*frags_act);
+    BOOST_CHECK(frags_exp.CheckEqual(*frags_act));
 }
 
-int TestRuleExtractor::TestExpandNode() {
+BOOST_AUTO_TEST_CASE(TestExpandNode) {
     ForestExtractor forest_ext;
     HyperNode old_node(1, -1, make_pair(5,6), 1);
     old_node.GetTrgSpan().insert(3);
@@ -324,10 +344,10 @@ int TestRuleExtractor::TestExpandNode() {
         delete val.second;
     BOOST_FOREACH(HyperNode * ptr, node_exp)
         delete ptr;
-    return ret;
+    BOOST_CHECK(ret);
 }
 
-int TestRuleExtractor::TestExhaustiveNullExtraction() {
+BOOST_AUTO_TEST_CASE(TestExhaustiveNullExtraction) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> frags_min(forest_ext.ExtractMinimalRules(*src3_graph, align3));
@@ -447,10 +467,10 @@ int TestRuleExtractor::TestExhaustiveNullExtraction() {
     frags_exp.AddEdge(nn5_edge_y);
     nn5_edge_y->AddFragmentEdge(src1_graph->GetEdge(4));
     nn5_node_y->AddEdge(nn5_edge_y);
-    return frags_exp.CheckEqual(*frags_act);
+    BOOST_CHECK(frags_exp.CheckEqual(*frags_act));
 }
 
-// int TestRuleExtractor::TestExhaustiveNullDisconnected() {
+// BOOST_AUTO_TEST_CASE(TestExhaustiveNullDisconnected) {
 //     std::string in_str =
 // "{\"nodes\": ["
 //     "{\"sym\": \"root\", \"span\": [0, 11], \"id\": 0, \"edges\": [0], \"trg_span\": [0, 2, 3, 4, 5, 6, 7, 9, 12, 13]},"
@@ -502,10 +522,10 @@ int TestRuleExtractor::TestExhaustiveNullExtraction() {
 //     forest_ext.SetMaxNonterm(3);
 //     boost::shared_ptr<HyperGraph> hg_out(forest_ext.AttachNullsExhaustive(*hg_in, align, 14));
 //     hg_out->InsideOutsideNormalize(); // We want to check that it doesn't die here
-//     return 1;
+//     BOOST_CHECK(1);
 // }
 
-int TestRuleExtractor::TestRulePrinting() {
+BOOST_AUTO_TEST_CASE(TestRulePrinting) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
@@ -524,10 +544,10 @@ int TestRuleExtractor::TestRulePrinting() {
     rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0 x1 ||| 1 ||| ");
     sort(rule_exp.begin(), rule_exp.end());
     sort(rule_act.begin(), rule_act.end());
-    return CheckVector(rule_exp, rule_act);
+    BOOST_CHECK(CheckVector(rule_exp, rule_act));
 }
 
-int TestRuleExtractor::TestRulePrintingTrgSyntax() {
+BOOST_AUTO_TEST_CASE(TestRulePrintingTrgSyntax) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::shared_ptr<HyperGraph> frags_act(forest_ext.ExtractMinimalRules(*src1_graph, align1));
@@ -547,11 +567,11 @@ int TestRuleExtractor::TestRulePrintingTrgSyntax() {
     rule_exp.push_back("ROOT ( S ( x0:NP x1:VP ) ) ||| x0:NP x1:VP @ ROOT ||| 1 ||| ");
     sort(rule_exp.begin(), rule_exp.end());
     sort(rule_act.begin(), rule_act.end());
-    return CheckVector(rule_exp, rule_act);
+    BOOST_CHECK(CheckVector(rule_exp, rule_act));
 }
 
 
-int TestRuleExtractor::TestComposeEdge() {
+BOOST_AUTO_TEST_CASE(TestComposeEdge) {
     // Run the Forest algorithm
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
@@ -577,10 +597,10 @@ int TestRuleExtractor::TestComposeEdge() {
     exp14->AddFragmentEdge(src1_graph->GetEdge(4));
     exp14->AddFragmentEdge(src1_graph->GetEdge(5));
     exp14->AddFragmentEdge(src1_graph->GetEdge(6));
-    return CheckEqual(*exp14, *act14);
+    BOOST_CHECK(CheckEqual(*exp14, *act14));
 }
 
-int TestRuleExtractor::TestRuleComposer() {
+BOOST_AUTO_TEST_CASE(TestRuleComposer) {
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
     RuleComposer rc(2);
@@ -595,10 +615,10 @@ int TestRuleExtractor::TestRuleComposer() {
     HyperEdge * e14 = RuleComposer::ComposeEdge(*static_cast<RuleEdge*>(edges[1]), *static_cast<RuleEdge*>(edges[4]), 1); exp_graph->AddEdge(e14); exp_graph->GetNode(1)->AddEdge(e14);
     HyperEdge * e02 = RuleComposer::ComposeEdge(*static_cast<RuleEdge*>(edges[0]), *static_cast<RuleEdge*>(edges[1]), 0); exp_graph->AddEdge(e02); exp_graph->GetNode(0)->AddEdge(e02);
 
-    return exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(exp_graph->CheckEqual(*act_graph));
 }
 
-int TestRuleExtractor::TestRuleComposerLex() {
+BOOST_AUTO_TEST_CASE(TestRuleComposerLex) {
     ForestExtractor forest_ext;
     boost::scoped_ptr<HyperGraph> rule_graph(forest_ext.ExtractMinimalRules(*src1_graph, align1));
     RuleComposer rc(1, 3);
@@ -610,10 +630,10 @@ int TestRuleExtractor::TestRuleComposerLex() {
     HyperEdge * e23 = RuleComposer::ComposeEdge(*static_cast<RuleEdge*>(edges[2]), *static_cast<RuleEdge*>(edges[3]), 0); exp_graph->AddEdge(e23); exp_graph->GetNode(2)->AddEdge(e23);
     HyperEdge * e45 = RuleComposer::ComposeEdge(*static_cast<RuleEdge*>(edges[4]), *static_cast<RuleEdge*>(edges[5]), 0); exp_graph->AddEdge(e45); exp_graph->GetNode(4)->AddEdge(e45);
 
-    return exp_graph->CheckEqual(*act_graph);
+    BOOST_CHECK(exp_graph->CheckEqual(*act_graph));
 }
 
-int TestRuleExtractor::TestTrinary() {
+BOOST_AUTO_TEST_CASE(TestTrinary) {
     // Use the example from Galley et al.
     std::string src_tree = "(S (A a) (B b))";
     std::string trg_str  = "a b";
@@ -640,27 +660,7 @@ int TestRuleExtractor::TestTrinary() {
     rule_exp.push_back("S ( x0:A x1:B ) ||| x0 x1 ||| 1 ||| ");
     sort(rule_exp.begin(), rule_exp.end());
     sort(rule_act.begin(), rule_act.end());
-    return CheckVector(rule_exp, rule_act);
+    BOOST_CHECK(CheckVector(rule_exp, rule_act));
 }
 
-bool TestRuleExtractor::RunTest() {
-    int done = 0, succeeded = 0;
-    done++; cout << "TestTreeExtraction()" << endl; if(TestTreeExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestForestExtraction()" << endl; if(TestForestExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestForestExtractionBinarized()" << endl; if(TestForestExtractionBinarized()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestExpandNode()" << endl; if(TestExpandNode()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestTopNullExtraction()" << endl; if(TestTopNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestExhaustiveNullExtraction()" << endl; if(TestExhaustiveNullExtraction()) succeeded++; else cout << "FAILED!!!" << endl;
-    // done++; cout << "TestExhaustiveNullDisconnected()" << endl; if(TestExhaustiveNullDisconnected()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRulePrinting()" << endl; if(TestRulePrinting()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRulePrintingTrgSyntax()" << endl; if(TestRulePrintingTrgSyntax()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestComposeEdge()" << endl; if(TestComposeEdge()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRuleComposer()" << endl; if(TestRuleComposer()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestRuleComposerLex()" << endl; if(TestRuleComposerLex()) succeeded++; else cout << "FAILED!!!" << endl;
-    done++; cout << "TestTrinary()" << endl; if(TestTrinary()) succeeded++; else cout << "FAILED!!!" << endl;
-    cout << "#### TestRuleExtractor Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
-    return done == succeeded;
-}
-
-} // namespace travatar
-
+BOOST_AUTO_TEST_SUITE_END()
