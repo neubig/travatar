@@ -6,7 +6,7 @@ using namespace boost;
 
 void OutputCollector::Write(int id, const string & out, const string & err) { 
     typedef map<int,pair<string,string> > TraceMap;
-    mutex::scoped_lock lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     if(id == next_) {
         *out_stream_ << out;
         *err_stream_ << err;
