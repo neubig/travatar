@@ -260,7 +260,7 @@ sub run_tree_parsing {
     $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
 
     # Parse
-    run_parallel("$PREF/clean", "$PREF/tree", $lang, "cat INFILE | $CKYLARK_DIR/src/bin/ckylark --add-root-tag --model $CKYLARK_MODEL > OUTFILE");
+    run_parallel("$PREF/clean", "$PREF/tree", $lang, "cat INFILE | $CKYLARK_DIR/src/bin/ckylark --add-root-tag --model $CKYLARK_MODEL $SPLIT_CMD > OUTFILE");
 
     # Lowercase and print
     run_parallel("$PREF/tree", "$PREF/treelow", $lang, "$TRAVATAR_DIR/script/tree/lowercase.pl < INFILE > OUTFILE");
@@ -287,10 +287,8 @@ sub run_forest_parsing {
     run_parallel("$PREF/tree", "$PREF/treefor", $lang, "$TRAVATAR_DIR/src/bin/tree-converter -input_format penn -output_format egret < INFILE 2> OUTFILE.log > OUTFILE", 1);
     
     if($lang eq "zh") {
-        # ZH Convert to GB encoding, same as the penn treebank
-        run_parallel("$PREF/clean", "$PREF/cleangb", $lang, "iconv -sc -f UTF-8 -t GB18030 < INFILE | sed \"s/^[ \t]*\$/FAILED/g\" > OUTFILE");
         # ZH Parse with Egret
-        run_parallel("$PREF/cleangb", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log  | iconv -f GB18030 -t UTF-8 | sed \"s/\\^g//g\" > OUTFILE", 1);
+        run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "$EGRET_DIR/egret -lapcfg -i=INFILE -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log | sed \"s/\\^g//g\" > OUTFILE", 1);
     } elsif($lang eq "ja") {
         # JA Parse with Egret
         run_parallel("$PREF/clean", "$PREF/egretfor", $lang, "cat INFILE | sed \"s/(/-LRB-/g; s/)/-RRB-/g\" | $EGRET_DIR/egret -lapcfg -i=/dev/stdin -printForest $EGRET_FOREST_OPT -data=$EGRET_MODEL 2> OUTFILE.log > OUTFILE", 1);
