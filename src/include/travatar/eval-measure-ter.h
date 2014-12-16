@@ -3,6 +3,7 @@
 
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <vector>
@@ -11,11 +12,11 @@ namespace travatar {
 
 class EvalStatsTer : public EvalStatsAverage {
 public:
-    EvalStatsTer(double val, double denom = 1.0, bool inverse = false)
+    EvalStatsTer(Real val, Real denom = 1.0, bool inverse = false)
         : EvalStatsAverage(val,denom), inverse_(inverse) { }
     virtual std::string GetIdString() const { return "TER"; }
-    virtual double ConvertToScore() const {
-        double score = vals_[1] ? vals_[0]/vals_[1] : 0;
+    virtual Real ConvertToScore() const {
+        Real score = vals_[1] ? vals_[0]/vals_[1] : 0;
         return inverse_ ? 1-score : score;
     }
     EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsTer(vals_[0], vals_[1], inverse_)); }

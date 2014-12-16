@@ -26,12 +26,12 @@ void TuneLbfgs::Init(const SparseMap & init_weights) {
     gradient_->Init(init_weights, examps_);
 }
 
-double TuneLbfgs::operator()(size_t n, const double * x, double * g) const {
+Real TuneLbfgs::operator()(size_t n, const Real * x, Real * g) const {
     return gradient_->CalcGradient(n, x, g);
 }
 
 // Tune new weights using the expected BLEU algorithm
-double TuneLbfgs::RunTuning(SparseMap & kv) {
+Real TuneLbfgs::RunTuning(SparseMap & kv) {
 
     // Sanity checks
     if(examps_.size() < 1)
@@ -43,13 +43,13 @@ double TuneLbfgs::RunTuning(SparseMap & kv) {
     PRINT_DEBUG("Starting L-BFGS Tuning Run: " << Dict::PrintSparseMap(kv) << endl, 2);
 
     // The final score
-    double last_score = 0.0;
+    Real last_score = 0.0;
 
     // Initialize the gradient
     gradient_->SetMult(-1);
 
     // Initialize the weights appropriately
-    vector<double> weights;
+    vector<Real> weights;
     if(!use_init_)
         kv = SparseMap();
     gradient_->DensifyWeights(kv, weights);

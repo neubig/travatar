@@ -1,6 +1,7 @@
 #ifndef TRANSLATION_RULE_H__
 #define TRANSLATION_RULE_H__
 
+#include <travatar/real.h>
 #include <travatar/sentence.h>
 #include <travatar/cfg-data.h>
 #include <travatar/sparse-map.h>
@@ -20,8 +21,8 @@ public:
 
     virtual ~TranslationRule() {} 
 
-    void AddFeature(int id, double feat);
-    void AddFeature(const std::string & str, double feat);
+    void AddFeature(int id, Real feat);
+    void AddFeature(const std::string & str, Real feat);
     
     virtual bool operator==(const TranslationRule & rhs) const {
         return

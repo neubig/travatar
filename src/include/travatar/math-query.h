@@ -2,6 +2,7 @@
 #define TRAVATAR_MATH_QUERY__
 
 #include <travatar/sentence.h>
+#include <travatar/real.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -19,11 +20,11 @@ struct MathToken;
 class MathQuery{
     std::vector<MathToken*> tokens_;
 public:
-    MathQuery(std::string query="", std::map<WordId,double> vars=std::map<WordId,double>());
+    MathQuery(std::string query="", std::map<WordId,Real> vars=std::map<WordId,Real>());
     virtual ~MathQuery();
 
-    static double Evaluate(const std::map<WordId,double>& var_map, const std::string& query);
-    static double Evaluate(const MathQuery& mq);
+    static Real Evaluate(const std::map<WordId,Real>& var_map, const std::string& query);
+    static Real Evaluate(const MathQuery& mq);
     virtual void Print(std::ostream& oss) const;
 };
 
@@ -50,7 +51,7 @@ class BinaryOperator : public MathToken {
 public:
     BinaryOperator(int priority, const string & op) : MathToken(BINARY_OPERATOR)
         { priority_ = priority; op_ = op; } 
-    virtual double eval(double x1, double x2) = 0;
+    virtual Real eval(Real x1, Real x2) = 0;
     const std::string GetOperator() const { return op_; }
     int GetPriority() const { return priority_; }
     virtual void Print(std::ostream& oss) const { oss << op_; }
@@ -58,29 +59,29 @@ public:
 
 struct Add : public BinaryOperator {
     Add() : BinaryOperator(0,"+") { }
-    double eval(double x1, double x2) { return x1 + x2; }
+    Real eval(Real x1, Real x2) { return x1 + x2; }
 };
 
 struct Subtract : public BinaryOperator {
     Subtract() : BinaryOperator(0,"-") { }
-    double eval(double x1, double x2) { return x1 - x2; }
+    Real eval(Real x1, Real x2) { return x1 - x2; }
 };
 
 struct Multiply : public BinaryOperator {
     Multiply() : BinaryOperator(1,"*") { }
-    double eval(double x1, double x2) { return x1 * x2; }
+    Real eval(Real x1, Real x2) { return x1 * x2; }
 };
 
 struct Divide : public BinaryOperator {
     Divide() : BinaryOperator(1,"/") { }
-    double eval(double x1, double x2) { return x1 / x2; }
+    Real eval(Real x1, Real x2) { return x1 / x2; }
 };
 
 class Operand : public MathToken {
-    double value_;
+    Real value_;
 public: 
-    Operand(double value) : MathToken(OPERAND), value_(value) { };
-    double GetValue() const { return value_; } 
+    Operand(Real value) : MathToken(OPERAND), value_(value) { };
+    Real GetValue() const { return value_; } 
     void Print(std::ostream& oss) const { oss << value_; }
 };
 

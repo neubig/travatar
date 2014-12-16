@@ -1,6 +1,7 @@
 #ifndef WEIGHTS_H__
 #define WEIGHTS_H__
 
+#include <travatar/real.h>
 #include <travatar/sparse-map.h>
 #include <travatar/nbest-list.h>
 #include <travatar/sentence.h>
@@ -16,22 +17,22 @@ class Weights {
 public:
 
     Weights(int factor = 0) : factor_(factor) {
-        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
+        ranges_[-1] = std::pair<Real,Real>(-REAL_MAX, REAL_MAX);
     }
     Weights(const SparseMap & current, int factor = 0) :
         current_(current), factor_(factor) {
-        ranges_[-1] = std::pair<double,double>(-DBL_MAX, DBL_MAX);
+        ranges_[-1] = std::pair<Real,Real>(-REAL_MAX, REAL_MAX);
     }
 
     virtual ~Weights() { }
 
     // Get the current values of the weights at this point in learning
-    virtual double GetCurrent(const SparseMap::key_type & key) const {
+    virtual Real GetCurrent(const SparseMap::key_type & key) const {
         const SparseMap & current = GetCurrent();
         SparseMap::const_iterator it = current.find(key);
         return (it != current.end() ? it->second : 0.0);
     }
-    virtual double GetCurrent(const SparseMap::key_type & key) {
+    virtual Real GetCurrent(const SparseMap::key_type & key) {
         const SparseMap & current = GetCurrent();
         SparseMap::const_iterator it = current.find(key);
         return (it != current.end() ? it->second : 0.0);
@@ -39,7 +40,7 @@ public:
     virtual const SparseMap & GetCurrent() const {
         return current_;
     }
-    virtual void SetCurrent(const SparseMap::key_type & key, double val) {
+    virtual void SetCurrent(const SparseMap::key_type & key, Real val) {
         current_[key] = val;
     }
     virtual void SetCurrent(const SparseMap & kv) { current_ = kv; }
@@ -59,13 +60,13 @@ public:
     // Adjust the weights according to the n-best list
     // Scores are current model scores and evaluation scores
     virtual void AdjustNbest(
-            const std::vector<std::pair<double,double> > & scores,
+            const std::vector<std::pair<Real,Real> > & scores,
             const std::vector<SparseVector*> & features);
 
     // The pairwise weight update rule
     virtual void Update (
-        const SparseVector & oracle, double oracle_score, double oracle_eval,
-        const SparseVector & system, double system_score, double system_eval
+        const SparseVector & oracle, Real oracle_score, Real oracle_eval,
+        const SparseVector & system, Real system_score, Real system_eval
     );
 
     // Adjust based on a single one-best list
@@ -74,24 +75,24 @@ public:
                         const EvalMeasure & eval,
                         const NbestList & nbest);
 
-    void SetRange(int id, double min, double max) {
-        ranges_[id] = std::pair<double,double>(min,max);
+    void SetRange(int id, Real min, Real max) {
+        ranges_[id] = std::pair<Real,Real>(min,max);
     }
-    std::pair<double,double> GetRange(int id) {
+    std::pair<Real,Real> GetRange(int id) {
         RangeMap::const_iterator it = ranges_.find(id);
         return (it == ranges_.end() ? ranges_[-1] : it->second);
     }
 
 protected:
     SparseMap current_;
-    typedef boost::unordered_map<WordId, std::pair<double,double> > RangeMap;
+    typedef boost::unordered_map<WordId, std::pair<Real,Real> > RangeMap;
     RangeMap ranges_;
     int factor_;
 
 };
 
-inline double operator*(const Weights & lhs, const SparseVector & rhs) {
-    double ret = 0;
+inline Real operator*(const Weights & lhs, const SparseVector & rhs) {
+    Real ret = 0;
     BOOST_FOREACH(const SparsePair & val, rhs.GetImpl()) {
         ret += val.second * lhs.GetCurrent(val.first);
     }

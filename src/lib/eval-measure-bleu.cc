@@ -83,36 +83,36 @@ boost::shared_ptr<EvalStats> EvalMeasureBleu::ReadStats(const std::string & line
     return ret;
 }
 
-double EvalStatsBleu::GetAvgLogPrecision() const {
+Real EvalStatsBleu::GetAvgLogPrecision() const {
     int ngram_order = GetNgramOrder();
-    double log_prec = 0.0;
+    Real log_prec = 0.0;
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
-        double smooth = (i == 0 ? 0 : smooth_);
-        double num = (vals_[3*i]+smooth);
-        double denom = (vals_[3*i+1]+smooth);
-        double prec = (denom ? num/denom : 0);
-        log_prec += (prec ? log(prec) : -DBL_MAX);
+        Real smooth = (i == 0 ? 0 : smooth_);
+        Real num = (vals_[3*i]+smooth);
+        Real denom = (vals_[3*i+1]+smooth);
+        Real prec = (denom ? num/denom : 0);
+        log_prec += (prec ? log(prec) : -REAL_MAX);
     }
     log_prec /= ngram_order;
     return log_prec;
 }
 
-double EvalStatsBleu::GetLengthRatio() const {
+Real EvalStatsBleu::GetLengthRatio() const {
     return vals_[1]/vals_[2];
 }
 
 BleuReport EvalStatsBleu::CalcBleuReport() const {
     BleuReport report;
-    double log_bleu = (mean_ == GEOMETRIC ? 1.0 : 0.0);
+    Real log_bleu = (mean_ == GEOMETRIC ? 1.0 : 0.0);
     int ngram_order = GetNgramOrder();
     // Calculate the precision for each order
     for (int i=0; i < ngram_order; i++) {
-        double smooth = (i == 0 ? 0 : smooth_);
-        double mat = (vals_[3*i]+smooth);
-        double sys = (vals_[3*i+1]+smooth);
-        double ref = (vals_[3*i+2]+smooth);
-        double fmeas = mat / (prec_weight_ * sys + (1-prec_weight_) * ref);
+        Real smooth = (i == 0 ? 0 : smooth_);
+        Real mat = (vals_[3*i]+smooth);
+        Real sys = (vals_[3*i+1]+smooth);
+        Real ref = (vals_[3*i+2]+smooth);
+        Real fmeas = mat / (prec_weight_ * sys + (1-prec_weight_) * ref);
         // To support PINC
         if (inverse_)
             fmeas = 1.0 - fmeas;
@@ -125,7 +125,7 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     }
     // Average and convert to log scale
     if(log_bleu == 0)
-        log_bleu = -DBL_MAX;
+        log_bleu = -REAL_MAX;
     else if(mean_ == GEOMETRIC)
         log_bleu = log(log_bleu)/ngram_order;
     else
@@ -134,8 +134,8 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     report.sys_len = vals_[1];
     report.ref_len = vals_[2];
     // Calculate the brevity penalty
-    report.ratio = (double)report.sys_len/report.ref_len;
-    double log_bp = 1.0-(double)report.ref_len/report.sys_len;
+    report.ratio = (Real)report.sys_len/report.ref_len;
+    Real log_bp = 1.0-(Real)report.ref_len/report.sys_len;
     if (calc_brev_ && log_bp < 0.0) {
         log_bleu += log_bp;
         report.brevity = exp(log_bp);
@@ -159,7 +159,7 @@ std::string EvalStatsBleu::ConvertToString() const {
     return oss.str();
 }
 
-double EvalStatsBleu::ConvertToScore() const {
+Real EvalStatsBleu::ConvertToScore() const {
     return CalcBleuReport().bleu;
 }
 
@@ -170,9 +170,9 @@ EvalMeasureBleu::EvalMeasureBleu(const std::string & config) : ngram_order_(4), 
         if(strs.first == "order") {
             ngram_order_ = boost::lexical_cast<int>(strs.second);
         } else if(strs.first == "smooth") {
-            smooth_val_ = boost::lexical_cast<double>(strs.second);
+            smooth_val_ = boost::lexical_cast<Real>(strs.second);
         } else if(strs.first == "prec") {
-            prec_weight_ = boost::lexical_cast<double>(strs.second);
+            prec_weight_ = boost::lexical_cast<Real>(strs.second);
         } else if(strs.first == "factor") {
             factor_ = boost::lexical_cast<int>(strs.second);
         } else if(strs.first == "scope") {

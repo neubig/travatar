@@ -1,6 +1,7 @@
 #ifndef TUNING_EXAMPLE_FOREST_H__
 #define TUNING_EXAMPLE_FOREST_H__
 
+#include <travatar/real.h>
 #include <travatar/tuning-example.h>
 #include <travatar/sentence.h>
 #include <boost/shared_ptr.hpp>
@@ -22,11 +23,11 @@ public:
     TuningExampleForest(EvalMeasure * measure,
                         const std::vector<Sentence> & refs,
                         int id,
-                        double mult) :
+                        Real mult) :
                             TuningExample(),
                             measure_(measure),
                             refs_(refs), oracle_score_(mult),
-                            curr_score_(-DBL_MAX), id_(id), mult_(mult) {
+                            curr_score_(-REAL_MAX), id_(id), mult_(mult) {
     }
 
     virtual ~TuningExampleForest() { }
@@ -76,15 +77,15 @@ protected:
     boost::shared_ptr<HyperGraph> forest_;
     std::vector<Sentence> refs_;
     // The score that the best hypothesis in the forest achieves
-    double oracle_score_;
+    Real oracle_score_;
     // The score that the forest achieves with the current weights
-    double curr_score_;
+    Real curr_score_;
     // A set of features that are active in the forest
     std::set<int> active_;
     // The ID of this example
     int id_;
     // Multiplier
-    double mult_;
+    Real mult_;
 
 };
 

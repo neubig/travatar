@@ -161,13 +161,13 @@ BOOST_AUTO_TEST_CASE(TestCalculateConvexHull) {
     // Here lines 0 and 1 should form the convex hull with an intersection at -1
     ConvexHull hull1_exp, hull1_act;
     hull1_act = examp_set[0]->CalculateConvexHull(weights, gradient);
-    hull1_exp.push_back(make_pair(make_pair(-DBL_MAX, -1.0), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
-    hull1_exp.push_back(make_pair(make_pair(-1.0, DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));  
+    hull1_exp.push_back(make_pair(make_pair(-REAL_MAX, -1.0), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
+    hull1_exp.push_back(make_pair(make_pair(-1.0, REAL_MAX), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));  
     ConvexHull hull2_exp, hull2_act;
     hull2_act = examp_set[1]->CalculateConvexHull(weights, gradient);
-    hull2_exp.push_back(make_pair(make_pair(-DBL_MAX, 1.0), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));
+    hull2_exp.push_back(make_pair(make_pair(-REAL_MAX, 1.0), EvalStatsPtr(new EvalStatsAverage(0.1, 1))));
     hull2_exp.push_back(make_pair(make_pair(1.0, 3.0), EvalStatsPtr(new EvalStatsAverage(0.3, 1))));
-    hull2_exp.push_back(make_pair(make_pair(3.0, DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
+    hull2_exp.push_back(make_pair(make_pair(3.0, REAL_MAX), EvalStatsPtr(new EvalStatsAverage(0.2, 1))));
     BOOST_CHECK(CheckVector(hull1_exp, hull1_act) && CheckVector(hull2_exp, hull2_act));
 }
 
@@ -176,9 +176,9 @@ BOOST_AUTO_TEST_CASE(TestLineSearch) {
     LineSearchResult exp_score1(2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.4, 2)));
     LineSearchResult act_score1 = TuneMert::LineSearch(weights, gradient, examp_set);
     LineSearchResult exp_score2(-2.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
-    LineSearchResult act_score2 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-DBL_MAX, 0.0));
+    LineSearchResult act_score2 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-REAL_MAX, 0.0));
     LineSearchResult exp_score3(-3.0, EvalStatsPtr(new EvalStatsAverage(0.2, 2)),EvalStatsPtr(new EvalStatsAverage(0.3, 2)));
-    LineSearchResult act_score3 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-DBL_MAX, -3.0));
+    LineSearchResult act_score3 = TuneMert::LineSearch(weights, gradient, examp_set, make_pair(-REAL_MAX, -3.0));
     BOOST_CHECK(CheckAlmost(exp_score1.pos, act_score1.pos));
     BOOST_CHECK(CheckAlmost(exp_score1.before->ConvertToScore(), act_score1.before->ConvertToScore()));
     BOOST_CHECK(CheckAlmost(exp_score1.after->ConvertToScore(), act_score1.after->ConvertToScore()));
@@ -201,11 +201,11 @@ BOOST_AUTO_TEST_CASE(TestLatticeHull) {
     // "d a" --> w=2, s=0  (BLEU=1/2, 1/2) dominated by "b c"
     // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
     // "b d" --> w=4, s=2  (BLEU=0/2, 1/2) crosses "b c" at 0
-    exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0, 1))));
+    exp_hull.push_back(make_pair(make_pair(-REAL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0, 1))));
     exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4), 1))));
     // According to orthographic order of the edges, "b c" should come before "b d", and thus will be returned
     exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4), 1))));
-    exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0, 1))));
+    exp_hull.push_back(make_pair(make_pair(DBL_MIN,REAL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0, 1))));
     BOOST_CHECK(CheckVector(exp_hull, act_hull));
 }
 
@@ -221,10 +221,10 @@ BOOST_AUTO_TEST_CASE(TestForestHull) {
     // "d a" --> w=2, s=0  (BLEU=1/2, 1/2)
     // "b c" --> w=4, s=0  (BLEU=1/2, 1/2)
     // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
-    exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
+    exp_hull.push_back(make_pair(make_pair(-REAL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
     exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
     exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
-    exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
+    exp_hull.push_back(make_pair(make_pair(DBL_MIN,REAL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
     BOOST_CHECK(CheckVector(exp_hull, act_hull));
 }
 
@@ -243,10 +243,10 @@ BOOST_AUTO_TEST_CASE(TestMultipleForests) {
     // "b d" --> w=4, s=2  (BLEU=0/2, 1/2)
     // In the case of ties, we prefer nodes with lower indexes on the
     // left side, so our value is "d a"
-    exp_hull.push_back(make_pair(make_pair(-DBL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
+    exp_hull.push_back(make_pair(make_pair(-REAL_MAX,-1.0),   EvalStatsPtr(new EvalStatsAverage(1.0))));
     exp_hull.push_back(make_pair(make_pair(-1.0,-DBL_MIN),   EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
     exp_hull.push_back(make_pair(make_pair(-DBL_MIN,DBL_MIN),EvalStatsPtr(new EvalStatsAverage(exp((log(0.5)*2)/4)))));
-    exp_hull.push_back(make_pair(make_pair(DBL_MIN,DBL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
+    exp_hull.push_back(make_pair(make_pair(DBL_MIN,REAL_MAX), EvalStatsPtr(new EvalStatsAverage(0.0))));
     BOOST_CHECK(CheckVector(exp_hull, act_hull));
 }
 
@@ -267,8 +267,8 @@ BOOST_AUTO_TEST_CASE(TestForestUnk) {
     // The check here should break
     ConvexHull act_hull = tef.CalculateConvexHull(weights, gradient);
     ConvexHull exp_hull;
-    exp_hull.push_back(make_pair(make_pair(-DBL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(0.0))));
-    exp_hull.push_back(make_pair(make_pair(10.0, DBL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
+    exp_hull.push_back(make_pair(make_pair(-REAL_MAX, 10.0), EvalStatsPtr(new EvalStatsAverage(0.0))));
+    exp_hull.push_back(make_pair(make_pair(10.0, REAL_MAX),  EvalStatsPtr(new EvalStatsAverage(1.0))));
     BOOST_CHECK(CheckVector(exp_hull, act_hull));
 }
 

@@ -1,6 +1,7 @@
 #ifndef WEIGHTS_ONLINE_PRO_H__
 #define WEIGHTS_ONLINE_PRO_H__
 
+#include <travatar/real.h>
 #include <travatar/weights.h>
 #include <boost/shared_ptr.hpp>
 
@@ -15,12 +16,12 @@ public:
           diff_threshold_(0.05), alpha_scale_(1.0) { }
 
     // Adjust the weights according to the n-best list
-    void SetAlphaScale(double alpha_scale) { alpha_scale_ = alpha_scale; }
+    void SetAlphaScale(Real alpha_scale) { alpha_scale_ = alpha_scale; }
 
     // Adjust the weights according to the n-best list
     // Scores are current model scores and evaluation scores
     virtual void AdjustNbest(
-            const std::vector<std::pair<double,double> > & scores,
+            const std::vector<std::pair<Real,Real> > & scores,
             const std::vector<SparseVector*> & features);
 
     virtual const SparseMap & GetCurrent() const { return weights_->GetCurrent(); }
@@ -31,8 +32,8 @@ protected:
     boost::shared_ptr<Weights> weights_;
     int num_samples_;
     int num_updates_;
-    double diff_threshold_;
-    double alpha_scale_;
+    Real diff_threshold_;
+    Real alpha_scale_;
 
 };
 

@@ -26,10 +26,10 @@ LineSearchResult TuneMert::LineSearch(
                 const SparseMap & weights,
                 const SparseMap & gradient,
                 vector<boost::shared_ptr<TuningExample> > & examps,
-                pair<double,double> range) {
+                pair<Real,Real> range) {
     EvalStatsPtr base_stats;
-    map<double,EvalStatsPtr> boundaries;
-    typedef pair<double,EvalStatsPtr> DoublePair;
+    map<Real,EvalStatsPtr> boundaries;
+    typedef pair<Real,EvalStatsPtr> DoublePair;
     // Create the search plane
     BOOST_FOREACH(const boost::shared_ptr<TuningExample> & examp, examps) {
         // Calculate the convex hull
@@ -45,26 +45,26 @@ LineSearchResult TuneMert::LineSearch(
             EvalStatsPtr diff = convex_hull[i].second->Plus(*convex_hull[i-1].second->Times(-1));
             PRINT_DEBUG("convex_hull["<<i<<"]: " << convex_hull[i] << endl, 5);
             if(!diff->IsZero()) {
-                map<double,EvalStatsPtr>::iterator it = boundaries.find(convex_hull[i].first.first);
+                map<Real,EvalStatsPtr>::iterator it = boundaries.find(convex_hull[i].first.first);
                 if(it != boundaries.end()) it->second->PlusEquals(*diff);
                 else                       boundaries.insert(make_pair(convex_hull[i].first.first, diff));
             }
         }
     }
-    boundaries[DBL_MAX] = base_stats->Times(0);
-    // if(boundaries.size() == 0) return make_pair(-DBL_MAX, -DBL_MAX);
+    boundaries[REAL_MAX] = base_stats->Times(0);
+    // if(boundaries.size() == 0) return make_pair(-REAL_MAX, -REAL_MAX);
     // Find the place with the best score on the plane
-    ScoredSpan best_span(Span(-DBL_MAX, -DBL_MAX), base_stats);
-    double best_score = -DBL_MAX;
+    ScoredSpan best_span(Span(-REAL_MAX, -REAL_MAX), base_stats);
+    Real best_score = -REAL_MAX;
     EvalStatsPtr curr_stats = base_stats->Clone(), zero_stats;
-    double last_bound = -DBL_MAX;
+    Real last_bound = -REAL_MAX;
     BOOST_FOREACH(const DoublePair & boundary, boundaries) {
         // Find the score at zero. If there is a boundary directly at zero, break ties
         // to the less optimistic side (or gain to the optimistic side)
         if(last_bound <= 0 && boundary.first >= 0)
             zero_stats = curr_stats->Clone();
         // Update the span if it exceeds the previous best and is in the acceptable gradient range
-        double curr_score = curr_stats->ConvertToScore();
+        Real curr_score = curr_stats->ConvertToScore();
         if(curr_score > best_score && (last_bound < range.second && boundary.first > range.first)) {
             best_span = ScoredSpan(Span(last_bound, boundary.first), curr_stats->Clone());
             best_score = curr_score;
@@ -75,12 +75,12 @@ LineSearchResult TuneMert::LineSearch(
         last_bound = boundary.first;
     }
     // Given the best span, find the middle
-    double middle;
+    Real middle;
     if(best_span.first.first < 0 && best_span.first.second > 0)
         middle = 0;
-    else if (best_span.first.first == -DBL_MAX)
+    else if (best_span.first.first == -REAL_MAX)
         middle = best_span.first.second - MARGIN;
-    else if (best_span.first.second == DBL_MAX)
+    else if (best_span.first.second == REAL_MAX)
         middle = best_span.first.first + MARGIN;
     else
         middle = (best_span.first.first+best_span.first.second)/2;
@@ -101,9 +101,9 @@ void TuneMert::Init(const SparseMap & init_weights) {
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
-double TuneMert::RunTuning(SparseMap & weights) {
+Real TuneMert::RunTuning(SparseMap & weights) {
     // Continue
-    double best_score = 0;
+    Real best_score = 0;
     PRINT_DEBUG("Starting MERT Run: " << Dict::PrintSparseMap(weights) << endl, 2);
     while(true) {
         // 1) Initialize the best result
@@ -125,16 +125,16 @@ double TuneMert::RunTuning(SparseMap & weights) {
         //  ** Random
         for(int i = 0; i < num_random_; i++) {
             BOOST_FOREACH(WordId val, potentials_)
-                gradients[curr_grad][val] = (rand()/(double)RAND_MAX*2 - 1);
+                gradients[curr_grad][val] = (rand()/(Real)RAND_MAX*2 - 1);
             curr_grad++;
         }
         //  ** Xeval
         if(xeval_scales_.size()) {
-            double sum = 0.0;
+            Real sum = 0.0;
             BOOST_FOREACH(SparseMap::value_type val, weights)
                 sum += val.second;
             if(sum == 0.0) sum = 1.0;
-            BOOST_FOREACH(double scale, xeval_scales_) {
+            BOOST_FOREACH(Real scale, xeval_scales_) {
                 weights[xeval_gradient_.GetScaleId()] = scale/sum;
                 xeval_gradient_.CalcSparseGradient(weights, gradients[curr_grad]);
                 curr_grad++;
@@ -185,9 +185,9 @@ void TuneMert::SetDirections(const std::string & str) {
             vector<string> range = Tokenize(lr[1], ":");
             if(range.size() != 3)
                 THROW_ERROR("Bad MERT direction specification " << col << ", must specify the min:max:mult for the xeval scale (e.g. 0.01:1000:10)");
-            double min_sc = lexical_cast<double>(range[0]);
-            double max_sc = lexical_cast<double>(range[1]);
-            double mult_sc = lexical_cast<double>(range[2]);
+            Real min_sc = lexical_cast<Real>(range[0]);
+            Real max_sc = lexical_cast<Real>(range[1]);
+            Real mult_sc = lexical_cast<Real>(range[2]);
             if(mult_sc <= 1 || min_sc > max_sc)
                 THROW_ERROR("Bad MERT direction specification " << col << ", must specify valid range (min <= max) and multiplier (mult > 1) for xeval");
             while(min_sc <= max_sc) {

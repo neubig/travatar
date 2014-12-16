@@ -5,6 +5,7 @@
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
 #include <travatar/dict.h>
+#include <travatar/real.h>
 #include <lm/left.hh>
 #include <lm/model.hh>
 #include <boost/unordered_map.hpp>
@@ -54,10 +55,10 @@ public:
 
     void * GetLM() { return lm_; }
     const void * GetLM() const { return lm_; }
-    double GetWeight() const { return lm_weight_; }
-    void SetWeight(double lm_weight) { lm_weight_ = lm_weight; }
-    double GetUnkWeight() const { return lm_unk_weight_; }
-    void SetUnkWeight(double lm_unk_weight) { lm_unk_weight_ = lm_unk_weight; }
+    Real GetWeight() const { return lm_weight_; }
+    void SetWeight(Real lm_weight) { lm_weight_ = lm_weight; }
+    Real GetUnkWeight() const { return lm_unk_weight_; }
+    void SetUnkWeight(Real lm_unk_weight) { lm_unk_weight_ = lm_unk_weight; }
     WordId GetFeatureName() const { return lm_feat_; }
     void SetFeatureName(WordId lm_feat) { lm_feat_ = lm_feat; }
     WordId GetUnkFeatureName() const { return lm_unk_feat_; }
@@ -76,7 +77,7 @@ protected:
     // The vocabulary map from Travatar vocab to LM vocab
     VocabMap * vocab_map_;
     // The weight assigned to this particular LM
-    double lm_weight_, lm_unk_weight_;
+    Real lm_weight_, lm_unk_weight_;
     // The factor to use
     int factor_; 
 };

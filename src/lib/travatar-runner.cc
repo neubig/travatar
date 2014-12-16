@@ -155,7 +155,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     do_tuning_ = true;
     if(config.GetString("tune_update") == "perceptron") {
         WeightsPerceptron * ptr = new WeightsPerceptron(init_weights);
-        ptr->SetL1Coeff(config.GetDouble("tune_l1_coeff"));
+        ptr->SetL1Coeff(config.GetReal("tune_l1_coeff"));
         weights_.reset(ptr);
     } else if(config.GetString("tune_update") == "delayed") {
         weights_.reset(new WeightsDelayedPerceptron(init_weights));
@@ -193,8 +193,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
                 if(range_vals.size() != 2 && range_vals.size() != 3)
                     THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
                 WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
-                double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
-                double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
+                Real min_score = (range_vals[0] == "" ? -REAL_MAX : atoi(range_vals[0].c_str()));
+                Real max_score = (range_vals[1] == "" ? REAL_MAX  : atoi(range_vals[1].c_str()));
                 weights_->SetRange(id, min_score, max_score);
             }
         }

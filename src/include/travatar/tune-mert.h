@@ -1,6 +1,7 @@
 #ifndef TUNE_MERT_H__
 #define TUNE_MERT_H__
 
+#include <travatar/real.h>
 #include <travatar/tune.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
@@ -22,19 +23,19 @@ struct LineSearchResult {
 
     LineSearchResult() :
         pos(0.0), gain(0.0) { }
-    LineSearchResult(double p, const EvalStatsPtr & b, const EvalStatsPtr & a) :
+    LineSearchResult(Real p, const EvalStatsPtr & b, const EvalStatsPtr & a) :
         pos(p), before(b->Clone()), after(a->Clone()), gain(a->ConvertToScore()-b->ConvertToScore()) { }
-    LineSearchResult(double p, const EvalStats & b, const EvalStats & a) :
+    LineSearchResult(Real p, const EvalStats & b, const EvalStats & a) :
         pos(p), before(b.Clone()), after(a.Clone()), gain(a.ConvertToScore()-b.ConvertToScore()) { }
 
     // The gradient position
-    double pos;
+    Real pos;
     // The total score before
     EvalStatsPtr before;
     // The total score after
     EvalStatsPtr after;
     // The gain between before and after
-    double gain;
+    Real gain;
 
 };
 
@@ -50,13 +51,13 @@ public:
       const SparseMap & weights,
       const SparseMap & gradient,
       std::vector<boost::shared_ptr<TuningExample> > & examps,
-      std::pair<double,double> range = std::pair<double,double>(-DBL_MAX, DBL_MAX));
+      std::pair<Real,Real> range = std::pair<Real,Real>(-REAL_MAX, REAL_MAX));
 
     // **** Non-static Members ****
     TuneMert();
 
     // Tune new weights using MERT
-    virtual double RunTuning(SparseMap & weights);
+    virtual Real RunTuning(SparseMap & weights);
 
     // Initialize
     virtual void Init(const SparseMap & init_weights);
@@ -69,7 +70,7 @@ protected:
     std::set<WordId> potentials_;
     bool use_coordinate_;
     int num_random_;
-    std::vector<double> xeval_scales_;
+    std::vector<Real> xeval_scales_;
     GradientXeval xeval_gradient_;
 
 };

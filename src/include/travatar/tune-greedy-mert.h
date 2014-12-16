@@ -1,6 +1,7 @@
 #ifndef TUNE_GREEDY_MERT_H__
 #define TUNE_GREEDY_MERT_H__
 
+#include <travatar/real.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <travatar/task.h>
@@ -24,7 +25,7 @@ public:
     GreedyMertTask(int id,
                    TuneGreedyMert & tgm,
                    int feature,
-                   double potential,
+                   Real potential,
                    OutputCollector * collector) :
         id_(id), tgm_(&tgm), feature_(feature), potential_(potential), collector_(collector) { }
     void Run();
@@ -32,7 +33,7 @@ protected:
     int id_;
     TuneGreedyMert * tgm_;
     int feature_;
-    double potential_;
+    Real potential_;
     OutputCollector * collector_;
 };
 
@@ -46,7 +47,7 @@ public:
     TuneGreedyMert();
 
     // Tune new weights using greedy mert
-    virtual double RunTuning(SparseMap & weights);
+    virtual Real RunTuning(SparseMap & weights);
 
     // Tune pick a single weight to tune and tune it
     // Return the improvement in score
@@ -55,7 +56,7 @@ public:
     void UpdateBest(const SparseMap &gradient, const LineSearchResult &result);
 
     const SparseMap & GetCurrentWeights() { return curr_weights_; }
-    double GetBestGain(); // { return best_result_.gain; }
+    Real GetBestGain(); // { return best_result_.gain; }
     bool GetEarlyTerminate() { return early_terminate_; }
     int GetThreads() const { return threads_; }
     void SetThreads(int threads) { threads_ = threads; }

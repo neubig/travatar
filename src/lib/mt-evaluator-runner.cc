@@ -60,7 +60,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
 
     // Vectors to hold the bootstrap stats
     vector<string> bootstrap_files;
-    vector<double> bootstrap_scores;
+    vector<Real> bootstrap_scores;
     // Calculate the scores
     BOOST_FOREACH(const string & filename, config.GetMainArgs()) {
         // Set up the total stats for each measure
@@ -106,7 +106,7 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                 cout << total_stats[i]->ConvertToString();
                 // Add it to the bootstrap matrix and calculate all scores
                 if(bootstrap) {
-                    boost::shared_ptr<vector<double> > my_vec(new vector<double>(bootstrap));
+                    boost::shared_ptr<vector<Real> > my_vec(new vector<Real>(bootstrap));
                     for(int j = 0; j < bootstrap; j++) {
                         PRINT_DEBUG(endl << "bootstrap_stats[" << i << "][" << j << "] == " << bootstrap_stats[i][j]->ConvertToString() << " @ " << bootstrap_scores.size() << endl, 3);
                         bootstrap_scores.push_back(bootstrap_stats[i][j]->ConvertToScore());
@@ -138,9 +138,9 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
                         else tie++;
                     }
                     cout << "  " << eval_ids[k] << "\t"
-                         << win/(double)bootstrap << " "
-                         << tie/(double)bootstrap << " "
-                         << loss/(double)bootstrap << endl;
+                         << win/(Real)bootstrap << " "
+                         << tie/(Real)bootstrap << " "
+                         << loss/(Real)bootstrap << endl;
                 }
             }
         }

@@ -65,7 +65,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     // Create rule filters
     vector< boost::shared_ptr<RuleFilter> > rule_filters;
     rule_filters.push_back(boost::shared_ptr<RuleFilter>(new PseudoNodeFilter));
-    rule_filters.push_back(boost::shared_ptr<RuleFilter>(new CountFilter(config.GetDouble("partial_count_thresh"))));
+    rule_filters.push_back(boost::shared_ptr<RuleFilter>(new CountFilter(config.GetReal("partial_count_thresh"))));
     rule_filters.push_back(boost::shared_ptr<RuleFilter>(new RuleSizeFilter(config.GetInt("term_len"), config.GetInt("nonterm_len"))));
     // Get the lines
     string src_line, trg_line, align_line;

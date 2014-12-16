@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <travatar/sentence.h>
+#include <travatar/real.h>
 
 namespace travatar {
 
@@ -47,7 +48,7 @@ public:
         std::vector<Sentence> & sys_sents);
 
 protected:
-    double slack_;
+    Real slack_;
 
 };
 

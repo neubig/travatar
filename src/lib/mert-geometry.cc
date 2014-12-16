@@ -23,8 +23,8 @@ MertHull::MertHull(int i) {
 }
 
 const MertHull MertHullWeightFunction::operator()(const HyperEdge& e) const {
-  const double m = direction * e.GetFeatures();
-  const double b = origin * e.GetFeatures();
+  const Real m = direction * e.GetFeatures();
+  const Real b = origin * e.GetFeatures();
   MertLine* line = new MertLine(m, b, e);
   return MertHull(1, line);
 }
@@ -67,7 +67,7 @@ void MertHull::Sort() const {
   int j = 0;
   for (int i = 0; i < k; ++i) {
     MertLine l = *lines[i];
-    l.x = -DBL_MAX;
+    l.x = -REAL_MAX;
     // cerr << "m=" << l.m << endl;
     if (0 < j) {
       if (lines[j-1]->m == l.m) {   // lines are parallel
@@ -79,7 +79,7 @@ void MertHull::Sort() const {
         if (lines[j-1]->x < l.x) break;
         --j;
       }
-      if (0 == j) l.x = -DBL_MAX;
+      if (0 == j) l.x = -REAL_MAX;
     }
     *lines[j++] = l;
   }
@@ -98,14 +98,14 @@ const MertHull& MertHull::operator*=(const MertHull& other) {
 //    if (other.size() > 1)
 //      cerr << *this << " (TIMES) " << other << endl;
     boost::shared_ptr<MertLine> edge_parent = lines[0];
-    const double& edge_b = edge_parent->b;
-    const double& edge_m = edge_parent->m;
+    const Real& edge_b = edge_parent->b;
+    const Real& edge_m = edge_parent->m;
     lines.clear();
     for (int i = 0; i < (int)other.lines.size(); ++i) {
       const MertLine& p = *other.lines[i];
-      const double m = p.m + edge_m;
-      const double b = p.b + edge_b;
-      const double& x = p.x;       // x's don't change with *
+      const Real m = p.m + edge_m;
+      const Real b = p.b + edge_b;
+      const Real& x = p.x;       // x's don't change with *
       lines.push_back(boost::shared_ptr<MertLine>(new MertLine(x, m, b, edge_parent, other.lines[i])));
       assert(lines.back()->p1->edge);
     }
@@ -117,16 +117,16 @@ const MertHull& MertHull::operator*=(const MertHull& other) {
     int other_i = 0;
     const int this_size  = lines.size();
     const int other_size = other.lines.size();
-    double cur_x = -DBL_MAX;   // moves from left to right across the
+    Real cur_x = -REAL_MAX;   // moves from left to right across the
                                      // real numbers, stopping for all inter-
                                      // sections
-    double this_next_val  = (1 < this_size  ? lines[1]->x       : DBL_MAX);
-    double other_next_val = (1 < other_size ? other.lines[1]->x : DBL_MAX);
+    Real this_next_val  = (1 < this_size  ? lines[1]->x       : REAL_MAX);
+    Real other_next_val = (1 < other_size ? other.lines[1]->x : REAL_MAX);
     while (this_i < this_size && other_i < other_size) {
       const MertLine& this_line = *lines[this_i];
       const MertLine& other_line= *other.lines[other_i];
-      const double m = this_line.m + other_line.m;
-      const double b = this_line.b + other_line.b;
+      const Real m = this_line.m + other_line.m;
+      const Real b = this_line.b + other_line.b;
  
       new_lines.push_back(boost::shared_ptr<MertLine>(new MertLine(cur_x, m, b, lines[this_i], other.lines[other_i])));
       int comp = 0;
@@ -136,17 +136,17 @@ const MertHull& MertHull::operator*=(const MertHull& other) {
         ++this_i;
         ++other_i;
         cur_x = this_next_val;  // could be other_next_val (they're equal!)
-        this_next_val  = (this_i+1  < this_size  ? lines[this_i+1]->x        : DBL_MAX);
-        other_next_val = (other_i+1 < other_size ? other.lines[other_i+1]->x : DBL_MAX);
+        this_next_val  = (this_i+1  < this_size  ? lines[this_i+1]->x        : REAL_MAX);
+        other_next_val = (other_i+1 < other_size ? other.lines[other_i+1]->x : REAL_MAX);
       } else {  // advance the i with the lower x, update cur_x
         if (-1 == comp) {
           ++this_i;
           cur_x = this_next_val;
-          this_next_val =  (this_i+1  < this_size  ? lines[this_i+1]->x        : DBL_MAX);
+          this_next_val =  (this_i+1  < this_size  ? lines[this_i+1]->x        : REAL_MAX);
         } else {
           ++other_i;
           cur_x = other_next_val;
-          other_next_val = (other_i+1 < other_size ? other.lines[other_i+1]->x : DBL_MAX);
+          other_next_val = (other_i+1 < other_size ? other.lines[other_i+1]->x : REAL_MAX);
         }
       }
     }

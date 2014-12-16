@@ -33,7 +33,7 @@ BatchTuneRunnerTask::BatchTuneRunnerTask(
         int task_id, const std::string & task_name,
         Tune & tune, const SparseMap & weights) :
     task_id_(task_id), task_name_(task_name), tune_(&tune),
-    weights_(weights), score_(-DBL_MAX) { }
+    weights_(weights), score_(-REAL_MAX) { }
 
 void BatchTuneRunnerTask::Run() {
     score_ = tune_->RunTuning(weights_);
@@ -85,7 +85,7 @@ void BatchTuneRunner::LoadForests(istream & sys_in, Tune & tune) {
         const std::vector<Sentence> & ref = refs_[id];
         // Add the example
         if((int)tune.NumExamples() <= id) {
-            double norm = (normalize_len ? ref.size() / (double)ref_len_ : 1.0 / refs_.size());
+            Real norm = (normalize_len ? ref.size() / (Real)ref_len_ : 1.0 / refs_.size());
             tune.AddExample(
                 boost::shared_ptr<TuningExample>(
                     new TuningExampleForest(
@@ -117,16 +117,16 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         threads = 1; // Threading is done inside greedy mert
     } else if(config.GetString("algorithm") == "lbfgs") {
         GradientXeval * gx = new GradientXeval;
-        gx->SetL2Coefficient(config.GetDouble("l2"));
-        gx->SetEntCoefficient(config.GetDouble("ent"));
+        gx->SetL2Coefficient(config.GetReal("l2"));
+        gx->SetEntCoefficient(config.GetReal("ent"));
         TuneLbfgs * tl = new TuneLbfgs(gx);
-        tl->SetL1Coefficient(config.GetDouble("l1"));
+        tl->SetL1Coefficient(config.GetReal("l1"));
         tune.reset(tl);
     } else if(config.GetString("algorithm") == "online" || config.GetString("algorithm") == "onlinepro") {
         TuneOnline * online = new TuneOnline;
         online->SetUpdate(config.GetString("update"));
-        online->SetLearningRate(config.GetDouble("rate"));
-        online->SetMarginScale(config.GetDouble("margin_scale"));
+        online->SetLearningRate(config.GetReal("rate"));
+        online->SetMarginScale(config.GetReal("margin_scale"));
         if(config.GetString("algorithm") == "onlinepro")
             online->SetAlgorithm("pro");
         tune.reset(online);
@@ -152,14 +152,14 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
             if(range_vals.size() != 2 && range_vals.size() != 3)
                 THROW_ERROR("Weight ranges must be in the format MIN|MAX[|NAME]");
             WordId id = (range_vals.size() == 3 ? Dict::WID(range_vals[2]) : -1);
-            double min_score = (range_vals[0] == "" ? -DBL_MAX : atoi(range_vals[0].c_str()));
-            double max_score = (range_vals[1] == "" ? DBL_MAX  : atoi(range_vals[1].c_str()));
+            Real min_score = (range_vals[0] == "" ? -REAL_MAX : atoi(range_vals[0].c_str()));
+            Real max_score = (range_vals[1] == "" ? REAL_MAX  : atoi(range_vals[1].c_str()));
             tune->SetRange(id, min_score, max_score);
         }
     }
 
     // Set other tuning options
-    tune->SetGainThreshold(config.GetDouble("threshold"));
+    tune->SetGainThreshold(config.GetReal("threshold"));
 
     // Open the n-best list if it exists
     bool use_nbest = config.GetString("nbest") != "";
@@ -228,7 +228,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         SparseMap rand_weights = weights;
         BOOST_FOREACH(SparseMap::value_type & rw, rand_weights)
             if(rw.first != tune->GetScaleId())
-                rw.second *= rand()/(double)RAND_MAX;
+                rw.second *= rand()/(Real)RAND_MAX;
         ostringstream oss; oss << "Rand " << i;
         tasks[i] = boost::shared_ptr<BatchTuneRunnerTask>(new BatchTuneRunnerTask(i, oss.str(), *tune, rand_weights));
         pool.Submit(tasks[i].get());
@@ -237,7 +237,7 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
 
     // Find the best result
     SparseMap best_weights = tasks[0]->GetWeights();
-    double best_score = tasks[0]->GetScore();
+    Real best_score = tasks[0]->GetScore();
     for(int i = 1; i < runs; i++) {
         // If the new value is better than the current best, update
         if(tasks[i]->GetScore() > best_score) {

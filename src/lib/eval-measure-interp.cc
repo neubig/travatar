@@ -22,8 +22,8 @@ std::string EvalStatsInterp::ConvertToString() const {
     return oss.str();
 }
 std::string EvalStatsInterp::GetIdString() const { return "INTERP"; }
-double EvalStatsInterp::ConvertToScore() const {
-    double num = 0, denom = 0;
+Real EvalStatsInterp::ConvertToScore() const {
+    Real num = 0, denom = 0;
     for(int i = 0; i < (int)stats_.size(); i++) {
         num   += coeffs_[i] * stats_[i]->ConvertToScore();
         denom += coeffs_[i];
@@ -114,7 +114,7 @@ EvalMeasureInterp::EvalMeasureInterp(const std::string & config) {
     if(strs.size() == 0 || strs.size() % 2 != 0)
         THROW_ERROR("Bad configuration in interpreted evaluation measure: " << config);
     for(int i = 0; i < (int)strs.size(); i += 2) {
-        coeffs_.push_back(boost::lexical_cast<double>(strs[i]));
+        coeffs_.push_back(boost::lexical_cast<Real>(strs[i]));
         measures_.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasureLoader::CreateMeasureFromString(strs[i+1])));
     }
 }

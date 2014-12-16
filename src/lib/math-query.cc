@@ -10,7 +10,7 @@ using namespace boost;
 
 namespace travatar {
 
-MathQuery::MathQuery(const std::string query, const std::map<WordId,double> var_map) {
+MathQuery::MathQuery(const std::string query, const std::map<WordId,Real> var_map) {
     // Parse the query into data structure
     int read = -1;
     for (size_t i=0; i < query.size(); ++i) {
@@ -28,7 +28,7 @@ MathQuery::MathQuery(const std::string query, const std::map<WordId,double> var_
             }
             
             if (c >= 'A' && c <= 'Z') {
-               std::map<WordId,double>::const_iterator it = var_map.find(Dict::WID(string(1,c)));
+               std::map<WordId,Real>::const_iterator it = var_map.find(Dict::WID(string(1,c)));
                if (it != var_map.end()) 
                     tokens_.push_back(new Operand(it->second));
                else 
@@ -61,12 +61,12 @@ MathQuery::~MathQuery() {
         delete tok;
 }
 
-double MathQuery::Evaluate(const std::map<WordId,double> & var_map, const std::string & query_str) {
+Real MathQuery::Evaluate(const std::map<WordId,Real> & var_map, const std::string & query_str) {
     MathQuery query(query_str, var_map);
     return Evaluate(query);
 }
 
-double MathQuery::Evaluate(const MathQuery& query) {
+Real MathQuery::Evaluate(const MathQuery& query) {
     stack<MathToken*> temp;
     vector<MathToken*> postfix;
     
@@ -124,14 +124,14 @@ double MathQuery::Evaluate(const MathQuery& query) {
     // cerr << endl;
     
     // Process all the postfix token
-    stack<double> tmp;
+    stack<Real> tmp;
     BOOST_FOREACH (MathToken* tok, postfix) {
         int c = tok->type_;
         if (c == OPERAND) {
             // DEBUG: cerr << dynamic_cast<Operand*>(tok)->GetValue() << endl;
             tmp.push(dynamic_cast<Operand*>(tok)->GetValue()); 
         } else if (c == BINARY_OPERATOR) {
-            double c1, c2;
+            Real c1, c2;
             if (tmp.size() == 0) 
                 THROW_ERROR("Not enough operand on query: " << query);
             c2 = tmp.top();
@@ -142,7 +142,7 @@ double MathQuery::Evaluate(const MathQuery& query) {
             tmp.pop();
             BinaryOperator* op = dynamic_cast<BinaryOperator*>(tok);
             // DEBUG: cerr << c1 << op->GetOperator() << c2 << endl;
-            double result = op->eval(c1,c2);
+            Real result = op->eval(c1,c2);
             tmp.push(result);
             op = NULL;
         } else {
@@ -150,7 +150,7 @@ double MathQuery::Evaluate(const MathQuery& query) {
         }
         tok = NULL;
     }
-    double ret;
+    Real ret;
     if (tmp.size() == 0) { 
         ret= 0;
     } else {

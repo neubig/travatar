@@ -12,6 +12,7 @@
 //  CICLING 13
 
 #include <travatar/eval-measure.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <vector>
@@ -23,17 +24,17 @@ typedef enum { CORPUS, SENTENCE } BleuScope;
 typedef enum { GEOMETRIC, ARITHMETIC } BleuMean;
 
 typedef struct {
-    double bleu; // BLEU score
-    std::vector<double> scores; // Scores for each n-gram (prec/rec/f)
-    double ref_len, sys_len; // Reference and system, lengths
-    double ratio, brevity; // The ref/sys ratio and brevity penalty
+    Real bleu; // BLEU score
+    std::vector<Real> scores; // Scores for each n-gram (prec/rec/f)
+    Real ref_len, sys_len; // Reference and system, lengths
+    Real ratio, brevity; // The ref/sys ratio and brevity penalty
 } BleuReport;
 
 class EvalStatsBleu : public EvalStats {
 public:
     EvalStatsBleu(const std::vector<EvalStatsDataType> vals = std::vector<EvalStatsDataType>(),
-                  double smooth = 0,
-                  double prec_weight = 1.0,
+                  Real smooth = 0,
+                  Real prec_weight = 1.0,
                   BleuMean mean = GEOMETRIC,
                   bool inverse = false,
                   bool calc_brev = true)
@@ -41,19 +42,19 @@ public:
         vals_ = vals;
     }
     virtual std::string GetIdString() const { return (inverse_ ? "INV_BLEU" : "BLEU"); }
-    virtual double ConvertToScore() const;
+    virtual Real ConvertToScore() const;
     virtual std::string ConvertToString() const;
     virtual EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsBleu(vals_, smooth_, prec_weight_, mean_,inverse_,calc_brev_)); }
     BleuReport CalcBleuReport() const;
-    double GetAvgLogPrecision() const;
-    double GetLengthRatio() const;
+    Real GetAvgLogPrecision() const;
+    Real GetLengthRatio() const;
     int GetNgramOrder() const { return vals_.size()/3; }
-    double GetMatch(int n) const { return vals_[3*n]+smooth_; }
-    double GetSysCount(int n) const { return vals_[3*n+1]+smooth_; }
-    double GetRefCount(int n) const { return vals_[3*n+2]+smooth_; }
+    Real GetMatch(int n) const { return vals_[3*n]+smooth_; }
+    Real GetSysCount(int n) const { return vals_[3*n+1]+smooth_; }
+    Real GetRefCount(int n) const { return vals_[3*n+2]+smooth_; }
 private:
-    double smooth_;
-    double prec_weight_;
+    Real smooth_;
+    Real prec_weight_;
     BleuMean mean_;
     // Flag
     bool inverse_;
@@ -70,8 +71,8 @@ public:
     // A cache to hold the stats
     typedef std::map<int,boost::shared_ptr<NgramStats> > StatsCache;
 
-    EvalMeasureBleu(int ngram_order = 4, double smooth_val = 0,
-                    BleuScope scope = CORPUS, double prec_weight = 1.0,
+    EvalMeasureBleu(int ngram_order = 4, Real smooth_val = 0,
+                    BleuScope scope = CORPUS, Real prec_weight = 1.0,
                     BleuMean mean = GEOMETRIC, bool inverse = false, bool calc_brevity = true) : 
         ngram_order_(ngram_order), smooth_val_(smooth_val), scope_(scope), prec_weight_(prec_weight), mean_(mean), inverse_(inverse), calc_brev_(calc_brevity) { }
     EvalMeasureBleu(const std::string & config);
@@ -107,20 +108,20 @@ public:
 
     int GetNgramOrder() const { return ngram_order_; }
     void SetNgramOrder(int ngram_order) { ngram_order_ = ngram_order; }
-    double GetSmoothVal() const { return smooth_val_; }
-    void SetSmoothVal(double smooth_val) { smooth_val_ = smooth_val; }
+    Real GetSmoothVal() const { return smooth_val_; }
+    void SetSmoothVal(Real smooth_val) { smooth_val_ = smooth_val; }
     std::string GetIdString() { return (inverse_ ? "INV_BLEU" : "BLEU"); }
 protected:
     // The order of BLEU n-grams
     int ngram_order_;
     // The amount by which to smooth n-grams over 1
-    double smooth_val_;
+    Real smooth_val_;
     // A cache to hold the stats
     StatsCache cache_;
     // The scope
     BleuScope scope_;
     // The weight of precision in F-measure, from one to zero (default 1)
-    double prec_weight_;
+    Real prec_weight_;
     // The type of mean, geometric or arithmetic (default geometric)
     BleuMean mean_;
     // Whether we are calculating the inverse of BLEU (PINC) or not

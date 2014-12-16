@@ -3,6 +3,7 @@
 
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <iostream>
 #include <vector>
@@ -15,11 +16,11 @@ class EvalMeasure;
 class RescorerNbestElement {
 public:
     RescorerNbestElement() : score(0.0) { }
-    RescorerNbestElement(const Sentence & se, const SparseVector & f, double sc) :
+    RescorerNbestElement(const Sentence & se, const SparseVector & f, Real sc) :
         sent(se), feat(f), score(sc) { }
     Sentence sent;
     SparseVector feat;
-    double score;
+    Real score;
 };
 typedef std::vector<RescorerNbestElement> RescorerNbest;
 inline bool operator< ( const RescorerNbestElement& lhs,
@@ -51,7 +52,7 @@ protected:
     int sent_;
     // For minimum Bayes risk rescoring
     boost::shared_ptr<EvalMeasure> mbr_eval_;
-    double mbr_scale_;
+    Real mbr_scale_;
     int mbr_hyp_cnt_;
     
 

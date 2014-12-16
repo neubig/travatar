@@ -11,6 +11,7 @@
 
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <iostream>
@@ -22,16 +23,16 @@ class HyperEdge;
 
 struct MertLine {
   MertLine() : x(), m(), b(), edge() {}
-  MertLine(double _m, double _b) :
-    x(-DBL_MAX), m(_m), b(_b), edge() {}
-  MertLine(double _x, double _m, double _b, const boost::shared_ptr<MertLine>& p1_, const boost::shared_ptr<MertLine>& p2_) :
+  MertLine(Real _m, Real _b) :
+    x(-REAL_MAX), m(_m), b(_b), edge() {}
+  MertLine(Real _x, Real _m, Real _b, const boost::shared_ptr<MertLine>& p1_, const boost::shared_ptr<MertLine>& p2_) :
     x(_x), m(_m), b(_b), p1(p1_), p2(p2_), edge() {}
-  MertLine(double _m, double _b, const HyperEdge& edge) :
-    x(-DBL_MAX), m(_m), b(_b), edge(&edge) {}
+  MertLine(Real _m, Real _b, const HyperEdge& edge) :
+    x(-REAL_MAX), m(_m), b(_b), edge(&edge) {}
 
-  double x;                   // x intersection with previous segment in env, or -inf if none
-  double m;                   // this line's slope
-  double b;                   // intercept with y-axis
+  Real x;                   // x intersection with previous segment in env, or -inf if none
+  Real m;                   // this line's slope
+  Real b;                   // intercept with y-axis
 
   // we keep a lineer to the "parents" of this segment so we can reconstruct
   // the Viterbi translation corresponding to this segment

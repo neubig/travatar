@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(TestCalculateSpan) {
 BOOST_AUTO_TEST_CASE(TestInsideOutside) {
     HyperGraph src2_copy(*src2_graph);
     src2_copy.InsideOutsideNormalize();
-    vector<double> prob_exp(9,log(.5)), prob_act;
+    vector<Real> prob_exp(9,log(.5)), prob_act;
     prob_exp[8] = 0;
     BOOST_FOREACH(const HyperEdge * edge, src2_copy.GetEdges())
         prob_act.push_back(edge->GetScore());
@@ -161,13 +161,13 @@ BOOST_AUTO_TEST_CASE(TestInsideOutsideUnbalanced) {
     // Perform the inside outside algorithm to normalize
     hg_act.InsideOutsideNormalize();
     // Get the scores of both graphs
-    vector<double> score_exp(5), score_act(5);
+    vector<Real> score_exp(5), score_act(5);
     score_exp[0] = log(0.25); score_act[0] = edge0->GetScore();
     score_exp[1] = log(0.75); score_act[1] = edge1->GetScore();
     score_exp[2] = log(0.25); score_act[2] = edge2->GetScore();
     score_exp[3] = log(0.25); score_act[3] = edge3->GetScore();
     score_exp[4] = log(0.25); score_act[4] = edge4->GetScore();
-    BOOST_CHECK(ApproximateDoubleEquals(score_exp, score_act));
+    BOOST_CHECK(ApproximateRealEquals(score_exp, score_act));
 }
 
 BOOST_AUTO_TEST_CASE(TestCopy) {
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(TestNbestPath) {
     // Accumulate Viterbi scores over nodes
     rule_graph_->ResetViterbiScores();
     // The viterbi scores should be -0.6, -0.1, -0.2
-    vector<double> exp_scores(3), act_scores(3);
+    vector<Real> exp_scores(3), act_scores(3);
     exp_scores[0] = -0.6; exp_scores[1] = -0.1; exp_scores[2] = -0.2;
     for(int i = 0; i < 3; i++)
         act_scores[i] = rule_graph_->GetNode(i)->CalcViterbiScore();
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(TestNbestTied) {
         e->SetScore(0.0);
     // Accumulate Viterbi scores over nodes
     tied_graph->ResetViterbiScores();
-    vector<double> exp_scores(3), act_scores(3);
+    vector<Real> exp_scores(3), act_scores(3);
     exp_scores[0] = 0; exp_scores[1] = 0; exp_scores[2] = 0;
     for(int i = 0; i < 3; i++)
         act_scores[i] = tied_graph->GetNode(i)->CalcViterbiScore();

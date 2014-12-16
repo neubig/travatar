@@ -1,6 +1,7 @@
 #ifndef SPARSE_MAP_H__
 #define SPARSE_MAP_H__
 
+#include <travatar/real.h>
 #include <boost/unordered_map.hpp>
 #include <iostream>
 #include <vector>
@@ -8,8 +9,8 @@
 namespace travatar {
 
 // Hashtable-based sparse map
-typedef std::pair<int, double> SparsePair;
-typedef boost::unordered_map<int, double> SparseMap;
+typedef std::pair<int, Real> SparsePair;
+typedef boost::unordered_map<int, Real> SparseMap;
 typedef boost::unordered_map<int, int> SparseIntMap;
 
 bool operator==(const SparseMap & lhs, const SparseMap & rhs);
@@ -19,9 +20,9 @@ SparseMap & operator+=(SparseMap & lhs, const SparseMap & rhs);
 SparseMap & operator-=(SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator+(const SparseMap & lhs, const SparseMap & rhs);
 SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs);
-double operator*(const SparseMap & lhs, const SparseMap & rhs);
-SparseMap operator*(const SparseMap & lhs, double rhs);
-void NormalizeL1(SparseMap & map, double val = 1.0);
+Real operator*(const SparseMap & lhs, const SparseMap & rhs);
+SparseMap operator*(const SparseMap & lhs, Real rhs);
+void NormalizeL1(SparseMap & map, Real val = 1.0);
 
 // Vector-based sparse map
 class SparseVector {
@@ -38,8 +39,8 @@ public:
     // Functions for modifying the vector
 
     // Add a single value
-    void Add(int k, double v);
-    // void Add(const std::string & str, double v);
+    void Add(int k, Real v);
+    // void Add(const std::string & str, Real v);
 
     // Return the actual vector
     SparseVectorImpl & GetImpl() { return impl_; }
@@ -61,10 +62,10 @@ SparseVector & operator+=(SparseVector & lhs, const SparseVector & rhs);
 SparseVector & operator-=(SparseVector & lhs, const SparseVector & rhs);
 SparseVector operator+(const SparseVector & lhs, const SparseVector & rhs);
 SparseVector operator-(const SparseVector & lhs, const SparseVector & rhs);
-double operator*(const SparseVector & lhs, const SparseVector & rhs);
-SparseVector operator*(const SparseVector & lhs, double rhs);
+Real operator*(const SparseVector & lhs, const SparseVector & rhs);
+SparseVector operator*(const SparseVector & lhs, Real rhs);
 
-double operator*(const SparseMap & lhs,    const SparseVector & rhs);
+Real operator*(const SparseMap & lhs,    const SparseVector & rhs);
 SparseMap & operator+=(SparseMap & lhs,    const SparseVector & rhs);
 SparseMap & operator-=(SparseMap & lhs,    const SparseVector & rhs);
 SparseMap operator+(const SparseMap & lhs, const SparseVector & rhs);

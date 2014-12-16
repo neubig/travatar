@@ -1,6 +1,7 @@
 #ifndef TUNE_XEVAL_H__
 #define TUNE_XEVAL_H__
 
+#include <travatar/real.h>
 #include <travatar/tune.h>
 #include <travatar/sparse-map.h>
 #include <travatar/eval-measure.h>
@@ -27,18 +28,18 @@ public:
     virtual void Init(const SparseMap & init_weights);
 
     // Tune new weights to maximize the expectation of the evaluation measure
-    virtual double RunTuning(SparseMap & weights);
+    virtual Real RunTuning(SparseMap & weights);
 
     // For tuning with LBFGS
-    double operator()(size_t n, const double * x, double * g) const;
+    Real operator()(size_t n, const Real * x, Real * g) const;
 
     void SetIters(int iters) { iters_ = iters; }
-    void SetL1Coefficient(double l1_coeff) { l1_coeff_ = l1_coeff; }
+    void SetL1Coefficient(Real l1_coeff) { l1_coeff_ = l1_coeff; }
 
 protected:
     int iters_;
     mutable int iter_;
-    double l1_coeff_;
+    Real l1_coeff_;
     std::string optimizer_;
     bool use_init_;
     Gradient* gradient_;

@@ -45,7 +45,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         if (!best.Valid() || best.GetScore() < add.GetScore())
             best = add;
         old_edge = (HyperEdge*)add.GetNote().vp;
-        double edge_score = add.GetScore();
+        Real edge_score = add.GetScore();
         // Add the new tails in *source* order 
         vector<HyperNode*> tails;
         Sentence wids;
@@ -88,7 +88,7 @@ NBestComplete Forest::Complete(std::vector<PartialEdge> &partial) {
         edge->SetHead(node);
         edge->SetTails(tails);
         hg->AddEdge(edge); node->AddEdge(edge);
-        double lm_score = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
+        Real lm_score = (edge_score - lm_unk * lm_unk_weight_ - edge->GetScore())/lm_weight_;
         edge->GetFeatures().Add(lm_id_, lm_score);
         if(lm_unk)
             edge->GetFeatures().Add(lm_unk_id_, lm_unk);
@@ -207,7 +207,7 @@ search::Vertex* LMComposerIncremental::CalculateRootVertex(
     // Allocate the edge
     search::PartialEdge pedge(edges.AllocateEdge(1));
     (*pedge.NT()) = vertices[0]->RootAlternate();
-    double below_score = vertices[0]->Bound();
+    Real below_score = vertices[0]->Bound();
     // Set the note
     search::Note note;
     note.vp = NULL;

@@ -1,6 +1,7 @@
 #ifndef WEIGHTS_AVERAGE_PERCEPTRON_H__
 #define WEIGHTS_AVERAGE_PERCEPTRON_H__
 
+#include <travatar/real.h>
 #include <travatar/weights-perceptron.h>
 #include <travatar/sparse-map.h>
 #include <cmath>
@@ -15,13 +16,13 @@ public:
 
     // Update the weights
     virtual void Update(
-        const SparseVector & oracle, double oracle_model, double oracle_eval,
-        const SparseVector & system, double system_model, double system_eval
+        const SparseVector & oracle, Real oracle_model, Real oracle_eval,
+        const SparseVector & system, Real system_model, Real system_eval
     );
 
     // Get the current values of the weights at this point in learning
-    virtual double GetCurrent(const SparseMap::key_type & key);
-    virtual double GetCurrent(const SparseMap::key_type & key) const;
+    virtual Real GetCurrent(const SparseMap::key_type & key);
+    virtual Real GetCurrent(const SparseMap::key_type & key) const;
 
     // Get the final values of the weights
     virtual const SparseMap & GetFinal();

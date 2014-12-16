@@ -2,6 +2,7 @@
 #define TRAVATAR_GRADIENT_XEVAL_H__
 
 #include <travatar/gradient.h>
+#include <travatar/real.h>
 #include <travatar/eval-measure.h>
 
 namespace travatar {
@@ -12,26 +13,26 @@ public:
     GradientXeval();
 
     // Calculate the gradient
-    virtual double CalcGradient(size_t n, const double * x, double * g) const;
+    virtual Real CalcGradient(size_t n, const Real * x, Real * g) const;
 
     // Calculate the gradient for averaged measures based on expectations, probabilities
     void CalcAvgGradient(
-            const std::vector<std::vector<double> > & p_i_k,
+            const std::vector<std::vector<Real> > & p_i_k,
             const EvalStatsPtr & stats, 
-            size_t n, const double * x, double * g) const;
+            size_t n, const Real * x, Real * g) const;
     
     // Calculate the gradient for BLEU based on expectations, probabilities
     void CalcBleuGradient(
-            const std::vector<std::vector<double> > & p_i_k,
+            const std::vector<std::vector<Real> > & p_i_k,
             const EvalStatsPtr & stats, 
-            size_t n, const double * x, double * g) const;
+            size_t n, const Real * x, Real * g) const;
 
     // Set the entropy coefficient
-    void SetEntCoefficient(double ent_coeff) { ent_coeff_ = ent_coeff; }
+    void SetEntCoefficient(Real ent_coeff) { ent_coeff_ = ent_coeff; }
 
 protected:
 
-    double ent_coeff_;
+    Real ent_coeff_;
     
 
 };

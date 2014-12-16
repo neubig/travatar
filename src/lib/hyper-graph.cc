@@ -158,7 +158,7 @@ void HyperNode::Print(std::ostream & out) const {
             out << (num++ != 0?", ":"") << v;
         out << "]";
     }
-    if(viterbi_score_ != -DBL_MAX)
+    if(viterbi_score_ != -REAL_MAX)
         out << ", \"viterbi\": " << viterbi_score_;
     if(frontier_ != UNSET_FRONTIER)
         out << ", \"frontier\": \"" << (char)frontier_<<"\"";
@@ -196,7 +196,7 @@ int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
     sort(act_tails.begin(), act_tails.end());
     if(!CheckVector(exp_tails, act_tails)) return 0;
     // Check if scores are equal
-    vector<double> l_scores(nodes_.size()), r_scores(nodes_.size());
+    vector<Real> l_scores(nodes_.size()), r_scores(nodes_.size());
     for(int i = 0; i < (int)nodes_.size(); i++) {
         l_scores[i] = nodes_[i]->GetViterbiScore();
         r_scores[i] = rhs.nodes_[i]->GetViterbiScore();
@@ -405,10 +405,10 @@ void HyperGraph::ScoreEdges(const Weights & weights) {
 
 class QueueEntry {
 public:
-    QueueEntry(double score, double lm_score, const vector<int> & id) :
+    QueueEntry(Real score, Real lm_score, const vector<int> & id) :
         score_(score), lm_score_(lm_score), id_(id) { }
     // Score of the entry
-    double score_, lm_score_;
+    Real score_, lm_score_;
     vector<int> id_;
 };
 
@@ -418,16 +418,16 @@ void HyperEdge::SetRule(const TranslationRule * rule, const SparseVector & orig_
     trg_data_ = rule->GetTrgData();
 }
 
-double HyperNode::GetInsideProb(vector<double> & inside) {
-    if(inside[id_] != -DBL_MAX)
+Real HyperNode::GetInsideProb(vector<Real> & inside) {
+    if(inside[id_] != -REAL_MAX)
         return inside[id_];
     else if(IsTerminal())
         return (inside[id_] = 0);
     // cerr << "@node: " << *this << ": " << edges_.size() << endl;
-    vector<double> sum_over;
+    vector<Real> sum_over;
     BOOST_FOREACH(HyperEdge * edge, edges_) {
         // cerr << "   @edge: " << *edge << endl;
-        double next = edge->GetScore();
+        Real next = edge->GetScore();
         BOOST_FOREACH(HyperNode * tail, edge->GetTails())
             next += tail->GetInsideProb(inside);
         sum_over.push_back(next);
@@ -441,16 +441,16 @@ double HyperNode::GetInsideProb(vector<double> & inside) {
     return inside[id_];
 }
 
-double HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, vector<double> & outside) const {
-    if(outside[id_] != -DBL_MAX)
+Real HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, vector<Real> & outside) const {
+    if(outside[id_] != -REAL_MAX)
         return outside[id_];
     else if(id_ == 0)
         return (outside[id_] = 0);
     else if(all_edges[id_].size() == 0)
-        return (outside[id_] = -DBL_MAX);
-    vector<double> sum_over;
+        return (outside[id_] = -REAL_MAX);
+    vector<Real> sum_over;
     BOOST_FOREACH(const HyperEdge * edge, all_edges[id_]) {
-        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
+        Real next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
         sum_over.push_back(next);
     }
     // cerr << "Outside over " << sum_over.size() << " @ " << id_ << " : " << AddLogProbs(sum_over) << endl;
@@ -468,14 +468,14 @@ vector< vector<HyperEdge*> > HyperGraph::GetReversedEdges() {
 // Perform the inside-outside algorithm, where each edge score is a log probability
 void HyperGraph::InsideOutsideNormalize() {
     // Calculate the inside and outside probabilities
-    vector<double> inside(nodes_.size(), -DBL_MAX), outside(nodes_.size(), -DBL_MAX);
+    vector<Real> inside(nodes_.size(), -REAL_MAX), outside(nodes_.size(), -REAL_MAX);
     vector<vector<HyperEdge*> > rev_edges = GetReversedEdges();
-    vector<double> new_scores(edges_.size(), -DBL_MAX);
+    vector<Real> new_scores(edges_.size(), -REAL_MAX);
     nodes_[0]->GetInsideProb(inside);
     // cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
     // Re-score the current edges
     BOOST_FOREACH(HyperEdge * edge, edges_) {
-        double next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside);
+        Real next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside);
         // cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside);
         new_scores[edge->GetId()] = next;
     }
@@ -484,12 +484,12 @@ void HyperGraph::InsideOutsideNormalize() {
 }
 
 // Calculate new viterbi scores if necessary
-double HyperNode::CalcViterbiScore() {
-    if(viterbi_score_ == -DBL_MAX) {
+Real HyperNode::CalcViterbiScore() {
+    if(viterbi_score_ == -REAL_MAX) {
         // if(edges_.size() == 0)
         //     THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
         BOOST_FOREACH(HyperEdge * edge, edges_) {
-            double score = edge->GetScore();
+            Real score = edge->GetScore();
             BOOST_FOREACH(HyperNode * tail, edge->GetTails())
                 score += tail->CalcViterbiScore();
             if(score > viterbi_score_)
@@ -537,7 +537,7 @@ void HyperGraph::DeleteEdges() {
 
 void HyperGraph::ResetViterbiScores() {
     BOOST_FOREACH(HyperNode * node, nodes_)
-        node->SetViterbiScore(-DBL_MAX);
+        node->SetViterbiScore(-REAL_MAX);
 }
 
 int HyperGraph::Append(const HyperGraph & rhs) {

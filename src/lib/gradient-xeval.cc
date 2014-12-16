@@ -9,36 +9,36 @@ using namespace std;
 using namespace boost;
 using namespace travatar;
 
-inline double DivideZero(double x, double y) {
+inline Real DivideZero(Real x, Real y) {
     return (y==0?0:x/y);
 }
-inline double LogZero(double x) {
-    return (x<=0?-DBL_MAX:log(x));
+inline Real LogZero(Real x) {
+    return (x<=0?-REAL_MAX:log(x));
 }
 
 GradientXeval::GradientXeval() : Gradient(), ent_coeff_(0.0) { }
 
 void GradientXeval::CalcAvgGradient(
-            const vector<vector<double> > & p_i_k,
+            const vector<vector<Real> > & p_i_k,
             const EvalStatsPtr & stats, 
-            size_t n, const double * x, double * g) const {
+            size_t n, const Real * x, Real * g) const {
     EvalStatsAverage * stats_avg = (EvalStatsAverage*)stats.get();
     int N = p_i_k.size();
     // The scaling constant and its
-    double gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
+    Real gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
     if(gamma == 0.0) gamma = 1.0;
-    double d_xeval_dgamma = 0;
+    Real d_xeval_dgamma = 0;
 
     // Calculate the stats for each example
     for(int i = 0; i < N; i++) {
         int K = p_i_k[i].size();
         // The amount to multiply each member k' by
-        vector<double> d_xeval_dsikprime(K,0);
+        vector<Real> d_xeval_dsikprime(K,0);
         for(int k = 0; k < K; k++) {
             EvalStatsAverage * stats_i_k_avg = (EvalStatsAverage*)all_stats_[i][k].get();
             PRINT_DEBUG("Stats i=" << i << ", k=" << k << ": " << stats_i_k_avg->ConvertToString() << endl, 4);
             // Calculate the derivative of xeval
-            double d_xeval_logpik = p_i_k[i][k]*stats_i_k_avg->GetVal()/stats_avg->GetDenom();
+            Real d_xeval_logpik = p_i_k[i][k]*stats_i_k_avg->GetVal()/stats_avg->GetDenom();
             // Now multiply this value for every k'
             for(int kprime = 0; kprime < K; kprime++)
                 d_xeval_dsikprime[kprime] += 
@@ -46,8 +46,8 @@ void GradientXeval::CalcAvgGradient(
         }
         // Calculate the actual gradient
         for(int kprime = 0; kprime < K; kprime++) {
-            double diff = d_xeval_dsikprime[kprime];
-            double diffgamma = diff*gamma;
+            Real diff = d_xeval_dsikprime[kprime];
+            Real diffgamma = diff*gamma;
             BOOST_FOREACH(SparseMap::value_type val, all_feats_[i][kprime]) {
                 g[val.first] += val.second * diffgamma;
                 d_xeval_dgamma += val.second * x[val.first] * diff;
@@ -61,52 +61,52 @@ void GradientXeval::CalcAvgGradient(
 }
 
 void GradientXeval::CalcBleuGradient(
-            const vector<vector<double> > & p_i_k,
+            const vector<vector<Real> > & p_i_k,
             const EvalStatsPtr & stats, 
-            size_t n, const double * x, double * g) const {
+            size_t n, const Real * x, Real * g) const {
     // Overall stats
     EvalStatsBleu * stats_bleu = (EvalStatsBleu*)stats.get();
     int N = p_i_k.size();
-    double P = stats_bleu->GetAvgLogPrecision();
-    double eP = exp(P);
-    double R = 1.0/stats_bleu->GetLengthRatio();
-    double mR = 1-R;
-    double emR = exp(mR), e10kmR = std::min(DBL_MAX,exp(10000*mR));
-    double B = (emR-1)/(e10kmR+1) + 1;
-    double Bprime = (emR-(emR-1)*10000*(e10kmR/(1+e10kmR)))/(1+e10kmR);
+    Real P = stats_bleu->GetAvgLogPrecision();
+    Real eP = exp(P);
+    Real R = 1.0/stats_bleu->GetLengthRatio();
+    Real mR = 1-R;
+    Real emR = exp(mR), e10kmR = std::min(REAL_MAX,exp(10000*mR));
+    Real B = (emR-1)/(e10kmR+1) + 1;
+    Real Bprime = (emR-(emR-1)*10000*(e10kmR/(1+e10kmR)))/(1+e10kmR);
     // This is used in the calculation of dB/log(p_{i,k})
     PRINT_DEBUG("P=" << P << ", eP=" << eP << ", B=" << B << ", Bprime=" << Bprime << ", R=" << R << ", e10kmR="<<e10kmR<<", emR=" << emR << endl, 3);
     // The left and right constants
-    double left = eP * Bprime * -R;
-    double right = eP * B / stats_bleu->GetNgramOrder();
+    Real left = eP * Bprime * -R;
+    Real right = eP * B / stats_bleu->GetNgramOrder();
     // The scaling constant and its
-    double gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
+    Real gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
     if(gamma == 0.0) gamma = 1.0;
-    double d_xeval_dgamma = 0;
+    Real d_xeval_dgamma = 0;
 
     // Calculate the stats for each example
     for(int i = 0; i < N; i++) {
         int K = p_i_k[i].size();
         // The amount to multiply each member k' by
-        vector<double> d_xeval_dsikprime(K,0);
+        vector<Real> d_xeval_dsikprime(K,0);
         for(int k = 0; k < K; k++) {
             EvalStatsBleu * stats_i_k_bleu = (EvalStatsBleu*)all_stats_[i][k].get();
             PRINT_DEBUG("s_i_k_bleu: " << stats_i_k_bleu->ConvertToString() << endl, 3);
-            double pik = p_i_k[i][k];
+            Real pik = p_i_k[i][k];
             // Calculate the derivative of exp(P) with respect to log(p_{i,k})
-            double my_right = 0;
+            Real my_right = 0;
             for(int n = 0; n < stats_bleu->GetNgramOrder(); n++)
                 my_right += DivideZero(stats_i_k_bleu->GetMatch(n)*pik,stats_bleu->GetMatch(n)) -
                             DivideZero(stats_i_k_bleu->GetSysCount(n)*pik,stats_bleu->GetSysCount(n));
             my_right *= right;
             PRINT_DEBUG("my_right: " << my_right << endl, 3);
             // Calculate the derivative of B with respect to log(p_{i,k})
-            double my_left = left * (
+            Real my_left = left * (
                              DivideZero(stats_i_k_bleu->GetRefCount(0)*pik,stats_bleu->GetRefCount(0)) -
                              DivideZero(stats_i_k_bleu->GetSysCount(0)*pik,stats_bleu->GetSysCount(0)));
             PRINT_DEBUG("my_left: " << my_left << endl, 3);
             // Calculate the derivative of xeval
-            double d_xeval_logpik = my_left + my_right;
+            Real d_xeval_logpik = my_left + my_right;
             PRINT_DEBUG("d_xeval_logpik: " << d_xeval_logpik << endl, 3);
             // Now multiply this value for every k'
             for(int kprime = 0; kprime < K; kprime++) {
@@ -116,8 +116,8 @@ void GradientXeval::CalcBleuGradient(
         }
         // Calculate the actual gradient
         for(int kprime = 0; kprime < K; kprime++) {
-            double diff = d_xeval_dsikprime[kprime];
-            double diffgamma = diff*gamma;
+            Real diff = d_xeval_dsikprime[kprime];
+            Real diffgamma = diff*gamma;
             BOOST_FOREACH(SparseMap::value_type val, all_feats_[i][kprime]) {
                 g[val.first] += val.second * diffgamma;
                 d_xeval_dgamma += val.second * x[val.first] * diff;
@@ -130,10 +130,10 @@ void GradientXeval::CalcBleuGradient(
         g[dense_scale_id_] = d_xeval_dgamma;
 }
 
-double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const {
+Real GradientXeval::CalcGradient(size_t n, const Real * x, Real * g) const {
 
     // Get the scaling factor
-    double gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
+    Real gamma = (dense_scale_id_ == -1 ? 1.0 : x[dense_scale_id_]);
     if(gamma == 0.0) gamma = 1.0;
 
     // Allocate some space for statistics
@@ -147,7 +147,7 @@ double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const
     }
     if(first_stats.get() == NULL) return 0;
     int N = all_stats_.size();
-    vector<vector<double> > p_i_k(N);
+    vector<vector<Real> > p_i_k(N);
     EvalStatsPtr stats;
     // Create the expected stats, make sure it is of the right type by cloning
     // the first stats of the first n-best list
@@ -181,15 +181,15 @@ double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");
     }
 
-    double score = stats->ConvertToScore();
+    Real score = stats->ConvertToScore();
 
     // Perform L2 regularization if necessary
     if(l2_coeff_ != 0.0) {
-        double dgamma = 0;
-        double gamma2 = gamma*gamma;
+        Real dgamma = 0;
+        Real gamma2 = gamma*gamma;
         for(size_t i = 0; i < n; i++) {
             if((int)i != dense_scale_id_) {
-                double v2 = x[i]*x[i];
+                Real v2 = x[i]*x[i];
                 score -= l2_coeff_ * v2 * gamma2;
                 g[i] -= 2 * l2_coeff_ * x[i] * gamma2;
                 dgamma -= 2 * l2_coeff_ * v2 * gamma;
@@ -201,14 +201,14 @@ double GradientXeval::CalcGradient(size_t n, const double * x, double * g) const
 
     // Perform entropy regularization if necessary
     if(ent_coeff_ != 0.0) {
-        double dgamma = 0;
-        double log2 = log(2.0);
+        Real dgamma = 0;
+        Real log2 = log(2.0);
         for(int i = 0; i < N; i++) {
             int K = all_feats_[i].size();
-            vector<double> ps(K, 0.0);
+            vector<Real> ps(K, 0.0);
             for(int k = 0; k < K; k++) {
-                double my_log2 = max(LogZero(p_i_k[i][k])/log2,-DBL_MAX);
-                double val = (my_log2 + 1) * p_i_k[i][k];
+                Real my_log2 = max(LogZero(p_i_k[i][k])/log2,-REAL_MAX);
+                Real val = (my_log2 + 1) * p_i_k[i][k];
                 score += my_log2 * p_i_k[i][k] * ent_coeff_;
                 for(int kprime = 0; kprime < K; kprime++)
                     ps[kprime] += val * ((kprime == k ? 1.0 : 0.0) - p_i_k[i][kprime]);

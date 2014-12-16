@@ -22,7 +22,7 @@ boost::shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & r
         return boost::shared_ptr<EvalStats>(new EvalStatsRibes(0, 1));
     
     // calculate brevity penalty (BP), not exceeding 1.0
-    double bp = min(1.0, exp(1.0 - 1.0 * ref.size()/sys.size())); 
+    Real bp = min(1.0, exp(1.0 - 1.0 * ref.size()/sys.size())); 
     
     // determine which ref. word corresponds to each sysothesis word
     // list for ref. word indices
@@ -105,10 +105,10 @@ boost::shared_ptr<EvalStats> EvalMeasureRibes::CalculateStats(const Sentence & r
                 ascending++;
     
     // normalize Kendall's tau
-    double nkt = double(ascending) / ((n * (n - 1))/2);
+    Real nkt = Real(ascending) / ((n * (n - 1))/2);
     
     // calculate unigram precision
-    double precision = 1.0 * n / sys.size();
+    Real precision = 1.0 * n / sys.size();
     
     // RIBES = (normalized Kendall's tau) * (unigram_precision ** alpha) * (brevity_penalty ** beta)
     return boost::shared_ptr<EvalStats>(new EvalStatsRibes(nkt * (pow(precision, alpha_)) * (pow(bp, beta_)), 1));
@@ -129,9 +129,9 @@ EvalMeasureRibes::EvalMeasureRibes(const std::string & config)
     if(config.length() == 0) return;
     BOOST_FOREACH(const EvalMeasure::StringPair & strs, EvalMeasure::ParseConfig(config)) {
         if(strs.first == "alpha") {
-            alpha_ = boost::lexical_cast<double>(strs.second);
+            alpha_ = boost::lexical_cast<Real>(strs.second);
         } else if(strs.first == "beta") {
-            beta_ = boost::lexical_cast<double>(strs.second);
+            beta_ = boost::lexical_cast<Real>(strs.second);
         } else if(strs.first == "factor") {
             factor_ = boost::lexical_cast<int>(strs.second);
         } else {

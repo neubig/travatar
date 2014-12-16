@@ -45,7 +45,7 @@ EvalStats & EvalStats::PlusEquals(const EvalStats & rhs) {
     }
     return *this;
 }
-EvalStats & EvalStats::PlusEqualsTimes(const EvalStats & rhs, double p) {
+EvalStats & EvalStats::PlusEqualsTimes(const EvalStats & rhs, Real p) {
     if(vals_.size() == 0) {
         vals_ = rhs.vals_;
         for(int i = 0; i < (int)vals_.size(); i++)
@@ -159,9 +159,9 @@ CfgDataVector EvalMeasure::CalculateOracle(const HyperGraph & graph, const std::
     NbestList nbest_list = lm_graph->GetNbest(NBEST_COUNT);
     // Find the sentence in the n-best list with the highest score
     CfgDataVector ret; 
-    double best_score = 0;
+    Real best_score = 0;
     BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
-        double score = this->CalculateCachedStats(refs, path->GetTrgData())->ConvertToScore();
+        Real score = this->CalculateCachedStats(refs, path->GetTrgData())->ConvertToScore();
         if(score > best_score) {
             ret = path->GetTrgData();
             best_score = score;

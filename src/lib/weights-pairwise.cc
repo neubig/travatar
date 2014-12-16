@@ -15,10 +15,10 @@ void WeightsPairwise::Adjust(const Sentence & src,
                              const NbestList & nbest) {
     // Find the oracle
     int oracle = -1;
-    double oracle_eval = -DBL_MAX;
+    Real oracle_eval = -REAL_MAX;
     for(int i = 0; i < (int)nbest.size(); i++) {
         const boost::shared_ptr<HyperPath> & path = nbest[i];
-        double my_eval = -DBL_MAX;
+        Real my_eval = -REAL_MAX;
         BOOST_FOREACH(const Sentence & ref, refs)
             my_eval = max(my_eval, eval.CalculateStats(ref, path->GetTrgData()[factor_].words)->ConvertToScore());
         if(my_eval > oracle_eval) {
@@ -27,9 +27,9 @@ void WeightsPairwise::Adjust(const Sentence & src,
         }
     }
     // Update given the oracle
-    double oracle_score = nbest[oracle]->GetScore();
-    double sys_score = nbest[0]->GetScore();
-    double sys_eval = -DBL_MAX;
+    Real oracle_score = nbest[oracle]->GetScore();
+    Real sys_score = nbest[0]->GetScore();
+    Real sys_eval = -REAL_MAX;
     BOOST_FOREACH(const Sentence & ref, refs)
         sys_eval = max(sys_eval, eval.CalculateStats(ref, nbest[0]->GetTrgData()[factor_].words)->ConvertToScore());
     Update(nbest[oracle]->CalcFeatures(), oracle_score, oracle_eval,

@@ -67,7 +67,7 @@ void TreeConverterRunner::Run(const ConfigTreeConverterRunner & config) {
     if(config.GetString("compoundsplit").size() != 0) {
       compoundsplitter.reset(new WordSplitterCompound(config.GetString("compoundsplit"),
 						      config.GetInt("compoundsplit_minchar"),
-						      config.GetDouble("compoundsplit_threshold"),
+						      config.GetReal("compoundsplit_threshold"),
 						      config.GetString("compoundsplit_filler")));
     }
 

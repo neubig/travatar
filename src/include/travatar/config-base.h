@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <travatar/real.h>
 #include <boost/unordered_map.hpp>
 
 namespace travatar {
@@ -40,14 +41,14 @@ public:
     const std::string & GetString(const std::string & name) const;
     std::vector<int> GetIntArray(const std::string & name) const;
     int GetInt(const std::string & name) const;
-    double GetDouble(const std::string & name) const;
+    Real GetReal(const std::string & name) const;
     bool GetBool(const std::string & name) const;
 
     // Setter functions
     void SetString(const std::string & name, const std::string & val);
 
     void SetInt(const std::string & name, int val);
-    void SetDouble(const std::string & name, double val);
+    void SetReal(const std::string & name, Real val);
     void SetBool(const std::string & name, bool val);
 
     void SetUsage(const std::string & str) { usage_ = str; }

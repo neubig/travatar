@@ -8,6 +8,7 @@
 
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <vector>
@@ -18,13 +19,13 @@ namespace travatar {
 class EvalStatsInterp : public EvalStats {
 public:
     EvalStatsInterp(const std::vector<EvalStatsPtr> & stats = std::vector<EvalStatsPtr>(),
-                    const std::vector<double> & coeffs = std::vector<double>()) :
+                    const std::vector<Real> & coeffs = std::vector<Real>()) :
         stats_(stats), coeffs_(coeffs) { }
     virtual ~EvalStatsInterp() { }
 
     virtual std::string ConvertToString() const;
     virtual std::string GetIdString() const;
-    virtual double ConvertToScore() const;
+    virtual Real ConvertToScore() const;
     // Check if the value is zero
     virtual bool IsZero();
     virtual EvalStats & PlusEquals(const EvalStats & rhs);
@@ -37,7 +38,7 @@ public:
 
 protected:
     std::vector<EvalStatsPtr> stats_;
-    std::vector<double> coeffs_;
+    std::vector<Real> coeffs_;
 };
 
 // The interpolated evaluation measure
@@ -46,7 +47,7 @@ class EvalMeasureInterp : public EvalMeasure {
 public:
 
 
-    EvalMeasureInterp(const std::vector<boost::shared_ptr<EvalMeasure> > & measures, const std::vector<double> & coeffs) 
+    EvalMeasureInterp(const std::vector<boost::shared_ptr<EvalMeasure> > & measures, const std::vector<Real> & coeffs) 
         : measures_(measures), coeffs_(coeffs) { }
     EvalMeasureInterp(const std::string & str);
     virtual ~EvalMeasureInterp() { }
@@ -72,7 +73,7 @@ public:
 
 protected:
     std::vector<boost::shared_ptr<EvalMeasure> > measures_;
-    std::vector<double> coeffs_;
+    std::vector<Real> coeffs_;
 
 };
 

@@ -222,9 +222,9 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
         try {
             vector<SparsePair> temp;
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("features"))
-                temp.push_back(make_pair(Dict::WID(t.first), t.second.get<double>("")));
+                temp.push_back(make_pair(Dict::WID(t.first), t.second.get<Real>("")));
             edge->SetFeatures(SparseVector(temp));
-            // edge->AddFeature(Dict::WID(t.first), t.second.get<double>(""));
+            // edge->AddFeature(Dict::WID(t.first), t.second.get<Real>(""));
         } catch (ptree_bad_path e) { }
         try {
             BOOST_FOREACH(ptree::value_type &t, v.second.get_child("trg")) {
@@ -242,7 +242,7 @@ HyperGraph * JSONTreeIO::ReadTree(istream & in) {
                 edge->GetTrgData().push_back(trg_data);
             }
         } catch (ptree_bad_path e) { }
-        edge->SetScore(v.second.get<double>("score", 0.0));
+        edge->SetScore(v.second.get<Real>("score", 0.0));
         ret->AddEdge(edge);
     }
     BOOST_FOREACH(ptree::value_type &v, pt.get_child("words"))
@@ -294,7 +294,7 @@ HyperNode * EgretTreeIO::MakeEgretNode(const string & str_id, SymbolSet<int> & n
 HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     HyperGraph * ret = new HyperGraph;
     string line, buff;
-    double score;
+    Real score;
     SymbolSet<int> node_map;
     // Make various regexes
     cmatch edge_match, sent_match;
@@ -347,13 +347,13 @@ HyperGraph * EgretTreeIO::ReadTree(istream & in) {
     // particular node, we need to normalize by nodes
     if(normalize_) {
         BOOST_FOREACH(HyperNode* node, ret->GetNodes()) {
-            vector<double> scores; scores.reserve(node->GetEdges().size());
+            vector<Real> scores; scores.reserve(node->GetEdges().size());
             BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
                 scores.push_back(edge->GetScore());
-            double denom = AddLogProbs(scores);
+            Real denom = AddLogProbs(scores);
             for(int i = 0; i < (int)scores.size(); i++) {
                 HyperEdge * edge = node->GetEdge(i);
-                double score = scores[i]-denom;
+                Real score = scores[i]-denom;
                 edge->SetScore(score);
                 edge->GetFeatures().Add(parse_id, score);
             }

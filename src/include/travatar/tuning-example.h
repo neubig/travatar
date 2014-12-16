@@ -1,6 +1,7 @@
 #ifndef TUNING_EXAMPLE_H__
 #define TUNING_EXAMPLE_H__
 
+#include <travatar/real.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <boost/shared_ptr.hpp>
@@ -13,7 +14,7 @@ namespace travatar {
 class EvalStats;
 class Weights;
 typedef boost::shared_ptr<EvalStats> EvalStatsPtr;
-typedef std::pair<double,double> Span;
+typedef std::pair<Real,Real> Span;
 typedef std::pair<Span, EvalStatsPtr> ScoredSpan;
 typedef std::vector<ScoredSpan> ConvexHull;
 

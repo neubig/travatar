@@ -3,6 +3,7 @@
 
 #include <travatar/sparse-map.h>
 #include <travatar/eval-measure.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 
 namespace travatar {
@@ -21,17 +22,17 @@ public:
 
     // Calculate the gradient for particular weights using either the dense or sparse
     // representation
-    virtual double CalcSparseGradient(const SparseMap & weights, SparseMap & d_xeval_dw) const;
-    virtual double CalcGradient(size_t n, const double * x, double * g) const = 0;
+    virtual Real CalcSparseGradient(const SparseMap & weights, SparseMap & d_xeval_dw) const;
+    virtual Real CalcGradient(size_t n, const Real * x, Real * g) const = 0;
 
-    void DensifyWeights(const SparseMap & sparse, std::vector<double> & dense);
-    void SparsifyWeights(const std::vector<double> & dense, SparseMap & sparse);
+    void DensifyWeights(const SparseMap & sparse, std::vector<Real> & dense);
+    void SparsifyWeights(const std::vector<Real> & dense, SparseMap & sparse);
 
     // Accessors
-    void SetL2Coefficient(double l2_coeff) { l2_coeff_ = l2_coeff; }
+    void SetL2Coefficient(Real l2_coeff) { l2_coeff_ = l2_coeff; }
     void SetAutoScale(bool auto_scale) { auto_scale_ = auto_scale; }
-    void SetMult(double mult) { mult_ = mult; }
-    double GetMult() const { return mult_; }
+    void SetMult(Real mult) { mult_ = mult; }
+    Real GetMult() const { return mult_; }
     WordId GetScaleId() const { return scale_id_; }
 
 protected:
@@ -39,13 +40,13 @@ protected:
     std::vector<int> dense2sparse_;
     SparseIntMap sparse2dense_;
     std::vector<std::vector<EvalStatsPtr> > all_stats_;    
-    std::vector<std::vector<std::vector<std::pair<WordId,double> > > > all_feats_;
+    std::vector<std::vector<std::vector<std::pair<WordId,Real> > > > all_feats_;
     const std::vector<boost::shared_ptr<TuningExample> > * examps_ptr_;
     bool auto_scale_;
     WordId dense_scale_id_;
     WordId scale_id_;
-    double l2_coeff_;
-    double mult_;
+    Real l2_coeff_;
+    Real mult_;
     
 
 };

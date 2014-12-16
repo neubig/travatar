@@ -87,7 +87,7 @@ SparseMap TuningExampleForest::CalculatePotentialGain(const SparseMap & weights)
     curr_score_ = measure_->CalculateCachedStats(refs_, nbest_list[0]->GetTrgData(), id_)->ConvertToScore() * mult_;
     // Find the potential gain
     oracle_score_ = max(oracle_score_, curr_score_);
-    double gain = oracle_score_ - curr_score_;
+    Real gain = oracle_score_ - curr_score_;
     // Add this to all existing values
     if(active_.size() == 0)
         FindActiveFeatures();
@@ -114,7 +114,7 @@ const MertHull & TuningExampleForest::CalculateMertHull(
     return *hulls[node_id];
 }
 
-inline double PosZero(double dub) { return (dub == -0.0 ? 0.0 : dub); }
+inline Real PosZero(Real dub) { return (dub == -0.0 ? 0.0 : dub); }
 
 // Get the convex hull, which consists of scored spans in order of the span location
 ConvexHull TuningExampleForest::CalculateConvexHull(
@@ -141,7 +141,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
     curr_stats->TimesEquals(mult_);
     // If we are not active, return the simple convex hull
     if(!active) {
-        ret.push_back(make_pair(make_pair(-DBL_MAX, DBL_MAX), curr_stats));
+        ret.push_back(make_pair(make_pair(-REAL_MAX, REAL_MAX), curr_stats));
     // Otherwise, calculate the convex hull from the forest
     } else {
         vector<boost::shared_ptr<MertHull> > hulls(forest_->NumNodes());
@@ -155,7 +155,7 @@ ConvexHull TuningExampleForest::CalculateConvexHull(
             std::vector<Sentence> sent(GlobalVars::trg_factors);
             line.ConstructTranslation(forest_->GetWords(), &sent);
             EvalStatsPtr stats = measure_->CalculateCachedStats(refs_, sent, id_);
-            double next = (i==(int)top_hull.size()-1 ? DBL_MAX : top_hull.GetLines()[i+1]->x);
+            Real next = (i==(int)top_hull.size()-1 ? REAL_MAX : top_hull.GetLines()[i+1]->x);
             // If the score is exactly the same as last, just update the right side
             // if(ret.size()) 
             //     cerr << "DEBUGGING stats: " << *stats << ", " << *ret.rbegin()->second << endl;

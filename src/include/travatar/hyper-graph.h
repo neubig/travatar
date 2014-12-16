@@ -5,6 +5,7 @@
 #include <travatar/sentence.h>
 #include <travatar/cfg-data.h>
 #include <travatar/nbest-list.h>
+#include <travatar/real.h>
 #include <vector>
 #include <climits>
 #include <cfloat>
@@ -31,7 +32,7 @@ protected:
     NodeId id_;
     HyperNode* head_;
     std::vector<HyperNode*> tails_;
-    double score_;
+    Real score_;
     std::string src_str_;
     CfgDataVector trg_data_;
     SparseVector features_;
@@ -50,8 +51,8 @@ public:
     }   
 
     // Get the probability (score, and must be between 0 and 1
-    double GetScore() const { return score_; }
-    void SetScore(double score) { score_ = score; }
+    Real GetScore() const { return score_; }
+    void SetScore(Real score) { score_ = score; }
 
     // Getters/Setters
     void SetId(NodeId id) { id_ = id; }
@@ -76,7 +77,7 @@ public:
     void SetSrcStr(const std::string & str) { src_str_ = str; }
     void SetTrgData(const CfgDataVector & trg) { trg_data_ = trg; }
     void SetFeatures(const SparseVector & feat) { features_ = feat; }
-    // void AddFeature(int idx, double feat) { features_[idx] += feat; }
+    // void AddFeature(int idx, Real feat) { features_[idx] += feat; }
     void AddTrgWord(int idx, int factor = 0) {
         if((int)trg_data_.size() <= factor)
             trg_data_.resize(factor+1);
@@ -151,14 +152,14 @@ private:
     // Whether or not this node is a frontier node
     FrontierType frontier_;
     // The viterbi score of the entire subtree under this node
-    double viterbi_score_;
+    Real viterbi_score_;
 public:
     HyperNode(WordId sym = -1,
               WordId trg_sym = -1,
               std::pair<int,int> span = std::pair<int,int>(-1,-1),
               int id = -1) : 
         id_(id), sym_(sym), trg_sym_(trg_sym), src_span_(span), has_trg_span_(false),
-        frontier_(UNSET_FRONTIER), viterbi_score_(-DBL_MAX) { };
+        frontier_(UNSET_FRONTIER), viterbi_score_(-REAL_MAX) { };
     ~HyperNode() { };
 
     // Refresh the pointers to head and tail nodes so they point to
@@ -166,10 +167,10 @@ public:
     void RefreshPointers(HyperGraph & new_graph);
     
     // Set or get the viterbi score without re-calculating it
-    void SetViterbiScore(double viterbi_score) { viterbi_score_ = viterbi_score; }
-    double GetViterbiScore() const { return viterbi_score_; }
+    void SetViterbiScore(Real viterbi_score) { viterbi_score_ = viterbi_score; }
+    Real GetViterbiScore() const { return viterbi_score_; }
     // Calculate new viterbi scores if necessary
-    double CalcViterbiScore();
+    Real CalcViterbiScore();
 
     // Calculate the spans and frontiers using the GHKM algorithm
     const std::set<int> & CalculateTrgSpan(
@@ -187,8 +188,8 @@ public:
     void RemoveEdge(int position) { edges_.erase(edges_.begin() + position); }
 
     // Functions for the inside-outside algorithm
-    double GetInsideProb(std::vector<double> & inside);
-    double GetOutsideProb(const std::vector< std::vector<HyperEdge*> > & all_edges, std::vector<double> & outside) const;
+    Real GetInsideProb(std::vector<Real> & inside);
+    Real GetOutsideProb(const std::vector< std::vector<HyperEdge*> > & all_edges, std::vector<Real> & outside) const;
 
     // Getters/Setters
     void SetSym(WordId sym) { sym_ = sym; }
@@ -269,11 +270,11 @@ public:
         }
         return ret;
     }
-    void SetScore(double score) { score_ = score; }
-    double AddScore(double score) { return (score_ += score); }
-    double GetScore() { return score_; }
-    void SetLoss(double loss) { loss_ = loss; }
-    double GetLoss() { return loss_; }
+    void SetScore(Real score) { score_ = score; }
+    Real AddScore(Real score) { return (score_ += score); }
+    Real GetScore() { return score_; }
+    void SetLoss(Real loss) { loss_ = loss; }
+    Real GetLoss() { return loss_; }
 
     CfgDataVector CalcTranslations();
     CfgData CalcTranslation(int factor) {
@@ -304,9 +305,9 @@ protected:
     // The actual translations themselves
     CfgDataVector data_;
     // The model score of the translation
-    double score_;
+    Real score_;
     // The loss of the translation
-    double loss_;
+    Real loss_;
     // For use with partial paths, which nodes are still open?
     std::vector<HyperNode*> remaining_nodes_;
 };

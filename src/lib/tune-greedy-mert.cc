@@ -20,14 +20,14 @@ using namespace travatar;
 
 void GreedyMertTask::Run() {
     // Check to make sure that our potential is still higher than the current best
-    double best = tgm_->GetBestGain();
+    Real best = tgm_->GetBestGain();
     if((potential_ <= best) ||
        (tgm_->GetEarlyTerminate() && best >= tgm_->GetGainThreshold()))
         return;
     // Mak the gradient and find the ranges
     SparseMap gradient;
     gradient[feature_] = 1;
-    pair<double,double> gradient_range = tgm_->FindGradientRange(tgm_->GetCurrentWeights(), feature_);
+    pair<Real,Real> gradient_range = tgm_->FindGradientRange(tgm_->GetCurrentWeights(), feature_);
     LineSearchResult result = TuneMert::LineSearch(tgm_->GetCurrentWeights(), gradient, tgm_->GetExamples(), gradient_range);
     if(result.gain > best) {
         tgm_->UpdateBest(gradient, result);
@@ -68,7 +68,7 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
         potential += examp->CalculatePotentialGain(weights);
     }
     // Order the weights in descending order
-    typedef pair<double,int> DIPair;
+    typedef pair<Real,int> DIPair;
     vector<DIPair> vals;
     BOOST_FOREACH(const SparseMap::value_type val, potential)
         if(val.second >= gain_threshold_)
@@ -110,7 +110,7 @@ LineSearchResult TuneGreedyMert::TuneOnce(SparseMap & weights) {
 }
 
 // Tune new weights using greedy mert until the threshold is exceeded
-double TuneGreedyMert::RunTuning(SparseMap & weights) {
+Real TuneGreedyMert::RunTuning(SparseMap & weights) {
     LineSearchResult result;
     do {
         result = TuneOnce(weights);
@@ -118,4 +118,4 @@ double TuneGreedyMert::RunTuning(SparseMap & weights) {
     return result.after->ConvertToScore();
 }
 
-double TuneGreedyMert::GetBestGain() { return best_result_.gain; }
+Real TuneGreedyMert::GetBestGain() { return best_result_.gain; }

@@ -14,7 +14,7 @@ using namespace travatar;
 
 Gradient::Gradient() : examps_ptr_(NULL), auto_scale_(false), dense_scale_id_(-1), scale_id_(Dict::WID("__SCALE__")), l2_coeff_(0.0), mult_(1.0) { }
 
-void Gradient::DensifyWeights(const SparseMap & sparse, std::vector<double> & dense) {
+void Gradient::DensifyWeights(const SparseMap & sparse, std::vector<Real> & dense) {
     dense.resize(dense2sparse_.size());
     for(int i = 0; i < (int)dense2sparse_.size(); i++) {
         SparseMap::const_iterator it = sparse.find(dense2sparse_[i]);
@@ -24,24 +24,24 @@ void Gradient::DensifyWeights(const SparseMap & sparse, std::vector<double> & de
         dense[dense_scale_id_] = 1.0;
 }
 
-void Gradient::SparsifyWeights(const std::vector<double> & dense, SparseMap & sparse) {
+void Gradient::SparsifyWeights(const std::vector<Real> & dense, SparseMap & sparse) {
     sparse = SparseMap();
     for(int i = 0; i < (int)dense2sparse_.size(); i++)
         if(dense[i])
             sparse[dense2sparse_[i]] = dense[i];
 }
 
-double Gradient::CalcSparseGradient(const SparseMap & kv, SparseMap & d_xeval_dw) const {
+Real Gradient::CalcSparseGradient(const SparseMap & kv, SparseMap & d_xeval_dw) const {
     size_t n = dense2sparse_.size();
-    vector<double> x(n, 0.0);
+    vector<Real> x(n, 0.0);
     BOOST_FOREACH(const SparseMap::value_type val, kv) {
         SparseIntMap::const_iterator it = sparse2dense_.find(val.first);
         if(it == sparse2dense_.end())
             THROW_ERROR("Attempting to transform value not in sparse2dense map: " << val.first << " (" << Dict::WSym(val.first) << ")" << endl);
         x[it->second] = val.second;
     }
-    vector<double> g(n, 0.0);
-    double ret = CalcGradient(n, &x[0], &g[0]);
+    vector<Real> g(n, 0.0);
+    Real ret = CalcGradient(n, &x[0], &g[0]);
     for(size_t i = 0; i < n; i++)
         if(g[i] != 0.0)
             d_xeval_dw[dense2sparse_[i]] = g[i];

@@ -4,6 +4,7 @@
 #include <travatar/task.h>
 #include <travatar/sentence.h>
 #include <travatar/sparse-map.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <iostream>
 #include <vector>
@@ -23,7 +24,7 @@ public:
         Tune & tune, const SparseMap & weights);
 
     const SparseMap & GetWeights() { return weights_; }
-    double GetScore() { return score_; }
+    Real GetScore() { return score_; }
 
     void Run();
 
@@ -32,7 +33,7 @@ private:
     std::string task_name_;
     Tune * tune_;
     SparseMap weights_;
-    double score_;
+    Real score_;
 
 };
 

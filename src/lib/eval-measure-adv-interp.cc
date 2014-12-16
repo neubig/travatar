@@ -15,7 +15,7 @@ using namespace boost;
 
 std::string EvalStatsAdvInterp::ConvertToString() const {
     std::ostringstream oss;
-    map<WordId, double> var_map;
+    map<WordId, Real> var_map;
     for (size_t i=0; i < stats_.size(); ++i) 
         var_map.insert(make_pair(vars_[i],stats_[i]->ConvertToScore()));
     MathQuery mq(query_,var_map);
@@ -25,8 +25,8 @@ std::string EvalStatsAdvInterp::ConvertToString() const {
 }
 
 std::string EvalStatsAdvInterp::GetIdString() const { return "ADV-INTERP"; }
-double EvalStatsAdvInterp::ConvertToScore() const {
-    map<WordId, double> var_map;
+Real EvalStatsAdvInterp::ConvertToScore() const {
+    map<WordId, Real> var_map;
     for(size_t i = 0; i < stats_.size(); ++i) 
         var_map.insert(make_pair(vars_[i],stats_[i]->ConvertToScore()));
     return MathQuery::Evaluate(var_map,query_);

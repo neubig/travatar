@@ -24,7 +24,7 @@ public:
 
     virtual std::string ConvertToString() const;
     virtual std::string GetIdString() const;
-    virtual double ConvertToScore() const;
+    virtual Real ConvertToScore() const;
     // Check if the value is zero
     virtual bool IsZero();
     virtual EvalStats & PlusEquals(const EvalStats & rhs);

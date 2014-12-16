@@ -40,27 +40,27 @@ struct TestBinarizer {
             e->SetScore(1); e->GetFeatures().Add(Dict::WID("feat"), 1);
         }
         // Example rule graph
-        double_graph_.reset(new HyperGraph);
+        Real_graph_.reset(new HyperGraph);
         {
             src_.resize(3); src_[0] = Dict::WID("s"); src_[1] = Dict::WID("t"); src_[2] = Dict::WID("u");
-            double_graph_->SetWords(src_);
-            HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));   double_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
-            HyperNode * nrx = new HyperNode; nrx->SetSpan(make_pair(0,3)); double_graph_->AddNode(nrx); nrx->SetSym(Dict::WID("X" ));
-            HyperNode * nry = new HyperNode; nry->SetSpan(make_pair(0,3)); double_graph_->AddNode(nry); nry->SetSym(Dict::WID("Y" ));
-            HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); double_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
-            HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); double_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
-            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); double_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
-            HyperEdge * eax = new HyperEdge(na);  double_graph_->AddEdge(eax); eax->AddTail(nrx); nrx->AddEdge(eax);
-            HyperEdge * eay = new HyperEdge(na);  double_graph_->AddEdge(eay); eay->AddTail(nry); nrx->AddEdge(eay);
-            HyperEdge * erx = new HyperEdge(nrx); double_graph_->AddEdge(erx); erx->AddTail(nb1); erx->AddTail(nb2); erx->AddTail(nb3); nrx->AddEdge(erx);
-            HyperEdge * ery = new HyperEdge(nry); double_graph_->AddEdge(ery); ery->AddTail(nb1); ery->AddTail(nb2); ery->AddTail(nb3); nry->AddEdge(ery);
+            Real_graph_->SetWords(src_);
+            HyperNode * na = new HyperNode; na->SetSpan(make_pair(0,3));   Real_graph_->AddNode(na);  na->SetSym( Dict::WID("A" ));
+            HyperNode * nrx = new HyperNode; nrx->SetSpan(make_pair(0,3)); Real_graph_->AddNode(nrx); nrx->SetSym(Dict::WID("X" ));
+            HyperNode * nry = new HyperNode; nry->SetSpan(make_pair(0,3)); Real_graph_->AddNode(nry); nry->SetSym(Dict::WID("Y" ));
+            HyperNode * nb1 = new HyperNode; nb1->SetSpan(make_pair(0,1)); Real_graph_->AddNode(nb1); nb1->SetSym(Dict::WID("B1"));
+            HyperNode * nb2 = new HyperNode; nb2->SetSpan(make_pair(1,2)); Real_graph_->AddNode(nb2); nb2->SetSym(Dict::WID("B2"));
+            HyperNode * nb3 = new HyperNode; nb3->SetSpan(make_pair(2,3)); Real_graph_->AddNode(nb3); nb3->SetSym(Dict::WID("."));
+            HyperEdge * eax = new HyperEdge(na);  Real_graph_->AddEdge(eax); eax->AddTail(nrx); nrx->AddEdge(eax);
+            HyperEdge * eay = new HyperEdge(na);  Real_graph_->AddEdge(eay); eay->AddTail(nry); nrx->AddEdge(eay);
+            HyperEdge * erx = new HyperEdge(nrx); Real_graph_->AddEdge(erx); erx->AddTail(nb1); erx->AddTail(nb2); erx->AddTail(nb3); nrx->AddEdge(erx);
+            HyperEdge * ery = new HyperEdge(nry); Real_graph_->AddEdge(ery); ery->AddTail(nb1); ery->AddTail(nb2); ery->AddTail(nb3); nry->AddEdge(ery);
             eax->SetScore(1); eax->GetFeatures().Add(Dict::WID("feat"), 1);
             eay->SetScore(1); eay->GetFeatures().Add(Dict::WID("feat"), 1);
         }
     }
     ~TestBinarizer() { }
 
-    boost::scoped_ptr<HyperGraph> trinary_graph_, unordered_graph_, double_graph_;
+    boost::scoped_ptr<HyperGraph> trinary_graph_, unordered_graph_, Real_graph_;
     std::vector<WordId> src_;
 
 };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(TestBinarizerCKY) {
 
 BOOST_AUTO_TEST_CASE(TestDoubleRight) {
     BinarizerDirectional br(BinarizerDirectional::BINARIZE_RIGHT);
-    boost::shared_ptr<HyperGraph> act_graph(br.TransformGraph(*double_graph_));
+    boost::shared_ptr<HyperGraph> act_graph(br.TransformGraph(*Real_graph_));
     boost::shared_ptr<HyperGraph> exp_graph(new HyperGraph);
     exp_graph->SetWords(src_);
     // Add the nodes

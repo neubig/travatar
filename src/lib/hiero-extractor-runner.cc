@@ -63,7 +63,7 @@ void HieroExtractorRunner::Run(const ConfigHieroExtractorRunner & config) {
         rules = extractor.ExtractHieroRule(alignment,src_sent,trg_sent);
 
         BOOST_FOREACH(vector<HieroRule*> rule , rules) {
-            double score = static_cast<double>(1.0) / rule.size();
+            Real score = static_cast<Real>(1.0) / rule.size();
             BOOST_FOREACH(HieroRule* r , rule) {
                 cout << r->ToString() << " ||| " << score << " ||| " << PrintAlignment(r->GetAlignments()) << endl;
                 delete r;

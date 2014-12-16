@@ -124,9 +124,9 @@ int ConfigBase::GetInt(const std::string & name) const {
         DIE_HELP("Value '"<<str<<"' for argument "<<name<<" was not an integer");
     return ret;
 }
-double ConfigBase::GetDouble(const std::string & name) const {
+Real ConfigBase::GetReal(const std::string & name) const {
     std::string str = GetString(name);
-    double ret = atof(str.c_str());
+    Real ret = atof(str.c_str());
     if(ret == 0 && str != "0" && str != "0.0")
         DIE_HELP("Value '"<<str<<"' for argument "<<name<<" was not float");
     return ret;
@@ -156,7 +156,7 @@ const std::string & ConfigBase::GetMainArg(int id) const {
 void ConfigBase::SetInt(const std::string & name, int val) {
     std::ostringstream oss; oss << val; SetString(name,oss.str());
 }
-void ConfigBase::SetDouble(const std::string & name, double val) {
+void ConfigBase::SetReal(const std::string & name, Real val) {
     std::ostringstream oss; oss << val; SetString(name,oss.str());
 }
 void ConfigBase::SetBool(const std::string & name, bool val) {

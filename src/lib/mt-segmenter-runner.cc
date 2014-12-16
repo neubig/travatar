@@ -33,7 +33,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
     // Add all sents up to the candidate span
     for(int i = curr_refsys.second; i < first; i++)
         curr_sentence.push_back(sys_corpus[i]);
-    double best_score = -DBL_MAX;
+    Real best_score = -REAL_MAX;
     for(int i = first; i <= last; i++) {
         pair<int,int> next_refsys(curr_refsys.first+1, i);
         EvalStatsPtr eval, next_eval;
@@ -50,7 +50,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
               ref_sents[curr_refsys.first], curr_sentence,
               curr_refsys.first, curr_refsys.second*(sys_corpus.size()+1)+i);
         if(next_eval.get() != NULL) eval->PlusEquals(*next_eval);
-        double my_score = eval->ConvertToScore();
+        Real my_score = eval->ConvertToScore();
         if(my_score > best_score) {
             memo[curr_refsys] = MTSegmenterMemo::mapped_type(next_refsys, eval);
             best_score = my_score;
@@ -58,7 +58,7 @@ MTSegmenterRunner::MTSegmenterMemo::mapped_type MTSegmenterRunner::GetNextRefSys
         if(i != last) curr_sentence.push_back(sys_corpus[i]);
     }
     // If we have not found any answer, add a dummy answer
-    if(best_score == -DBL_MAX)
+    if(best_score == -REAL_MAX)
         memo[curr_refsys] = 
             MTSegmenterMemo::mapped_type(make_pair(-1,-1), EvalStatsPtr());
     else
@@ -92,7 +92,7 @@ void MTSegmenterRunner::Run(const ConfigMTSegmenterRunner & config) {
 
     // Set the global variables
     GlobalVars::debug = config.GetInt("debug");
-    slack_ = config.GetDouble("slack");
+    slack_ = config.GetReal("slack");
 
     // Load the reference
     ifstream refin(config.GetString("ref").c_str());

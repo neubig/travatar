@@ -1,6 +1,7 @@
 #ifndef TUNE_ONLINE_H__
 #define TUNE_ONLINE_H__
 
+#include <travatar/real.h>
 #include <travatar/sparse-map.h>
 #include <travatar/sentence.h>
 #include <travatar/eval-measure.h>
@@ -24,20 +25,20 @@ public:
                    algorithm_("pairwise"), rate_(1), margin_scale_(0) { }
 
     // Tune new weights using an online learning algorithm
-    virtual double RunTuning(SparseMap & weights);
+    virtual Real RunTuning(SparseMap & weights);
 
     void SetUpdate(const std::string & update) { update_ = update; }
     void SetAlgorithm(const std::string & algorithm) { algorithm_ = algorithm; }
-    void SetLearningRate(double rate) { rate_ = rate; }
-    void SetMarginScale(double margin) { margin_scale_ = margin; }
+    void SetLearningRate(Real rate) { rate_ = rate; }
+    void SetMarginScale(Real margin) { margin_scale_ = margin; }
 
 protected:
     bool shuffle_;
     int iters_;
     std::string update_;
     std::string algorithm_;
-    double rate_;
-    double margin_scale_;
+    Real rate_;
+    Real margin_scale_;
 
 };
 

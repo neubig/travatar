@@ -2,6 +2,7 @@
 #define LM_COMPOSER_BU_H__
 
 #include <travatar/lm-composer.h>
+#include <travatar/real.h>
 #include <lm/left.hh>
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -18,15 +19,15 @@ typedef std::vector<HyperNode*> ChartEntry;
 class LMComposerBUFunc {
 public:
     static LMComposerBUFunc * CreateFromType(lm::ngram::ModelType type);
-    virtual std::pair<double,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state) = 0;
-    virtual double CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state) = 0;
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state) = 0;
+    virtual Real CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state) = 0;
     virtual ~LMComposerBUFunc() { }
 };
 
 template <class LMType>
 class LMComposerBUFuncTemplate : public LMComposerBUFunc {
-    virtual std::pair<double,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state);
-    virtual double CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state);
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state);
+    virtual Real CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state);
     virtual ~LMComposerBUFuncTemplate() { }
 };
 
@@ -64,7 +65,7 @@ public:
     int GetStackPopLimit() const { return stack_pop_limit_; }
     void SetStackPopLimit(int stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
     int GetChartLimit() const { return chart_limit_; }
-    void SetChartLimit(double chart_limit) { chart_limit_ = chart_limit; }
+    void SetChartLimit(Real chart_limit) { chart_limit_ = chart_limit; }
 
 protected:
 

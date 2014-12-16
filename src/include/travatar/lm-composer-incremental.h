@@ -4,6 +4,7 @@
 #include <travatar/lm-composer.h>
 #include <travatar/hyper-graph.h>
 #include <travatar/sentence.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -23,15 +24,15 @@ class Forest {
 public:
 
     // Constructor
-    Forest(travatar::WordId lm_id, double lm_weight,
-           travatar::WordId lm_unk_id, double lm_unk_weight,
+    Forest(travatar::WordId lm_id, Real lm_weight,
+           travatar::WordId lm_unk_id, Real lm_unk_weight,
            travatar::WordId root_sym, int factor) : hg(new travatar::HyperGraph),
                 lm_id_(lm_id), lm_weight_(lm_weight), lm_unk_id_(lm_unk_id),
                 lm_unk_weight_(lm_unk_weight), root_sym_(root_sym), factor_(factor) {
         hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
     }
     // // Constructor
-    // Forest(double lm_weight, double lm_unk_weight, int factor) : hg(new travatar::HyperGraph),
+    // Forest(Real lm_weight, Real lm_unk_weight, int factor) : hg(new travatar::HyperGraph),
     //             lm_weight_(lm_weight), lm_unk_weight_(lm_unk_weight), factor_(factor) {
     //     hg->GetNodes().resize(1, NULL); // Reserve a spot for the root
     // }
@@ -67,9 +68,9 @@ public:
   private:
     travatar::HyperGraph* hg;
     travatar::WordId lm_id_;
-    double lm_weight_;
+    Real lm_weight_;
     travatar::WordId lm_unk_id_;
-    double lm_unk_weight_;
+    Real lm_unk_weight_;
     std::vector<int> lm_unks_;
     travatar::WordId root_sym_;
     int factor_;
@@ -109,7 +110,7 @@ public:
 
     // Accessors
     int GetStackPopLimit() const { return stack_pop_limit_; }
-    void SetStackPopLimit(double stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
+    void SetStackPopLimit(Real stack_pop_limit) { stack_pop_limit_ = stack_pop_limit; }
 
 protected:
 

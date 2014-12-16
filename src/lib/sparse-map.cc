@@ -82,8 +82,8 @@ SparseMap operator-(const SparseMap & lhs, const SparseMap & rhs) {
     return ret;
 }
 
-double operator*(const SparseMap & lhs, const SparseMap & rhs) {
-    double ret = 0;
+Real operator*(const SparseMap & lhs, const SparseMap & rhs) {
+    Real ret = 0;
     if(lhs.size() <= rhs.size()) {
         BOOST_FOREACH(const SparsePair & val, lhs) {
             SparseMap::const_iterator it = rhs.find(val.first);
@@ -100,15 +100,15 @@ double operator*(const SparseMap & lhs, const SparseMap & rhs) {
     return ret;
 }
 
-SparseMap operator*(const SparseMap & lhs, double rhs) {
+SparseMap operator*(const SparseMap & lhs, Real rhs) {
     SparseMap ret;
     BOOST_FOREACH(const SparsePair & val, lhs)
         ret[val.first] = val.second * rhs;
     return ret;
 }
 
-void NormalizeL1(SparseMap & weights, double denom) {
-    double curr = 0;
+void NormalizeL1(SparseMap & weights, Real denom) {
+    Real curr = 0;
     BOOST_FOREACH(const SparsePair & val, weights)
         curr += abs(val.second);
     if(curr == 0) return;
@@ -139,7 +139,7 @@ SparseVector::SparseVector(const std::vector<SparsePair> & vec) : impl_(vec) {
 }
 
 // Add a single value
-void SparseVector::Add(int k, double v) {
+void SparseVector::Add(int k, Real v) {
     if(v == 0) return;
     SparseVectorImpl::iterator b = impl_.begin(), e = impl_.end(), n;
     while(1) {
@@ -158,7 +158,7 @@ void SparseVector::Add(int k, double v) {
         }
     }
 }
-// void SparseVector::Add(const string & str, double v) {
+// void SparseVector::Add(const string & str, Real v) {
 //     Add(Dict::WID(str), v);
 // }
 
@@ -250,7 +250,7 @@ SparseVector operator+(const SparseVector & lhs, const SparseVector & rhs) {
                 impl.push_back(*itl);
             itl++;
         } else {
-            double val = itl->second + itr->second;
+            Real val = itl->second + itr->second;
             if(val != 0)
                 impl.push_back(make_pair(itl->first, val));
             itl++; itr++;
@@ -283,7 +283,7 @@ SparseVector operator-(const SparseVector & lhs, const SparseVector & rhs) {
                 impl.push_back(*itl);
             itl++;
         } else {
-            double val = itl->second - itr->second;
+            Real val = itl->second - itr->second;
             if(val != 0)
                 impl.push_back(make_pair(itl->first, val));
             itl++; itr++;
@@ -292,10 +292,10 @@ SparseVector operator-(const SparseVector & lhs, const SparseVector & rhs) {
     return ret;
 }
 
-double operator*(const SparseVector & lhs, const SparseVector & rhs) {
+Real operator*(const SparseVector & lhs, const SparseVector & rhs) {
     SparseVector::SparseVectorImpl::const_iterator itl = lhs.begin();
     SparseVector::SparseVectorImpl::const_iterator itr = rhs.begin();
-    double ret = 0;
+    Real ret = 0;
     while(itr != rhs.end() && itl != lhs.end()) {
         if(itl->first == itr->first) {
             ret += itl->second * itr->second;
@@ -309,15 +309,15 @@ double operator*(const SparseVector & lhs, const SparseVector & rhs) {
     return ret;
 }
 
-SparseVector operator*(const SparseVector & lhs, double rhs) {
+SparseVector operator*(const SparseVector & lhs, Real rhs) {
     SparseVector ret = lhs;
     BOOST_FOREACH(SparsePair & val, ret.GetImpl())
         val.second *= rhs;
     return ret;
 }
 
-double operator*(const SparseMap & lhs, const SparseVector & rhs) {
-    double ret = 0;
+Real operator*(const SparseMap & lhs, const SparseVector & rhs) {
+    Real ret = 0;
     BOOST_FOREACH(SparsePair val, rhs.GetImpl()) {
         SparseMap::const_iterator it = lhs.find(val.first);
         if(it != lhs.end())

@@ -36,19 +36,19 @@ void RescorerRunner::Rescore(RescorerNbest & nbest) {
         }
 
         // First get the maximum probability
-        double max_score = -DBL_MAX;
+        Real max_score = -REAL_MAX;
         BOOST_FOREACH(RescorerNbestElement & elem, nbest)
             max_score = max(max_score, elem.score);
         // Convert to probabilities and and sum
-        double sum = 0;
+        Real sum = 0;
         BOOST_FOREACH(RescorerNbestElement & elem, nbest) {
             elem.score = exp( (elem.score-max_score)*mbr_scale_ );
             sum += elem.score;
         }
 
         // A map with the probability/expected BLEU of each sentence
-        typedef pair<const Sentence, pair<double,double> > SentProbExp; 
-        std::map<Sentence, pair<double,double> > prob_exp; 
+        typedef pair<const Sentence, pair<Real,Real> > SentProbExp; 
+        std::map<Sentence, pair<Real,Real> > prob_exp; 
 
         // Calculate probabilities
         for(int i = 0; i < (int)nbest.size(); i++)
@@ -128,7 +128,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
     // Create an evaluation measure for MBR if necessary
     if(config.GetString("mbr_eval") != "") {
         mbr_eval_.reset(EvalMeasureLoader::CreateMeasureFromString(config.GetString("mbr_eval")));
-        mbr_scale_ = config.GetDouble("mbr_scale");
+        mbr_scale_ = config.GetReal("mbr_scale");
         mbr_hyp_cnt_ = config.GetInt("mbr_hyp_cnt");
     }
 
@@ -151,7 +151,7 @@ void RescorerRunner::Run(const ConfigRescorer & config) {
         last_id = id;
         nbest.push_back(RescorerNbestElement(Dict::ParseWords(columns[1]), 
                                              Dict::ParseSparseVector(columns[3]),
-                                             boost::lexical_cast<double>(columns[2])));
+                                             boost::lexical_cast<Real>(columns[2])));
     }
     Rescore(nbest);
     Print(nbest);

@@ -22,7 +22,7 @@ using namespace boost;
 using namespace travatar;
 
 // Tune new weights using online learning
-double TuneOnline::RunTuning(SparseMap & kv) {
+Real TuneOnline::RunTuning(SparseMap & kv) {
     PRINT_DEBUG("Starting Online Learning Run: " << Dict::PrintSparseMap(kv) << endl, 2);
 
     // Create a weight adjuster
@@ -86,7 +86,7 @@ double TuneOnline::RunTuning(SparseMap & kv) {
             vector<ExamplePair> nbest = examp.CalculateNbest(*weights);
             
             // Calculate the scores
-            vector<pair<double, double> > scores(nbest.size());
+            vector<pair<Real, Real> > scores(nbest.size());
             vector<SparseVector*> feats(nbest.size());
             PRINT_DEBUG("CURRENT: " << Dict::PrintSparseMap(weights->GetCurrent()) << endl, 3);
             for(int i = 0; i < (int)nbest.size(); i++) {

@@ -3,6 +3,7 @@
 
 #include <travatar/sentence.h>
 #include <travatar/cfg-data.h>
+#include <travatar/real.h>
 #include <boost/shared_ptr.hpp>
 #include <cfloat>
 #include <climits>
@@ -16,7 +17,7 @@ class HyperGraph;
 
 // An interface for holding stats for a particular evaluation measure
 class EvalStats;
-typedef double EvalStatsDataType;
+typedef Real EvalStatsDataType;
 typedef boost::shared_ptr<EvalStats> EvalStatsPtr;
 class EvalStats {
 public:
@@ -24,7 +25,7 @@ public:
     EvalStats(const std::vector<EvalStatsDataType> & vals) : vals_(vals) { }
     virtual ~EvalStats() { }
     // ConvertToScore takes the stats and converts them into a score
-    virtual double ConvertToScore() const = 0;
+    virtual Real ConvertToScore() const = 0;
     // Clone is a utility function that basically calls the constructor of
     // child classes, as this functionality is not included in C++
     virtual EvalStatsPtr Clone() const = 0;
@@ -35,7 +36,7 @@ public:
     // Utility functions
     virtual std::string ConvertToString() const;
     virtual EvalStats & PlusEquals(const EvalStats & rhs);
-    virtual EvalStats & PlusEqualsTimes(const EvalStats & rhs, double p);
+    virtual EvalStats & PlusEqualsTimes(const EvalStats & rhs, Real p);
     virtual EvalStats & TimesEquals(EvalStatsDataType mult);
     virtual EvalStatsPtr Plus(const EvalStats & rhs);
     virtual EvalStatsPtr Times(EvalStatsDataType mult);
@@ -61,16 +62,16 @@ inline std::ostream &operator<<( std::ostream &out, const EvalStats &L ) {
 // Simple sentence-averaged stats
 class EvalStatsAverage : public EvalStats {
 public:
-    EvalStatsAverage(double val = 0.0, double denom = 1.0) {
+    EvalStatsAverage(Real val = 0.0, Real denom = 1.0) {
         vals_.resize(2);
         vals_[0] = val;
         vals_[1] = denom;
     }
-    double ConvertToScore() const { return vals_[1] ? vals_[0]/vals_[1] : 0; }
+    Real ConvertToScore() const { return vals_[1] ? vals_[0]/vals_[1] : 0; }
     EvalStatsPtr Clone() const { return EvalStatsPtr(new EvalStatsAverage(vals_[0], vals_[1])); }
     virtual std::string GetIdString() const { return "AVG"; }
     // Getters
-    double GetVal() const { return vals_[0]; }
+    Real GetVal() const { return vals_[0]; }
     int GetDenom() const { return vals_[1]; }
 private:
 };

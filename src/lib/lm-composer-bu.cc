@@ -75,7 +75,7 @@ LMComposerBUFunc * LMComposerBUFunc::CreateFromType(lm::ngram::ModelType type) {
 }
 
 template <class LMType>
-pair<double,int> LMComposerBUFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
+pair<Real,int> LMComposerBUFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
     // Get the rule score for the appropriate model
     RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
     int unk = 0;
@@ -98,7 +98,7 @@ pair<double,int> LMComposerBUFuncTemplate<LMType>::CalcNontermScore(const LMData
 }
 
 template <class LMType>
-double LMComposerBUFuncTemplate<LMType>::CalcFinalScore(const void * lm, const ChartState & prev_state) {
+Real LMComposerBUFuncTemplate<LMType>::CalcFinalScore(const void * lm, const ChartState & prev_state) {
     ChartState my_state;
     RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(lm), my_state);
     my_rule_score.BeginSentence();
@@ -120,7 +120,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
     chart[id].reset(new ChartEntry);
     ChartEntry & my_chart = *chart[id].get();
     // The priority queue of values yet to be expanded
-    priority_queue<pair<double, vector<int> > > hypo_queue;
+    priority_queue<pair<Real, vector<int> > > hypo_queue;
     // The hypothesis combination map
     map<vector<ChartState>, HyperNode*> hypo_comb;
     map<HyperNode*, vector<ChartState> > hypo_rev;
@@ -133,19 +133,19 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
         HyperEdge * my_edge = node_edges[i];
         vector<int> q_id(my_edge->GetTails().size()+1);
         q_id[0] = i;
-        double viterbi_score = my_edge->GetScore();
+        Real viterbi_score = my_edge->GetScore();
         for(int j = 1; j < (int)q_id.size(); j++) {
             q_id[j] = 0;
             const ChartEntry & my_entry = BuildChartCubePruning(parse, chart, states, my_edge->GetTail(j-1)->GetId(), rule_graph);
             // For empty nodes, break
             if(my_entry.size() == 0) {
-                viterbi_score = -DBL_MAX;
+                viterbi_score = -REAL_MAX;
                 break;
             } else {
                 viterbi_score += my_entry[0]->CalcViterbiScore();
             }
         }
-        if(viterbi_score != -DBL_MAX)
+        if(viterbi_score != -REAL_MAX)
             hypo_queue.push(make_pair(viterbi_score, q_id));
     }
     // For each edge on the queue, process it
@@ -153,7 +153,7 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
     while(hypo_queue.size() != 0) {
         if(num_popped++ >= stack_pop_limit_) break;
         // Get the score, id string, and edge
-        double top_score = hypo_queue.top().first;
+        Real top_score = hypo_queue.top().first;
         vector<int> id_str = hypo_queue.top().second;
         const HyperEdge * id_edge = nodes[id]->GetEdge(id_str[0]);
         // cerr << "Processing ID string: " << id_str << endl;
@@ -179,18 +179,18 @@ const ChartEntry & LMComposerBU::BuildChartCubePruning(
                 next_str[curr_id+1]++;
                 if(finished.find(next_str) == finished.end()) {
                     finished.insert(next_str);
-                    double next_score = top_score - my_entry[edge_pos]->CalcViterbiScore() + my_entry[edge_pos+1]->CalcViterbiScore();
+                    Real next_score = top_score - my_entry[edge_pos]->CalcViterbiScore() + my_entry[edge_pos+1]->CalcViterbiScore();
                     hypo_queue.push(make_pair(next_score, next_str));
                 }
             }
         }
         // *** Actually step through in target order, scoring
-        double total_score = 0;
+        Real total_score = 0;
         vector<SparsePair> lm_features;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
 
-            pair<double,int> lm_scores = funcs_[lm_id]->CalcNontermScore(data, id_edge->GetTrgData()[data->GetFactor()].words, next_edge->GetTails(), states, lm_id, my_state[lm_id]);
+            pair<Real,int> lm_scores = funcs_[lm_id]->CalcNontermScore(data, id_edge->GetTrgData()[data->GetFactor()].words, next_edge->GetTails(), states, lm_id, my_state[lm_id]);
             // Add to the features and the score
             total_score += lm_scores.first * data->GetWeight() + lm_scores.second * data->GetUnkWeight();
             if(lm_scores.first != 0.0)
@@ -270,7 +270,7 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
         HyperEdge * edge = new HyperEdge(root);
         edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
         edge->AddTail(node);
-        double total_score = 0;
+        Real total_score = 0;
         for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
             LMData* data = lm_data_[lm_id];
             // ChartState my_state;
@@ -278,8 +278,8 @@ HyperGraph * LMComposerBU::TransformGraph(const HyperGraph & parse) const {
             // my_rule_score.BeginSentence();
             // my_rule_score.NonTerminal(states[node->GetId()][lm_id], 0);
             // my_rule_score.Terminal(static_cast<LMType*>(data->GetLM())->GetVocabulary().Index("</s>"));
-            // double my_score = my_rule_score.Finish();
-            double my_score = funcs_[lm_id]->CalcFinalScore(data->GetLM(), states[node->GetId()][lm_id]);
+            // Real my_score = my_rule_score.Finish();
+            Real my_score = funcs_[lm_id]->CalcFinalScore(data->GetLM(), states[node->GetId()][lm_id]);
             if(my_score != 0.0)
                 edge->GetFeatures().Add(data->GetFeatureName(), my_score);
             total_score += my_score * data->GetWeight();

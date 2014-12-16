@@ -19,11 +19,11 @@ using namespace travatar;
 //  EMNLP 2012
 // and tune the weights using online learning
 void WeightsOnlinePro::AdjustNbest(
-        const std::vector<std::pair<double,double> > & scores,
+        const std::vector<std::pair<Real,Real> > & scores,
         const std::vector<SparseVector*> & features) {
     boost::mt19937 gen(time(0));
     // Sampling algorithm 1
-    vector<pair<double,pair<int,int> > > samples;
+    vector<pair<Real,pair<int,int> > > samples;
     for(int i = 0; i < num_samples_; i++) {
         int id1 = gen() % scores.size(),
             id2 = gen() % scores.size();
@@ -31,8 +31,8 @@ void WeightsOnlinePro::AdjustNbest(
         if(scores[id2].second > scores[id1].second)
             swap(id1, id2);
         // If the difference is big enough, and probability
-        double diff = (scores[id1].second-scores[id2].second) * alpha_scale_;
-        if( diff > diff_threshold_ && ((double)gen())/RAND_MAX < diff )
+        Real diff = (scores[id1].second-scores[id2].second) * alpha_scale_;
+        if( diff > diff_threshold_ && ((Real)gen())/RAND_MAX < diff )
             samples.push_back(
                 make_pair(scores[id2].second - scores[id1].second,
                     make_pair(id1,id2)));

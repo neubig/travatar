@@ -2,6 +2,7 @@
 #define RULE_FILTER_H__
 
 #include <travatar/sentence.h>
+#include <travatar/real.h>
 #include <cmath>
 #include <cfloat>
 
@@ -41,7 +42,7 @@ public:
 class CountFilter : public RuleFilter {
 public:
     
-    CountFilter(double prob_thresh) : score_thresh_(prob_thresh ? log(prob_thresh) : -DBL_MAX) { }
+    CountFilter(Real prob_thresh) : score_thresh_(prob_thresh ? log(prob_thresh) : -REAL_MAX) { }
     virtual ~CountFilter() { };
 
     virtual bool PassesFilter(
@@ -49,7 +50,7 @@ public:
         const Sentence & src_sent,
         const Sentence & trg_sent) const;
 private:
-    double score_thresh_;
+    Real score_thresh_;
 };
 
 // Don't return rules greater than a certain length

@@ -33,6 +33,10 @@
 extern "C" {
 #endif/*__cplusplus*/
 
+#ifdef TRAVATAR_REAL_FLOAT
+#define LBFGS_FLOAT     32
+#endif
+
 /*
  * The default precision of floating point values is 64bit (double).
  */
