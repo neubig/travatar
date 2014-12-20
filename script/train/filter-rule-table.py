@@ -135,7 +135,7 @@ def parseRule(line):
     rhsSourceSymbols = calcTravatarRHS(cols[0])
     ruleCount = None
     if len(cols) > 4:
-        counts = cols[4].split()
+        counts = cols[3].split()
         if len(counts) == 3:
             ruleCount = float(counts[2])
     return (rhsSourceSymbols, ruleCount)
