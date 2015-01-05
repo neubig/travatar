@@ -73,7 +73,7 @@ if($NO_FILTER_RT) {
     safesystem("cp $TRAVATAR_CONFIG $WORKING_DIR/run1.ini");
 } else {
     my $format = ($IN_FORMAT ? "-src-format $IN_FORMAT" : "");
-    safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rt.pl -src $SRC $format\"") or die "Couldn't filter";
+    safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rule-table.py $SRC\"") or die "Couldn't filter";
 }
 
 # Find the weights contained in the model
