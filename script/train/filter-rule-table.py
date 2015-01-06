@@ -22,7 +22,8 @@
 # including JJ, with varying probabilities, so removing the rule would
 # be a bad idea.)
 
-import optparse
+#import optparse
+import argparse
 import sys
 
 class NGram(tuple):
@@ -35,25 +36,31 @@ class Gap:
     def getMinSpan(self):
         return self.minSpan
 
-def printUsage():
-    sys.stderr.write("Usage: filter-rule-table.py [--min-non-initial-rule-count=N] INPUT")
-
 def main():
-    parser = optparse.OptionParser()
-    parser.add_option("-c", "--min-non-initial-rule-count",
-                      action="store", dest="minCount",
-                      type="float", default="0.0",
-                      help="prune non-initial rules where count is below N",
-                      metavar="N")
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        printUsage()
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--min-non-initial-rule-count",
+                        dest="minCount",
+                        type=float, default="0.0",
+                        help="prune non-initial rules where count is below N",
+                        metavar="N")
+    parser.add_argument("-f", "--format",
+                        dest="format",
+                        choices=['penn', 'egret', 'word', 'guess'],
+                        default='guess',
+                        help="format of input file")
+    parser.add_argument("src",
+                        type=str,
+                        help="input text for filtering")
+    args = parser.parse_args()
     N = 10
     inputSentences = []
-    for line in open(args[0]):
+    for line in open(args.src):
         inputSentences.append(line.split())
-    filterRuleTable(sys.stdin, inputSentences, N, options)
+    if args.format == 'guess':
+        args.format = guessFormat(inputSentences)
+    if args.format != 'word':
+        inputSentences = cleanSentences(inputSentences, args)
+    filterRuleTable(sys.stdin, inputSentences, N, args)
 
 def filterRuleTable(ruleTable, inputSentences, N, options):
     # Map each input n-gram (n = 1..N) to a map from sentence indices to
@@ -81,18 +88,18 @@ def filterRuleTable(ruleTable, inputSentences, N, options):
         # filter or not (unless it was pruned before checking).
         if rhs == prevRHS and prevRuleIncluded != None:
             if prevRuleIncluded:
-                print line,
+                sys.stdout.write(line)
             continue
         prevRHS = rhs
         # <s> and </s> can appear in glue rules.
         if rhs[0] == "<s>" or rhs[-1] == "</s>":
-            print line,
+            sys.stdout.write(line)
             prevRuleIncluded = True
             continue
         segments = segmentRHS(rhs, N)
         ngramMaps = [occurrences.get(s, {}) for s in segments if isinstance(s, NGram)]
         if len(ngramMaps) == 0:
-            print line,
+            sys.stdout.write(line)
             prevRuleIncluded = True
             continue
         # Determine the sentences in which all n-grams co-occur.
@@ -105,7 +112,7 @@ def filterRuleTable(ruleTable, inputSentences, N, options):
             sentenceLength = len(inputSentences[sentenceIndex])
             for indexSeq in enumerateIndexSeqs(ngramMaps, sentenceIndex, 0):
                 if matchSegments(segments, indexSeq, sentenceLength):
-                    print line,
+                    sys.stdout.write(line)
                     match = True
                     break
             if match:
@@ -216,5 +223,32 @@ def enumerateIndexSeqs(ngramMaps, sentenceIndex, minFirstIndex):
             assert seq[0] > index
             yield [index] + seq
 
+def guessFormat(inputSentences):
+    if inputSentences[0] == ['sentence', '1', ':']:
+        return 'egret'
+    elif inputSentences[0][0][0] == '(':
+        return 'penn'
+    else:
+        return 'word'
+
+def cleanSentences(inputSentences, options):
+    sentences = []
+    if options.format == 'penn':
+        for sentence in inputSentences:
+            cleaned = []
+            for elem in sentence:
+                if elem[-1] == ')':
+                    cleaned.append( elem.rstrip(')') )
+            if cleaned:
+                sentences.append(cleaned)
+    elif options.format == 'egret':
+        for i, sentence in enumerate(inputSentences):
+            if len(sentence) == 3 and sentence[0] == 'sentence' and sentence[-1] == ':':
+                sentences.append(inputSentences[i+1])
+    else:
+        assert False
+    return sentences
+
 if __name__ == "__main__":
     main()
+
