@@ -4,6 +4,7 @@
 *.a
 *.tar.gz
 *.swp
+*.dSYM
 .deps
 .libs
 .dirstamp
