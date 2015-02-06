@@ -20,7 +20,6 @@ lmplz_LDADD = libklm.la ../util/libklm_util.la ${LDLIBS}
 
 lib_LTLIBRARIES = libklm.la
 
-libklm_la_SOURCES = bhiksha.cc binary_format.cc config.cc fragment_main.cc lm_exception.cc model.cc quantize.cc read_arpa.cc search_hashed.cc search_trie.cc sizes.cc trie.cc trie_sort.cc value_build.cc virtual_interface.cc vocab.cc builder/adjust_counts.cc builder/corpus_count.cc builder/initial_probabilities.cc builder/interpolate.cc builder/pipeline.cc builder/print.cc 
+libklm_la_SOURCES = bhiksha.cc binary_format.cc builder/adjust_counts.cc builder/corpus_count.cc builder/initial_probabilities.cc builder/interpolate.cc builder/output.cc builder/pipeline.cc builder/print.cc config.cc filter/arpa_io.cc filter/phrase.cc filter/vocab.cc lm_exception.cc model.cc quantize.cc read_arpa.cc search_hashed.cc search_trie.cc sizes.cc trie.cc trie_sort.cc value_build.cc virtual_interface.cc vocab.cc
 
-AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) $(BOOST_CPPFLAGS) -I$(srcdir)/..
-
+AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) $(BOOST_CPPFLAGS) -I$(srcdir)/.. 

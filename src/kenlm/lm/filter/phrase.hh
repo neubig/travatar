@@ -1,5 +1,5 @@
-#ifndef LM_FILTER_PHRASE_H__
-#define LM_FILTER_PHRASE_H__
+#ifndef LM_FILTER_PHRASE_H
+#define LM_FILTER_PHRASE_H
 
 #include "util/murmur_hash.hh"
 #include "util/string_piece.hh"
@@ -103,11 +103,33 @@ template <class Iterator> void MakeHashes(Iterator i, const Iterator &end, std::
   }
 }
 
+class Vertex;
+class Arc;
+
+class ConditionCommon {
+  protected:
+    ConditionCommon(const Substrings &substrings);
+    ConditionCommon(const ConditionCommon &from);
+
+    ~ConditionCommon();
+
+    detail::Vertex &MakeGraph();
+
+    // Temporaries in PassNGram and Evaluate to avoid reallocation.
+    std::vector<Hash> hashes_;
+
+  private:
+    std::vector<detail::Vertex> vertices_;
+    std::vector<detail::Arc> arcs_;
+
+    const Substrings &substrings_;
+};
+
 } // namespace detail
 
-class Union {
+class Union : public detail::ConditionCommon {
   public:
-    explicit Union(const Substrings &substrings) : substrings_(substrings) {}
+    explicit Union(const Substrings &substrings) : detail::ConditionCommon(substrings) {}
 
     template <class Iterator> bool PassNGram(const Iterator &begin, const Iterator &end) {
       detail::MakeHashes(begin, end, hashes_);
@@ -116,23 +138,19 @@ class Union {
 
   private:
     bool Evaluate();
-
-    std::vector<Hash> hashes_;
-
-    const Substrings &substrings_;
 };
 
-class Multiple {
+class Multiple : public detail::ConditionCommon {
   public:
-    explicit Multiple(const Substrings &substrings) : substrings_(substrings) {}
+    explicit Multiple(const Substrings &substrings) : detail::ConditionCommon(substrings) {}
 
     template <class Iterator, class Output> void AddNGram(const Iterator &begin, const Iterator &end, const StringPiece &line, Output &output) {
       detail::MakeHashes(begin, end, hashes_);
       if (hashes_.empty()) {
         output.AddNGram(line);
-        return;
+      } else {
+        Evaluate(line, output);
       }
-      Evaluate(line, output);
     }
 
     template <class Output> void AddNGram(const StringPiece &ngram, const StringPiece &line, Output &output) {
@@ -143,12 +161,8 @@ class Multiple {
 
   private:
     template <class Output> void Evaluate(const StringPiece &line, Output &output);
-
-    std::vector<Hash> hashes_;
-
-    const Substrings &substrings_;
 };
 
 } // namespace phrase
 } // namespace lm
-#endif // LM_FILTER_PHRASE_H__
+#endif // LM_FILTER_PHRASE_H

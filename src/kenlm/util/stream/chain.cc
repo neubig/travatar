@@ -59,6 +59,11 @@ Chain &Chain::operator>>(const WriteAndRecycle &writer) {
   return *this;
 }
 
+Chain &Chain::operator>>(const PWriteAndRecycle &writer) {
+  threads_.push_back(new Thread(Complete(), writer));
+  return *this;
+}
+
 void Chain::Wait(bool release_memory) {
   if (queues_.empty()) {
     assert(threads_.empty());
@@ -123,10 +128,15 @@ Link::~Link() {
   if (current_) {
     // Probably an exception unwinding.  
     std::cerr << "Last input should have been poison." << std::endl;
-//    abort();
+    // abort();
   } else {
     if (!poisoned_) {
-      // Pass the poison!
+      // Poison is a block whose memory pointer is NULL.
+      //
+      // Because we're in the else block,
+      //   we know that the memory pointer of current_ is NULL.
+      //
+      // Pass the current (poison) block!
       out_->Produce(current_);
     }
   }

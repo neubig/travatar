@@ -1,53 +1,100 @@
 #include "lm/ngram_query.hh"
+#include "util/getopt.hh"
 
 #ifdef WITH_NPLM
 #include "lm/wrappers/nplm.hh"
 #endif
 
+#include <stdlib.h>
+
+void Usage(const char *name) {
+  std::cerr <<
+    "KenLM was compiled with maximum order " << KENLM_MAX_ORDER << ".\n"
+    "Usage: " << name << " [-n] [-s] lm_file\n"
+    "-n: Do not wrap the input in <s> and </s>.\n"
+    "-s: Sentence totals only.\n"
+    "-l lazy|populate|read|parallel: Load lazily, with populate, or malloc+read\n"
+    "The default loading method is populate on Linux and read on others.\n";
+  exit(1);
+}
+
 int main(int argc, char *argv[]) {
-  if (!(argc == 2 || (argc == 3 && !strcmp(argv[2], "null")))) {
-    std::cerr << "KenLM was compiled with maximum order " << KENLM_MAX_ORDER << "." << std::endl;
-    std::cerr << "Usage: " << argv[0] << " lm_file [null]" << std::endl;
-    std::cerr << "Input is wrapped in <s> and </s> unless null is passed." << std::endl;
-    return 1;
+  if (argc == 1 || (argc == 2 && !strcmp(argv[1], "--help")))
+    Usage(argv[0]);
+
+  lm::ngram::Config config;
+  bool sentence_context = true;
+  bool show_words = true;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "hnsl:")) != -1) {
+    switch (opt) {
+      case 'n':
+        sentence_context = false;
+        break;
+      case 's':
+        show_words = false;
+        break;
+      case 'l':
+        if (!strcmp(optarg, "lazy")) {
+          config.load_method = util::LAZY;
+        } else if (!strcmp(optarg, "populate")) {
+          config.load_method = util::POPULATE_OR_READ;
+        } else if (!strcmp(optarg, "read")) {
+          config.load_method = util::READ;
+        } else if (!strcmp(optarg, "parallel")) {
+          config.load_method = util::PARALLEL_READ;
+        } else {
+          Usage(argv[0]);
+        }
+        break;
+      case 'h':
+      default:
+        Usage(argv[0]);
+    }
   }
+  if (optind + 1 != argc)
+    Usage(argv[0]);
+  const char *file = argv[optind];
   try {
-    bool sentence_context = (argc == 2);
     using namespace lm::ngram;
     ModelType model_type;
-    if (RecognizeBinary(argv[1], model_type)) {
+    if (RecognizeBinary(file, model_type)) {
       switch(model_type) {
         case PROBING:
-          Query<lm::ngram::ProbingModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<lm::ngram::ProbingModel>(file, config, sentence_context, show_words);
           break;
         case REST_PROBING:
-          Query<lm::ngram::RestProbingModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<lm::ngram::RestProbingModel>(file, config, sentence_context, show_words);
           break;
         case TRIE:
-          Query<TrieModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<TrieModel>(file, config, sentence_context, show_words);
           break;
         case QUANT_TRIE:
-          Query<QuantTrieModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<QuantTrieModel>(file, config, sentence_context, show_words);
           break;
         case ARRAY_TRIE:
-          Query<ArrayTrieModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<ArrayTrieModel>(file, config, sentence_context, show_words);
           break;
         case QUANT_ARRAY_TRIE:
-          Query<QuantArrayTrieModel>(argv[1], sentence_context, std::cin, std::cout);
+          Query<QuantArrayTrieModel>(file, config, sentence_context, show_words);
           break;
         default:
           std::cerr << "Unrecognized kenlm model type " << model_type << std::endl;
           abort();
       }
 #ifdef WITH_NPLM
-    } else if (lm::np::Model::Recognize(argv[1])) {
-      lm::np::Model model(argv[1]);
-      Query(model, sentence_context, std::cin, std::cout);
+    } else if (lm::np::Model::Recognize(file)) {
+      lm::np::Model model(file);
+      if (show_words) {
+        Query<lm::np::Model, lm::ngram::FullPrint>(model, sentence_context);
+      } else {
+        Query<lm::np::Model, lm::ngram::BasicPrint>(model, sentence_context);
+      }
 #endif
     } else {
-      Query<ProbingModel>(argv[1], sentence_context, std::cin, std::cout);
+      Query<ProbingModel>(file, config, sentence_context, show_words);
     }
-    std::cerr << "Total time including destruction:\n";
     util::PrintUsage(std::cerr);
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;

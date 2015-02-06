@@ -2,9 +2,10 @@
 
 #include "lm/builder/adjust_counts.hh"
 #include "lm/builder/corpus_count.hh"
+#include "lm/builder/hash_gamma.hh"
 #include "lm/builder/initial_probabilities.hh"
 #include "lm/builder/interpolate.hh"
-#include "lm/builder/print.hh"
+#include "lm/builder/output.hh"
 #include "lm/builder/sort.hh"
 
 #include "lm/sizes.hh"
@@ -15,15 +16,19 @@
 
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 namespace lm { namespace builder {
 
 namespace {
-void PrintStatistics(const std::vector<uint64_t> &counts, const std::vector<Discount> &discounts) {
+void PrintStatistics(const std::vector<uint64_t> &counts, const std::vector<uint64_t> &counts_pruned, const std::vector<Discount> &discounts) {
   std::cerr << "Statistics:\n";
   for (size_t i = 0; i < counts.size(); ++i) {
-    std::cerr << (i + 1) << ' ' << counts[i];
+    std::cerr << (i + 1) << ' ' << counts_pruned[i];
+    if(counts[i] != counts_pruned[i])
+       std::cerr << "/" << counts[i];
+
     for (size_t d = 1; d <= 3; ++d)
       std::cerr << " D" << d << (d == 3 ? "+=" : "=") << discounts[i].amount[d];
     std::cerr << '\n';
@@ -32,14 +37,14 @@ void PrintStatistics(const std::vector<uint64_t> &counts, const std::vector<Disc
 
 class Master {
   public:
-    explicit Master(const PipelineConfig &config) 
+    explicit Master(PipelineConfig &config) 
       : config_(config), chains_(config.order), files_(config.order) {
       config_.minimum_block = std::max(NGram::TotalSize(config_.order), config_.minimum_block);
     }
 
     const PipelineConfig &Config() const { return config_; }
 
-    Chains &MutableChains() { return chains_; }
+    util::stream::Chains &MutableChains() { return chains_; }
 
     template <class T> Master &operator>>(const T &worker) {
       chains_ >> worker;
@@ -64,7 +69,7 @@ class Master {
     }
 
     // For initial probabilities, but this is generic.
-    void SortAndReadTwice(const std::vector<uint64_t> &counts, Sorts<ContextOrder> &sorts, Chains &second, util::stream::ChainConfig second_config) {
+    void SortAndReadTwice(const std::vector<uint64_t> &counts, Sorts<ContextOrder> &sorts, util::stream::Chains &second, util::stream::ChainConfig second_config) {
       // Do merge first before allocating chain memory.
       for (std::size_t i = 1; i < config_.order; ++i) {
         sorts[i - 1].Merge(0);
@@ -196,14 +201,14 @@ class Master {
       std::cerr << std::endl;
     }
 
-    PipelineConfig config_;
+    PipelineConfig &config_;
 
-    Chains chains_;
+    util::stream::Chains chains_;
     // Often only unigrams, but sometimes all orders.  
-    FixedArray<util::stream::FileBuffer> files_;
+    util::FixedArray<util::stream::FileBuffer> files_;
 };
 
-void CountText(int text_file /* input */, int vocab_file /* output */, Master &master, uint64_t &token_count, std::string &text_file_name) {
+void CountText(int text_file /* input */, int vocab_file /* output */, Master &master, uint64_t &token_count, std::string &text_file_name, std::vector<bool> &prune_words) {
   const PipelineConfig &config = master.Config();
   std::cerr << "=== 1/5 Counting and sorting n-grams ===" << std::endl;
 
@@ -221,7 +226,7 @@ void CountText(int text_file /* input */, int vocab_file /* output */, Master &m
   WordIndex type_count = config.vocab_estimate;
   util::FilePiece text(text_file, NULL, &std::cerr);
   text_file_name = text.FileName();
-  CorpusCount counter(text, vocab_file, token_count, type_count, chain.BlockSize() / chain.EntrySize());
+  CorpusCount counter(text, vocab_file, token_count, type_count, prune_words, config.prune_vocab_file, chain.BlockSize() / chain.EntrySize(), config.disallowed_symbol_action);
   chain >> boost::ref(counter);
 
   util::stream::Sort<SuffixOrder, AddCombiner> sorter(chain, config.sort, SuffixOrder(config.order), AddCombiner());
@@ -231,21 +236,22 @@ void CountText(int text_file /* input */, int vocab_file /* output */, Master &m
   master.InitForAdjust(sorter, type_count);
 }
 
-void InitialProbabilities(const std::vector<uint64_t> &counts, const std::vector<Discount> &discounts, Master &master, Sorts<SuffixOrder> &primary, FixedArray<util::stream::FileBuffer> &gammas) {
+void InitialProbabilities(const std::vector<uint64_t> &counts, const std::vector<uint64_t> &counts_pruned, const std::vector<Discount> &discounts, Master &master, Sorts<SuffixOrder> &primary,
+                          util::FixedArray<util::stream::FileBuffer> &gammas, const std::vector<uint64_t> &prune_thresholds, bool prune_vocab) {
   const PipelineConfig &config = master.Config();
-  Chains second(config.order);
+  util::stream::Chains second(config.order);
 
   {
     Sorts<ContextOrder> sorts;
     master.SetupSorts(sorts);
-    PrintStatistics(counts, discounts);
-    lm::ngram::ShowSizes(counts);
+    PrintStatistics(counts, counts_pruned, discounts);
+    lm::ngram::ShowSizes(counts_pruned);
     std::cerr << "=== 3/5 Calculating and sorting initial probabilities ===" << std::endl;
-    master.SortAndReadTwice(counts, sorts, second, config.initial_probs.adder_in);
+    master.SortAndReadTwice(counts_pruned, sorts, second, config.initial_probs.adder_in);
   }
 
-  Chains gamma_chains(config.order);
-  InitialProbabilities(config.initial_probs, discounts, master.MutableChains(), second, gamma_chains);
+  util::stream::Chains gamma_chains(config.order);
+  InitialProbabilities(config.initial_probs, discounts, master.MutableChains(), second, gamma_chains, prune_thresholds, prune_vocab);
   // Don't care about gamma for 0.  
   gamma_chains[0] >> util::stream::kRecycle;
   gammas.Init(config.order - 1);
@@ -257,26 +263,31 @@ void InitialProbabilities(const std::vector<uint64_t> &counts, const std::vector
   master.SetupSorts(primary);
 }
 
-void InterpolateProbabilities(const std::vector<uint64_t> &counts, Master &master, Sorts<SuffixOrder> &primary, FixedArray<util::stream::FileBuffer> &gammas) {
+void InterpolateProbabilities(const std::vector<uint64_t> &counts, Master &master, Sorts<SuffixOrder> &primary, util::FixedArray<util::stream::FileBuffer> &gammas) {
   std::cerr << "=== 4/5 Calculating and writing order-interpolated probabilities ===" << std::endl;
   const PipelineConfig &config = master.Config();
   master.MaximumLazyInput(counts, primary);
 
-  Chains gamma_chains(config.order - 1);
-  util::stream::ChainConfig read_backoffs(config.read_backoffs);
-  read_backoffs.entry_size = sizeof(float);
+  util::stream::Chains gamma_chains(config.order - 1);
   for (std::size_t i = 0; i < config.order - 1; ++i) {
+    util::stream::ChainConfig read_backoffs(config.read_backoffs);
+
+    if(config.prune_vocab || config.prune_thresholds[i + 1] > 0)
+        read_backoffs.entry_size = sizeof(HashGamma);
+    else
+        read_backoffs.entry_size = sizeof(float);
+
     gamma_chains.push_back(read_backoffs);
     gamma_chains.back() >> gammas[i].Source();
   }
-  master >> Interpolate(counts[0], ChainPositions(gamma_chains));
+  master >> Interpolate(std::max(master.Config().vocab_size_for_unk, counts[0] - 1 /* <s> is not included */), util::stream::ChainPositions(gamma_chains), config.prune_thresholds, config.prune_vocab, config.output_q);
   gamma_chains >> util::stream::kRecycle;
   master.BufferFinal(counts);
 }
 
 } // namespace
 
-void Pipeline(PipelineConfig config, int text_file, int out_arpa) {
+void Pipeline(PipelineConfig &config, int text_file, Output &output) {
   // Some fail-fast sanity checks.
   if (config.sort.buffer_size * 4 > config.TotalMemory()) {
     config.sort.buffer_size = config.TotalMemory() / 4;
@@ -291,32 +302,43 @@ void Pipeline(PipelineConfig config, int text_file, int out_arpa) {
       "Not enough memory to fit " << (config.order * config.block_count) << " blocks with minimum size " << config.minimum_block << ".  Increase memory to " << (config.minimum_block * config.order * config.block_count) << " bytes or decrease the minimum block size.");
 
   UTIL_TIMER("(%w s) Total wall time elapsed\n");
+
   Master master(config);
+  // master's destructor will wait for chains.  But they might be deadlocked if
+  // this thread dies because e.g. it ran out of memory.
+  try {
+    util::scoped_fd vocab_file(config.vocab_file.empty() ? 
+        util::MakeTemp(config.TempPrefix()) : 
+        util::CreateOrThrow(config.vocab_file.c_str()));
+    output.SetVocabFD(vocab_file.get());
+    uint64_t token_count;
+    std::string text_file_name;
+    
+    std::vector<bool> prune_words;
+    CountText(text_file, vocab_file.get(), master, token_count, text_file_name, prune_words);
+    
+    std::vector<uint64_t> counts;
+    std::vector<uint64_t> counts_pruned;
+    std::vector<Discount> discounts;
+    master >> AdjustCounts(config.prune_thresholds, counts, counts_pruned, prune_words, config.discount, discounts);
 
-  util::scoped_fd vocab_file(config.vocab_file.empty() ? 
-      util::MakeTemp(config.TempPrefix()) : 
-      util::CreateOrThrow(config.vocab_file.c_str()));
-  uint64_t token_count;
-  std::string text_file_name;
-  CountText(text_file, vocab_file.get(), master, token_count, text_file_name);
+    {
+      util::FixedArray<util::stream::FileBuffer> gammas;
+      Sorts<SuffixOrder> primary;
+      InitialProbabilities(counts, counts_pruned, discounts, master, primary, gammas, config.prune_thresholds, config.prune_vocab);
+      InterpolateProbabilities(counts_pruned, master, primary, gammas);
+    }
 
-  std::vector<uint64_t> counts;
-  std::vector<Discount> discounts;
-  master >> AdjustCounts(counts, discounts);
+    std::cerr << "=== 5/5 Writing ARPA model ===" << std::endl;
 
-  {
-    FixedArray<util::stream::FileBuffer> gammas;
-    Sorts<SuffixOrder> primary;
-    InitialProbabilities(counts, discounts, master, primary, gammas);
-    InterpolateProbabilities(counts, master, primary, gammas);
+    output.SetHeader(HeaderInfo(text_file_name, token_count, counts_pruned));
+    output.Apply(PROB_SEQUENTIAL_HOOK, master.MutableChains());
+    master >> util::stream::kRecycle;
+    master.MutableChains().Wait(true);
+  } catch (const util::Exception &e) {
+    std::cerr << e.what() << std::endl;
+    abort();
   }
-
-  std::cerr << "=== 5/5 Writing ARPA model ===" << std::endl;
-  VocabReconstitute vocab(vocab_file.get());
-  UTIL_THROW_IF(vocab.Size() != counts[0], util::Exception, "Vocab words don't match up.  Is there a null byte in the input?");
-  HeaderInfo header_info(text_file_name, token_count);
-  master >> PrintARPA(vocab, counts, (config.verbose_header ? &header_info : NULL), out_arpa) >> util::stream::kRecycle;
-  master.MutableChains().Wait(true);
 }
 
 }} // namespaces
