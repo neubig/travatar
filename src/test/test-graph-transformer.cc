@@ -193,13 +193,13 @@ BOOST_AUTO_TEST_CASE(TestCompoundWordSplitFiller) {
 "\n"
 "\\2-grams:\n"
 "-0.4372497	<s> jahr\n"
-"-0.4855544	<s> promotionszeit\n"
+"-0.4855544	<s> promotionzeit\n"
 "-0.1286666	jahr zeit\n"
 "-0.1286666	jahr promotion\n"
 "-0.4372497	zeit </s>\n"
 "-0.4855544	zeit jahreszeit\n"
 "-0.2108534	jahreszeit </s>\n"
-"-0.2108534	promotionszeit jahr" 
+"-0.2108534	promotionzeit jahr" 
 "\n"
 "\\end\\\n" << endl;
     arpa_out.close();
