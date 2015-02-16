@@ -44,6 +44,8 @@
 
 <h1>Training Travatar</h1>
 
+<p align=right><a href="training-guide-ja.html">日本語 (Japanese)</a></p>
+
 <p>
 This guide will take you through the steps required to create a translation model for Travatar.
 In particular, we will use English-Japanese translation as an example, but this should work for other languages as well.
@@ -62,12 +64,6 @@ cd ~/travatar-tutorial
 </pre>
 
 <p>
-In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, a <b>word aligner</b>, and a <b>language model toolkit</b>.
-In this tutorial, in addition to Travatar, we will use the <a href="http://github.com/odashi/Ckylark">Ckylark</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
-First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
-</p>
-
-<p>
 First, you must get the latest version of Travatar.
 Follow the directions on the <a href="index.html#download">download</a> page and place the compiled program in the <tt>travatar</tt> directory below <tt>travatar-tutorial</tt>.
 If you can run the following commands and get the help message, everything should be working properly.
@@ -77,6 +73,12 @@ If you can run the following commands and get the help message, everything shoul
 cd ~/travatar-tutorial
 travatar/src/bin/travatar --help
 </pre>
+
+<p>
+In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, and a <b>word aligner</b>.
+In this tutorial, in addition to Travatar, we will use the <a href="http://github.com/odashi/Ckylark">Ckylark</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
+First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
+</p>
 
 <p>
 For the Ckylark parser, first download the latest version from Github to the Ckylark directory.
@@ -91,11 +93,11 @@ make
 cd ~/travatar-tutorial
 </pre>
 
-<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.6, change the version number):</p>
+<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.7, change the version number):</p>
 
 <pre>
-tar -xzf kytea-0.4.6.tar.gz
-cd kytea-0.4.6
+tar -xzf kytea-0.4.7.tar.gz
+cd kytea-0.4.7
 ./configure --prefix=$HOME/travatar-tutorial/usr
 make
 make install
@@ -114,7 +116,7 @@ cp GIZA++-v2/GIZA++ GIZA++-v2/*.out mkcls-v2/mkcls .
 cd ~/travatar-tutorial
 </pre>
 
-<h2>Creating a Directory and Collect Data</h2>
+<h2>Collecting Data</h2>
 
 <p>
 Next, we need to collect data for training the translation and language models.
@@ -322,7 +324,7 @@ nohup travatar/script/mert/mert-travatar.pl -travatar-config train/model/travata
 
 <p>
 Again, if this finishes very quickly, there is probably an error in <tt>tune.log</tt>.
-Also, if you want to speed up the tuning process you can use multiple processors by adding <tt>-decoder-options "-threads XX"</tt> where XX is the number of processors to use.
+Also, if you want to speed up the tuning process you can use multiple processors by adding <tt>-threads XX</tt> where XX is the number of processors to use.
 </p>
 
 <h2>Testing</h2>
