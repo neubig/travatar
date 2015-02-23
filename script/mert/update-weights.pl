@@ -71,7 +71,9 @@ while(<FILE0>) {
     last if not $_;
     my ($oldname, $oldweight) = split(/=/);
     my $newweight;
-    if(!%wmap) {
+    if(not @weights) {
+        print "$oldname=0\n";
+    } elsif(!%wmap) {
         die "Weight sizes don't match" if not @weights;
         my $newname = shift(@names);
         $newweight = shift(@weights);

@@ -135,7 +135,8 @@ public:
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
     void SetSaveSrcStr(const bool save_src_str);
 
-    static TranslationRuleHiero* GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels);
+    static TranslationRuleHiero* GetUnknownRule(const WordId unknown_word, const HieroHeadLabels& head_labels);
+    static TranslationRuleHiero* GetUnknownRule(const WordId src, WordId unknown_word, const HieroHeadLabels& head_labels);
 
     static LookupTableFSM * ReadFromFiles(const std::vector<std::string> & filenames);
 

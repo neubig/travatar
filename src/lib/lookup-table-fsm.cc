@@ -145,10 +145,8 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     return ret;
 }
 
-#define VALID_NODE 99999999
-
 HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
-    
+    int VALID_NODE = 9999999; 
     HyperGraph* _graph = new HyperGraph;
     Sentence sent = graph.GetWords();
     _graph->SetWords(sent);
@@ -174,7 +172,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
             if (node_span.second - node_span.first == 1) {
                 int i = node_span.first;
                 if(node->GetEdges().size() == 0) {
-                    TranslationRuleHiero* unk_rule = GetUnknownRule(delete_unknown_? Dict::WID("") : sent[i], head_node.first);
+                    TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i], delete_unknown_? Dict::WID("") : sent[i], head_node.first);
                     HyperEdge* unk_edge = LookupTableFSM::TransformRuleIntoEdge(node_map,i,i+1,temp_spans,unk_rule,save_src_str_);
                     edge_list.push_back(unk_edge);
                     delete unk_rule;
@@ -454,7 +452,11 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap& map_ptr,
     }
 }
 
-TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels) 
+TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels) {
+    return GetUnknownRule(unknown_word,unknown_word, head_labels);
+}
+
+TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId src, WordId unknown_word, const HieroHeadLabels& head_labels) 
 {
     CfgDataVector target;
     for (int i=1; i < (int)head_labels.size(); ++i) 
@@ -462,7 +464,7 @@ TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, const 
     return new TranslationRuleHiero(
         target,
         Dict::ParseSparseVector("unk=1"),
-        CfgData(Sentence(1, unknown_word), head_labels[0])
+        CfgData(Sentence(1, src), head_labels[0])
     );
 }
 
