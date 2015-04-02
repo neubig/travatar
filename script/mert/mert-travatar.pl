@@ -21,6 +21,7 @@ my $IN_FORMAT; # The format of the input
 my $NBEST = 200;
 my $TRG_FACTORS = 1; # The number of target factors
 my $THREADS = 1; # The number of threads to use
+my $RESUME = 0;
 GetOptions(
     # Necessary
     "travatar-dir=s" => \$TRAVATAR_DIR,
@@ -44,6 +45,7 @@ GetOptions(
     "trace!" => \$TRACE,
     "trg-factors=i" => \$TRG_FACTORS,
     "stat-generator=s" => \$STAT_GENERATOR,
+    "resume" => \$RESUME,
     # "=s" => \$,
     # "=s" => \$,
     # "=s" => \$,
@@ -67,13 +69,26 @@ if(@ARGV != 0) {
     exit 1;
 }
 
+my $iter_start = 0;
 # Make the working directory and filter the mode
-safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
-if($NO_FILTER_RT) {
-    safesystem("cp $TRAVATAR_CONFIG $WORKING_DIR/run1.ini");
-} else {
-    my $format = ($IN_FORMAT ? "-src-format $IN_FORMAT" : "");
-    safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rule-table.py $SRC\"") or die "Couldn't filter";
+if (not ($RESUME and -d $WORKING_DIR)) {
+  safesystem("mkdir $WORKING_DIR") or die "couldn't mkdir";
+}
+if ($RESUME) {
+  foreach my $iter (1 .. $MAX_ITERS) {
+    if (-f "${WORKING_DIR}/run${iter}.ini") {
+      $iter_start = ${iter};
+    }
+  }
+}
+if ($iter_start == 0) {
+  if($NO_FILTER_RT) {
+      safesystem("cp $TRAVATAR_CONFIG $WORKING_DIR/run1.ini");
+  } else {
+      my $format = ($IN_FORMAT ? "-src-format $IN_FORMAT" : "");
+      safesystem("$TRAVATAR_DIR/script/train/filter-model.pl $TRAVATAR_CONFIG $WORKING_DIR/run1.ini $WORKING_DIR/filtered \"$TRAVATAR_DIR/script/train/filter-rule-table.py $SRC\"") or die "Couldn't filter";
+  }
+  $iter_start = 1;
 }
 
 # Find the weights contained in the model
@@ -89,7 +104,7 @@ if($MERT_SOLVER eq "batch-tune") {
 
 # Do the outer loop
 my ($iter, $prev, $next);
-foreach $iter (1 .. $MAX_ITERS) {
+foreach $iter ($iter_start .. $MAX_ITERS) {
     $prev = "$WORKING_DIR/run$iter";
     $next = "$WORKING_DIR/run".($iter+1);
     # Candidate options
