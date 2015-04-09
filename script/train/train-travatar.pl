@@ -67,6 +67,9 @@ my $LM_FILE = "";
 my $NO_LM = "false";
 my $CONFIG_FILE = "";
 
+# Progress showing option by pipe viewer
+my $PROGRESS = 0;
+
 GetOptions(
     "work_dir=s" => \$WORK_DIR, # The working directory to use
     "travatar_dir=s" => \$TRAVATAR_DIR, # The directory of travatar
@@ -102,6 +105,7 @@ GetOptions(
     "method=s" => \$TRANSLATION_METHOD, # The translation method that is used for travatar (t2s or hiero)
     "initial_phrase=s" => \$MAX_INITIAL_PHRASE, # The maximum length of initial phrase in hiero extraction
     "hiero_rule_len=s" => \$MAX_TERMINALS, # The maximum length of hiero rules that are extracted from hiero extraction
+    "progress" => \$PROGRESS, # Flag to show the progress bar (by pv command)
 );
 if(@ARGV != 0) {
     print STDERR "Usage: $0 --work_dir=work --src_file=src.txt --trg_file=trg.txt\n";
@@ -126,6 +130,19 @@ for($SRC_FILE, $TRG_FILE, $TRAVATAR_DIR, $SRC_WORDS, $TRG_WORDS, $ALIGN_FILE, $L
 if ($TRANSLATION_METHOD eq "hiero") {
     $SRC_FORMAT = "word";
     $TM_STORAGE = "fsm";
+}
+
+my ($PV, $PV_PIPE, $PV_SORT);
+if ($PROGRESS) {
+  if (system("which ${BIN_DIR}/pv > /dev/null") == 0) {
+    $PV = "${BIN_DIR}/pv";
+  } elsif (system("which pv > /dev/null") == 0) {
+    $PV = "pv";
+  }
+  if ($PV) {
+    $PV_PIPE = "| ${PV} -W";
+    $PV_SORT = "| ${PV} -Wl -N 'sorting records'";
+  }
 }
 
 # Steps:
@@ -241,7 +258,7 @@ if(not $TM_FILE) {
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
     my $RT_SRCTRG_CMD = "zcat $EXTRACT_FILE | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort | gzip > $RT_SRCTRG";
-    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl | env LC_ALL=C sort | gzip > $RT_TRGSRC";
+    my $RT_TRGSRC_CMD = "zcat $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort | gzip $PV_PIPE > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
     my $zip_cmd;
@@ -252,7 +269,7 @@ if(not $TM_FILE) {
         $TM_FILE = "$WORK_DIR/model/rule-table";
     }
     # Finally, combine the table
-    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --fof-file=$WORK_DIR/model/fof.txt --smooth=$SMOOTH --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd > $TM_FILE") or die;
+    safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --fof-file=$WORK_DIR/model/fof.txt --smooth=$SMOOTH --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $zip_cmd $PV_PIPE > $TM_FILE") or die;
     # If we are doing Hiero, print the glue rules too
     if ($TRANSLATION_METHOD eq "hiero") {
         my $gfile = "$WORK_DIR/model/glue-rules";
