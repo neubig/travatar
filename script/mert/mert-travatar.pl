@@ -152,6 +152,7 @@ foreach $iter ($iter_start .. $MAX_ITERS) {
 }
 
 safesystem("$TRAVATAR_DIR/script/mert/update-weights.pl -model $next.ini $TRAVATAR_CONFIG > $WORKING_DIR/travatar.ini") or die "couldn't make init opt";
+safesystem("cat $prev.tune.log | grep \"Best\" > $WORKING_DIR/tune.best");
 
 # Auxiliary functions
 sub safesystem {
