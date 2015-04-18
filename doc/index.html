@@ -63,32 +63,32 @@ This is particularly effective for language pairs that require a large amount of
 <a name="download">
 <h2>Download/Install</h2>
 
-<h3>Download</h3>
+<h3>Preparation</h3>
 
 <p>
-<b>Latest Version:</b> <a href="http://www.github.com/neubig/travatar" target="_blank">@github</a><br/>
-<b>Older Versions:</b> <a href="download/travatar-0.1.0.tar.gz">Travatar 0.1.0</a>
-</p>
-
-<p>
-The code of Travatar is distributed according to the <a href="http://www.gnu.org/copyleft/lesser.html" target="_blank">LGPL</a>, and can be distributed freely according to the license.
-</p>
-
-
-<h3>Install</h3>
-
-<p>
-Travatar is mainly developed on linux, but should also work on Mac OSX, and Windows (via cygwin).
-In order to install Travatar, you must have <a href="http://www.boost.org/">Boost</a> and <tt>autotools</tt> installed.
-The easiest way to install Boost/autotools on (Ubuntu/Debian) Linux is:
+Travatar is mainly developed on linux and Mac OSX, but should also work on Windows (via cygwin).
+In order to install Travatar, you must have <tt>git</tt>, <a href="http://www.boost.org/">Boost</a> and <tt>autotools</tt> installed.
+The easiest way to install these tools on (Ubuntu/Debian) Linux is:
 </p>
 
 <pre>
-sudo apt-get install libboost-all-dev autoconf automake autotools-dev libtool
+sudo apt-get install git libboost-all-dev autoconf automake autotools-dev libtool
+</pre>
+
+<h3>Download/Compilation</h3>
+
+
+<p>
+The code of Travatar is distributed according to the <a href="http://www.gnu.org/copyleft/lesser.html" target="_blank">LGPL</a>, and can be distributed freely according to the license.
+You can download the latest version of Travatar by going to the <a href="http://www.github.com/neubig/travatar" target="_blank">github page</a>, or directly by using the following <tt>git</tt> command.
+</p>
+
+<pre>
+git clone https://github.com/neubig/travatar.git
 </pre>
 
 <p>
-Once they are installed, you can compile Travatar by the following commands:
+Next, compile travatar with the following commands:
 </p>
 
 <pre>
@@ -159,6 +159,9 @@ Here, <tt>input-parsed.txt</tt> is a file containing one syntactic <a href="pars
 <ul>
 <li><a href="http://www.phontron.com">Graham Neubig</a> (Most Coding)</li>
 <li>Philip Arthur (Hiero, SCFG coding)</li>
+<li><a href="http://isw3.naist.jp/~koichi-a/">Koichi Akabe</a> (Visualization/Analysis Scripts)</li>
+<li>Akiba Miura (Fixes to Training Scripts)</li>
+<li><a href="http://odaemon.com/">Yusuke Oda</a> (Refactoring, etc.)</li>
 <li><a href="http://cl.naist.jp/~kevinduh/">Kevin Duh</a> (Compound Splitting)</li>
 </ul>
 

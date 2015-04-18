@@ -78,28 +78,35 @@ travatar/src/bin/travatar --help
 
 <p>
 In addition, you will need to install a <b>syntactic parser</b> to parse the input sentences, a <b>tokenizer</b> for the output sentence, and a <b>word aligner</b>.
-In this tutorial, in addition to Travatar, we will use the <a href="http://github.com/odashi/Ckylark">Ckylark</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://code.google.com/p/giza-pp/">GIZA++</a> for word alignment.
-First, go to all of these sites and download the latest versions of the tools to the travatar-tutorial directory and proceed to install.
-</p>
-
-<p>
-For the Ckylark parser, first download the latest version from Github to the Ckylark directory.
-Then, enter the directory and compile the program.
+In this tutorial, in addition to Travatar, we will use the <a href="http://github.com/odashi/Ckylark">Ckylark</a> for parsing English, the <a href="http://www.phontron.com/kytea">KyTea word segmenter</a> for segmenting Japanese, and <a href="http://github.com/moses-smt/giza-pp">GIZA++</a> for word alignment.
+You can go to all these sites and download the code, or preferably download the code using <tt>git</tt> as follows:
 </p>
 
 <pre>
-cd Ckylark
+cd ~/travatar-tutorial
+git clone https://github.com/odashi/ckylark.git
+git clone https://github.com/neubig/kytea.git
+git clone https://github.com/moses-smt/giza-pp.git
+</pre>
+
+<p>
+Then, compile Ckylark:
+</p>
+
+<pre>
+cd ckylark
 autoreconf -i
 ./configure
 make
 cd ~/travatar-tutorial
 </pre>
 
-<p>KyTea can be compiled as follows (if you are not using KyTea 0.4.7, change the version number):</p>
+<p>Compile KyTea:</p>
 
 <pre>
-tar -xzf kytea-0.4.7.tar.gz
-cd kytea-0.4.7
+cd kytea
+gunzip data/model.bin.gz
+autoreconf -i
 ./configure --prefix=$HOME/travatar-tutorial/usr
 make
 make install
@@ -111,7 +118,6 @@ GIZA++ can be compiled as follows, and we additionally copy all of the binaries 
 </p>
 
 <pre>
-tar -xzf giza-pp*.tar.gz
 cd giza-pp
 make
 cp GIZA++-v2/GIZA++ GIZA++-v2/*.out mkcls-v2/mkcls .

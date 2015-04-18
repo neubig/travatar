@@ -45,3 +45,4 @@ src/include/travatar/config.h
 src/kenlm/lm/lmplz
 src/kenlm/lm/build_binary
 test-driver
+.DS_Store
