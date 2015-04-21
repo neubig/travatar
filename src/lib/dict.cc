@@ -39,7 +39,9 @@ SparseMap Dict::ParseSparseMap(std::istream & iss) {
     while(iss >> buff) {
         size_t pos = buff.rfind('=');
         if(pos == string::npos) THROW_ERROR("Bad feature string @ " << buff);
-        ret.insert(make_pair(Dict::WID(buff.substr(0, pos)), atof(buff.substr(pos+1).c_str())));
+        WordId feature_id = Dict::WID(buff.substr(0,pos));
+        if (ret.find(feature_id) != ret.end()) THROW_ERROR("Found duplicated feature string @ " << buff);
+        ret.insert(make_pair(feature_id, atof(buff.substr(pos+1).c_str())));
     }
     return ret;
 }

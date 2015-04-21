@@ -35,4 +35,14 @@ BOOST_AUTO_TEST_CASE(TestParseSparseMap) {
     BOOST_CHECK(CheckMap(feat_exp, feat_act));
 }
 
+BOOST_AUTO_TEST_CASE(TestParseSparseMapError) {
+    // Parser the vector
+    try {
+        SparseMap error_map = Dict::ParseSparseMap("a=0 b=1 a=0");
+        BOOST_CHECK(false);
+    } catch (std::runtime_error& e) {
+        BOOST_CHECK(true);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
