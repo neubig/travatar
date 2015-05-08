@@ -124,8 +124,12 @@ Given the tokenized file <tt>tokenized.txt</tt>, we then run Egret as follows, w
 </p>
 
 <pre>
-$EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar &gt; egret-parsed.txt
+$EGRET_DIR/egret -lapcfg -i=tokenized.txt -data=$EGRET_DIR/eng_grammar | sed 's/( /(ROOT /g' &gt; egret-parsed.txt
 </pre>
+
+<p>
+The "sed" command here replaces the empty root symbol with an explicit "ROOT" symbol, which is necessary for Travatar.
+</p>
 
 <p>
 Unfortunately, for some sentences, Egret's parsing fails and generates an empty tree "(())", maybe one in every 10000 or so sentences.
