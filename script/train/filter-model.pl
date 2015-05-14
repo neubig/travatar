@@ -44,7 +44,7 @@ close FILE0;
 safesystem("mkdir -p $ARGV[2]");
 foreach my $i (0 .. $#models) {
     my $model = $models[$i];
-    my $CAT = (($model =~ /\.gz$/)? "zcat" : "cat");
+    my $CAT = (($model =~ /\.gz$/)? "gunzip -c" : "cat");
     my $ZIP = (($model =~ /\.gz$/)? "| gzip" : "");
     my $PV  = (system("which pv > /dev/null") == 0? "| pv -WN filtered" : "");
     safesystem("$CAT $model | $ARGV[3] $ZIP $PV > $outputs[$i]") or die;
