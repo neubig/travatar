@@ -223,7 +223,7 @@ Next, we will use the Ckylark parser to parse the source side English sentences.
 </p>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
 </pre>
 
 <p>
@@ -231,11 +231,11 @@ And do the same for <tt>kyoto-dev</tt> and <tt>kyoto-test</tt>.
 </p>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
 </pre>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
 </pre>
 
 <p>
