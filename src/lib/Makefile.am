@@ -1,6 +1,7 @@
 include $(top_srcdir)/common.am
 
 TRAVATARCPP = \
+	hyper-graph.cc \
 	alignment.cc \
 	binarizer.cc \
 	binarizer-cky.cc \
@@ -17,7 +18,6 @@ TRAVATARCPP = \
 	eval-measure-wer.cc \
     gradient.cc \
     gradient-xeval.cc \
-	hyper-graph.cc \
 	input-file-stream.cc \
 	io-util.cc \
 	lm-composer.cc \

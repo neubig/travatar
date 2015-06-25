@@ -274,62 +274,75 @@ SparseVector HyperPath::GetFeatures() {
 
 class PathScoreMore {
 public:
-    bool operator()(const boost::shared_ptr<HyperPath> x, const boost::shared_ptr<HyperPath> y) {
-        if(abs(x->GetScore() - y->GetScore()) > 1e-6) { return x->GetScore() > y->GetScore(); }
-        const vector<HyperEdge*> & xe = x->GetEdges(), ye = y->GetEdges();
-        if(xe.size() != ye.size()) { return xe.size() > ye.size(); }
-        for(int i = 0; i < (int)xe.size(); i++)
-            if(xe[i]->GetId() != ye[i]->GetId())
-                return xe[i]->GetId() < ye[i]->GetId();
+    bool operator()(const boost::shared_ptr<HyperPathBackPtr> x, const boost::shared_ptr<HyperPathBackPtr> y) {
+        if(abs(x->GetScore() - y->GetScore()) > 1e-7) { return x->GetScore() > y->GetScore(); }
+        else if(x->GetSize() != y->GetSize()) { return x->GetSize() > y->GetSize(); }
+        HyperPathBackPtr *xn = x.get(), *yn = y.get();
+        while(xn != NULL) {
+            if(xn->GetEdge()->GetId() != yn->GetEdge()->GetId())
+                return xn->GetEdge()->GetId() < yn->GetEdge()->GetId();
+            xn = xn->GetPtr().get();
+            yn = yn->GetPtr().get();
+        }
         return false;
     }
 };
 
+void HyperPathBackPtr::UnfoldPath(HyperPath * new_path) const {
+    if(ptr_.get() != NULL)
+        ptr_->UnfoldPath(new_path);
+    if(edge_ != NULL)
+        new_path->AddEdge(edge_);
+}
+HyperPath * HyperPathBackPtr::ToPath() const {
+    HyperPath * new_path = new HyperPath;
+    UnfoldPath(new_path);
+    new_path->SetScore(score_);
+    return new_path;
+}
+
 vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
-    set<boost::shared_ptr<HyperPath>, PathScoreMore> paths;
-    boost::shared_ptr<HyperPath> init_path(new HyperPath);
+    set<boost::shared_ptr<HyperPathBackPtr>, PathScoreMore> ptrs;
+    boost::shared_ptr<HyperPathBackPtr> init_path(new HyperPathBackPtr());
     init_path->PushNode(nodes_[0]);
     init_path->AddScore(nodes_[0]->CalcViterbiScore());
     // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
-    paths.insert(init_path);
+    ptrs.insert(init_path);
     vector<boost::shared_ptr<HyperPath> > ret;
     set<CfgDataVector> uniq_sents;
-    while(paths.size() > 0 && (int)ret.size() < n) {
-        boost::shared_ptr<HyperPath> curr_path = *paths.begin();
-        paths.erase(paths.begin());
-        // cerr << " Processing " << *curr_path << "    size: " << paths.size() << endl;
-        HyperNode * node = curr_path->PopNode();
+    while(ptrs.size() > 0 && (int)ret.size() < n) {
+        boost::shared_ptr<HyperPathBackPtr> curr_ptr = *ptrs.begin();
+        ptrs.erase(ptrs.begin());
+        HyperNode * node = curr_ptr->PopNode();
         if(node == NULL) {
-            CfgDataVector trg = curr_path->CalcTranslations();
-            // cerr << "  Attempting to add " << Dict::PrintWords(trg) << endl;
-            curr_path->SetTrgData(trg);
+            boost::shared_ptr<HyperPath> act_path(curr_ptr->ToPath());
+            CfgDataVector trg = act_path->CalcTranslations();
+            act_path->SetTrgData(trg);
             if(!uniq) {
-                ret.push_back(curr_path);
+                ret.push_back(act_path);
             } else if(uniq_sents.find(trg) == uniq_sents.end()) {
                 uniq_sents.insert(trg);
-                ret.push_back(curr_path);
+                ret.push_back(act_path);
             }
         } else {
-            curr_path->AddScore(-1*node->CalcViterbiScore());
+            double start_score = curr_ptr->GetScore() - node->CalcViterbiScore();
             // Expand each different edge
             BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
                 // Create a new path that is a copy of the old one, and add
                 // the edge and its corresponding score
-                boost::shared_ptr<HyperPath> next_path(new HyperPath(*curr_path));
-                next_path->AddEdge(edge);
-                next_path->AddScore(edge->GetScore());
+                boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(curr_ptr, edge, curr_ptr->GetSize()+1, curr_ptr->GetNodes()));
+                next_ptr->SetScore(start_score + edge->GetScore());
                 BOOST_FOREACH(HyperNode * tail_node, edge->GetTails())
-                    next_path->AddScore(tail_node->CalcViterbiScore());
+                    next_ptr->AddScore(tail_node->CalcViterbiScore());
                 // Add the nodes in reverse order, to ensure that we
                 // are doing a depth-first left-to-right traversal
                 BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
-                    next_path->PushNode(tail);
-                paths.insert(next_path);
-                // cerr << "  Pushed " << *next_path << "   size: " << paths.size() << endl;
+                    next_ptr->PushNode(tail);
+                ptrs.insert(next_ptr);
             }
             if(!uniq)
-                while((int)paths.size() > n)
-                    paths.erase(boost::prior(paths.end()));
+                while((int)ptrs.size() > n)
+                    ptrs.erase(boost::prior(ptrs.end()));
         }
         
     }
@@ -339,15 +352,11 @@ vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
 
 // Check to make sure that two hyperpaths are equal
 bool HyperPath::operator==(const HyperPath & rhs) const {
-    if(edges_.size() != rhs.edges_.size() || remaining_nodes_.size() != rhs.remaining_nodes_.size())
+    if(edges_.size() != rhs.edges_.size())
         return false;
     for(int i = 0; i < (int)edges_.size(); i++)
        if((edges_[i]==NULL) != (rhs.edges_[i]==NULL) ||
           (edges_[i]!=NULL && edges_[i]->GetId() != rhs.edges_[i]->GetId()))
-          return false;
-    for(int i = 0; i < (int)remaining_nodes_.size(); i++)
-       if((remaining_nodes_[i]==NULL) != (rhs.remaining_nodes_[i]==NULL) ||
-          (remaining_nodes_[i]!=NULL && remaining_nodes_[i]->GetId() != rhs.remaining_nodes_[i]->GetId()))
           return false;
     return abs(score_ - rhs.score_) < 1e-5;
 }
@@ -358,11 +367,6 @@ void HyperPath::Print(std::ostream & out) const {
     for(int i = 0; i < (int)edges_.size(); i++)
         out << (i != 0 ? ", " : "") << edges_[i]->GetId();
     out << "], \"score\": " << score_;
-    if(remaining_nodes_.size()) {
-        out << ", \"remaining_nodes\": [";
-        for(int i = 0; i < (int)remaining_nodes_.size(); i++)
-            out << remaining_nodes_[i]->GetId() << ((i == (int)remaining_nodes_.size()-1) ? "]" : ", ");
-    }
     out << "}";
 }
 
@@ -423,19 +427,15 @@ Real HyperNode::GetInsideProb(vector<Real> & inside) {
         return inside[id_];
     else if(IsTerminal())
         return (inside[id_] = 0);
-    // cerr << "@node: " << *this << ": " << edges_.size() << endl;
     vector<Real> sum_over;
     BOOST_FOREACH(HyperEdge * edge, edges_) {
-        // cerr << "   @edge: " << *edge << endl;
         Real next = edge->GetScore();
         BOOST_FOREACH(HyperNode * tail, edge->GetTails())
             next += tail->GetInsideProb(inside);
         sum_over.push_back(next);
     }
     inside[id_] = AddLogProbs(sum_over);
-    // cerr << "Inside over " << sum_over.size() << " edges=" << edges_.size() << " @ " << id_ << ": " << AddLogProbs(sum_over) << endl;
     for(int i = 0; i < (int)sum_over.size(); i++) {
-        // cerr << "edges_["<<i<<"->SetScore("<<sum_over[i]<<" - " << inside[id_]<<")" << endl;
         edges_[i]->SetScore(sum_over[i] - inside[id_]);
     }
     return inside[id_];
