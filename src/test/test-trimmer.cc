@@ -68,8 +68,7 @@ BOOST_AUTO_TEST_CASE(TestNbest) {
     boost::shared_ptr<HyperGraph> exp_graph(new HyperGraph);
     vector<int> ab(2); ab[0] = Dict::WID("s"); ab[1] = Dict::WID("t");
     exp_graph->SetWords(ab);
-    HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2));
- exp_graph->AddNode(n0); n0->SetViterbiScore(-0.6);
+    HyperNode * n0 = new HyperNode; n0->SetSpan(make_pair(0,2)); exp_graph->AddNode(n0); n0->SetViterbiScore(-0.6);
     HyperNode * n1 = new HyperNode; n1->SetSpan(make_pair(0,1)); exp_graph->AddNode(n1); n1->SetViterbiScore(-0.1);
     HyperNode * n2 = new HyperNode; n2->SetSpan(make_pair(1,2)); exp_graph->AddNode(n2); n2->SetViterbiScore(-0.2);
     HyperEdge * e0 = new HyperEdge(n0); exp_graph->AddEdge(e0); e0->AddTail(n1); e0->AddTail(n2); e0->SetScore(-0.3); e0->SetRule(rule_01.get()); n0->AddEdge(e0);

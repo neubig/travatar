@@ -279,8 +279,10 @@ public:
         else if(x->GetSize() != y->GetSize()) { return x->GetSize() > y->GetSize(); }
         HyperPathBackPtr *xn = x.get(), *yn = y.get();
         while(xn != NULL) {
-            if(xn->GetEdge()->GetId() != yn->GetEdge()->GetId())
-                return xn->GetEdge()->GetId() < yn->GetEdge()->GetId();
+            if(xn->GetNode() != yn->GetNode())
+                return xn->GetNode() < yn->GetNode();
+            if(xn->GetRank() != yn->GetRank())
+                return xn->GetRank() > yn->GetRank();
             xn = xn->GetPtr().get();
             yn = yn->GetPtr().get();
         }
@@ -288,34 +290,76 @@ public:
     }
 };
 
-void HyperPathBackPtr::UnfoldPath(HyperPath * new_path) const {
+class RankScoreMore {
+public:
+    bool operator()(const std::pair<Real, int> & x, const std::pair<Real, int> & y) {
+        if(x.first != y.first) { return x.first > y.first; }
+        return x.second < y.second;
+    }
+};
+
+void HyperPathBackPtr::UnfoldPath(HyperGraph & graph, const vector<vector<pair<Real, int> > > & edges, HyperPath * new_path) const {
     if(ptr_.get() != NULL)
-        ptr_->UnfoldPath(new_path);
-    if(edge_ != NULL)
-        new_path->AddEdge(edge_);
+        ptr_->UnfoldPath(graph, edges, new_path);
+    assert(node_ < (int)edges.size());
+    assert(rank_ < (int)edges[node_].size());
+    new_path->AddEdge(graph.GetEdge(edges[node_][rank_].second));
 }
-HyperPath * HyperPathBackPtr::ToPath() const {
+HyperPath * HyperPathBackPtr::ToPath(HyperGraph & graph, const vector<vector<pair<Real, int> > > & edges) const {
     HyperPath * new_path = new HyperPath;
-    UnfoldPath(new_path);
+    UnfoldPath(graph, edges, new_path);
     new_path->SetScore(score_);
     return new_path;
 }
 
+pair<Real, int> HyperGraph::CalcEdge(int node, int rank, vector<vector<pair<Real, int> > > & all_edges) {
+    assert(node < (int)all_edges.size());
+    if(all_edges[node].size() == 0) {
+        assert(node < (int)nodes_.size());
+        BOOST_FOREACH(HyperEdge* edge, nodes_[node]->GetEdges()) {
+            Real score = edge->GetScore();
+            BOOST_FOREACH(HyperNode* node, edge->GetTails())
+                score += node->CalcViterbiScore();
+            all_edges[node].push_back(make_pair(score, edge->GetId()));
+        }
+        // Sort in descending order of score
+        sort(all_edges[node].begin(), all_edges[node].end(), RankScoreMore());
+    }
+    return all_edges[node][rank];
+}
+
+vector<int> HyperGraph::GetUpdatedNodes(const boost::shared_ptr<HyperPathBackPtr> & ptr, const HyperEdge* edge) const {
+    vector<int> ret;
+    if(ptr.get() != NULL) {
+        ret = ptr->GetNodes();
+        ret.resize(ret.size()-1);
+    }
+    BOOST_REVERSE_FOREACH(HyperNode* tail, edge->GetTails()) {
+        ret.push_back(tail->GetId());
+    }
+    return ret;
+}
+
 vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
+    // Create the vector to hold edges for all nodes
+    vector<vector<pair<Real, int> > > all_edges(nodes_.size());
+    pair<Real, int> best_edge = CalcEdge(0, 0, all_edges);
+    // Create the initial state
     set<boost::shared_ptr<HyperPathBackPtr>, PathScoreMore> ptrs;
-    boost::shared_ptr<HyperPathBackPtr> init_path(new HyperPathBackPtr());
-    init_path->PushNode(nodes_[0]);
-    init_path->AddScore(nodes_[0]->CalcViterbiScore());
-    // cerr << "Generating nbest, viterbi = " << nodes_[0]->CalcViterbiScore() << endl;
-    ptrs.insert(init_path);
+    boost::shared_ptr<HyperPathBackPtr> init_ptr(
+            new HyperPathBackPtr(0, 0, 0, nodes_[0]->CalcViterbiScore(), vector<int>()));
+    BOOST_REVERSE_FOREACH(HyperNode * tail, edges_[best_edge.second]->GetTails())
+        init_ptr->PushNode(tail->GetId());
+    ptrs.insert(init_ptr);
     vector<boost::shared_ptr<HyperPath> > ret;
     set<CfgDataVector> uniq_sents;
+    // Extract n-best
     while(ptrs.size() > 0 && (int)ret.size() < n) {
         boost::shared_ptr<HyperPathBackPtr> curr_ptr = *ptrs.begin();
         ptrs.erase(ptrs.begin());
-        HyperNode * node = curr_ptr->PopNode();
-        if(node == NULL) {
-            boost::shared_ptr<HyperPath> act_path(curr_ptr->ToPath());
+        int node = curr_ptr->LastNode();
+        if(node == -1) {
+            boost::shared_ptr<HyperPath> act_path(curr_ptr->ToPath(*this, all_edges));
             CfgDataVector trg = act_path->CalcTranslations();
             act_path->SetTrgData(trg);
             if(!uniq) {
@@ -325,26 +369,29 @@ vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
                 ret.push_back(act_path);
             }
         } else {
-            double start_score = curr_ptr->GetScore() - node->CalcViterbiScore();
-            // Expand each different edge
-            BOOST_FOREACH(HyperEdge * edge, node->GetEdges()) {
-                // Create a new path that is a copy of the old one, and add
-                // the edge and its corresponding score
-                boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(curr_ptr, edge, curr_ptr->GetSize()+1, curr_ptr->GetNodes()));
-                next_ptr->SetScore(start_score + edge->GetScore());
-                BOOST_FOREACH(HyperNode * tail_node, edge->GetTails())
-                    next_ptr->AddScore(tail_node->CalcViterbiScore());
-                // Add the nodes in reverse order, to ensure that we
-                // are doing a depth-first left-to-right traversal
-                BOOST_REVERSE_FOREACH(HyperNode * tail, edge->GetTails())
-                    next_ptr->PushNode(tail);
-                ptrs.insert(next_ptr);
-            }
-            if(!uniq)
-                while((int)ptrs.size() > n)
-                    ptrs.erase(boost::prior(ptrs.end()));
+            // Actually create the pointer
+            pair<Real,int> next_edge = CalcEdge(node, 0, all_edges);
+            boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(
+                node, 0, curr_ptr->GetSize()+1, curr_ptr->GetScore(), 
+                GetUpdatedNodes(curr_ptr, edges_[next_edge.second]), curr_ptr));
+            ptrs.insert(next_ptr); 
         }
-        
+        int node_id = curr_ptr->GetNode();
+        int rank = curr_ptr->GetRank();
+        if(rank < nodes_[node_id]->GetEdges().size() - 1) {
+            // Calculate the ranks
+            pair<Real, int> prev_edge = CalcEdge(node_id, rank, all_edges);
+            pair<Real, int> next_edge = CalcEdge(node_id, rank+1, all_edges);
+            // Get the nodes from the previous pointer
+            vector<int> my_nodes = GetUpdatedNodes(curr_ptr->GetPtr(), edges_[next_edge.second]);
+            boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(
+                node_id, rank+1, curr_ptr->GetSize(),
+                curr_ptr->GetScore()-prev_edge.first+next_edge.first, my_nodes, curr_ptr->GetPtr()));
+            ptrs.insert(next_ptr);
+        }
+        if(!uniq)
+            while((int)ptrs.size() > n)
+                ptrs.erase(boost::prior(ptrs.end()));
     }
     return ret;
 }
@@ -385,7 +432,7 @@ CfgData HyperPath::CalcTranslation(int factor, int & idx) {
     int my_id = idx++;
     BOOST_FOREACH(HyperNode * tail, edges_[my_id]->GetTails()) {
         if(tail != edges_[idx]->GetHead())
-            THROW_ERROR("Unmatching hyper-nodes " << *tail);
+            THROW_ERROR("Unmatching hyper-nodes " << *tail << " and " << *edges_[idx]->GetHead() << " at edge" << idx);
         child_trans.push_back(CalcTranslation(factor, idx));
     }
     CfgData ret;

@@ -258,7 +258,7 @@ inline std::ostream &operator<<( std::ostream &out, const HyperNode &L ) {
 // A single scored path through a hypergraph
 class HyperPath {
 public:
-    HyperPath() : edges_(), data_(), score_(0), loss_(0) /*, remaining_nodes_()*/ { }
+    HyperPath() : edges_(), data_(), score_(0), loss_(0) /*, nodes_()*/ { }
     
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
     void SetScore(Real score) { score_ = score; }
@@ -308,46 +308,45 @@ inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
 // A single scored path through a hypergraph
 class HyperPathBackPtr {
 public:
-    HyperPathBackPtr(boost::shared_ptr<HyperPathBackPtr> ptr = boost::shared_ptr<HyperPathBackPtr>(), HyperEdge * edge = NULL, int size = 0, std::vector<HyperNode*> remaining_nodes = std::vector<HyperNode*>())
-            : ptr_(ptr), edge_(edge), score_(0), size_(size), remaining_nodes_(remaining_nodes) { }
+    HyperPathBackPtr(int node, int rank, int size, 
+                     Real score, std::vector<int> nodes, 
+                     boost::shared_ptr<HyperPathBackPtr> ptr = boost::shared_ptr<HyperPathBackPtr>())
+            : node_(node), rank_(rank), size_(size), score_(score), nodes_(nodes), ptr_(ptr) { }
     
-    void PushNode(HyperNode * node) { remaining_nodes_.push_back(node); }
-    HyperNode* PopNode() {
-        HyperNode * ret = NULL;
-        if(remaining_nodes_.size() > 0) {
-            ret = *remaining_nodes_.rbegin();
-            remaining_nodes_.pop_back();
-        }
-        return ret;
+    void PushNode(int node) { nodes_.push_back(node); }
+    int LastNode() {
+        return nodes_.size() > 0 ? *nodes_.rbegin() : -1;
     }
     void SetScore(Real score) { score_ = score; }
     Real AddScore(Real score) { return (score_ += score); }
     Real GetScore() const { return score_; }
     int GetSize() const { return size_; }
+    int GetNode() const { return node_; }
+    int GetRank() const { return rank_; }
     const boost::shared_ptr<HyperPathBackPtr> & GetPtr() const { return ptr_; } 
-    const std::vector<HyperNode*> & GetNodes() const { return remaining_nodes_; }
+    const std::vector<int> & GetNodes() const { return nodes_; }
 
-    void UnfoldPath(HyperPath* new_path) const;
-    HyperPath* ToPath() const;
 
-    const HyperEdge* GetEdge() const { return edge_; }
-    HyperEdge* GetEdge() { return edge_; }
+    void UnfoldPath(HyperGraph & graph, const std::vector<std::vector<std::pair<Real, int> > > & edges, HyperPath * new_path) const;
+    HyperPath* ToPath(HyperGraph & graph, const std::vector<std::vector<std::pair<Real, int> > > & edges) const;
 
     bool operator==(const HyperPathBackPtr & rhs) const;
     bool operator!=(const HyperPathBackPtr & rhs) const { return !(*this == rhs); }
     void Print(std::ostream & out) const;
 
 protected:
-    // Back pointer
-    boost::shared_ptr<HyperPathBackPtr> ptr_; 
-    // The edges contrained in this translation
-    class HyperEdge* edge_;
-    // The model score of the translation
-    Real score_;
+    // The node that this represents
+    int node_;
+    // The rank of the edge in the node
+    int rank_;
     // The number of previous nodes, for tie-breaking scores
     int size_;
+    // The model score of the translation
+    Real score_;
     // For use with partial paths, which nodes are still open?
-    std::vector<HyperNode*> remaining_nodes_;
+    std::vector<int> nodes_;
+    // Back pointer
+    boost::shared_ptr<HyperPathBackPtr> ptr_; 
 };
 
 // The hypergraph
@@ -429,6 +428,13 @@ public:
     void SetWords(const Sentence & words) { words_ = words; }
     EdgeType GetEdgeType() const { return edge_type_; }
     void SetEdgeType(EdgeType edge_type) { edge_type_ = edge_type; }
+
+private:
+
+    // Calculate viterbi scores of edges, for use in n-best generation
+    std::pair<Real, int> CalcEdge(int node, int rank, std::vector<std::vector<std::pair<Real, int> > > & all_edges);
+
+    std::vector<int> GetUpdatedNodes(const boost::shared_ptr<HyperPathBackPtr> & ptr, const HyperEdge* edge) const;
 
 };
 
