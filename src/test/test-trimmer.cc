@@ -39,6 +39,7 @@ struct TestTrimmer {
             HyperEdge * e5 = new HyperEdge(n2); rule_graph_->AddEdge(e5); e5->SetScore(-0.5); e5->SetRule(rule_y.get()); n2->AddEdge(e5);
             rule_unk.reset(new TranslationRule); rule_unk->AddTrgWord(Dict::WID("<unk>"));
             HyperEdge * e6 = new HyperEdge(n2); rule_graph_->AddEdge(e6); e6->SetScore(-2.5); e6->SetRule(rule_unk.get()); n2->AddEdge(e6);
+            rule_graph_->GetNode(0)->CalcViterbiScore();
         }
         // Two option graph
         binary_graph_.reset(new HyperGraph);
@@ -50,6 +51,7 @@ struct TestTrimmer {
             HyperEdge * e1 = new HyperEdge(n0); binary_graph_->AddEdge(e1); e1->AddTail(n2); e1->SetScore(-0.3); n0->AddEdge(e1);
             HyperEdge * e2 = new HyperEdge(n1); binary_graph_->AddEdge(e2); e2->SetScore(-0.2); n1->AddEdge(e2);
             HyperEdge * e3 = new HyperEdge(n2); binary_graph_->AddEdge(e3); e3->SetScore(-0.3); n2->AddEdge(e3);
+            binary_graph_->GetNode(0)->CalcViterbiScore();
         }
     }
     ~TestTrimmer() { }

@@ -265,30 +265,17 @@ HyperNode::FrontierType HyperNode::CalculateFrontier(
     return frontier_;
 }
 
+void HyperPath::AddEdges(std::vector<HyperEdge*> & edges) {
+    BOOST_FOREACH(HyperEdge* edge, edges)
+        edges_.push_back(edge);
+}
+
 SparseVector HyperPath::GetFeatures() {
     SparseVector ret;
     BOOST_FOREACH(const HyperEdge* edge, edges_)
         ret += edge->GetFeatures();
     return ret;
 }
-
-class PathScoreMore {
-public:
-    bool operator()(const boost::shared_ptr<HyperPathBackPtr> x, const boost::shared_ptr<HyperPathBackPtr> y) {
-        if(abs(x->GetScore() - y->GetScore()) > 1e-7) { return x->GetScore() > y->GetScore(); }
-        else if(x->GetSize() != y->GetSize()) { return x->GetSize() > y->GetSize(); }
-        HyperPathBackPtr *xn = x.get(), *yn = y.get();
-        while(xn != NULL) {
-            if(xn->GetNode() != yn->GetNode())
-                return xn->GetNode() < yn->GetNode();
-            if(xn->GetRank() != yn->GetRank())
-                return xn->GetRank() > yn->GetRank();
-            xn = xn->GetPtr().get();
-            yn = yn->GetPtr().get();
-        }
-        return false;
-    }
-};
 
 class RankScoreMore {
 public:
@@ -298,100 +285,91 @@ public:
     }
 };
 
-void HyperPathBackPtr::UnfoldPath(HyperGraph & graph, const vector<vector<pair<Real, int> > > & edges, HyperPath * new_path) const {
-    if(ptr_.get() != NULL)
-        ptr_->UnfoldPath(graph, edges, new_path);
-    assert(node_ < (int)edges.size());
-    assert(rank_ < (int)edges[node_].size());
-    new_path->AddEdge(graph.GetEdge(edges[node_][rank_].second));
-}
-HyperPath * HyperPathBackPtr::ToPath(HyperGraph & graph, const vector<vector<pair<Real, int> > > & edges) const {
-    HyperPath * new_path = new HyperPath;
-    UnfoldPath(graph, edges, new_path);
-    new_path->SetScore(score_);
-    return new_path;
-}
-
-pair<Real, int> HyperGraph::CalcEdge(int node, int rank, vector<vector<pair<Real, int> > > & all_edges) {
-    assert(node < (int)all_edges.size());
-    if(all_edges[node].size() == 0) {
-        assert(node < (int)nodes_.size());
+boost::shared_ptr<NbestState> HyperGraph::NbestCalcState(int node, vector<boost::shared_ptr<NbestState> > & states) {
+    if(states[node].get() == NULL) {
+        states[node].reset(new NbestState);
+        // Get the edges and sort in descending order of score
         BOOST_FOREACH(HyperEdge* edge, nodes_[node]->GetEdges()) {
             Real score = edge->GetScore();
             BOOST_FOREACH(HyperNode* node, edge->GetTails())
                 score += node->CalcViterbiScore();
-            all_edges[node].push_back(make_pair(score, edge->GetId()));
+            states[node]->edges.push_back(make_pair(score, edge->GetId()));
         }
-        // Sort in descending order of score
-        sort(all_edges[node].begin(), all_edges[node].end(), RankScoreMore());
+        sort(states[node]->edges.begin(), states[node]->edges.end(), RankScoreMore());
+        // Initialize stack with all edges
+        for(int i = 0; i < (int)states[node]->edges.size(); i++) {
+            NbestEdge n_edge = states[node]->edges[i];
+            states[node]->PushStack(boost::shared_ptr<NbestStackItem>(new NbestStackItem(n_edge.first, i, vector<int>(edges_[n_edge.second]->GetTails().size(), 0))));
+        }
     }
-    return all_edges[node][rank];
+    return states[node];
 }
 
-vector<int> HyperGraph::GetUpdatedNodes(const boost::shared_ptr<HyperPathBackPtr> & ptr, const HyperEdge* edge) const {
-    vector<int> ret;
-    if(ptr.get() != NULL) {
-        ret = ptr->GetNodes();
-        ret.resize(ret.size()-1);
-    }
-    BOOST_REVERSE_FOREACH(HyperNode* tail, edge->GetTails()) {
-        ret.push_back(tail->GetId());
+boost::shared_ptr<HyperPath> HyperGraph::NbestCreatePath(int node, NbestStackItem & item, bool uniq, vector<boost::shared_ptr<NbestState> > & states) {
+    boost::shared_ptr<HyperPath> ret(new HyperPath);
+    ret->SetScore(item.score);
+    HyperEdge* my_edge = edges_[states[node]->edges[item.edge_rank].second];
+    ret->AddEdge(my_edge);
+    for(int i = 0; i < (int)item.child_ranks.size(); i++) {
+        boost::shared_ptr<HyperPath> child_path = NbestGetNthPath(my_edge->GetTail(i)->GetId(), item.child_ranks[i], uniq, states);
+        if(child_path.get() == NULL) return child_path;
+        ret->AddEdges(child_path->GetEdges());
     }
     return ret;
 }
 
-vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
-    // Create the vector to hold edges for all nodes
-    vector<vector<pair<Real, int> > > all_edges(nodes_.size());
-    pair<Real, int> best_edge = CalcEdge(0, 0, all_edges);
-    // Create the initial state
-    set<boost::shared_ptr<HyperPathBackPtr>, PathScoreMore> ptrs;
-    boost::shared_ptr<HyperPathBackPtr> init_ptr(
-            new HyperPathBackPtr(0, 0, 0, nodes_[0]->CalcViterbiScore(), vector<int>()));
-    BOOST_REVERSE_FOREACH(HyperNode * tail, edges_[best_edge.second]->GetTails())
-        init_ptr->PushNode(tail->GetId());
-    ptrs.insert(init_ptr);
-    vector<boost::shared_ptr<HyperPath> > ret;
-    set<CfgDataVector> uniq_sents;
-    // Extract n-best
-    while(ptrs.size() > 0 && (int)ret.size() < n) {
-        boost::shared_ptr<HyperPathBackPtr> curr_ptr = *ptrs.begin();
-        ptrs.erase(ptrs.begin());
-        int node = curr_ptr->LastNode();
-        if(node == -1) {
-            boost::shared_ptr<HyperPath> act_path(curr_ptr->ToPath(*this, all_edges));
+boost::shared_ptr<NbestStackItem> HyperGraph::NbestStackIncrementChild(int node, NbestStackItem & item, int child_num, bool uniq, vector<boost::shared_ptr<NbestState> > & states) {
+    HyperEdge* my_edge = edges_[states[node]->edges[item.edge_rank].second];
+    boost::shared_ptr<HyperPath> curr_path = NbestGetNthPath(my_edge->GetTail(child_num)->GetId(), item.child_ranks[child_num], uniq, states);
+    boost::shared_ptr<HyperPath> next_path = NbestGetNthPath(my_edge->GetTail(child_num)->GetId(), item.child_ranks[child_num]+1, uniq, states);
+    if(next_path.get() == NULL)
+        return boost::shared_ptr<NbestStackItem>();
+    Real diff = next_path->GetScore() - curr_path->GetScore();
+    boost::shared_ptr<NbestStackItem> ret(new NbestStackItem(item));
+    ret->score += diff;
+    ret->child_ranks[child_num]++;
+    return ret;
+}
+
+boost::shared_ptr<HyperPath> HyperGraph::NbestGetNthPath(int node, int rank, bool uniq, vector<boost::shared_ptr<NbestState> > & states) {
+    boost::shared_ptr<NbestState> state = NbestCalcState(node, states);
+    // Until we've found a path or the stack is exhausted
+    while(state->paths.size() <= rank && state->stack.size() != 0) {
+        // Get an item from the stack and create the path
+        boost::shared_ptr<NbestStackItem> item = state->PopStack();
+        boost::shared_ptr<HyperPath> act_path = NbestCreatePath(node, *item, uniq, states);
+        // Check whether to add it or not
+        if(uniq) {
             CfgDataVector trg = act_path->CalcTranslations();
-            act_path->SetTrgData(trg);
-            if(!uniq) {
-                ret.push_back(act_path);
-            } else if(uniq_sents.find(trg) == uniq_sents.end()) {
-                uniq_sents.insert(trg);
-                ret.push_back(act_path);
+            if(state->uniq_sents.find(trg) == state->uniq_sents.end()) {
+                state->uniq_sents.insert(trg);
+                state->paths.push_back(act_path);
             }
         } else {
-            // Actually create the pointer
-            pair<Real,int> next_edge = CalcEdge(node, 0, all_edges);
-            boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(
-                node, 0, curr_ptr->GetSize()+1, curr_ptr->GetScore(), 
-                GetUpdatedNodes(curr_ptr, edges_[next_edge.second]), curr_ptr));
-            ptrs.insert(next_ptr); 
+            state->paths.push_back(act_path);
         }
-        int node_id = curr_ptr->GetNode();
-        int rank = curr_ptr->GetRank();
-        if(rank < nodes_[node_id]->GetEdges().size() - 1) {
-            // Calculate the ranks
-            pair<Real, int> prev_edge = CalcEdge(node_id, rank, all_edges);
-            pair<Real, int> next_edge = CalcEdge(node_id, rank+1, all_edges);
-            // Get the nodes from the previous pointer
-            vector<int> my_nodes = GetUpdatedNodes(curr_ptr->GetPtr(), edges_[next_edge.second]);
-            boost::shared_ptr<HyperPathBackPtr> next_ptr(new HyperPathBackPtr(
-                node_id, rank+1, curr_ptr->GetSize(),
-                curr_ptr->GetScore()-prev_edge.first+next_edge.first, my_nodes, curr_ptr->GetPtr()));
-            ptrs.insert(next_ptr);
+        // Expand the stack by incrementing each path's child by one
+        for(int i = 0; i < item->child_ranks.size(); i++) {
+            boost::shared_ptr<NbestStackItem> next_item = NbestStackIncrementChild(node, *item, i, uniq, states);
+            if(next_item.get() != NULL)
+                state->PushStack(next_item);
         }
-        if(!uniq)
-            while((int)ptrs.size() > n)
-                ptrs.erase(boost::prior(ptrs.end()));
+    }
+    // Return the path if found, null if not
+    if(state->paths.size() > rank)
+        return state->paths[rank];
+    else
+        return boost::shared_ptr<HyperPath>();
+}
+
+vector<boost::shared_ptr<HyperPath> > HyperGraph::GetNbest(int n, bool uniq) {
+    vector<boost::shared_ptr<NbestState> > states(nodes_.size());
+    vector<boost::shared_ptr<HyperPath> > ret;
+    for(int i = 0; i < n; i++) {
+        boost::shared_ptr<HyperPath> path = NbestGetNthPath(0, i, uniq, states);
+        if(path.get() == NULL) break;
+        path->SetTrgData(path->CalcTranslations());
+        ret.push_back(path);
     }
     return ret;
 }
@@ -500,7 +478,6 @@ Real HyperNode::GetOutsideProb(const vector< vector<HyperEdge*> > & all_edges, v
         Real next = edge->GetScore() + edge->GetHead()->GetOutsideProb(all_edges, outside);
         sum_over.push_back(next);
     }
-    // cerr << "Outside over " << sum_over.size() << " @ " << id_ << " : " << AddLogProbs(sum_over) << endl;
     return (outside[id_] = AddLogProbs(sum_over));
 }
 
@@ -519,11 +496,9 @@ void HyperGraph::InsideOutsideNormalize() {
     vector<vector<HyperEdge*> > rev_edges = GetReversedEdges();
     vector<Real> new_scores(edges_.size(), -REAL_MAX);
     nodes_[0]->GetInsideProb(inside);
-    // cerr << exp(nodes_[0]->GetInsideProb(inside)) << endl;
     // Re-score the current edges
     BOOST_FOREACH(HyperEdge * edge, edges_) {
         Real next = edge->GetScore() + edge->GetHead()->GetOutsideProb(rev_edges, outside);
-        // cerr << "next @ "<<edge->GetId()<<": " << edge->GetScore() << " + " << edge->GetHead()->GetOutsideProb(rev_edges, outside);
         new_scores[edge->GetId()] = next;
     }
     for(int i = 0; i < (int)new_scores.size(); i++)

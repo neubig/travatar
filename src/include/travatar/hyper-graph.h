@@ -261,6 +261,7 @@ public:
     HyperPath() : edges_(), data_(), score_(0), loss_(0) /*, nodes_()*/ { }
     
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
+    void AddEdges(std::vector<HyperEdge*> & edges);
     void SetScore(Real score) { score_ = score; }
     Real AddScore(Real score) { return (score_ += score); }
     Real GetScore() { return score_; }
@@ -305,48 +306,49 @@ inline std::ostream &operator<<( std::ostream &out, const HyperPath &L ) {
     return out;
 }
 
-// A single scored path through a hypergraph
-class HyperPathBackPtr {
+class NbestStackItem {
 public:
-    HyperPathBackPtr(int node, int rank, int size, 
-                     Real score, std::vector<int> nodes, 
-                     boost::shared_ptr<HyperPathBackPtr> ptr = boost::shared_ptr<HyperPathBackPtr>())
-            : node_(node), rank_(rank), size_(size), score_(score), nodes_(nodes), ptr_(ptr) { }
-    
-    void PushNode(int node) { nodes_.push_back(node); }
-    int LastNode() {
-        return nodes_.size() > 0 ? *nodes_.rbegin() : -1;
+    NbestStackItem(Real s, int er, const std::vector<int> & cr) :
+        score(s), edge_rank(er), child_ranks(cr) { }
+
+    Real score;
+    int edge_rank;
+    std::vector<int> child_ranks;
+
+};
+
+class StackScoreMore {
+public:
+    bool operator()(const boost::shared_ptr<NbestStackItem> x, const boost::shared_ptr<NbestStackItem> y) {
+        if(x->score != y->score) { return x->score > y->score; }
+        if(x->edge_rank != y->edge_rank) { return x->edge_rank < y->edge_rank; }
+        for(int i = 0; i < (int)x->child_ranks.size(); i++) {
+            if(x->child_ranks[i] != y->child_ranks[i]) { return x->child_ranks[i] < y->child_ranks[i]; }
+        }
+        return false;
     }
-    void SetScore(Real score) { score_ = score; }
-    Real AddScore(Real score) { return (score_ += score); }
-    Real GetScore() const { return score_; }
-    int GetSize() const { return size_; }
-    int GetNode() const { return node_; }
-    int GetRank() const { return rank_; }
-    const boost::shared_ptr<HyperPathBackPtr> & GetPtr() const { return ptr_; } 
-    const std::vector<int> & GetNodes() const { return nodes_; }
+};
 
+typedef std::pair<Real, int> NbestEdge;
+class NbestState {
+public:
+    NbestState() { }
 
-    void UnfoldPath(HyperGraph & graph, const std::vector<std::vector<std::pair<Real, int> > > & edges, HyperPath * new_path) const;
-    HyperPath* ToPath(HyperGraph & graph, const std::vector<std::vector<std::pair<Real, int> > > & edges) const;
+    typedef std::set<boost::shared_ptr<NbestStackItem>, StackScoreMore> NbestStateStack;
 
-    bool operator==(const HyperPathBackPtr & rhs) const;
-    bool operator!=(const HyperPathBackPtr & rhs) const { return !(*this == rhs); }
-    void Print(std::ostream & out) const;
+    void PushStack(const boost::shared_ptr<NbestStackItem> & item) { stack.insert(item); }
+    boost::shared_ptr<NbestStackItem> PopStack() {
+        NbestStateStack::iterator beg = stack.begin();
+        boost::shared_ptr<NbestStackItem> ret = *beg;
+        stack.erase(beg);
+        return ret;
+    }
 
-protected:
-    // The node that this represents
-    int node_;
-    // The rank of the edge in the node
-    int rank_;
-    // The number of previous nodes, for tie-breaking scores
-    int size_;
-    // The model score of the translation
-    Real score_;
-    // For use with partial paths, which nodes are still open?
-    std::vector<int> nodes_;
-    // Back pointer
-    boost::shared_ptr<HyperPathBackPtr> ptr_; 
+    std::vector<NbestEdge> edges;
+    NbestStateStack stack;
+    std::vector<boost::shared_ptr<HyperPath> > paths;
+    std::set<CfgDataVector> uniq_sents;
+
 };
 
 // The hypergraph
@@ -431,10 +433,14 @@ public:
 
 private:
 
-    // Calculate viterbi scores of edges, for use in n-best generation
-    std::pair<Real, int> CalcEdge(int node, int rank, std::vector<std::vector<std::pair<Real, int> > > & all_edges);
-
-    std::vector<int> GetUpdatedNodes(const boost::shared_ptr<HyperPathBackPtr> & ptr, const HyperEdge* edge) const;
+    // // Calculate viterbi scores of edges, for use in n-best generation
+    // std::pair<Real, int> CalcEdge(int node, int rank, std::vector<std::vector<std::pair<Real, int> > > & all_edges);
+    // std::vector<int> GetUpdatedNodes(const boost::shared_ptr<HyperPathBackPtr> & ptr, const HyperEdge* edge) const;
+    
+    boost::shared_ptr<NbestState> NbestCalcState(int node, std::vector<boost::shared_ptr<NbestState> > & states);
+    boost::shared_ptr<HyperPath> NbestGetNthPath(int node, int rank, bool uniq, std::vector<boost::shared_ptr<NbestState> > & states);
+    boost::shared_ptr<HyperPath> NbestCreatePath(int node, NbestStackItem & item, bool uniq, std::vector<boost::shared_ptr<NbestState> > & states);
+    boost::shared_ptr<NbestStackItem> NbestStackIncrementChild(int node, NbestStackItem & item, int child_num, bool uniq, std::vector<boost::shared_ptr<NbestState> > & states);
 
 };
 
