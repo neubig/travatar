@@ -71,8 +71,7 @@ void TravatarRunnerTask::Run() {
         out << Dict::PrintWords(nbest_list[best_answer]->GetTrgData());
     }
     out << endl;
-    collector_->Write(sent_, out.str(), "");
-
+    
     // If we are printing the n-best list, print it
     if(nbest_collector_ != NULL) {
         ostringstream nbest_out;
@@ -106,6 +105,8 @@ void TravatarRunnerTask::Run() {
             trace_collector_->Skip();
         }
     }
+    
+    collector_->Write(sent_, out.str(), "");
 
     // If we are printing a forest, print it
     if(forest_collector_ != NULL) {
@@ -274,7 +275,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     scoped_ptr<ostream> nbest_out;
     scoped_ptr<OutputCollector> nbest_collector;
     if(config.GetString("nbest_out") != "") {
-        nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
+        if (config.GetString("nbest_out") == "STDOUT") {
+            nbest_out.reset(&cout);
+        } else if (config.GetString("nbest_out") == "STDERR") {
+            nbest_out.reset(&cerr);
+        } else {
+            nbest_out.reset(new ofstream(config.GetString("nbest_out").c_str()));
+        }
         if(!*nbest_out)
             THROW_ERROR("Could not open nbest output file: " << config.GetString("nbest_out"));
         nbest_collector.reset(new OutputCollector(nbest_out.get(), &cerr, config.GetBool("buffer")));
@@ -301,7 +308,13 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     scoped_ptr<ostream> trace_out;
     scoped_ptr<OutputCollector> trace_collector;
     if(config.GetString("trace_out") != "") {
-        trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
+        if (config.GetString("trace_out") == "STDOUT") {
+            trace_out.reset(&cout);
+        } else if (config.GetString("trace_out") == "STDERR") {
+            trace_out.reset(&cerr);
+        } else {
+            trace_out.reset(new ofstream(config.GetString("trace_out").c_str()));
+        }
         if(!*trace_out)
             THROW_ERROR("Could not open trace output file: " << config.GetString("trace_out"));
         trace_collector.reset(new OutputCollector(trace_out.get(), &cerr, config.GetBool("buffer")));
