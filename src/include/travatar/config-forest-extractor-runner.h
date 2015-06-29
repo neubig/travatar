@@ -22,7 +22,7 @@ public:
 "  by Graham Neubig\n"
 "\n"
 "Extracts tree-to-string translation rules from trees or forests.\n"
-"  Usage: forest-extractor [SRG_TREES] [TRG_FILE] [ALIGN]\n"
+"  Usage: forest-extractor [SRC_TREES] [TRG_FILE] [ALIGN]\n"
 );
 
         AddConfigEntry("input_format", "penn", "The format of the input (penn/json)");
