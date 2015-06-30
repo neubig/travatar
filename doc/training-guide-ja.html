@@ -78,7 +78,7 @@ travatar/src/bin/travatar --help
 
 <p>
 Travatarに加えて、入力文の構文解析を行う<b>構文解析器</b>、出力文の単語分割（トークン化）を行う<b>トークナイザ</b>、単語の対応付けを行う<b>アライナー</b>が必要です。
-本ページでは、英語の構文解析に<a href="http://github.com/odashi/Ckylark">Ckylark</a>、日本語の単語分割に<a href="http://www.phontron.com/kytea">KyTea</a>、単語の対応付けに<a href="http://code.google.com/p/giza-pp/">GIZA++</a>を利用します。
+本ページでは、英語の構文解析に<a href="http://github.com/odashi/ckylark">Ckylark</a>、日本語の単語分割に<a href="http://www.phontron.com/kytea">KyTea</a>、単語の対応付けに<a href="http://github.com/moses-smt/giza-pp">GIZA++</a>を利用します。
 まず、それぞれのサイトに行って、ツールの最新版をダウンロードしてインストールしましょう。
 </p>
 
@@ -87,7 +87,7 @@ Ckylarkに関しては、まずgithubからコードをダウンロードして�
 </p>
 
 <pre>
-cd Ckylark
+cd ckylark
 autoreconf -i
 ./configure
 make
@@ -215,7 +215,7 @@ head -20000 &lt; data/kyoto-clean.tok.ja &gt; data/kyoto-head.tok.ja
 </p>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-head.tok.en &gt; data/kyoto-head.parse.en
 </pre>
 
 <p>
@@ -223,11 +223,11 @@ Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-hea
 </p>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-dev.tok.en &gt; data/kyoto-dev.parse.en
 </pre>
 
 <pre>
-Ckylark/src/ckylark --add-root-tag --model Ckylark/model/wsj &lt; data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
+ckylark/src/bin/ckylark --add-root-tag --model ckylark/data/wsj &lt; data/kyoto-test.tok.en &gt; data/kyoto-test.parse.en
 </pre>
 
 <p>
