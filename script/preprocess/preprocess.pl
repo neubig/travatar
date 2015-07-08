@@ -148,12 +148,12 @@ GetOptions(
     "truecase-trg" => \$TRUECASE_TRG,
     "trg=s" => \$TRG,
 );
-$CKYLARK_DIR = "$PROGRAM_DIR/ckylark" if not $EGRET_DIR;
+$CKYLARK_DIR = "$PROGRAM_DIR/ckylark" if not $CKYLARK_DIR;
 $EGRET_DIR = "$PROGRAM_DIR/egret" if not $EGRET_DIR;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
 $KYTEA_DIR = "$PROGRAM_DIR/kytea" if not $KYTEA_DIR;
 $NILE_DIR = "$PROGRAM_DIR/nile" if not $NILE_DIR;
-my %CKYLARK_DEFAULT_MODEL = ( "en" => "$CKYLARK_DIR/model/wsj",  "ja" => "$CKYLARK_DIR/model/jdc" );
+my %CKYLARK_DEFAULT_MODEL = ( "en" => "$CKYLARK_DIR/data/wsj",  "ja" => "$CKYLARK_DIR/data/jdc" );
 my %EGRET_DEFAULT_MODEL = ( "en" => "$EGRET_DIR/eng_grammar",  "ja" => "$EGRET_DIR/jpn_grammar", "zh" => "$EGRET_DIR/chn_grammar" );
 my %KYTEA_DEFAULT_MODEL = ( "ja" => "$KYTEA_DIR/data/model.bin" );
 
