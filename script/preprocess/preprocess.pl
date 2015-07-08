@@ -255,7 +255,7 @@ sub run_tree_parsing {
     my $is_src = shift;
     my $CKYLARK_MODEL = ($is_src ? $CKYLARK_SRC_MODEL : $CKYLARK_TRG_MODEL);
     if(not $CKYLARK_MODEL) { $CKYLARK_MODEL = $CKYLARK_DEFAULT_MODEL{$lang}; }
-    (-e "$CKYLARK_MODEL.grammar") or die "Could not find Ckylark model \"$CKYLARK_MODEL\" for $lang";
+    (-e "$CKYLARK_MODEL.grammar") or (-e "$CKYLARK_MODEL.grammar.gz") or die "Could not find Ckylark model \"$CKYLARK_MODEL\" for $lang";
     my $SPLIT_CMD = "";
     $SPLIT_CMD = "| $TRAVATAR_DIR/src/bin/tree-converter -split \"$split_words\"" if $split_words;
 
