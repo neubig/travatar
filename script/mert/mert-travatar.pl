@@ -9,7 +9,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my ($SRC, $REF, $TRAVATAR_CONFIG, $TRAVATAR_DIR, $MOSES_DIR, $WORKING_DIR, $TRAVATAR, $DECODER_OPTIONS, $NO_FILTER_RT);
-my ($STAT_GENERATOR,$TRACE);
+my ($STAT_GENERATOR,$POST_PROC,$TRACE);
 
 my $MERT_SOLVER = "batch-tune"; # Can be set to "moses" to use Moses's MERT solver
 my $EVAL = "bleu"; # The evaluation measure to use
@@ -46,6 +46,7 @@ GetOptions(
     "trg-factors=i" => \$TRG_FACTORS,
     "stat-generator=s" => \$STAT_GENERATOR,
     "resume" => \$RESUME,
+    "post-processing=s" => \$POST_PROC,
     # "=s" => \$,
     # "=s" => \$,
     # "=s" => \$,
@@ -115,6 +116,10 @@ foreach $iter ($iter_start .. $MAX_ITERS) {
     my $format = ($IN_FORMAT ? "-in_format $IN_FORMAT" : "");
     my $trace = ($TRACE ? "-trace_out $prev.trace -buffer false" : "");
     safesystem("$TRAVATAR -threads $THREADS $format $trace -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
+    if (defined($POST_PROC)) {
+        safesystem("$POST_PROC < $prev.out > /tmp/travatar-pp.out");
+        safesystem("mv /tmp/travatar-pp.out $prev.out");
+    }
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
     if($MERT_SOLVER eq "moses") {
