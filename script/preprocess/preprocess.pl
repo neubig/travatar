@@ -148,7 +148,7 @@ GetOptions(
     "truecase-trg" => \$TRUECASE_TRG,
     "trg=s" => \$TRG,
 );
-$CKYLARK_DIR = "$PROGRAM_DIR/Ckylark" if not $EGRET_DIR;
+$CKYLARK_DIR = "$PROGRAM_DIR/ckylark" if not $EGRET_DIR;
 $EGRET_DIR = "$PROGRAM_DIR/egret" if not $EGRET_DIR;
 $GIZA_DIR = "$PROGRAM_DIR/giza-pp" if not $GIZA_DIR;
 $KYTEA_DIR = "$PROGRAM_DIR/kytea" if not $KYTEA_DIR;
