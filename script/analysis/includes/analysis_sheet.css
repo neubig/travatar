@@ -73,6 +73,12 @@ table tr:last-child td:last-child
 	border-radius: 0 0 5px 0;
 }
 
+table tr td input
+{
+	width: 100%;
+}
+
+
 body
 {
 	padding-bottom: 50pt;
