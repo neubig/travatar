@@ -147,7 +147,7 @@ var parentref = new Object();
         self.html_parentref_content = """parentref["%s"] = "%s";"""
         self.html_script_footer = """        //--></script>"""
 
-        self.html_table1 = """        <table>
+        self.html_table1 = """        <table id='table-%d'>
             <tr>
                 <td>Sentence ID:</td>
                 <td>%d</td>
@@ -163,6 +163,10 @@ var parentref = new Object();
         self.html_table3 = """            <tr>
                 <td>Target MT:</td>
                 <td>%s</td>
+            </tr>
+            <tr>
+                <td>Paste (C):</td>
+                <td><input type='text' readonly /></td>
             </tr>
         </table>"""
 
@@ -204,7 +208,7 @@ var parentref = new Object();
             for k, v in parentref.items():
                 print(self.html_parentref_content % (k, v), file=fp)
             print(self.html_script_footer, file=fp)
-            print(self.html_table1 % (i, src), file=fp)
+            print(self.html_table1 % (i, i, src), file=fp)
 
             if ref:
                 print(self.html_table2 % escape(ref.strip()), file=fp)

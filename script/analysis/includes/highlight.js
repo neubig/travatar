@@ -35,6 +35,7 @@ $(function(){
 		function()
 		{
 			unhighlight(currentnode);
+			currentnode = "";
 			$(".rules").hide();
 		}
 	);
@@ -70,7 +71,8 @@ $(function(){
 		}
 	);
 	$('.text').click(
-		function(e){
+		function(e)
+		{
 			if(currentnode in parentref)
 			{
 				unhighlight(currentnode);
@@ -78,6 +80,17 @@ $(function(){
 				highlight(currentnode);
 			}
 			return false;
+		}
+	);
+	$(window).keydown(
+		function(e)
+		{
+			if(e.keyCode == 67 && currentnode != "")
+			{
+				sentid = currentnode.split("-")[0];
+				rule_string = desc[currentnode + "-src"] + " ||| " + desc[currentnode + "-trg"];
+				$("#table-" + sentid).find("input").val(rule_string);
+			}
 		}
 	);
 })
