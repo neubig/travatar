@@ -54,13 +54,16 @@ AC_CHECK_HEADERS([ext/hash_map])
 # Check if we have rt/boost
 AC_CHECK_LIB([rt], [timer_create], [AC_SUBST(LIBRT, "-lrt")], [])
 
-BOOST_REQUIRE()
-BOOST_THREADS
-BOOST_REGEX
-BOOST_IOSTREAMS
-BOOST_PROGRAM_OPTIONS
-BOOST_LOCALE
-BOOST_TEST
+
+# Check if we have rt/boost
+AX_BOOST_BASE([1.49], , AC_MSG_ERROR([Boost 1.49 or later is required]))
+AX_BOOST_IOSTREAMS
+AX_BOOST_LOCALE
+AX_BOOST_PROGRAM_OPTIONS
+AX_BOOST_REGEX
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+AX_BOOST_UNIT_TEST_FRAMEWORK
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])

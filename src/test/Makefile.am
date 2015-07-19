@@ -35,11 +35,11 @@ test_travatar_LDADD = \
 	../tercpp/libter.la \
 	../marisa/libmarisa.la \
 	../liblbfgs/liblbfgs.la \
-	$(BOOST_SYSTEM_LDFLAGS) \
-	$(BOOST_THREAD_LIBS) \
-	$(BOOST_REGEX_LIBS) \
-	$(BOOST_IOSTREAMS_LIBS) \
-	$(BOOST_SYSTEM_LIBS) \
-	$(BOOST_LOCALE_LIBS) \
-	$(BOOST_UNIT_TEST_FRAMEWORK_LIBS) \
+	$(BOOST_LDFLAGS) \
+	$(BOOST_THREAD_LIB) \
+	$(BOOST_REGEX_LIB) \
+	$(BOOST_IOSTREAMS_LIB) \
+	$(BOOST_SYSTEM_LIB) \
+	$(BOOST_LOCALE_LIB) \
+	$(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
 	-lz
