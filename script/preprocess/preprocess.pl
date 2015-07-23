@@ -190,14 +190,16 @@ my %file_lens;
 $file_len_func = sub {
     my $f = shift;
     return $file_lens{$f} if defined $file_lens{$f};
-    my $len = `wc -l $f`; $len =~ s/[ \n].*//g;
-    $file_lens{$f} = $len;
-    return $len;
+    my $len = `wc -l $f`;
+    $len =~ /^\s*(\d+)/ or die "could not find file length for $f, result: $len\n";
+    $file_lens{$f} = $1;
+    return $1;
 };
 
 ###### Get and check the lengths #######
 my ($SRCLEN, $TRGLEN);
 $SRCLEN = &$file_len_func($ARGV[0]);
+print STDERR "$SRCLEN/$THREADS\n";
 my $len = int($SRCLEN/$THREADS+1);
 my $suflen = int(log($THREADS)/log(10)+1);
 my @suffixes = map { sprintf("%0${suflen}d", $_) } (0 .. $THREADS-1);
@@ -227,7 +229,7 @@ sub tokenize_cmd {
     elsif($_[0] =~ /^(ja|zh)$/) { 
         my $mod = ($_[1] ? $_[1] : $KYTEA_DEFAULT_MODEL{$_[0]});
         die "Must specify a KyTea model for $_[0]" if(not $mod);
-        return "$KYTEA_DIR/src/bin/kytea -notags -wsconst D -model $mod INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g\" > OUTFILE";
+        return "$KYTEA_DIR/src/bin/kytea -notags -wsconst D -model $mod INFILE | sed \"s/[\t ]+/ /g; s/^ +//g; s/ +\$//g; s/ \\\\\\\\ //g\" > OUTFILE";
     }
     else { die "Cannot tokenize $_[0]"; }
 }
@@ -468,7 +470,18 @@ sub wait_done {
 sub split_file {
     my ($len, $suflen, $sufs, $infile, $outpref) = @_;
     if($SPLIT_TYPE eq "consecutive") {
-        safesystem("split -l $len -a $suflen -d $infile $outpref") or die;
+        open INFILE, "<:utf8", $infile or die "Couldn't open $infile\n";
+        my $lines = 0;
+        while(<INFILE>) {
+            if($lines % $len == 0) {
+                if($lines != 0) { close OUTFILE; }
+                my $outfile = sprintf("%s%0${suflen}d", $outpref, int($lines/$len));
+                open OUTFILE, ">:utf8", $outfile or die "Couldn't open $outfile\n";
+            }
+            print OUTFILE $_;
+            $lines++;
+        }
+        close INFILE;
     } elsif($SPLIT_TYPE eq "interleave") {
         my $filecnt = @$sufs;
         safesystem("awk '{print >(sprintf(\"$outpref%0${suflen}d\", (NR-1)%$filecnt))}' $infile");
@@ -477,7 +490,7 @@ sub split_file {
     }
 }
 
-# Split files 
+# Concatenate files 
 sub cat_files {
     my ($out, @in) = @_;
     if($SPLIT_TYPE eq "consecutive") {
