@@ -36,7 +36,7 @@ public:
         AddConfigEntry("debug", "1", "What level of debugging output to print");
         AddConfigEntry("forest_out", "", "Forest output file location");
         AddConfigEntry("forest_nbest_trim", "0", "Trim the forest so it only includes edges in the n-best");
-        AddConfigEntry("in_format", "penn", "The format of the input (penn/egret)");
+        AddConfigEntry("in_format", "penn", "The format of the input (penn/egret/moses/word)");
         AddConfigEntry("lm_file", "", "Language model file location");
         AddConfigEntry("lm_multi_type", "joint", "How to combine multiple LMs (joint/consec)");
         AddConfigEntry("nbest", "1", "The length of the n-best list");

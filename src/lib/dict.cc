@@ -166,10 +166,10 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
         // The next word is the head symbol
         if(buff == "@") {
             if(!(iss >> buff))
-                THROW_ERROR("Missing label in synchronus rule: " <<  str);
+                THROW_ERROR("Bad rule string. Missing label in synchronous rule: " <<  str);
             data.label = WID(buff);
             if(iss >> buff)
-                THROW_ERROR("Too many labels in synchronus rule: " <<  str);
+                THROW_ERROR("Bad rule string. Too many labels in synchronous rule: " <<  str);
             break;
         // Read a terminal
         } else if (bs > 2 && buff[0] == '"' && buff[bs-1] == '"') {
@@ -178,18 +178,18 @@ CfgData Dict::ParseAnnotatedWords(const std::string & str) {
         } else if(buff[0] == 'x') {
             int end;
             for(end = 1; end < bs && buff[end] >= '0' && buff[end] <= '9'; end++);
-            if(end == 1) THROW_ERROR("Bad rule string: " << str);
+            if(end == 1) THROW_ERROR("Bad rule string. All non-terminals must have an ID (e.g. 'x0') none was found (e.g. 'x'): " << str);
             int id = lexical_cast<int>(buff.substr(1, end-1));
             data.words.push_back(-1 - id);
             if(end != bs) {
-                if(buff[end] != ':') THROW_ERROR("Bad rule string: " << str);
+                if(buff[end] != ':') THROW_ERROR("Bad rule string. Non-terminals can only be followed by a space or colon, but a different character '" << buff[end] << "' was found: " << str);
                 if(id >= (int)data.syms.size())
                     data.syms.resize(id+1, -1);
                 data.syms[id] = Dict::WID(buff.substr(end+1));
             }
         // Everything else is bad
         } else {
-            THROW_ERROR("Bad rule string: " << str);
+            THROW_ERROR("Bad rule string. Illegal label '" << buff << "': " << str);
         }
     }
     if(data.words.capacity() > data.words.size()) { std::vector<WordId>(data.words).swap(data.words); }
