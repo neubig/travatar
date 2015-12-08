@@ -117,8 +117,8 @@ foreach $iter ($iter_start .. $MAX_ITERS) {
     my $trace = ($TRACE ? "-trace_out $prev.trace -buffer false" : "");
     safesystem("$TRAVATAR -threads $THREADS $format $trace -trg_factors $TRG_FACTORS -config_file $prev.ini $DECODER_OPTIONS $CAND_OPTIONS  < $SRC > $prev.out 2> $prev.err") or die "couldn't decode";
     if (defined($POST_PROC)) {
-        safesystem("$POST_PROC < $prev.out > /tmp/travatar-pp.out");
-        safesystem("mv /tmp/travatar-pp.out $prev.out");
+        safesystem("$POST_PROC < $prev.nbest > $WORKING_DIR/travatar-pp.nbest") or die;
+        safesystem("mv $WORKING_DIR/travatar-pp.nbest $prev.nbest") or die;
     }
     safesystem("cp $prev.out $WORKING_DIR/last.out") or die "couldn't copy to last.out";
     safesystem("cp $prev.ini $WORKING_DIR/last.ini") or die "couldn't copy to last.out";
