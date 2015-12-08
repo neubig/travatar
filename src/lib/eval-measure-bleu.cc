@@ -112,7 +112,8 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
         Real mat = (vals_[3*i]+smooth);
         Real sys = (vals_[3*i+1]+smooth);
         Real ref = (vals_[3*i+2]+smooth);
-        Real fmeas = mat / (prec_weight_ * sys + (1-prec_weight_) * ref);
+        
+        Real fmeas = (sys == 0 ? 0 : mat / (prec_weight_ * sys + (1-prec_weight_) * ref));
         // To support PINC
         if (inverse_)
             fmeas = 1.0 - fmeas;
@@ -123,6 +124,7 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
         else
             log_bleu += fmeas;
     }
+
     // Average and convert to log scale
     if(log_bleu == 0)
         log_bleu = -REAL_MAX;
@@ -130,6 +132,8 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
         log_bleu = log(log_bleu)/ngram_order;
     else
         log_bleu = log(log_bleu/ngram_order);
+    
+    
     // vals_[vals__n-1] is the ref length, vals_[1] is the test length
     report.sys_len = vals_[1];
     report.ref_len = vals_[2];
@@ -145,6 +149,7 @@ BleuReport EvalStatsBleu::CalcBleuReport() const {
     // Sanity check
     if(log_bleu > 0) THROW_ERROR("Found a "<< GetIdString() <<" larger than one: " << exp(log_bleu))
     report.bleu = exp(log_bleu);
+    
     return report;
 }
 
