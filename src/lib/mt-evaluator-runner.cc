@@ -73,6 +73,8 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
         ifstream sysin(filename.c_str());
         if(!sysin) THROW_ERROR("Could not open system file: " << filename);
         while(getline(sysin, line)) {
+            if(id >= ref_sentences.size())
+              THROW_ERROR("File " << filename << " longer than reference file " << config.GetString("ref"));
             vector<Sentence> sys_sent = Dict::ParseWordVector(line);
             for(int i = 0; i < eval_count; i++) {
                 EvalStatsPtr stats = eval_measures[i]->CalculateCachedStats(ref_sentences[id],sys_sent);
