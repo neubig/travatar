@@ -1,7 +1,13 @@
 language: cpp
+sudo: true
 
 compiler:
   - clang
   - gcc
+
+addons:
+  apt:
+    packages:
+    - libboost-all-dev
 
 script: autoreconf -i && ./configure && make && make check
