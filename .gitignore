@@ -44,5 +44,8 @@ src/include/travatar/stamp-h1
 src/include/travatar/config.h
 src/kenlm/lm/lmplz
 src/kenlm/lm/build_binary
+src/test/test-suite.log
+src/test/test-travatar.log
+src/test/test-travatar.trs
 test-driver
 .DS_Store
