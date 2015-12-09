@@ -8,6 +8,12 @@ compiler:
 addons:
   apt:
     packages:
-    - libboost-all-dev
+    - libboost-iostreams1.55-dev
+    - libboost-locale1.55-dev
+    - libboost-program-options1.55-dev
+    - libboost-regex1.55-dev
+    - libboost-system1.55-dev
+    - libboost-test1.55-dev
+    - libboost-thread1.55-dev
 
 script: autoreconf -i && ./configure && make && make check

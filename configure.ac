@@ -56,7 +56,7 @@ AC_CHECK_LIB([rt], [timer_create], [AC_SUBST(LIBRT, "-lrt")], [])
 
 
 # Check if we have rt/boost
-AX_BOOST_BASE([1.46], , AC_MSG_ERROR([Boost 1.46 or later is required]))
+AX_BOOST_BASE([1.49], , AC_MSG_ERROR([Boost 1.49 or later is required]))
 AX_BOOST_IOSTREAMS
 AX_BOOST_LOCALE
 AX_BOOST_PROGRAM_OPTIONS
