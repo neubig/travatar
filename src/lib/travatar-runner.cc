@@ -80,7 +80,11 @@ void TravatarRunnerTask::Run() {
                 << sent_
                 << " ||| " << Dict::PrintWords(path->GetTrgData())
                 << " ||| " << path->GetScore()
-                << " ||| " << Dict::PrintSparseVector(path->CalcFeatures()) << endl;
+                << " ||| " << Dict::PrintSparseVector(path->CalcFeatures());
+            if(runner_->GetNbestTree()){
+                nbest_out << " ||| " << path->GetTreeStr();
+            }
+            nbest_out << endl;
         }
         nbest_collector_->Write(sent_, nbest_out.str(), "");
     }
@@ -134,7 +138,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load all the variables
     GlobalVars::debug = config.GetInt("debug");
     GlobalVars::trg_factors = config.GetInt("trg_factors");
-    bool save_src_str = (config.GetString("trace_out") != "");
+    nbest_tree_ = config.GetBool("nbest_tree");
+    bool save_src_str = (config.GetString("trace_out") != "" || nbest_tree_);
     bool consider_trg = config.GetBool("consider_trg");
     nbest_count_ = config.GetInt("nbest");
     nbest_uniq_ = config.GetBool("nbest_uniq");
