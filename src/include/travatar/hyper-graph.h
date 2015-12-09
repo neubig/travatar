@@ -290,6 +290,7 @@ public:
     bool operator==(const HyperPath & rhs) const;
     bool operator!=(const HyperPath & rhs) const { return !(*this == rhs); }
     void Print(std::ostream & out) const;
+    std::string GetTreeStr() const;
 
 protected:
     // The edges contrained in this translation

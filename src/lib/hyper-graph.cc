@@ -2,6 +2,7 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/tr1/unordered_set.hpp>
+#include <boost/regex.hpp>
 #include <lm/left.hh>
 #include <lm/model.hh>
 #include <travatar/weights.h>
@@ -395,6 +396,22 @@ void HyperPath::Print(std::ostream & out) const {
     out << "}";
 }
 
+
+std::string HyperPath::GetTreeStr() const{
+    if ((int)edges_.size() < 1) return "";
+
+    string tree = edges_[1]->GetSrcStr();
+    boost::regex e ("\\bx[0-9]:(.*?) ");
+    boost::smatch m;
+    for(int i = 2; i < (int)edges_.size(); i++){
+       string nextTree = edges_[i]->GetSrcStr() + " ";
+       if(boost::regex_search(tree, m, e) == true){
+           tree = boost::regex_replace(tree, e, nextTree, boost::format_first_only);
+       }
+    }
+
+    return tree;
+}
 
 // Calculate the features for this path by simply adding up all the features
 SparseVector HyperPath::CalcFeatures() {
