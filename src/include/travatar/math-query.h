@@ -18,12 +18,13 @@ enum TokenType {
 struct MathToken;
 
 class MathQuery{
+    typedef std::map<WordId,Real> WordIdRealMap;
     std::vector<MathToken*> tokens_;
 public:
-    MathQuery(std::string query="", std::map<WordId,Real> vars=std::map<WordId,Real>());
+    MathQuery(std::string query="", WordIdRealMap vars=WordIdRealMap());
     virtual ~MathQuery();
 
-    static Real Evaluate(const std::map<WordId,Real>& var_map, const std::string& query);
+    static Real Evaluate(const WordIdRealMap& var_map, const std::string& query);
     static Real Evaluate(const MathQuery& mq);
     virtual void Print(std::ostream& oss) const;
 };

@@ -21,8 +21,9 @@ class TranslationRule;
 class Weights;
 class RuleEdge;
 
-typedef std::pair< std::pair<int,int>, WordId > LabeledSpan;
-typedef std::map< std::pair<int,int>, WordId > LabeledSpans;
+typedef std::pair<int,int> SpanId;
+typedef std::pair< SpanId, WordId > LabeledSpan;
+typedef std::map< SpanId, WordId > LabeledSpans;
 
 // A hyperedge in the hypergraph
 class HyperEdge {
@@ -142,7 +143,7 @@ private:
     // The ID of the symbol represented on the target side
     WordId trg_sym_;
     // The span in the source sentence covered
-    std::pair<int,int> src_span_;
+    SpanId src_span_;
     // HyperEdges to child nodes
     std::vector<HyperEdge*> edges_;
     // For use in rule extraction, the span in the target sentence that this
@@ -156,7 +157,7 @@ private:
 public:
     HyperNode(WordId sym = -1,
               WordId trg_sym = -1,
-              std::pair<int,int> span = std::pair<int,int>(-1,-1),
+              SpanId span = SpanId(-1,-1),
               int id = -1) : 
         id_(id), sym_(sym), trg_sym_(trg_sym), src_span_(span), has_trg_span_(false),
         frontier_(UNSET_FRONTIER), viterbi_score_(-REAL_MAX) { };
@@ -198,10 +199,10 @@ public:
     WordId GetTrgSym() const { return trg_sym_; }
     void SetId(NodeId id) { id_ = id; }
     NodeId GetId() const { return id_; }
-    const std::pair<int,int> & GetSpan() const { return src_span_; }
-    std::pair<int,int> & GetSpan() { return src_span_; }
-    void SetSpan(const std::pair<int,int> & span) { src_span_ = span; }
-    void AddSpan(const std::pair<int,int> & span) {
+    const SpanId & GetSpan() const { return src_span_; }
+    SpanId & GetSpan() { return src_span_; }
+    void SetSpan(const SpanId & span) { src_span_ = span; }
+    void AddSpan(const SpanId & span) {
         if(src_span_.second == -1) src_span_ = span;
         else {
             src_span_.first = std::min(src_span_.first, span.first);

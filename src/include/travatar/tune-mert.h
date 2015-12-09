@@ -39,6 +39,8 @@ struct LineSearchResult {
 
 };
 
+typedef std::pair<Real,Real> RealSpan;
+
 // Performs MERT
 class TuneMert : public Tune {
 
@@ -51,7 +53,7 @@ public:
       const SparseMap & weights,
       const SparseMap & gradient,
       std::vector<boost::shared_ptr<TuningExample> > & examps,
-      std::pair<Real,Real> range = std::pair<Real,Real>(-REAL_MAX, REAL_MAX));
+      RealSpan range = RealSpan(-REAL_MAX, REAL_MAX));
 
     // **** Non-static Members ****
     TuneMert();
