@@ -69,7 +69,7 @@ public:
     const EvalMeasure & GetEvalMeasure() const { return *tune_eval_measure_; }
     int GetNbestCount() const { return nbest_count_; }
     bool GetNbestUniq() const { return nbest_uniq_; }
-    bool GetNbestWithTree() const { return nbest_with_tree_; }
+    bool GetNbestTree() const { return nbest_tree_; }
     int GetThreads() const { return threads_; }
     bool GetDoTuning() const { return do_tuning_; } 
 
@@ -89,7 +89,7 @@ private:
     boost::shared_ptr<EvalMeasure> tune_eval_measure_;
     int nbest_count_;
     bool nbest_uniq_;
-    bool nbest_with_tree_;
+    bool nbest_tree_;
     int threads_;
     bool do_tuning_;
 

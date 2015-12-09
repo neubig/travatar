@@ -76,21 +76,15 @@ void TravatarRunnerTask::Run() {
     if(nbest_collector_ != NULL) {
         ostringstream nbest_out;
         BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
-            if(runner_->GetNbestWithTree() == false){
-                nbest_out
-                    << sent_
-                    << " ||| " << Dict::PrintWords(path->GetTrgData())
-                    << " ||| " << path->GetScore()
-                    << " ||| " << Dict::PrintSparseVector(path->CalcFeatures()) << endl;
+            nbest_out
+                << sent_
+                << " ||| " << Dict::PrintWords(path->GetTrgData())
+                << " ||| " << path->GetScore()
+                << " ||| " << Dict::PrintSparseVector(path->CalcFeatures());
+            if(runner_->GetNbestTree()){
+                nbest_out << " ||| " << path->GetTreeStr();
             }
-            else {
-                nbest_out
-                    << sent_
-                    << " ||| " << Dict::PrintWords(path->GetTrgData())
-                    << " ||| " << path->GetScore()
-                    << " ||| " << Dict::PrintSparseVector(path->CalcFeatures())
-                    << " ||| " << path->GetTreeStr() << endl;
-            }
+            nbest_out << endl;
         }
         nbest_collector_->Write(sent_, nbest_out.str(), "");
     }
@@ -144,8 +138,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     // Load all the variables
     GlobalVars::debug = config.GetInt("debug");
     GlobalVars::trg_factors = config.GetInt("trg_factors");
-    nbest_with_tree_ = config.GetBool("nbest_with_tree");
-    bool save_src_str = (config.GetString("trace_out") != "" || nbest_with_tree_);
+    nbest_tree_ = config.GetBool("nbest_tree");
+    bool save_src_str = (config.GetString("trace_out") != "" || nbest_tree_);
     bool consider_trg = config.GetBool("consider_trg");
     nbest_count_ = config.GetInt("nbest");
     nbest_uniq_ = config.GetBool("nbest_uniq");
