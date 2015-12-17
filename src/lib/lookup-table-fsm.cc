@@ -97,6 +97,9 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
                 THROW_ERROR("Mismatched number of non-terminals in rule table: " << endl << line);
         if(src_data.words.size() == 0)
             THROW_ERROR("Empty sources in a rule are not allowed: " << endl << line);
+        BOOST_FOREACH(WordId srcid, src_data.words)
+            if(-1 - srcid > (int)src_data.syms.size())
+                THROW_ERROR("Non-terminal ID is larger than number of symbols: " << endl << line);
 
         string key_str = CreateKey(src_data, trg_data);
         rules[key_str].push_back(rule);
