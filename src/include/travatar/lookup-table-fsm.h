@@ -131,6 +131,7 @@ public:
 
     void SetDeleteUnknown(bool delete_unk) { delete_unknown_ = delete_unk; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
+    void SetUnkSymbol(WordId symbol) { unk_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetSpanLimits(const std::vector<int>& limits);
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
     void SetSaveSrcStr(const bool save_src_str);
