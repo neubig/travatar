@@ -77,10 +77,12 @@ while(1) {
     die "Wrong number of columns:\nFILE0: $s0\nFILE1: $s1\n" if ((@arr0 != 5) or (@arr1 != 5));
     die "Rules don't match:\nFILE0: $s0\nFILE1: $s1\n" if ($arr0[0] ne $arr1[0]) or ($arr0[1] ne $arr1[1]);
     # Print the previous set of rules if necessary
-    if($arr0[0] ne $curr) {
+    my $my_sym = $arr0[0];
+    $my_sym =~ s/ @ [^ ]+//g;
+    if($my_sym ne $curr) {
         print_queue(@queue);
         @queue = ();
-        $curr = $arr0[0];
+        $curr = $my_sym;
     }
     # Save the features from both
     my %feat; add_feat(\%feat, $arr0[2]); add_feat(\%feat, $arr1[2]);
