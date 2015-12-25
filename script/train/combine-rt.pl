@@ -78,7 +78,7 @@ while(1) {
     die "Rules don't match:\nFILE0: $s0\nFILE1: $s1\n" if ($arr0[0] ne $arr1[0]) or ($arr0[1] ne $arr1[1]);
     # Print the previous set of rules if necessary
     my $my_sym = $arr0[0];
-    $my_sym =~ s/ @ [^ ]+//g;
+    $my_sym =~ s/ @ [^ ]+$//g;
     if($my_sym ne $curr) {
         print_queue(@queue);
         @queue = ();
