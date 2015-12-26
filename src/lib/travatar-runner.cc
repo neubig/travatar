@@ -59,7 +59,7 @@ void TravatarRunnerTask::Run() {
     // Calculate the n-best list
     NbestList nbest_list;
     if(rule_graph->NumNodes() > 0) {
-        PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->GetViterbiScore() << endl, 1);
+        PRINT_DEBUG("SENT " << sent_ << " score: " << rule_graph->GetNode(0)->CalcViterbiScore() << endl, 1);
         nbest_list = rule_graph->GetNbest(runner_->GetNbestCount(), runner_->GetNbestUniq());
     }
 
