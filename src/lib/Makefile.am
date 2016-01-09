@@ -76,7 +76,7 @@ TRAVATARCPP = \
 	output-collector.cc
 
 
-AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/..
+AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. $(BOOST_CPPFLAGS)
 
 lib_LTLIBRARIES = libtravatar.la
 
