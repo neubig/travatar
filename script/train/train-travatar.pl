@@ -70,6 +70,9 @@ my $CONFIG_FILE = "";
 # Progress showing option by pipe viewer
 my $PROGRESS = 0;
 
+# Sort command options
+my $SORT_OPTIONS = "";
+
 GetOptions(
     "work_dir=s" => \$WORK_DIR, # The working directory to use
     "travatar_dir=s" => \$TRAVATAR_DIR, # The directory of travatar
@@ -98,6 +101,7 @@ GetOptions(
     "term_len=s" => \$TERM_LEN, # The maximum number of terminals in a rule
     "nbest_rules=s" => \$NBEST_RULES, # The maximum number of rules for each source
     "score_options=s" => \$SCORE_OPTIONS, # Any additional options to the score-t2s.pl script (src-trg)
+    "sort_options=s" => \$SORT_OPTIONS, # Any additional options to the unix sort command
     "tm_file=s" => \$TM_FILE, # An already created TM file
     "lm_file=s" => \$LM_FILE, # An already created LM file
     "config_file=s" => \$CONFIG_FILE, # Where to output the configuration file
@@ -257,8 +261,8 @@ if(not $TM_FILE) {
     # Then, score the rules (in parallel?)
     my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
     my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "gunzip -c $EXTRACT_FILE | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort | gzip > $RT_SRCTRG";
-    my $RT_TRGSRC_CMD = "gunzip -c $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $PV_PIPE | gzip > $RT_TRGSRC";
+    my $RT_SRCTRG_CMD = "gunzip -c $EXTRACT_FILE | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort $SORT_OPTIONS | gzip > $RT_SRCTRG";
+    my $RT_TRGSRC_CMD = "gunzip -c $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS $PV_PIPE | gzip > $RT_TRGSRC";
     run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
     # Whether to create the model zipped or not
     my $zip_cmd;
