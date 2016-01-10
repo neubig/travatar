@@ -23,7 +23,7 @@ my $FOF_MAX = 20;
 my $FOF_FILE;
 GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
-    "cooc-min-freq=i" => \$COOC_MIN_FREQ, # Minimum co-occurrence frequency of src and trg patterns
+    "cooc-min-freq=f" => \$COOC_MIN_FREQ, # Minimum co-occurrence frequency of src and trg patterns
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
                                           # calculating model 1
     "lex-type=s" => \$LEX_TYPE,           # Calculate lexical probs. using "all" or "aligned" words
