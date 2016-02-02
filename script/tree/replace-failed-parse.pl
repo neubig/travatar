@@ -80,8 +80,9 @@ sub get_egret {
         $buf = <$handle>;
         return (0, "$ret\n");
     }
+    my $len = 0;
     while($buf = <$handle>) {
-        $ret .= $buf;
+        $ret .= $buf if ($len++ <= ($MAX_FOREST+1));
         chomp $buf;
         last if not $buf;
     }
