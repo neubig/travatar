@@ -9,6 +9,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $SRC_MIN_FREQ = 0;
+my $COOC_MIN_FREQ = 0;
 my $LEX_PROB_FILE = "";
 my $LEX_TYPE = "all";
 my $TRG_SYNTAX = 0;
@@ -22,6 +23,7 @@ my $FOF_MAX = 20;
 my $FOF_FILE;
 GetOptions(
     "src-min-freq=i" => \$SRC_MIN_FREQ,   # Minimum frequency of a src pattern
+    "cooc-min-freq=f" => \$COOC_MIN_FREQ, # Minimum co-occurrence frequency of src and trg patterns
     "lex-prob-file=s" => \$LEX_PROB_FILE, # File of lexical probabilities for
                                           # calculating model 1
     "lex-type=s" => \$LEX_TYPE,           # Calculate lexical probs. using "all" or "aligned" words
@@ -100,12 +102,16 @@ my $SYNTAX_FEATS = ($TRG_SYNTAX or $SRC_LABEL or $TRG_LABEL or $SRC_TRG_LABEL);
 sub print_counts {
     my ($src, $counts) = @_;
     my $sum;
-    for(@$counts) { $sum += $_->[1]; }
+    for(@$counts) { 
+        next if $_->[1] < $COOC_MIN_FREQ;
+        $sum += $_->[1];
+    }
     return if $sum < $SRC_MIN_FREQ;
     my @srcarr = strip_arr($src);
     # my $lsum = log($sum);
     foreach my $kv (@$counts) {
         my ($trg, $cnt, $align) = @$kv;
+        next if $cnt < $COOC_MIN_FREQ;
         # Find the number of words
         my @trgarr = strip_arr($trg);
         # Find the best alignment

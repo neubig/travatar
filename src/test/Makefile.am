@@ -1,6 +1,6 @@
 include $(top_srcdir)/common.am
 
-AM_CXXFLAGS += $(BOOST_CPPFLAGS) -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. -DPKGDATADIR='"$(pkgdatadir)"'
+AM_CXXFLAGS += -I$(srcdir)/../include -I$(srcdir)/../kenlm -I$(srcdir)/.. $(BOOST_CPPFLAGS) -DPKGDATADIR='"$(pkgdatadir)"'
 
 noinst_PROGRAMS = test-travatar
 TESTS = test-travatar
@@ -42,4 +42,8 @@ test_travatar_LDADD = \
 	$(BOOST_SYSTEM_LIB) \
 	$(BOOST_LOCALE_LIB) \
 	$(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
-	-lz
+	-lz \
+	-licui18n \
+	-licuuc \
+	-licudata \
+	-lrt

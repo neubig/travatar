@@ -20,4 +20,4 @@ lib_LTLIBRARIES = libklm_util.la
 
 libklm_util_la_SOURCES = bit_packing.cc cat_compressed_main.cc double-conversion/bignum-dtoa.cc double-conversion/bignum.cc double-conversion/cached-powers.cc double-conversion/diy-fp.cc double-conversion/double-conversion.cc double-conversion/fast-dtoa.cc double-conversion/fixed-dtoa.cc double-conversion/strtod.cc ersatz_progress.cc exception.cc file.cc file_piece.cc mmap.cc murmur_hash.cc parallel_read.cc pool.cc read_compressed.cc scoped.cc stream/chain.cc stream/io.cc stream/line_input.cc stream/multi_progress.cc string_piece.cc usage.cc
 
-AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) $(BOOST_CPPFLAGS) -I$(srcdir)/.. 
+AM_CXXFLAGS += -W -Wall -Wno-sign-compare $(GTEST_CPPFLAGS) -I$(srcdir)/.. $(BOOST_CPPFLAGS)
