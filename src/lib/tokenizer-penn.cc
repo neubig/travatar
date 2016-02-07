@@ -22,7 +22,8 @@ TokenizerPenn::TokenizerPenn() {
     // patterns_.push_back(pattern_type(regex_type("([^.])([.])([\\x5B\\x5D\\x29\\x7D\\x3E\\x22\\x27]*)(?=[[:space:]]*$)"), "$1 $2$3"));
     patterns_.push_back(pattern_type(regex_type("([.])([\\x5B\\x5D\\x29\\x7D\\x3E\\x22\\x27]+)"), "$1 $2"));
     
-    patterns_.push_back(pattern_type(regex_type("([?!\\x5B\\x5D\\x28\\x29\\x7B\\x7D\\x3C\\x3E]|--)"), " $1 "));
+    // Last two are unicode quotes
+    patterns_.push_back(pattern_type(regex_type("([?!\\x5B\\x5D\\x28\\x29\\x7B\\x7D\\x3C\\x3E]|--|\\xE2\\x80\\x9C|\\xE2\\x80\\x9D)"), " $1 "));
     
     patterns_.push_back(pattern_type(regex_type("\""), " \'\' "));
     
