@@ -2,6 +2,7 @@
 #define TRAVATAR_RUNNER_H__
 
 #include <travatar/task.h>
+#include <travatar/nbest-list.h>
 #include <travatar/output-collector.h>
 #include <travatar/sparse-map.h>
 #include <boost/shared_ptr.hpp>
@@ -34,6 +35,12 @@ public:
           trace_collector_(trace_collector), forest_collector_(forest_collector) { }
     void Run();
 private:
+    // Subtasks
+    void PrintNbestList(const NbestList & nbest_list);
+    void PrintBestTrace(const NbestList & nbest_list, const int best_answer);
+    void PrintNbestTrace(const NbestList & nbest_list);
+    void PrintForest(boost::shared_ptr<HyperGraph> & rule_graph);
+
     int sent_; // ID of this sentence
     boost::shared_ptr<HyperGraph> tree_graph_; // The input
     std::vector<Sentence> refs_; // References

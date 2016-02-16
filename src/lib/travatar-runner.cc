@@ -33,6 +33,80 @@ using namespace std;
 using namespace boost;
 using namespace lm::ngram;
 
+void TravatarRunnerTask::PrintNbestList(const NbestList & nbest_list) {
+    ostringstream nbest_out;
+    BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
+        nbest_out
+            << sent_
+            << " ||| " << Dict::PrintWords(path->GetTrgData())
+            << " ||| " << path->GetScore()
+            << " ||| " << Dict::PrintSparseVector(path->CalcFeatures());
+        if(runner_->GetNbestTree()){
+            nbest_out << " ||| " << path->GetTreeStr();
+        }
+        nbest_out << endl;
+    }
+    nbest_collector_->Write(sent_, nbest_out.str(), "");
+}
+
+void TravatarRunnerTask::PrintBestTrace(const NbestList & nbest_list, const int best_answer) {
+    // if there is some output print the trace
+    if (nbest_list.size() != 0) {
+        ostringstream trace_out;
+        BOOST_FOREACH(const HyperEdge * edge, nbest_list[best_answer]->GetEdges()) {
+            trace_out
+                << sent_
+                << " ||| " << edge->GetHead()->GetSpan()
+                << " ||| " << edge->GetSrcStr()
+                << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
+                << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
+                << endl;
+        }
+        trace_collector_->Write(sent_, trace_out.str(), "");
+    } else {
+        // Skip this sentence
+        trace_collector_->Skip();
+    }
+}
+
+void TravatarRunnerTask::PrintNbestTrace(const NbestList & nbest_list) {
+    // if there is some output print the trace
+    if (nbest_list.size() != 0) {
+        ostringstream trace_out;
+        int answer = 0;
+        BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
+          BOOST_FOREACH(const HyperEdge * edge, path->GetEdges()) {
+              trace_out
+                  << sent_
+                  << " ||| " << answer
+                  << " ||| " << edge->GetHead()->GetSpan()
+                  << " ||| " << edge->GetSrcStr()
+                  << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
+                  << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
+                  << endl;
+          }
+          ++answer;
+        }
+        trace_collector_->Write(sent_, trace_out.str(), "");
+    } else {
+        // Skip this sentence
+        trace_collector_->Skip();
+    }
+}
+
+void TravatarRunnerTask::PrintForest(boost::shared_ptr<HyperGraph> & rule_graph) {
+    // Trim if needed
+    boost::shared_ptr<HyperGraph> out_for = rule_graph;
+    if(runner_->HasTrimmer())
+        out_for.reset(runner_->GetTrimmer().TransformGraph(*out_for));
+    // Print
+    ostringstream forest_out;
+    JSONTreeIO io;
+    io.WriteTree(*out_for, forest_out);
+    forest_out << endl;
+    forest_collector_->Write(sent_, forest_out.str(), "");
+}
+
 void TravatarRunnerTask::Run() {
     typedef boost::shared_ptr<GraphTransformer> GTPtr;
     PRINT_DEBUG("Translating sentence " << sent_ << endl << Dict::PrintWords(tree_graph_->GetWords()) << endl, 1);
@@ -71,59 +145,26 @@ void TravatarRunnerTask::Run() {
         out << Dict::PrintWords(nbest_list[best_answer]->GetTrgData());
     }
     out << endl;
-    
+
     // If we are printing the n-best list, print it
     if(nbest_collector_ != NULL) {
-        ostringstream nbest_out;
-        BOOST_FOREACH(const boost::shared_ptr<HyperPath> & path, nbest_list) {
-            nbest_out
-                << sent_
-                << " ||| " << Dict::PrintWords(path->GetTrgData())
-                << " ||| " << path->GetScore()
-                << " ||| " << Dict::PrintSparseVector(path->CalcFeatures());
-            if(runner_->GetNbestTree()){
-                nbest_out << " ||| " << path->GetTreeStr();
-            }
-            nbest_out << endl;
-        }
-        nbest_collector_->Write(sent_, nbest_out.str(), "");
+        PrintNbestList(nbest_list);
     }
-    
+
     // If we are printing a trace, create it
     if(trace_collector_ != NULL) {
-        // if there is some output print the trace
-        if (nbest_list.size() != 0) {
-            ostringstream trace_out;
-            BOOST_FOREACH(const HyperEdge * edge, nbest_list[best_answer]->GetEdges()) {
-                trace_out
-                    << sent_
-                    << " ||| " << edge->GetHead()->GetSpan()
-                    << " ||| " << edge->GetSrcStr() 
-                    << " ||| " << Dict::PrintAnnotatedVector(edge->GetTrgData())
-                    << " ||| " << Dict::PrintSparseVector(edge->GetFeatures())
-                    << endl;
-            }
-            trace_collector_->Write(sent_, trace_out.str(), "");
+        if(nbest_collector_ != NULL) {
+            PrintNbestTrace(nbest_list);
         } else {
-            // Skip this sentence
-            trace_collector_->Skip();
+            PrintBestTrace(nbest_list, best_answer);
         }
     }
-    
+
     collector_->Write(sent_, out.str(), "");
 
     // If we are printing a forest, print it
     if(forest_collector_ != NULL) {
-        // Trim if needed
-        boost::shared_ptr<HyperGraph> out_for = rule_graph;
-        if(runner_->HasTrimmer())
-            out_for.reset(runner_->GetTrimmer().TransformGraph(*out_for));
-        // Print
-        ostringstream forest_out;
-        JSONTreeIO io;
-        io.WriteTree(*out_for, forest_out);
-        forest_out << endl;
-        forest_collector_->Write(sent_, forest_out.str(), "");
+        PrintForest(rule_graph);
     }
 
     // If we are tuning load the next references and check the weights
@@ -170,7 +211,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         do_tuning_ = false;
     } else {
         THROW_ERROR("Invalid value for tune_update: "<<config.GetString("tune_update"));
-    }    
+    }
     vector<boost::shared_ptr<istream> > tune_ins;
     // If we need to do tuning
     if(do_tuning_) {
@@ -217,7 +258,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         tree_io = boost::shared_ptr<TreeIO>(new EgretTreeIO);
     else if(config.GetString("in_format") == "moses")
         tree_io = boost::shared_ptr<TreeIO>(new MosesXMLTreeIO);
-    else if(config.GetString("in_format") == "word") 
+    else if(config.GetString("in_format") == "word")
         tree_io = boost::shared_ptr<TreeIO>(new WordTreeIO);
     else
         THROW_ERROR("Bad in_format option " << config.GetString("in_format"));
@@ -303,7 +344,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         if(!*forest_out)
             THROW_ERROR("Could not open forest output file: " << config.GetString("forest_out"));
         forest_collector.reset(new OutputCollector(forest_out.get(), &cerr, config.GetBool("buffer")));
-    } 
+    }
 
     // Get the class to trim the forest if necessary
     scoped_ptr<Trimmer> trimmer_;
@@ -359,16 +400,16 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }
     pool.Stop(true);
     // Make sure all the collector flushed their output
-    if (trace_collector.get() != NULL) 
+    if (trace_collector.get() != NULL)
         trace_collector->Flush();
-    if (nbest_collector.get() != NULL) 
+    if (nbest_collector.get() != NULL)
         nbest_collector->Flush();
     if (forest_collector.get() != NULL)
         forest_collector->Flush();
 
     // Finished translating
     PRINT_DEBUG(endl << "Done translating [" << timer << " sec]" << endl, 1);
-    
+
     if(do_tuning_) {
         // Load the features from the weight file
         ofstream weight_out(config.GetString("tune_weight_out").c_str());
@@ -388,7 +429,7 @@ boost::shared_ptr<GraphTransformer> TravatarRunner::CreateLMComposer(
         int pop_limit, const SparseMap & weights) {
     // Set the LM Composer
     boost::shared_ptr<GraphTransformer> ret;
-    string search = config.GetString("search"); 
+    string search = config.GetString("search");
     if(search == "cp") {
         LMComposerBU * bu = new LMComposerBU(lm_files);
         bu->SetStackPopLimit(pop_limit);
