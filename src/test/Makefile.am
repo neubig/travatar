@@ -42,8 +42,8 @@ test_travatar_LDADD = \
 	$(BOOST_SYSTEM_LIB) \
 	$(BOOST_LOCALE_LIB) \
 	$(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
+  $(LIBRT) \
 	-lz \
 	-licui18n \
 	-licuuc \
-	-licudata \
-	-lrt
+	-licudata
