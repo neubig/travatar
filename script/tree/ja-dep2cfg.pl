@@ -8,6 +8,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $BINARIZE = 1;
+my $ADD_ROOT = 1;
 
 sub makesafe {
     $_ = shift;
@@ -64,6 +65,9 @@ sub buildcfg {
         push @child, $root;
         $str = "(".$tree->[$root]->[3]."P ".
             join(" ", map { ($_ == $root?$str:buildcfg($tree,$_)) } sort { $a <=> $b } @child).")";
+    }
+    if($ADD_ROOT and ($str !~ /^(ROOT/)) {
+      $str = "(ROOT $str)";
     }
     return $str;
 }
