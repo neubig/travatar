@@ -66,9 +66,6 @@ sub buildcfg {
         $str = "(".$tree->[$root]->[3]."P ".
             join(" ", map { ($_ == $root?$str:buildcfg($tree,$_)) } sort { $a <=> $b } @child).")";
     }
-    if($ADD_ROOT and ($str !~ /^(ROOT/)) {
-      $str = "(ROOT $str)";
-    }
     return $str;
 }
 
@@ -94,5 +91,9 @@ while(<STDIN>) {
     chomp;
     my @deptree = readtree($_);
     make_projective(\@deptree);
-    print buildcfg(\@deptree, getchildren(\@deptree, -1))."\n";
+    my $str = buildcfg(\@deptree, getchildren(\@deptree, -1));
+    if($ADD_ROOT and ($str !~ /^\(ROOT/)) {
+      $str = "(ROOT $str)";
+    }
+    print "$str\n";
 }
