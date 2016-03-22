@@ -36,6 +36,7 @@ LookupTableFSM::LookupTableFSM() : rule_fsms_(),
                    trg_factors_(1),
                    root_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("S")))),
                    unk_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("X")))),
+                   empty_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("")))),
                    save_src_str_(false) { }
 
 LookupTableFSM::~LookupTableFSM() {
@@ -150,36 +151,42 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
 
 HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     int VALID_NODE = 9999999; 
-    HyperGraph* _graph = new HyperGraph;
+    HyperGraph* ret = new HyperGraph;
     Sentence sent = graph.GetWords();
-    _graph->SetWords(sent);
+    ret->SetWords(sent);
 
     HieroRuleSpans span = HieroRuleSpans();
     HieroNodeMap node_map = HieroNodeMap();
     EdgeList edge_list = EdgeList(); 
+
     // For each starting point
     for(int i = sent.size()-1; i >= 0; i--) {
-        // Add a size 0 node for unknown words
-        LookupTableFSM::FindNode(node_map, i, i+1, unk_symbol_);
+        if (unk_symbol_ != empty_symbol_) {
+            // Add a size 0 node for unknown words
+            LookupTableFSM::FindNode(node_map, i, i+1, unk_symbol_);
+        }
         // For each grammar, add rules
         BOOST_FOREACH(RuleFSM* rule_fsm, rule_fsms_)
             rule_fsm->BuildHyperGraphComponent(node_map, edge_list, sent, "", i, span);
     }
 
     // Add rules for unknown words
-    vector<TailSpanKey> temp_spans;
     BOOST_FOREACH(HieroNodeMap::value_type & val, node_map) {
         BOOST_FOREACH(HeadNodePairs::value_type & head_node, val.second) {
             HyperNode* node = head_node.second;
+            HieroHeadLabels node_label = head_node.first;
             pair<int,int> node_span = node->GetSpan();
-            if (node_span.second - node_span.first == 1) {
-                int i = node_span.first;
-                if(node->GetEdges().size() == 0) {
-                    TranslationRuleHiero* unk_rule = GetUnknownRule(sent[i], delete_unknown_? Dict::WID("") : sent[i], head_node.first);
-                    HyperEdge* unk_edge = LookupTableFSM::TransformRuleIntoEdge(node_map,i,i+1,temp_spans,unk_rule,save_src_str_);
-                    edge_list.push_back(unk_edge);
-                    delete unk_rule;
-                } 
+            // -unk_symbol is the empty string, 
+            // we add unk rule to all symbol
+            // OR if -unk_symbol is not the empty string we add unk rule only to SPECIFIED symbol. 
+            if (unk_symbol_ == empty_symbol_ || unk_symbol_ == node_label) {
+                // Unknown spanning [x, x+1]
+                if (node_span.second - node_span.first == 1) {
+                    if(node->GetEdges().size() == 0) {
+                        HyperEdge * unk_edge = LookupUnknownRule(node_span.first, sent, head_node.first, node_map);
+                        edge_list.push_back(unk_edge);
+                    } 
+                }
             }
         }
     }
@@ -250,7 +257,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     // Add the root node
     if (root_node != NULL) {
         root_node->SetId(-1);
-        _graph->AddNode(root_node);
+        ret->AddNode(root_node);
     }
 
     // Add the rest of the nodes
@@ -258,7 +265,7 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
         BOOST_FOREACH(HeadNodePairs::value_type & head_node, nodes.second) {
             if(head_node.second->GetId() == VALID_NODE) {
                 head_node.second->SetId(-1);
-                _graph->AddNode(head_node.second);
+                ret->AddNode(head_node.second);
             } else if (head_node.second != root_node) {
                 delete head_node.second;
             }
@@ -268,13 +275,13 @@ HyperGraph * LookupTableFSM::TransformGraph(const HyperGraph & graph) const {
     BOOST_FOREACH (HyperEdge* edges, edge_list) { 
         if(edges) {
             edges->SetId(-1);
-            _graph->AddEdge(edges);
+            ret->AddEdge(edges);
         } else {
             THROW_ERROR("All edges here should be valid, but found 1 with invalid.");
         }
     }
 
-    return _graph;
+    return ret;
 }
 
 void RuleFSM::BuildHyperGraphComponent(
@@ -453,6 +460,14 @@ HyperNode* LookupTableFSM::FindNode(HieroNodeMap& map_ptr,
             return it2->second;
         }
     }
+}
+
+HyperEdge * LookupTableFSM::LookupUnknownRule(int index, const Sentence & sent, const HieroHeadLabels & syms, HieroNodeMap & node_map) const {
+    TranslationRuleHiero* unk_rule = GetUnknownRule(sent[index], delete_unknown_? Dict::WID("") : sent[index], syms);
+    vector<TailSpanKey> temp_spans;
+    HyperEdge* unk_edge = LookupTableFSM::TransformRuleIntoEdge(node_map, index, index+1, temp_spans, unk_rule, save_src_str_);
+    delete unk_rule;
+    return unk_edge;
 }
 
 TranslationRuleHiero* LookupTableFSM::GetUnknownRule(WordId unknown_word, const HieroHeadLabels& head_labels) {

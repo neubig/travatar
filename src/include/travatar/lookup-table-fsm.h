@@ -26,6 +26,7 @@ typedef std::pair<int, std::pair<int,int> > TailSpanKey;
 typedef std::map<HieroHeadLabels,std::set<HieroHeadLabels> > UnaryMap;
 typedef std::map<WordId, LookupNodeFSM*> LookupNodeMap;
 typedef std::map<HieroHeadLabels, LookupNodeFSM*> NTLookupNodeMap;
+
 class LookupNodeFSM {
 protected:
     LookupNodeMap lookup_map_;
@@ -113,6 +114,7 @@ protected:
     int trg_factors_;
     HieroHeadLabels root_symbol_;
     HieroHeadLabels unk_symbol_;
+    HieroHeadLabels empty_symbol_;
     bool save_src_str_;
 public:
     LookupTableFSM();
@@ -135,7 +137,6 @@ public:
     void SetSpanLimits(const std::vector<int>& limits);
     void SetTrgFactors(const int trg_factors) { trg_factors_ = trg_factors; } 
     void SetSaveSrcStr(const bool save_src_str);
-
     static TranslationRuleHiero* GetUnknownRule(const WordId unknown_word, const HieroHeadLabels& head_labels);
     static TranslationRuleHiero* GetUnknownRule(const WordId src, WordId unknown_word, const HieroHeadLabels& head_labels);
 
@@ -147,7 +148,9 @@ public:
     static HyperEdge* TransformRuleIntoEdge(TranslationRuleHiero* rule, const HieroRuleSpans & rule_span, HieroNodeMap & node_map, bool save_src_str=false);
 
     static HyperNode* FindNode(HieroNodeMap& map, const int span_begin, const int span_end, const HieroHeadLabels& head_label);
-    
+
+private:
+    HyperEdge * LookupUnknownRule(int index, const Sentence & sent, const HieroHeadLabels & syms, HieroNodeMap & node_map) const;
 };
 }
 
