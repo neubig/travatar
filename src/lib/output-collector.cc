@@ -30,6 +30,6 @@ void OutputCollector::Flush() {
     err_stream_->flush();
 }
 
-void OutputCollector::Skip() {
-    ++next_;
+void OutputCollector::Skip(int id) {
+    Write(id, "", "");
 }

@@ -8,6 +8,7 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $BINARIZE = 1;
+my $ADD_ROOT = 1;
 
 sub makesafe {
     $_ = shift;
@@ -90,5 +91,9 @@ while(<STDIN>) {
     chomp;
     my @deptree = readtree($_);
     make_projective(\@deptree);
-    print buildcfg(\@deptree, getchildren(\@deptree, -1))."\n";
+    my $str = buildcfg(\@deptree, getchildren(\@deptree, -1));
+    if($ADD_ROOT and ($str !~ /^\(ROOT/)) {
+      $str = "(ROOT $str)";
+    }
+    print "$str\n";
 }

@@ -65,7 +65,7 @@ void TravatarRunnerTask::PrintBestTrace(const NbestList & nbest_list, const int 
         trace_collector_->Write(sent_, trace_out.str(), "");
     } else {
         // Skip this sentence
-        trace_collector_->Skip();
+        trace_collector_->Skip(sent_);
     }
 }
 
@@ -90,7 +90,7 @@ void TravatarRunnerTask::PrintNbestTrace(const NbestList & nbest_list) {
         trace_collector_->Write(sent_, trace_out.str(), "");
     } else {
         // Skip this sentence
-        trace_collector_->Skip();
+        trace_collector_->Skip(sent_);
     }
 }
 
