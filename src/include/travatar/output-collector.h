@@ -16,8 +16,8 @@ public:
             next_(0), out_stream_(out_stream), err_stream_(err_stream), buffer_(buffer) { }
 
     void Write(int id, const std::string & out, const std::string & err);
+    void Skip(int id);
     void Flush();
-    void Skip();
 private:
     std::map<int,std::pair<std::string,std::string> > saved_;
     int next_;
