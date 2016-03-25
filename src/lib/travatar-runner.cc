@@ -11,6 +11,7 @@
 #include <travatar/lookup-table-hash.h>
 #include <travatar/lookup-table-marisa.h>
 #include <travatar/lookup-table-fsm.h>
+#include <travatar/lookup-table-cfglm.h>
 #include <travatar/weights.h>
 #include <travatar/weights-perceptron.h>
 #include <travatar/weights-delayed-perceptron.h>
@@ -267,8 +268,8 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     PRINT_DEBUG("Loading language model [" << timer << " sec]" << endl, 1);
     vector<int> pop_limits = config.GetIntArray("pop_limit");
     string lm_string = config.GetString("lm_file");
-    if(lm_string != "") {
-        vector<string> lm_files = Tokenize(lm_string, " ");
+    vector<string> lm_files = Tokenize(lm_string, " ");
+    if(lm_string != "" && config.GetString("tm_storage") != "cfg") {
         string multi_type = config.GetString("lm_multi_type");
         if(multi_type == "joint") {
             if(pop_limits.size() != 1)
@@ -313,6 +314,16 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         fsm_tm_->SetUnkSymbol(Dict::WID(config.GetString("unk_symbol")));
         fsm_tm_->SetSpanLimits(config.GetIntArray("hiero_span_limit"));
         fsm_tm_->SetSaveSrcStr(save_src_str);
+        tm_.reset(fsm_tm_);
+    }  else if (config.GetString("tm_storage") == "cfg") {
+        if(lm_files.size() > 1 || pop_limits.size() != 1) THROW_ERROR("Cannot use multiple LMs or pop limits with -tm_storage=cfg");
+        LookupTableCFGLM * fsm_tm_ = LookupTableCFGLM::ReadFromFiles(tm_files);
+        fsm_tm_->LoadLM(lm_files[0], pop_limits[0]);
+        fsm_tm_->SetTrgFactors(GlobalVars::trg_factors);
+        fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
+        fsm_tm_->SetUnkSymbol(Dict::WID(config.GetString("unk_symbol")));
+        // fsm_tm_->SetSpanLimits(config.GetIntArray("hiero_span_limit"));
+        // fsm_tm_->SetSaveSrcStr(save_src_str);
         tm_.reset(fsm_tm_);
     } else {
         THROW_ERROR("Unknown storage type: " << config.GetString("tm_storage"));

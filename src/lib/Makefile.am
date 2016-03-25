@@ -23,11 +23,15 @@ TRAVATARCPP = \
 	lm-composer.cc \
 	lm-composer-bu.cc \
 	lm-composer-incremental.cc \
+	lm-func.cc \
 	lookup-table.cc \
+	lookup-table-cfglm.cc \
+	lookup-table-fsm.cc \
 	lookup-table-hash.cc \
 	lookup-table-marisa.cc \
 	mert-geometry.cc \
 	rule-composer.cc \
+	rule-fsm.cc \
 	forest-extractor.cc \
 	hiero-extractor.cc \
 	rule-filter.cc \
@@ -70,7 +74,6 @@ TRAVATARCPP = \
 	rescorer-runner.cc \
 	hiero-extractor-runner.cc \
 	translation-rule-hiero.cc \
-	lookup-table-fsm.cc \
 	eval-measure-adv-interp.cc \
 	math-query.cc \
 	output-collector.cc

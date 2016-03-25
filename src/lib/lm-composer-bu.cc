@@ -54,59 +54,6 @@ public:
 
 }
 
-
-LMComposerBUFunc * LMComposerBUFunc::CreateFromType(lm::ngram::ModelType type) {
-    switch(type) {
-    case lm::ngram::PROBING:
-      return new LMComposerBUFuncTemplate<lm::ngram::ProbingModel>();
-    case lm::ngram::REST_PROBING:
-      return new LMComposerBUFuncTemplate<lm::ngram::RestProbingModel>();
-    case lm::ngram::TRIE:
-      return new LMComposerBUFuncTemplate<lm::ngram::TrieModel>();
-    case lm::ngram::QUANT_TRIE:
-      return new LMComposerBUFuncTemplate<lm::ngram::QuantTrieModel>();
-    case lm::ngram::ARRAY_TRIE:
-      return new LMComposerBUFuncTemplate<lm::ngram::ArrayTrieModel>();
-    case lm::ngram::QUANT_ARRAY_TRIE:
-      return new LMComposerBUFuncTemplate<lm::ngram::QuantArrayTrieModel>();
-    default:
-      THROW_ERROR("Unrecognized kenlm model type " << type);
-    }
-}
-
-template <class LMType>
-pair<Real,int> LMComposerBUFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
-    // Get the rule score for the appropriate model
-    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
-    int unk = 0;
-    BOOST_FOREACH(int trg_id, syms) {
-        if(trg_id < 0) {
-            int curr_id = -1 - trg_id;
-            // Add that edge to our non-terminal
-            const vector<ChartState> & child_state = states[tails[curr_id]->GetId()];
-            // cerr << " Adding node context " << *next_edge->GetTail(curr_id) << " : " << PrintContext(child_state[lm_id].left) << ", " << PrintContext(child_state[lm_id].right) << endl;
-            my_rule_score.NonTerminal(child_state[lm_id], 0);
-        } else {
-            // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
-            // Re-index vocabulary
-            lm::WordIndex index = data->GetMapping(trg_id);
-            if(index == 0) unk++;
-            my_rule_score.Terminal(index);
-        }
-    }
-    return make_pair(my_rule_score.Finish(), unk);
-}
-
-template <class LMType>
-Real LMComposerBUFuncTemplate<LMType>::CalcFinalScore(const void * lm, const ChartState & prev_state) {
-    ChartState my_state;
-    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(lm), my_state);
-    my_rule_score.BeginSentence();
-    my_rule_score.NonTerminal(prev_state, 0);
-    my_rule_score.Terminal(static_cast<const LMType*>(lm)->GetVocabulary().Index("</s>"));
-    return my_rule_score.Finish();
-}
-
 const ChartEntry & LMComposerBU::BuildChartCubePruning(
                     const HyperGraph & parse,
                     vector<boost::shared_ptr<ChartEntry> > & chart,

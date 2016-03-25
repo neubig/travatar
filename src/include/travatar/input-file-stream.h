@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef INPUT_FILE_STREAM_H__
 #define INPUT_FILE_STREAM_H__
 
+#include <iostream>
 #include <cstdlib>
 #include <fstream>
 #include <string>
