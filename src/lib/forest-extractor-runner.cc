@@ -47,6 +47,8 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
     extractor.SetMaxAttach(config.GetInt("attach_len"));
     extractor.SetMaxNonterm(config.GetInt("nonterm_len"));
     scoped_ptr<GraphTransformer> binarizer, composer;
+    // Check whether to count rules
+    bool count_rules = config.GetBool("count_rules");
     // Create the binarizer
     binarizer.reset(Binarizer::CreateBinarizerFromString(config.GetString("binarize")));
     // Create the composer
@@ -132,6 +134,7 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
             THROW_ERROR("Extraction must result in a rule graph");
         // { /* DEBUG */ JSONTreeIO io; io.WriteTree(*rule_graph, cerr); cerr << endl; }
         // Print each of the rules as long as they pass the filter
+        int output_rules = 0;
         BOOST_FOREACH(HyperEdge* edge, rule_graph->GetEdges()) {
             int filt;
             for(filt = 0; 
@@ -139,13 +142,16 @@ void ForestExtractorRunner::Run(const ConfigForestExtractorRunner & config) {
                 rule_filters[filt]->PassesFilter(*edge, src_graph->GetWords(), trg_sent);
                 filt++);
             if(filt == (int)rule_filters.size()) {
-                cout << extractor.RuleToString(*static_cast<RuleEdge*>(edge), 
-                                               src_graph->GetWords(), 
-                                               trg_sent,
-                                               align,
-                                               trg_io.get() != NULL ? &trg_labs : NULL) << endl;
+                output_rules++;
+                if(!count_rules)
+                    cout << extractor.RuleToString(*static_cast<RuleEdge*>(edge), 
+                                                   src_graph->GetWords(), 
+                                                   trg_sent,
+                                                   align,
+                                                   trg_io.get() != NULL ? &trg_labs : NULL) << endl;
             }
         }
+        if(count_rules) cout << output_rules << endl;
         sent++;
         if(sent % 10000 == 0) {
             cerr << (sent % 100000 == 0 ? '!' : '.'); cerr.flush();

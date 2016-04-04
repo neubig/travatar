@@ -36,6 +36,7 @@ public:
         AddConfigEntry("nonterm_len", "3", "The maximum number of non-terminals in a rule");
         AddConfigEntry("normalize_probs", "false", "Whether or not to normalize counts to probabilities");
         AddConfigEntry("partial_count_thresh", "0.0", "Only print phrases with a partial count greater than this value");
+        AddConfigEntry("count_rules", "false", "Instead of outputting rules, just output counts per sentence");
         AddConfigEntry("debug", "0", "How much debug output to produce");
 
     }
