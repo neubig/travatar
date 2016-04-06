@@ -29,6 +29,44 @@ LMFunc * LMFunc::CreateFromType(lm::ngram::ModelType type) {
 }
 
 template <class LMType>
+pair<Real,int> LMFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<lm::ngram::ChartState> & states, ChartState & out_state) {
+    // Get the rule score for the appropriate model
+    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
+    int unk = 0;
+    BOOST_FOREACH(int trg_id, syms) {
+        if(trg_id < 0) {
+            int curr_id = -1 - trg_id;
+            my_rule_score.NonTerminal(states[curr_id], 0);
+        } else {
+            // Re-index vocabulary
+            lm::WordIndex index = data->GetMapping(trg_id);
+            if(index == 0) unk++;
+            my_rule_score.Terminal(index);
+        }
+    }
+    return make_pair(my_rule_score.Finish(), unk);
+}
+
+template <class LMType>
+pair<Real,int> LMFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
+    // Get the rule score for the appropriate model
+    RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
+    int unk = 0;
+    BOOST_FOREACH(int trg_id, syms) {
+        if(trg_id < 0) {
+            int curr_id = -1 - trg_id;
+            my_rule_score.NonTerminal(states[curr_id][lm_id], 0);
+        } else {
+            // Re-index vocabulary
+            lm::WordIndex index = data->GetMapping(trg_id);
+            if(index == 0) unk++;
+            my_rule_score.Terminal(index);
+        }
+    }
+    return make_pair(my_rule_score.Finish(), unk);
+}
+
+template <class LMType>
 pair<Real,int> LMFuncTemplate<LMType>::CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, ChartState & out_state) {
     // Get the rule score for the appropriate model
     RuleScore<LMType> my_rule_score(*static_cast<const LMType*>(data->GetLM()), out_state);
@@ -38,10 +76,8 @@ pair<Real,int> LMFuncTemplate<LMType>::CalcNontermScore(const LMData* data, cons
             int curr_id = -1 - trg_id;
             // Add that edge to our non-terminal
             const vector<ChartState> & child_state = states[tails[curr_id]->GetId()];
-            // cerr << " Adding node context " << *next_edge->GetTail(curr_id) << " : " << PrintContext(child_state[lm_id].left) << ", " << PrintContext(child_state[lm_id].right) << endl;
             my_rule_score.NonTerminal(child_state[lm_id], 0);
         } else {
-            // cerr << " Adding word " << Dict::WSym(trg_id) << endl;
             // Re-index vocabulary
             lm::WordIndex index = data->GetMapping(trg_id);
             if(index == 0) unk++;

@@ -5,39 +5,41 @@
 #include <travatar/rule-fsm.h>
 #include <marisa/marisa.h>
 
+namespace lm { namespace ngram { struct ChartState; } }
+
 namespace travatar {
 
+class LMFunc;
 class LMData;
 class CFGPath;
 
 class CFGChartItem {
 
 public:
-    CFGChartItem() { }
-    ~CFGChartItem() { }
+    typedef std::pair<HyperNode*, std::vector<lm::ngram::ChartState> > StatefulNode;
+    typedef boost::unordered_map<HieroHeadLabels, std::vector<StatefulNode*> > StatefulNodeMap;
 
-    std::vector<HieroHeadLabels> & GetSyms() { return syms_; }
+    CFGChartItem() : populated_(false) { }
+    ~CFGChartItem();
 
-protected:
+    StatefulNodeMap & GetNodes() { return nodes_; }
+    bool IsPopulated() { return populated_; }
 
-    std::vector<HieroHeadLabels> syms_;
-
-};
-
-class CFGCollection {
-
-public:
-    CFGCollection() { }
-    ~CFGCollection() { }
-
-    void AddRules(const CFGPath & path, const RuleVec & rules) {
-        for(size_t i = 0; i < rules.size(); i++)
-          rules_.push_back(rules[i]);
+    Real GetHypScore(const HieroHeadLabels & label, int pos) const;
+    Real GetHypScoreDiff(const HieroHeadLabels & label, int pos) const {
+        return GetHypScore(label, pos) - GetHypScore(label, pos-1);
     }
 
+    const StatefulNode & GetStatefulNode(const HieroHeadLabels & label, int pos) const;
+    void AddStatefulNode(const HieroHeadLabels & label, HyperNode* node, const std::vector<lm::ngram::ChartState> & state) {
+        nodes_[label].push_back(new StatefulNode(node, state));
+    }
+    void FinalizeNodes();
+
 protected:
 
-    RuleVec rules_;
+    bool populated_;
+    StatefulNodeMap nodes_;
 
 };
 
@@ -49,21 +51,54 @@ public:
         agent.set_query(str.c_str());
     }
     CFGPath(CFGPath & prev_path, const Sentence & sent, int id) : str(prev_path.str), spans(prev_path.spans) {
+        assert(id < sent.size());
         str.append((char*)&sent[id], sizeof(WordId));
-        spans.push_back(std::make_pair(id, id+1));
         agent.set_query(str.c_str());
     }
     CFGPath(CFGPath & prev_path, const HieroHeadLabels & heads, int i, int j) : str(prev_path.str), spans(prev_path.spans) {
         Sentence inv_heads(heads.size());
         for(size_t i = 0; i < heads.size(); i++) inv_heads[i] = -1 - heads[i];
         str.append((char*)&inv_heads[0], inv_heads.size()*sizeof(WordId));
+        labels.push_back(heads);
         spans.push_back(std::make_pair(i, j));
         agent.set_query(str.c_str());
     }
 
     std::string str;
     marisa::Agent agent;
+    std::vector<HieroHeadLabels> labels;
     HieroRuleSpans spans;
+
+};
+
+class CFGCollection {
+
+public:
+    typedef std::vector<std::shared_ptr<HieroRuleSpans> > SpanVec;
+    typedef std::vector<std::shared_ptr<std::vector<HieroHeadLabels> > > LabelVec;
+
+    CFGCollection() { }
+    ~CFGCollection() { }
+
+    void AddRules(const CFGPath & path, const RuleVec & rules) {
+        std::shared_ptr<HieroRuleSpans> span(new HieroRuleSpans(path.spans));
+        std::shared_ptr<std::vector<HieroHeadLabels> > label(new std::vector<HieroHeadLabels>(path.labels));
+        for(size_t i = 0; i < rules.size(); i++) {
+            rules_.push_back(rules[i]);
+            spans_.push_back(span);
+            labels_.push_back(label);
+        }
+    }
+
+    const RuleVec & GetRules() const { return rules_; }
+    const SpanVec & GetSpans() const { return spans_; }
+    const LabelVec & GetLabels() const { return labels_; }
+
+protected:
+
+    RuleVec rules_;
+    SpanVec spans_;
+    LabelVec labels_;
 
 };
 
@@ -90,6 +125,7 @@ public:
     // Accessors
     void LoadLM(const std::string & filename, int pop_limit);
     void SetTrgFactors(int trg_factors) { trg_factors_ = trg_factors; }
+    void SetWeights(const Weights & weights) { weights_ = &weights; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetUnkSymbol(WordId symbol) { unk_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void AddRuleFSM(RuleFSM* fsm) { rule_fsms_.push_back(fsm); }
@@ -97,17 +133,19 @@ public:
 private:
 
     std::vector<RuleFSM*> rule_fsms_;
-    LMData* lm_;
-
+    std::vector<LMData*> lm_data_;
+    std::vector<LMFunc*> funcs_;
     int pop_limit_;
+    
     int trg_factors_;
     HieroHeadLabels root_symbol_;
     HieroHeadLabels unk_symbol_;
     HieroHeadLabels empty_symbol_;
+    const Weights * weights_;
 
     void Consume(CFGPath & a, const Sentence & sent, int N, int i, int j, int k, std::vector<CFGChartItem> & chart, std::vector<CFGCollection> & collections) const;
     void AddToChart(CFGPath & a, const Sentence & sent, int N, int i, int j, bool u, std::vector<CFGChartItem> & chart, std::vector<CFGCollection> & collections) const;
-    void CubePrune(const CFGCollection & collection) const;
+    void CubePrune(int N, int i, int j, std::vector<CFGCollection> & collection, std::vector<CFGChartItem> & chart, HyperGraph & ret) const;
 
 };
 

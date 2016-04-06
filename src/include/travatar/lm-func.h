@@ -85,6 +85,8 @@ class LMFunc {
 public:
     static LMFunc * CreateFromType(lm::ngram::ModelType type);
     virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state) = 0;
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state) = 0;
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<lm::ngram::ChartState> & states, lm::ngram::ChartState & out_state) = 0;
     virtual Real CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state) = 0;
     virtual ~LMFunc() { }
 };
@@ -92,6 +94,8 @@ public:
 template <class LMType>
 class LMFuncTemplate : public LMFunc {
     virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<HyperNode*> & tails, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state);
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<std::vector<lm::ngram::ChartState> > & states, int lm_id, lm::ngram::ChartState & out_state);
+    virtual std::pair<Real,int> CalcNontermScore(const LMData* data, const Sentence & syms, const std::vector<lm::ngram::ChartState> & states, lm::ngram::ChartState & out_state);
     virtual Real CalcFinalScore(const void * lm, const lm::ngram::ChartState & prev_state);
     virtual ~LMFuncTemplate() { }
 };
