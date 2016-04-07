@@ -145,6 +145,7 @@ public:
     // Accessors
     void LoadLM(const std::string & filename);
     void SetPopLimit(int pop_limit) { pop_limit_ = pop_limit; }
+    void SetChartLimit(int chart_limit) { chart_limit_ = chart_limit; }
     void SetTrgFactors(int trg_factors) { trg_factors_ = trg_factors; }
     void SetWeights(const Weights & weights) { weights_ = &weights; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
@@ -157,6 +158,7 @@ private:
     std::vector<LMData*> lm_data_;
     std::vector<LMFunc*> funcs_;
     int pop_limit_;
+    int chart_limit_;
     
     int trg_factors_;
     HieroHeadLabels root_symbol_;

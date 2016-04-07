@@ -525,8 +525,8 @@ void HyperGraph::InsideOutsideNormalize() {
 // Calculate new viterbi scores if necessary
 Real HyperNode::CalcViterbiScore() {
     if(viterbi_score_ == -REAL_MAX) {
-        // if(edges_.size() == 0)
-        //     THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
+        if(edges_.size() == 0)
+            THROW_ERROR("Cannot GetViterbiScore for a node with no edges");
         BOOST_FOREACH(HyperEdge * edge, edges_) {
             Real score = edge->GetScore();
             BOOST_FOREACH(HyperNode * tail, edge->GetTails())

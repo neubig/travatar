@@ -32,12 +32,13 @@ CFGChartItem::~CFGChartItem() {
 
 
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
+    cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
     assert(populated_);
-    cerr << "label: " << label << ", pos: " << pos << endl;
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     assert(it != nodes_.end());
-    if(it == nodes_.end()) THROW_ERROR("Couldn't find label");
-    return (it->second.size() > pos ? it->second[pos]->first->GetViterbiScore() : -REAL_MAX);
+    Real ret = (it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
+    cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << (it->second.size() > pos) << ", ret: " << ret << endl;
+    return ret;
 }
 
 
@@ -48,6 +49,7 @@ void CFGChartItem::AddStatefulNode(const HieroHeadLabels & label, HyperNode* nod
 const CFGChartItem::StatefulNode & CFGChartItem::GetStatefulNode(const HieroHeadLabels & label, int pos) const {
     assert(populated_);
     StatefulNodeMap::const_iterator it = nodes_.find(label);
+    cerr << " pos==" << pos << ", it->second.size()==" << it->second.size() << endl;
     assert(it != nodes_.end() && it->second.size() > pos);
     return *it->second[pos];
 }
@@ -64,11 +66,12 @@ void CFGChartItem::FinalizeNodes() {
         if(node_set.second.size() > 1)
             sort(node_set.second.begin(), node_set.second.end(), StatefulNodeScoresMore());
     }
+    cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
     populated_ = true;
 }
 
 LookupTableCFGLM::LookupTableCFGLM() : 
-      pop_limit_(-1), trg_factors_(1),
+      pop_limit_(-1), chart_limit_(-1), trg_factors_(1),
       root_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("S")))),
       unk_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("X")))),
       empty_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("")))),
@@ -105,21 +108,28 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
     int N = sent.size();
     vector<CFGChartItem> chart(N*N);
     vector<CFGCollection> collections(N*N);
-    CFGPath root;
+    CFGPath root_path;
+
+    // Add the root note
+    HyperNode * root = new HyperNode;
+    root->SetSpan(make_pair(0, N));
+    ret->AddNode(root);
 
     for(int i = N-1; i >= 0; i--) {
         // Find single words
-        CFGPath next(root, sent, i);
+        CFGPath next(root_path, sent, i);
         if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
             AddToChart(next, sent, N, i, i, false, chart, collections);
         CubePrune(N, i, i, collections, chart, *ret);
 
         // Find multi-words
         for(int j = i+1; j < N; j++) {
-            Consume(root, sent, N, i, i, j, chart, collections);
+            Consume(root_path, sent, N, i, i, j, chart, collections);
             CubePrune(N, i, j, collections, chart, *ret);
         }
     }
+
+    THROW_ERROR("Haven't implemented the root node part yet");
 
     return ret;
 }
@@ -177,12 +187,13 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         const vector<pair<int,int> > & path = *spans[i];
         const vector<HieroHeadLabels> & lab = *labels[i];
         assert(i < labels.size());
-        cerr << " Lab: " << lab.size() << ", path: " << path.size() << endl;
+        cerr << " Lab: " << lab.size() << ", path: " << path.size() << ", rule_score: " << score << endl;
         assert(lab.size() == path.size());
         for(size_t j = 0; j < path.size() && score != -REAL_MAX; j++) {
             int id = path[j].first * N + path[j].second;
             score += chart[id].GetHypScore(lab[j], 0);
         }
+        cerr << " score = " << score << endl;
         if(score != -REAL_MAX) {
             vector<int> pos(spans[i]->size()+1,0); pos[0] = i;
             hypo_queue.push(make_pair(score, pos));
@@ -195,7 +206,9 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     RecombMap recomb_map;
 
     // Go through the priority queue
-    for(int num_popped = 0; hypo_queue.size() != 0 && (pop_limit_ < 0 || num_popped < pop_limit_); num_popped++) {
+    for(int num_popped = 0; hypo_queue.size() != 0 && 
+                            (pop_limit_ < 0 || num_popped < pop_limit_) &&
+                            (chart_limit_ < 0 || recomb_map.size() < chart_limit_); num_popped++) {
         // Pop the top hypothesis
         Real top_score = hypo_queue.top().first;
         vector<int> id_str = hypo_queue.top().second;
@@ -210,7 +223,8 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         vector<lm::ngram::ChartState> my_state(lm_data_.size());
         vector<vector<lm::ngram::ChartState> > states(path.size());
         for(size_t j = 0; j < path.size(); j++) {
-            const CFGChartItem::StatefulNode & node = chart[id].GetStatefulNode((*labels[id_str[0]])[j], id_str[j]);
+            const pair<int,int> & my_span = (*spans[id_str[0]])[j];
+            const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode((*labels[id_str[0]])[j], id_str[j+1]);
             next_edge->AddTail(node.first);
             states[j] = node.second;
         }
@@ -231,20 +245,26 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         // Add the hypothesis to the hypergraph
         RecombIndex ridx = make_pair(rule.GetHeadLabels(), my_state);
         RecombMap::iterator rit = recomb_map.find(ridx);
+        ret.AddEdge(next_edge);
         if(rit != recomb_map.end()) {
             rit->second->AddEdge(next_edge);
+            next_edge->SetHead(rit->second);
         } else {
             HyperNode * node = new HyperNode;
+            node->SetSpan(make_pair(i, j+1));
+            next_edge->SetHead(node);
             ret.AddNode(node);
             chart[id].AddStatefulNode(rule.GetHeadLabels(), node, my_state);
             node->AddEdge(next_edge);
             recomb_map.insert(make_pair(ridx, node));
         }
-        ret.AddEdge(next_edge);
+        cerr << " hypo_queue.size(): " << hypo_queue.size() << endl;
         // Advance the hypotheses
         for(size_t j = 0; j < path.size(); j++) {
-            Real my_score = top_score + chart[id].GetHypScoreDiff((*labels[id_str[0]])[j], id_str[j+1]);
-            if(my_score != -REAL_MAX) {
+            const pair<int,int> & my_span = (*spans[id_str[0]])[j];
+            Real my_score = top_score - chart[my_span.first*N + my_span.second].GetHypScoreDiff((*labels[id_str[0]])[j], id_str[j+1]);
+            if(my_score > -REAL_MAX/2) {
+                cerr << " adding hypothesis with score: " << my_score << endl;
                 vector<int> pos(id_str); pos[j+1]++;
                 hypo_queue.push(make_pair(my_score, pos));
             }
@@ -252,6 +272,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     }
 
     // Sort the nodes in each bin, and mark the chart populated
+    cerr << " Finalizing " << id << endl;
     chart[id].FinalizeNodes();
 
 }
