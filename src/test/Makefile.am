@@ -18,6 +18,7 @@ test_travatar_SOURCES = \
     test-io-util.cc \
     test-lm-composer.cc \
     test-lookup-table-fsm.cc \
+    test-lookup-table-cfglm.cc \
     test-lookup-table.cc \
     test-math-query.cc \
     test-rule-extractor.cc \

@@ -3,6 +3,7 @@
 #include <travatar/global-debug.h>
 #include <travatar/dict.h>
 #include <travatar/translation-rule-hiero.h>
+#include <travatar/lookup-table-cfglm.h>
 #include <travatar/hyper-graph.h>
 #include <boost/foreach.hpp>
 
@@ -79,6 +80,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     BOOST_FOREACH(RuleMap::value_type & rule, rules) {
         marisa::Agent agent;
         agent.set_query(rule.first.c_str(), rule.first.length());
+        cerr << "Adding agent: " << CFGPath::PrintAgent(agent) << endl;
         if(!ret->GetTrie().lookup(agent))
             THROW_ERROR("Internal error when building rule table");
         main_rules[agent.key().id()].swap(rule.second);

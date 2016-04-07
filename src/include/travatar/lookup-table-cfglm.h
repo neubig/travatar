@@ -12,6 +12,7 @@ namespace travatar {
 class LMFunc;
 class LMData;
 class CFGPath;
+class Weights;
 
 class CFGChartItem {
 
@@ -31,9 +32,7 @@ public:
     }
 
     const StatefulNode & GetStatefulNode(const HieroHeadLabels & label, int pos) const;
-    void AddStatefulNode(const HieroHeadLabels & label, HyperNode* node, const std::vector<lm::ngram::ChartState> & state) {
-        nodes_[label].push_back(new StatefulNode(node, state));
-    }
+    void AddStatefulNode(const HieroHeadLabels & label, HyperNode* node, const std::vector<lm::ngram::ChartState> & state);
     void FinalizeNodes();
 
 protected:
@@ -47,21 +46,42 @@ class CFGPath {
 
 public:
     CFGPath() { }
-    CFGPath(const Sentence & sent, int id) : str((char*)&sent[id], sizeof(WordId)), spans(1, std::make_pair(id, id+1)) {
-        agent.set_query(str.c_str());
+    CFGPath(const Sentence & sent, int id) : str((char*)&sent[id], sizeof(WordId)) {
+        agent.set_query(str.c_str(), str.length());
     }
-    CFGPath(CFGPath & prev_path, const Sentence & sent, int id) : str(prev_path.str), spans(prev_path.spans) {
+    CFGPath(CFGPath & prev_path, const Sentence & sent, int id) : str(prev_path.str), labels(prev_path.labels), spans(prev_path.spans) {
         assert(id < sent.size());
         str.append((char*)&sent[id], sizeof(WordId));
-        agent.set_query(str.c_str());
+        agent.set_query(str.c_str(), str.length());
+        assert(labels.size() == spans.size());
     }
-    CFGPath(CFGPath & prev_path, const HieroHeadLabels & heads, int i, int j) : str(prev_path.str), spans(prev_path.spans) {
+    CFGPath(CFGPath & prev_path, const HieroHeadLabels & heads, int i, int j) : str(prev_path.str), labels(prev_path.labels), spans(prev_path.spans) {
         Sentence inv_heads(heads.size());
         for(size_t i = 0; i < heads.size(); i++) inv_heads[i] = -1 - heads[i];
         str.append((char*)&inv_heads[0], inv_heads.size()*sizeof(WordId));
         labels.push_back(heads);
         spans.push_back(std::make_pair(i, j));
-        agent.set_query(str.c_str());
+        assert(labels.size() == spans.size());
+        agent.set_query(str.c_str(), str.length());
+    }
+
+    static std::string PrintAgent(const marisa::Agent & agent) {
+        if(agent.query().length() == 0) return "";
+        std::ostringstream oss;
+        const char* ptr = agent.query().ptr();
+        for(size_t i = 0; i < agent.query().length(); i += sizeof(WordId)) {
+            oss << (i==0 ? "" : " ") << *(WordId*)(ptr+i);
+        }
+        return oss.str();
+    }
+    static std::string PrintAgentKey(const marisa::Agent & agent) {
+        if(agent.key().length() == 0) return "";
+        std::ostringstream oss;
+        const char* ptr = agent.key().ptr();
+        for(size_t i = 0; i < agent.key().length(); i += sizeof(WordId)) {
+            oss << (i==0 ? "" : " ") << *(WordId*)(ptr+i);
+        }
+        return oss.str();
     }
 
     std::string str;
@@ -123,7 +143,8 @@ public:
     static LookupTableCFGLM * ReadFromFiles(const std::vector<std::string> & filename);
 
     // Accessors
-    void LoadLM(const std::string & filename, int pop_limit);
+    void LoadLM(const std::string & filename);
+    void SetPopLimit(int pop_limit) { pop_limit_ = pop_limit; }
     void SetTrgFactors(int trg_factors) { trg_factors_ = trg_factors; }
     void SetWeights(const Weights & weights) { weights_ = &weights; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }

@@ -33,9 +33,16 @@ CFGChartItem::~CFGChartItem() {
 
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
     assert(populated_);
+    cerr << "label: " << label << ", pos: " << pos << endl;
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     assert(it != nodes_.end());
+    if(it == nodes_.end()) THROW_ERROR("Couldn't find label");
     return (it->second.size() > pos ? it->second[pos]->first->GetViterbiScore() : -REAL_MAX);
+}
+
+
+void CFGChartItem::AddStatefulNode(const HieroHeadLabels & label, HyperNode* node, const std::vector<lm::ngram::ChartState> & state) {
+    nodes_[label].push_back(new StatefulNode(node, state));
 }
 
 const CFGChartItem::StatefulNode & CFGChartItem::GetStatefulNode(const HieroHeadLabels & label, int pos) const {
@@ -65,7 +72,7 @@ LookupTableCFGLM::LookupTableCFGLM() :
       root_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("S")))),
       unk_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("X")))),
       empty_symbol_(HieroHeadLabels(vector<WordId>(GlobalVars::trg_factors+1,Dict::WID("")))),
-      weights_(NULL) { }
+      weights_(new Weights) { }
 
 LookupTableCFGLM::~LookupTableCFGLM() {
     BOOST_FOREACH(RuleFSM* rule, rule_fsms_) delete rule;
@@ -85,12 +92,9 @@ LookupTableCFGLM * LookupTableCFGLM::ReadFromFiles(const std::vector<std::string
     return ret;
 }
 
-void LookupTableCFGLM::LoadLM(const std::string & filename, int pop_limit) {
+void LookupTableCFGLM::LoadLM(const std::string & filename) {
     lm_data_.push_back(new LMData(filename));
     funcs_.push_back(LMFunc::CreateFromType(lm_data_[lm_data_.size()-1]->GetType())); 
-    if(lm_data_.size() != 1 && pop_limit_ != pop_limit)
-        THROW_ERROR("Cannot set different pop limits.");
-    pop_limit_ = pop_limit;
 }
 
 HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
@@ -135,9 +139,14 @@ void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i,
 }
 
 void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int i, int j, bool u, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
+    cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
     if(!u) {
-        if(rule_fsms_[0]->GetTrie().lookup(a.agent))
+        if(rule_fsms_[0]->GetTrie().lookup(a.agent)) {
+            cerr << " found rules!" << endl;
             collections[i*N+j].AddRules(a, rule_fsms_[0]->GetRules()[a.agent.key().id()]);
+        } else {
+            cerr << " didn't find rules!" << endl;
+        }
     }
     if(rule_fsms_[0]->GetTrie().predictive_search(a.agent))
         for(int k = j+1; k < N; k++)
@@ -145,6 +154,7 @@ void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int
 }
 
 void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & collection, vector<CFGChartItem> & chart, HyperGraph & ret) const {
+    cerr << "CubePrune(" << N << ", " << i << ", " << j << ")" << endl;
     // Don't build already finished charts
     int id = i*N + j;
     assert(!chart[id].IsPopulated());
@@ -160,13 +170,18 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
 
     // Score the top hypotheses of each rule
     vector<Real> rule_scores(rules.size());
+    cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
     for(size_t i = 0; i < rules.size(); i++) {
         // Get the base score for the rule
         Real score = weights_->GetCurrent() * rules[i]->GetFeatures();
         const vector<pair<int,int> > & path = *spans[i];
+        const vector<HieroHeadLabels> & lab = *labels[i];
+        assert(i < labels.size());
+        cerr << " Lab: " << lab.size() << ", path: " << path.size() << endl;
+        assert(lab.size() == path.size());
         for(size_t j = 0; j < path.size() && score != -REAL_MAX; j++) {
             int id = path[j].first * N + path[j].second;
-            score += chart[id].GetHypScore((*labels[i])[j], 0);
+            score += chart[id].GetHypScore(lab[j], 0);
         }
         if(score != -REAL_MAX) {
             vector<int> pos(spans[i]->size()+1,0); pos[0] = i;
@@ -180,7 +195,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     RecombMap recomb_map;
 
     // Go through the priority queue
-    for(int num_popped = 0; hypo_queue.size() != 0 && num_popped < pop_limit_; num_popped++) {
+    for(int num_popped = 0; hypo_queue.size() != 0 && (pop_limit_ < 0 || num_popped < pop_limit_); num_popped++) {
         // Pop the top hypothesis
         Real top_score = hypo_queue.top().first;
         vector<int> id_str = hypo_queue.top().second;
