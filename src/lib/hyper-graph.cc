@@ -176,26 +176,12 @@ int HyperGraph::CheckEqual(const HyperGraph & rhs) const {
 
 // Check to make sure two hypergraphs are equal
 int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
-    // Check if nodes and edges are equal
-    if(!(edges_.size() == rhs.edges_.size() &&
-         nodes_.size() == rhs.nodes_.size() &&
-         CheckVector(words_, rhs.words_))) {
-        cerr << "edges: " << edges_.size() << " == " << rhs.edges_.size() << endl;
-        BOOST_FOREACH(HyperEdge* edge, this->GetEdges()) { edge->Print(cerr); cerr << endl; }
-        BOOST_FOREACH(HyperEdge* edge, rhs.GetEdges())   { edge->Print(cerr); cerr << endl; }
-        cerr << endl << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
-        BOOST_FOREACH(HyperNode* node, this->GetNodes()) { node->Print(cerr); cerr << endl; }
-        BOOST_FOREACH(HyperNode* node, rhs.GetNodes())   { node->Print(cerr); cerr << endl; }
-        cerr << endl;
-        return 0;
-    }
     // Check if tails are equal
     vector<int> exp_tails, act_tails;
     BOOST_FOREACH(const HyperEdge * edge, edges_) exp_tails.push_back(edge->GetTails().size());
     BOOST_FOREACH(const HyperEdge * edge, rhs.edges_) act_tails.push_back(edge->GetTails().size());
     sort(exp_tails.begin(), exp_tails.end());
     sort(act_tails.begin(), act_tails.end());
-    if(!CheckVector(exp_tails, act_tails)) return 0;
     // Check if scores are equal
     vector<Real> l_scores(nodes_.size()), r_scores(nodes_.size());
     for(int i = 0; i < (int)nodes_.size(); i++) {
@@ -204,7 +190,25 @@ int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
     }
     sort(l_scores.begin(), l_scores.end());
     sort(r_scores.begin(), r_scores.end());
-    return CheckAlmostVector(l_scores, r_scores);
+    // Check if nodes and edges are equal
+    if(!(edges_.size() == rhs.edges_.size() &&
+         nodes_.size() == rhs.nodes_.size() &&
+         CheckVector(words_, rhs.words_) &&
+         CheckVector(exp_tails, act_tails) &&
+         CheckAlmostVector(l_scores, r_scores))) {
+        cerr << "edges: " << edges_.size() << " == " << rhs.edges_.size() << endl;
+        BOOST_FOREACH(HyperEdge* edge, this->GetEdges()) { edge->Print(cerr); cerr << endl; }
+        BOOST_FOREACH(HyperEdge* edge, rhs.GetEdges())   { edge->Print(cerr); cerr << endl; }
+        cerr << endl << "nodes: " << nodes_.size() << " == " << rhs.nodes_.size() << endl;
+        BOOST_FOREACH(HyperNode* node, this->GetNodes()) { node->Print(cerr); cerr << endl; }
+        BOOST_FOREACH(HyperNode* node, rhs.GetNodes())   { node->Print(cerr); cerr << endl; }
+        cerr << endl;
+        cerr << "exp words: " << words_ << ", act words: " << rhs.words_ << endl;
+        cerr << "exp tails: " << exp_tails << ", act tails: " << act_tails << endl;
+        // cerr << "exp scores: " << l_scores << ", act scores: " << r_scores << endl;
+        return false;
+    }
+    return true;
 }
 
 const set<int> & HyperNode::CalculateTrgSpan(

@@ -19,101 +19,30 @@ using namespace travatar;
 struct TestLookupTableCFGLM {
 public:
 
-    TestLookupTableCFGLM() {
-        // Load the rules
-        ostringstream rule_oss;
-        rule_oss << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        rule_oss << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
-        rule_oss << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
-        rule_oss << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
-        rule_oss << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
-        rule_oss << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
-        rule_oss << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
-        rule_oss << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
-        rule_oss << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
-        rule_oss << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
-        rule_oss << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
-        istringstream rule_iss(rule_oss.str());
-        lookup_cfglm.reset(new LookupTableCFGLM);
-        lookup_cfglm->SetTrgFactors(1);
-        lookup_cfglm->SetRootSymbol(Dict::WID("X"));
-        lookup_cfglm->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
+    TestLookupTableCFGLM() { 
     
-        // Load the rules
-        ostringstream rule_oss1, rule_oss2;
-        rule_oss1 << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        rule_oss1 << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
-        rule_oss2 << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
-        rule_oss2 << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
-        rule_oss2 << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
-        rule_oss2 << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
-        rule_oss2 << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
-        rule_oss2 << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
-        rule_oss2 << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
-        rule_oss2 << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
-        rule_oss1 << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
-        istringstream rule_iss1(rule_oss1.str());
-        istringstream rule_iss2(rule_oss2.str());
-        lookup_cfglm_split.reset(new LookupTableCFGLM);
-        lookup_cfglm_split->SetTrgFactors(1);
-        lookup_cfglm_split->SetRootSymbol(Dict::WID("X"));
-        lookup_cfglm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss1));
-        lookup_cfglm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss2));
+        // // Load the rules, c = complete
+        // ostringstream rule_oss_c, rule_glue;
+        // rule_oss_c << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+        // rule_oss_c << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
+        // rule_oss_c << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
+        // rule_oss_c << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
+        // rule_oss_c << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
+        // rule_oss_c << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
+        // rule_oss_c << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
+        // rule_oss_c << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
+        // rule_oss_c << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
+        // rule_oss_c << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
+        // rule_oss_c << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
+        // rule_glue << "x0:X x1:X @ X ||| x0:X x1:X @ X ||| glue=1" << endl; // 12
+        // istringstream rule_iss_c(rule_oss_c.str());
+        // istringstream rule_iss_glue(rule_glue.str());
+        // lookup_cfglm_c.reset(new LookupTableCFGLM);
+        // lookup_cfglm_c->SetTrgFactors(1);
+        // lookup_cfglm_c->SetRootSymbol(Dict::WID("X"));
+        // lookup_cfglm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_c));
+        // lookup_cfglm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_glue));
     
-        // Load the rules
-        ostringstream rule_oss_extra;
-        rule_oss_extra << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        rule_oss_extra << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
-        rule_oss_extra << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
-        rule_oss_extra << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
-        rule_oss_extra << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
-        rule_oss_extra << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
-        rule_oss_extra << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
-        rule_oss_extra << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
-        rule_oss_extra << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
-        rule_oss_extra << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
-        rule_oss_extra << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
-        // rule_oss_extra << "x0:X @ BAD ||| x0:X @ BAD ||| Pegf=0.02 ppen=2.718" << endl; // 11
-        rule_oss_extra << "\"two\" x0:DIFF @ X ||| \"futatsu\" x0:DIFF @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        istringstream rule_iss_extra(rule_oss_extra.str());
-        lookup_cfglm_extra.reset(new LookupTableCFGLM);
-        lookup_cfglm_extra->SetTrgFactors(1);
-        lookup_cfglm_extra->SetRootSymbol(Dict::WID("X"));
-        lookup_cfglm_extra->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_extra));
-    
-        // Load the rules, c = complete
-        ostringstream rule_oss_c, rule_glue;
-        rule_oss_c << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
-        rule_oss_c << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
-        rule_oss_c << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
-        rule_oss_c << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
-        rule_oss_c << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
-        rule_oss_c << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
-        rule_oss_c << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
-        rule_oss_c << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
-        rule_oss_c << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
-        rule_oss_c << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
-        rule_oss_c << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
-        rule_glue << "x0:X x1:X @ X ||| x0:X x1:X @ X ||| glue=1" << endl; // 12
-        istringstream rule_iss_c(rule_oss_c.str());
-        istringstream rule_iss_glue(rule_glue.str());
-        lookup_cfglm_c.reset(new LookupTableCFGLM);
-        lookup_cfglm_c->SetTrgFactors(1);
-        lookup_cfglm_c->SetRootSymbol(Dict::WID("X"));
-        lookup_cfglm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_c));
-        lookup_cfglm_c->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_glue));
-    
-        //Load the rule mhd = multi head
-        ostringstream rule_oss_mhd;
-        rule_oss_mhd << "\"the\" x0:NN x1:VP @ S ||| x1:NP x0:NN @ S ||| para=1" << endl;
-        rule_oss_mhd << "\"program\" @ NN ||| \"program\" @ NN ||| para=1" << endl;
-        rule_oss_mhd << "\"made\" \"by\" x0:PRP @ VP ||| x0:PRP$ @ NP ||| para=1" << endl;
-        rule_oss_mhd << "\"me\" @ PRP ||| \"my\" @ PRP$ ||| para=1" << endl;
-        istringstream rule_iss_mhd(rule_oss_mhd.str());
-        lookup_cfglm_mhd.reset(new LookupTableCFGLM);
-        lookup_cfglm_mhd->SetTrgFactors(1);
-        lookup_cfglm_mhd->SetRootSymbol(Dict::WID("S"));
-        lookup_cfglm_mhd->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_mhd));
     }
     
     ~TestLookupTableCFGLM() { }
@@ -491,42 +420,51 @@ public:
     }
     
     HyperGraph * CreateMultiHeadExpectedGraph() {
-        vector<HyperNode*> node(4);
-        vector<HyperEdge*> edge(4);
+        vector<HyperNode*> node(5);
+        vector<HyperEdge*> edge(5);
     
         for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
         for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
-        edge[0]->SetHead(node[3]);
-        edge[1]->SetHead(node[1]);
-        {
-            edge[1]->AddTail(node[1]);
-        }
-        edge[2]->SetHead(node[2]);
-        edge[3]->SetHead(node[0]);
-        {
-            edge[3]->AddTail(node[1]);
-            edge[3]->AddTail(node[2]);
-        }
+
+        // [4,5]: me
+        edge[0]->SetHead(node[1]);
+        // [2,5]: made by X0[4,5]
+        edge[1]->SetHead(node[2]);
+        edge[1]->AddTail(node[1]);
+        // [1,2]: program
+        edge[2]->SetHead(node[3]);
+        // [0,5]: the X0[1,2] X1[2,5]
+        edge[3]->SetHead(node[4]);
+        edge[3]->AddTail(node[3]);
+        edge[3]->AddTail(node[2]);
+        // root:
+        edge[4]->SetHead(node[0]);
+        edge[4]->AddTail(node[4]);
+
+        // root
         node[0]->SetSpan(pair<int,int>(0,5));
-        {
-            node[0]->SetSym(Dict::WID("S"));
-            node[0]->AddEdge(edge[3]);
-        }
-        node[1]->SetSpan(pair<int,int>(2,5));
-        {
-            node[1]->SetSym(Dict::WID("VP"));
-            node[1]->AddEdge(edge[1]);
-        }
-        node[2]->SetSpan(pair<int,int>(1,2));
-        {
-            node[2]->SetSym(Dict::WID("NN"));
-            node[2]->AddEdge(edge[2]);
-        }
-        node[3]->SetSpan(pair<int,int>(4,5));
-        {
-            node[3]->SetSym(Dict::WID("PRP"));
-            node[3]->AddEdge(edge[0]);
-        }
+        node[0]->AddEdge(edge[4]);
+        node[0]->SetViterbiScore(0);
+        // [4,5]
+        node[1]->SetSpan(pair<int,int>(4,5));
+        node[1]->SetSym(Dict::WID("PRP"));
+        node[1]->AddEdge(edge[0]);
+        node[1]->SetViterbiScore(0);
+        // [2,5]
+        node[2]->SetSpan(pair<int,int>(2,5));
+        node[2]->SetSym(Dict::WID("VP"));
+        node[2]->AddEdge(edge[1]);
+        node[2]->SetViterbiScore(0);
+        // [1,2]
+        node[3]->SetSpan(pair<int,int>(1,2));
+        node[3]->SetSym(Dict::WID("NN"));
+        node[3]->AddEdge(edge[2]);
+        node[3]->SetViterbiScore(0);
+        // [0,5]
+        node[4]->SetSpan(pair<int,int>(0,5));
+        node[4]->SetSym(Dict::WID("S"));
+        node[4]->AddEdge(edge[3]);
+        node[4]->SetViterbiScore(0);
     
         HyperGraph* expected_graph = new HyperGraph;
         BOOST_FOREACH(HyperEdge* ed, edge) {
@@ -605,6 +543,26 @@ public:
 BOOST_FIXTURE_TEST_SUITE(lookup_table_cfglm, TestLookupTableCFGLM)
 
 BOOST_AUTO_TEST_CASE(TestBuildRules) {
+
+    // Load the rules
+    ostringstream rule_oss;
+    rule_oss << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+    rule_oss << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
+    rule_oss << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
+    rule_oss << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
+    rule_oss << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
+    rule_oss << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
+    rule_oss << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
+    rule_oss << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
+    rule_oss << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
+    rule_oss << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
+    rule_oss << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
+    istringstream rule_iss(rule_oss.str());
+    lookup_cfglm.reset(new LookupTableCFGLM);
+    lookup_cfglm->SetTrgFactors(1);
+    lookup_cfglm->SetRootSymbol(Dict::WID("X"));
+    lookup_cfglm->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
+
     BOOST_CHECK(BuildRules(*lookup_cfglm));
 }
 
@@ -617,14 +575,71 @@ BOOST_AUTO_TEST_CASE(TestBuildRules) {
 // }
 
 BOOST_AUTO_TEST_CASE(TestBuildRulesSplit) {
+
+    // Load the rules
+    ostringstream rule_oss1, rule_oss2;
+    rule_oss1 << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+    rule_oss1 << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
+    rule_oss2 << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
+    rule_oss2 << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
+    rule_oss2 << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
+    rule_oss2 << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
+    rule_oss2 << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
+    rule_oss2 << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
+    rule_oss2 << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
+    rule_oss2 << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
+    rule_oss1 << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
+    istringstream rule_iss1(rule_oss1.str());
+    istringstream rule_iss2(rule_oss2.str());
+    lookup_cfglm_split.reset(new LookupTableCFGLM);
+    lookup_cfglm_split->SetTrgFactors(1);
+    lookup_cfglm_split->SetRootSymbol(Dict::WID("X"));
+    lookup_cfglm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss1));
+    lookup_cfglm_split->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss2));
+
     BOOST_CHECK(BuildRules(*lookup_cfglm_split));
 }
 
 BOOST_AUTO_TEST_CASE(TestBuildRulesExtra) {
+
+    // Load the rules
+    ostringstream rule_oss_extra;
+    rule_oss_extra << "\"I\" x0:X @ X ||| \"watashi\" \"wa\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+    rule_oss_extra << "\"eat\" \"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 2
+    rule_oss_extra << "\"two\" x0:X @ X ||| \"futatsu\" \"no\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 3
+    rule_oss_extra << "x0:X \"eat\" x1:X @ X ||| x0:X \"wa\" x1:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 4
+    rule_oss_extra << "\"eat\" x0:X @ X ||| x0:X \"wo\" \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 5
+    rule_oss_extra << "\"I\" x0:X \"two\" \"hamburgers\" @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" \"hanbaga\" \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 6
+    rule_oss_extra << "\"I\" x0:X \"two\" x1:X @ X ||| \"watashi\" \"wa\" \"futatsu\" \"no\" x1:X \"wo\" x0:X @ X ||| Pegf=0.02 ppen=2.718" << endl; // 7
+    rule_oss_extra << "\"I\" @ X ||| \"watashi\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 8
+    rule_oss_extra << "\"eat\" @ X ||| \"taberu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 9
+    rule_oss_extra << "\"two\" @ X ||| \"futatsu\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 10
+    rule_oss_extra << "\"hamburgers\" @ X ||| \"hanbaga\" @ X ||| Pegf=0.02 ppen=2.718" << endl; // 11
+    // rule_oss_extra << "x0:X @ BAD ||| x0:X @ BAD ||| Pegf=0.02 ppen=2.718" << endl; // 11
+    rule_oss_extra << "\"two\" x0:DIFF @ X ||| \"futatsu\" x0:DIFF @ X ||| Pegf=0.02 ppen=2.718" << endl; // 1
+    istringstream rule_iss_extra(rule_oss_extra.str());
+    lookup_cfglm_extra.reset(new LookupTableCFGLM);
+    lookup_cfglm_extra->SetTrgFactors(1);
+    lookup_cfglm_extra->SetRootSymbol(Dict::WID("X"));
+    lookup_cfglm_extra->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_extra));
+
     BOOST_CHECK(BuildRules(*lookup_cfglm_extra));
 }
 
 BOOST_AUTO_TEST_CASE(TestMultiHead) {
+
+    //Load the rule mhd = multi head
+    ostringstream rule_oss_mhd;
+    rule_oss_mhd << "\"the\" x0:NN x1:VP @ S ||| x1:NP x0:NN @ S ||| para=1" << endl;
+    rule_oss_mhd << "\"program\" @ NN ||| \"program\" @ NN ||| para=1" << endl;
+    rule_oss_mhd << "\"made\" \"by\" x0:PRP @ VP ||| x0:PRP$ @ NP ||| para=1" << endl;
+    rule_oss_mhd << "\"me\" @ PRP ||| \"my\" @ PRP$ ||| para=1" << endl;
+    istringstream rule_iss_mhd(rule_oss_mhd.str());
+    lookup_cfglm_mhd.reset(new LookupTableCFGLM);
+    lookup_cfglm_mhd->SetTrgFactors(1);
+    lookup_cfglm_mhd->SetRootSymbol(Dict::WID("S"));
+    lookup_cfglm_mhd->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_mhd));
+
     BOOST_CHECK(MultiHead(*lookup_cfglm_mhd));
 }
 

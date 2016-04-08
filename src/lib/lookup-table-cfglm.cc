@@ -100,16 +100,26 @@ void LookupTableCFGLM::LoadLM(const std::string & filename) {
     funcs_.push_back(LMFunc::CreateFromType(lm_data_[lm_data_.size()-1]->GetType())); 
 }
 
+bool LookupTableCFGLM::PredictiveSearch(marisa::Agent & agent) const {
+    BOOST_FOREACH(const RuleFSM * fsm, rule_fsms_) {
+        marisa::Agent tmp_agent; tmp_agent.set_query(agent.query().ptr(), agent.query().length());
+        if(fsm->GetTrie().predictive_search(tmp_agent))
+            return true;
+    }
+    return false;
+}
+
 void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i, int j, int k, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
+    //cerr << "Consume(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << k << ")" << endl;
     bool unary = (i == j);
     if(j == k) {
         CFGPath next(a, sent, j);
-        if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
+        if(PredictiveSearch(next.agent))
             AddToChart(next, sent, N, i, k, unary, chart, collections);
     }
     BOOST_FOREACH(const CFGChartItem::StatefulNodeMap::value_type & sym, chart[j*N+k].GetNodes()) {
         CFGPath next(a, sym.first, j, k);
-        if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
+        if(PredictiveSearch(next.agent))
             AddToChart(next, sent, N, i, k, unary, chart, collections);
     }
 }
@@ -117,14 +127,16 @@ void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i,
 void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int i, int j, bool u, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
     //cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
     if(!u) {
-        if(rule_fsms_[0]->GetTrie().lookup(a.agent)) {
-            //cerr << " found rules!" << endl;
-            collections[i*N+j].AddRules(a, rule_fsms_[0]->GetRules()[a.agent.key().id()]);
-        } else {
-            //cerr << " didn't find rules!" << endl;
+        BOOST_FOREACH(const RuleFSM * fsm, rule_fsms_) {
+            if(fsm->GetTrie().lookup(a.agent)) {
+                //cerr << " Looking up and found rules" << endl;
+                collections[i*N+j].AddRules(a, fsm->GetRules()[a.agent.key().id()]);
+            } else {
+                //cerr << " Looking up and didn't find rules" << endl;
+            }
         }
     }
-    if(rule_fsms_[0]->GetTrie().predictive_search(a.agent))
+    if(PredictiveSearch(a.agent))
         for(int k = j+1; k < N; k++)
             Consume(a, sent, N, i, j+1, k, chart, collections);
 }
@@ -191,6 +203,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         for(size_t j = 0; j < path.size(); j++) {
             const pair<int,int> & my_span = (*spans[id_str[0]])[j];
             const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode((*labels[id_str[0]])[j], id_str[j+1]);
+            //cerr << " Adding tail: " << node.first->GetId() << endl;
             next_edge->AddTail(node.first);
             states[j] = node.second;
         }
@@ -262,7 +275,7 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
     for(int i = N-1; i >= 0; i--) {
         // Find single words
         CFGPath next(root_path, sent, i);
-        if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
+        if(PredictiveSearch(next.agent))
             AddToChart(next, sent, N, i, i, false, chart, collections);
         CubePrune(N, i, i, collections, chart, *ret);
 
@@ -278,6 +291,7 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
         BOOST_FOREACH(const CFGChartItem::StatefulNode * sn, snm.second) {
             HyperEdge * edge = new HyperEdge(root);
             edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
+            //cerr << " Adding tail: " << sn->first->GetId() << endl;
             edge->AddTail(sn->first);
             Real total_score = 0;
             for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {

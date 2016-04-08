@@ -139,6 +139,7 @@ public:
 
     // Transform a graph of words into a hiero graph
     virtual HyperGraph * TransformGraph(const HyperGraph & graph) const;
+    bool PredictiveSearch(marisa::Agent & agent) const;
 
     static LookupTableCFGLM * ReadFromFiles(const std::vector<std::string> & filename);
 
