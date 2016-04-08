@@ -419,69 +419,6 @@ public:
         return expected_graph;
     }
     
-    HyperGraph * CreateMultiHeadExpectedGraph() {
-        vector<HyperNode*> node(5);
-        vector<HyperEdge*> edge(5);
-    
-        for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
-        for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
-
-        // [4,5]: me
-        edge[0]->SetHead(node[1]);
-        // [2,5]: made by X0[4,5]
-        edge[1]->SetHead(node[2]);
-        edge[1]->AddTail(node[1]);
-        // [1,2]: program
-        edge[2]->SetHead(node[3]);
-        // [0,5]: the X0[1,2] X1[2,5]
-        edge[3]->SetHead(node[4]);
-        edge[3]->AddTail(node[3]);
-        edge[3]->AddTail(node[2]);
-        // root:
-        edge[4]->SetHead(node[0]);
-        edge[4]->AddTail(node[4]);
-
-        // root
-        node[0]->SetSpan(pair<int,int>(0,5));
-        node[0]->AddEdge(edge[4]);
-        node[0]->SetViterbiScore(0);
-        // [4,5]
-        node[1]->SetSpan(pair<int,int>(4,5));
-        node[1]->SetSym(Dict::WID("PRP"));
-        node[1]->AddEdge(edge[0]);
-        node[1]->SetViterbiScore(0);
-        // [2,5]
-        node[2]->SetSpan(pair<int,int>(2,5));
-        node[2]->SetSym(Dict::WID("VP"));
-        node[2]->AddEdge(edge[1]);
-        node[2]->SetViterbiScore(0);
-        // [1,2]
-        node[3]->SetSpan(pair<int,int>(1,2));
-        node[3]->SetSym(Dict::WID("NN"));
-        node[3]->AddEdge(edge[2]);
-        node[3]->SetViterbiScore(0);
-        // [0,5]
-        node[4]->SetSpan(pair<int,int>(0,5));
-        node[4]->SetSym(Dict::WID("S"));
-        node[4]->AddEdge(edge[3]);
-        node[4]->SetViterbiScore(0);
-    
-        HyperGraph* expected_graph = new HyperGraph;
-        BOOST_FOREACH(HyperEdge* ed, edge) {
-            expected_graph->AddEdge(ed);
-        }
-    
-        BOOST_FOREACH(HyperNode* nd, node) {
-            expected_graph->AddNode(nd);
-        }
-        string inp = "the program made by me";
-        Sentence c = Dict::ParseWords(inp);
-        BOOST_FOREACH(WordId w_id, c) {
-            expected_graph->AddWord(w_id);
-        }
-        return expected_graph;
-    }
-    
     
     bool BuildRules(LookupTableCFGLM & lookup, bool extra = false) {
         string inp = "I eat two hamburgers";
@@ -517,25 +454,10 @@ public:
     //     return ret;
     // }
     
-    bool MultiHead(LookupTableCFGLM & lookup) {
-        string inp = "the program made by me";
-        boost::shared_ptr<HyperGraph> input_graph(new HyperGraph);
-        BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
-            input_graph->AddWord(word);
-    
-        HyperGraph* actual_graph = lookup.TransformGraph(*input_graph);
-        HyperGraph* expected_graph = CreateMultiHeadExpectedGraph();
-        bool ret = expected_graph->CheckMaybeEqual(*actual_graph);
-        delete actual_graph;
-        delete expected_graph;
-        return ret;
-    }
-    
     boost::scoped_ptr<LookupTableCFGLM> lookup_cfglm;
     boost::scoped_ptr<LookupTableCFGLM> lookup_cfglm_split;
     boost::scoped_ptr<LookupTableCFGLM> lookup_cfglm_extra;
     boost::scoped_ptr<LookupTableCFGLM> lookup_cfglm_c;
-    boost::scoped_ptr<LookupTableCFGLM> lookup_cfglm_mhd;
 };
 
 
@@ -629,18 +551,150 @@ BOOST_AUTO_TEST_CASE(TestBuildRulesExtra) {
 BOOST_AUTO_TEST_CASE(TestMultiHead) {
 
     //Load the rule mhd = multi head
-    ostringstream rule_oss_mhd;
-    rule_oss_mhd << "\"the\" x0:NN x1:VP @ S ||| x1:NP x0:NN @ S ||| para=1" << endl;
-    rule_oss_mhd << "\"program\" @ NN ||| \"program\" @ NN ||| para=1" << endl;
-    rule_oss_mhd << "\"made\" \"by\" x0:PRP @ VP ||| x0:PRP$ @ NP ||| para=1" << endl;
-    rule_oss_mhd << "\"me\" @ PRP ||| \"my\" @ PRP$ ||| para=1" << endl;
-    istringstream rule_iss_mhd(rule_oss_mhd.str());
-    lookup_cfglm_mhd.reset(new LookupTableCFGLM);
-    lookup_cfglm_mhd->SetTrgFactors(1);
-    lookup_cfglm_mhd->SetRootSymbol(Dict::WID("S"));
-    lookup_cfglm_mhd->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss_mhd));
+    ostringstream rule_oss;
+    rule_oss << "\"the\" x0:NN x1:VP @ S ||| x1:NP x0:NN @ S ||| para=1" << endl;
+    rule_oss << "\"program\" @ NN ||| \"program\" @ NN ||| para=1" << endl;
+    rule_oss << "\"made\" \"by\" x0:PRP @ VP ||| x0:PRP$ @ NP ||| para=1" << endl;
+    rule_oss << "\"me\" @ PRP ||| \"my\" @ PRP$ ||| para=1" << endl;
+    istringstream rule_iss(rule_oss.str());
+    boost::scoped_ptr<LookupTableCFGLM> lookup(new LookupTableCFGLM);
+    lookup->SetTrgFactors(1);
+    lookup->SetRootSymbol(Dict::WID("S"));
+    lookup->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
 
-    BOOST_CHECK(MultiHead(*lookup_cfglm_mhd));
+    string inp = "the program made by me";
+    boost::scoped_ptr<HyperGraph> input_graph(new HyperGraph);
+    BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
+        input_graph->AddWord(word);
+    
+    HyperGraph* actual_graph = lookup->TransformGraph(*input_graph);
+
+    vector<HyperNode*> node(5);
+    vector<HyperEdge*> edge(5);
+    
+    for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
+    for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
+
+    // [4,5]: me
+    edge[0]->SetHead(node[1]);
+    // [2,5]: made by X0[4,5]
+    edge[1]->SetHead(node[2]);
+    edge[1]->AddTail(node[1]);
+    // [1,2]: program
+    edge[2]->SetHead(node[3]);
+    // [0,5]: the X0[1,2] X1[2,5]
+    edge[3]->SetHead(node[4]);
+    edge[3]->AddTail(node[3]);
+    edge[3]->AddTail(node[2]);
+    // root:
+    edge[4]->SetHead(node[0]);
+    edge[4]->AddTail(node[4]);
+
+    // root
+    node[0]->SetSpan(pair<int,int>(0,5));
+    node[0]->AddEdge(edge[4]);
+    node[0]->SetViterbiScore(0);
+    // [4,5]
+    node[1]->SetSpan(pair<int,int>(4,5));
+    node[1]->SetSym(Dict::WID("PRP"));
+    node[1]->AddEdge(edge[0]);
+    node[1]->SetViterbiScore(0);
+    // [2,5]
+    node[2]->SetSpan(pair<int,int>(2,5));
+    node[2]->SetSym(Dict::WID("VP"));
+    node[2]->AddEdge(edge[1]);
+    node[2]->SetViterbiScore(0);
+    // [1,2]
+    node[3]->SetSpan(pair<int,int>(1,2));
+    node[3]->SetSym(Dict::WID("NN"));
+    node[3]->AddEdge(edge[2]);
+    node[3]->SetViterbiScore(0);
+    // [0,5]
+    node[4]->SetSpan(pair<int,int>(0,5));
+    node[4]->SetSym(Dict::WID("S"));
+    node[4]->AddEdge(edge[3]);
+    node[4]->SetViterbiScore(0);
+    
+    HyperGraph* expected_graph = new HyperGraph;
+    BOOST_FOREACH(HyperEdge* ed, edge) { expected_graph->AddEdge(ed); }
+    BOOST_FOREACH(HyperNode* nd, node) { expected_graph->AddNode(nd); }
+    Sentence c = Dict::ParseWords(inp);
+    BOOST_FOREACH(WordId w_id, c) { expected_graph->AddWord(w_id); }
+
+    BOOST_CHECK(expected_graph->CheckMaybeEqual(*actual_graph));
+    delete actual_graph;
+    delete expected_graph;
+
+}
+
+BOOST_AUTO_TEST_CASE(TestUnary) {
+
+    ostringstream rule_oss;
+    rule_oss << "\"hello\" @ A ||| \"hello\" @ A ||| para=1" << endl;
+    rule_oss << "x0:A @ B ||| x0:A @ B ||| para=1" << endl;
+    rule_oss << "x0:B @ S ||| x0:B @ S ||| para=1" << endl;
+    istringstream rule_iss(rule_oss.str());
+    boost::scoped_ptr<LookupTableCFGLM> lookup(new LookupTableCFGLM);
+    lookup->SetTrgFactors(1);
+    lookup->SetRootSymbol(Dict::WID("S"));
+    lookup->AddRuleFSM(RuleFSM::ReadFromRuleTable(rule_iss));
+
+    string inp = "hello";
+    boost::scoped_ptr<HyperGraph> input_graph(new HyperGraph);
+    BOOST_FOREACH(WordId word, Dict::ParseWords(inp))
+        input_graph->AddWord(word);
+    
+    HyperGraph* actual_graph = lookup->TransformGraph(*input_graph);
+
+    vector<HyperNode*> node(4);
+    vector<HyperEdge*> edge(4);
+    
+    for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
+    for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
+
+    // [0,1]: hello -> A
+    edge[0]->SetHead(node[1]);
+    // [0,1]: A -> B
+    edge[1]->SetHead(node[2]);
+    edge[1]->AddTail(node[1]);
+    // [0,1]: B -> S
+    edge[2]->SetHead(node[3]);
+    edge[2]->AddTail(node[2]);
+    // [0,1]: S -> root
+    edge[3]->SetHead(node[0]);
+    edge[3]->AddTail(node[3]);
+
+    // root
+    node[0]->SetSpan(pair<int,int>(0,1));
+    node[0]->AddEdge(edge[3]);
+    node[0]->SetViterbiScore(0);
+    // [0,1]A
+    node[1]->SetSpan(pair<int,int>(0,1));
+    node[1]->SetSym(Dict::WID("A"));
+    node[1]->AddEdge(edge[0]);
+    node[1]->SetViterbiScore(0);
+    // [0,1]B
+    node[2]->SetSpan(pair<int,int>(0,1));
+    node[2]->SetSym(Dict::WID("B"));
+    node[2]->AddEdge(edge[1]);
+    node[2]->SetViterbiScore(0);
+    // [0,1]S
+    node[3]->SetSpan(pair<int,int>(0,1));
+    node[3]->SetSym(Dict::WID("S"));
+    node[3]->AddEdge(edge[2]);
+    node[3]->SetViterbiScore(0);
+    
+    HyperGraph* expected_graph = new HyperGraph;
+    BOOST_FOREACH(HyperEdge* ed, edge) { expected_graph->AddEdge(ed); }
+    BOOST_FOREACH(HyperNode* nd, node) { expected_graph->AddNode(nd); }
+
+    Sentence c = Dict::ParseWords(inp);
+    BOOST_FOREACH(WordId w_id, c) { expected_graph->AddWord(w_id); }
+
+    BOOST_CHECK(expected_graph->CheckMaybeEqual(*actual_graph));
+    delete actual_graph;
+    delete expected_graph;
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

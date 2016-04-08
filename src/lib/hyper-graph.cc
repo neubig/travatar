@@ -183,11 +183,9 @@ int HyperGraph::CheckMaybeEqual(const HyperGraph & rhs) const {
     sort(exp_tails.begin(), exp_tails.end());
     sort(act_tails.begin(), act_tails.end());
     // Check if scores are equal
-    vector<Real> l_scores(nodes_.size()), r_scores(nodes_.size());
-    for(int i = 0; i < (int)nodes_.size(); i++) {
-        l_scores[i] = nodes_[i]->GetViterbiScore();
-        r_scores[i] = rhs.nodes_[i]->GetViterbiScore();
-    }
+    vector<Real> l_scores(nodes_.size()), r_scores(rhs.nodes_.size());
+    for(size_t i = 0; i < nodes_.size(); i++) l_scores[i] = nodes_[i]->GetViterbiScore();
+    for(size_t i = 0; i < rhs.nodes_.size(); i++) r_scores[i] = rhs.nodes_[i]->GetViterbiScore();
     sort(l_scores.begin(), l_scores.end());
     sort(r_scores.begin(), r_scores.end());
     // Check if nodes and edges are equal
