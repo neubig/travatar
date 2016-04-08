@@ -80,7 +80,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
     BOOST_FOREACH(RuleMap::value_type & rule, rules) {
         marisa::Agent agent;
         agent.set_query(rule.first.c_str(), rule.first.length());
-        cerr << "Adding agent: " << CFGPath::PrintAgent(agent) << endl;
+        // cerr << "Adding agent: " << CFGPath::PrintAgent(agent) << endl;
         if(!ret->GetTrie().lookup(agent))
             THROW_ERROR("Internal error when building rule table");
         main_rules[agent.key().id()].swap(rule.second);

@@ -32,12 +32,12 @@ CFGChartItem::~CFGChartItem() {
 
 
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
-    cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
+    //cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
     assert(populated_);
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     assert(it != nodes_.end());
     Real ret = (it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
-    cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << (it->second.size() > pos) << ", ret: " << ret << endl;
+    //cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << (it->second.size() > pos) << ", ret: " << ret << endl;
     return ret;
 }
 
@@ -49,7 +49,7 @@ void CFGChartItem::AddStatefulNode(const HieroHeadLabels & label, HyperNode* nod
 const CFGChartItem::StatefulNode & CFGChartItem::GetStatefulNode(const HieroHeadLabels & label, int pos) const {
     assert(populated_);
     StatefulNodeMap::const_iterator it = nodes_.find(label);
-    cerr << " pos==" << pos << ", it->second.size()==" << it->second.size() << endl;
+    //cerr << " pos==" << pos << ", it->second.size()==" << it->second.size() << endl;
     assert(it != nodes_.end() && it->second.size() > pos);
     return *it->second[pos];
 }
@@ -66,7 +66,7 @@ void CFGChartItem::FinalizeNodes() {
         if(node_set.second.size() > 1)
             sort(node_set.second.begin(), node_set.second.end(), StatefulNodeScoresMore());
     }
-    cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
+    //cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
     populated_ = true;
 }
 
@@ -87,7 +87,7 @@ LookupTableCFGLM * LookupTableCFGLM::ReadFromFiles(const std::vector<std::string
     LookupTableCFGLM * ret = new LookupTableCFGLM;
     BOOST_FOREACH(const std::string & filename, filenames) {
         InputFileStream tm_in(filename.c_str());
-        cerr << "Reading TM file from "<<filename<<"..." << endl;
+        //cerr << "Reading TM file from "<<filename<<"..." << endl;
         if(!tm_in)
             THROW_ERROR("Could not find TM: " << filename);
         ret->AddRuleFSM(RuleFSM::ReadFromRuleTable(tm_in));
@@ -98,40 +98,6 @@ LookupTableCFGLM * LookupTableCFGLM::ReadFromFiles(const std::vector<std::string
 void LookupTableCFGLM::LoadLM(const std::string & filename) {
     lm_data_.push_back(new LMData(filename));
     funcs_.push_back(LMFunc::CreateFromType(lm_data_[lm_data_.size()-1]->GetType())); 
-}
-
-HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
-
-    HyperGraph * ret = new HyperGraph;
-       
-    Sentence sent = graph.GetWords();
-    int N = sent.size();
-    vector<CFGChartItem> chart(N*N);
-    vector<CFGCollection> collections(N*N);
-    CFGPath root_path;
-
-    // Add the root note
-    HyperNode * root = new HyperNode;
-    root->SetSpan(make_pair(0, N));
-    ret->AddNode(root);
-
-    for(int i = N-1; i >= 0; i--) {
-        // Find single words
-        CFGPath next(root_path, sent, i);
-        if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
-            AddToChart(next, sent, N, i, i, false, chart, collections);
-        CubePrune(N, i, i, collections, chart, *ret);
-
-        // Find multi-words
-        for(int j = i+1; j < N; j++) {
-            Consume(root_path, sent, N, i, i, j, chart, collections);
-            CubePrune(N, i, j, collections, chart, *ret);
-        }
-    }
-
-    THROW_ERROR("Haven't implemented the root node part yet");
-
-    return ret;
 }
 
 void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i, int j, int k, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
@@ -149,13 +115,13 @@ void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i,
 }
 
 void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int i, int j, bool u, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
-    cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
+    //cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
     if(!u) {
         if(rule_fsms_[0]->GetTrie().lookup(a.agent)) {
-            cerr << " found rules!" << endl;
+            //cerr << " found rules!" << endl;
             collections[i*N+j].AddRules(a, rule_fsms_[0]->GetRules()[a.agent.key().id()]);
         } else {
-            cerr << " didn't find rules!" << endl;
+            //cerr << " didn't find rules!" << endl;
         }
     }
     if(rule_fsms_[0]->GetTrie().predictive_search(a.agent))
@@ -164,7 +130,7 @@ void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int
 }
 
 void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & collection, vector<CFGChartItem> & chart, HyperGraph & ret) const {
-    cerr << "CubePrune(" << N << ", " << i << ", " << j << ")" << endl;
+    //cerr << "CubePrune(" << N << ", " << i << ", " << j << ")" << endl;
     // Don't build already finished charts
     int id = i*N + j;
     assert(!chart[id].IsPopulated());
@@ -180,20 +146,20 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
 
     // Score the top hypotheses of each rule
     vector<Real> rule_scores(rules.size());
-    cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
+    //cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
     for(size_t i = 0; i < rules.size(); i++) {
         // Get the base score for the rule
         Real score = weights_->GetCurrent() * rules[i]->GetFeatures();
         const vector<pair<int,int> > & path = *spans[i];
         const vector<HieroHeadLabels> & lab = *labels[i];
         assert(i < labels.size());
-        cerr << " Lab: " << lab.size() << ", path: " << path.size() << ", rule_score: " << score << endl;
+        //cerr << " Lab: " << lab.size() << ", path: " << path.size() << ", rule_score: " << score << endl;
         assert(lab.size() == path.size());
         for(size_t j = 0; j < path.size() && score != -REAL_MAX; j++) {
             int id = path[j].first * N + path[j].second;
             score += chart[id].GetHypScore(lab[j], 0);
         }
-        cerr << " score = " << score << endl;
+        //cerr << " score = " << score << endl;
         if(score != -REAL_MAX) {
             vector<int> pos(spans[i]->size()+1,0); pos[0] = i;
             hypo_queue.push(make_pair(score, pos));
@@ -258,13 +224,13 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
             node->AddEdge(next_edge);
             recomb_map.insert(make_pair(ridx, node));
         }
-        cerr << " hypo_queue.size(): " << hypo_queue.size() << endl;
+        //cerr << " hypo_queue.size(): " << hypo_queue.size() << endl;
         // Advance the hypotheses
         for(size_t j = 0; j < path.size(); j++) {
             const pair<int,int> & my_span = (*spans[id_str[0]])[j];
             Real my_score = top_score - chart[my_span.first*N + my_span.second].GetHypScoreDiff((*labels[id_str[0]])[j], id_str[j+1]);
             if(my_score > -REAL_MAX/2) {
-                cerr << " adding hypothesis with score: " << my_score << endl;
+                //cerr << " adding hypothesis with score: " << my_score << endl;
                 vector<int> pos(id_str); pos[j+1]++;
                 hypo_queue.push(make_pair(my_score, pos));
             }
@@ -272,7 +238,61 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     }
 
     // Sort the nodes in each bin, and mark the chart populated
-    cerr << " Finalizing " << id << endl;
+    //cerr << " Finalizing " << id << endl;
     chart[id].FinalizeNodes();
 
+}
+
+HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
+
+    HyperGraph * ret = new HyperGraph;
+    ret->SetWords(graph.GetWords());
+       
+    Sentence sent = graph.GetWords();
+    int N = sent.size();
+    vector<CFGChartItem> chart(N*N);
+    vector<CFGCollection> collections(N*N);
+    CFGPath root_path;
+
+    // Add the root note
+    HyperNode * root = new HyperNode;
+    root->SetSpan(make_pair(0, N));
+    ret->AddNode(root);
+
+    for(int i = N-1; i >= 0; i--) {
+        // Find single words
+        CFGPath next(root_path, sent, i);
+        if(rule_fsms_[0]->GetTrie().predictive_search(next.agent))
+            AddToChart(next, sent, N, i, i, false, chart, collections);
+        CubePrune(N, i, i, collections, chart, *ret);
+
+        // Find multi-words
+        for(int j = i+1; j < N; j++) {
+            Consume(root_path, sent, N, i, i, j, chart, collections);
+            CubePrune(N, i, j, collections, chart, *ret);
+        }
+    }
+
+    // Build the final nodes
+    BOOST_FOREACH(const CFGChartItem::StatefulNodeMap::value_type snm, chart[N-1].GetNodes()) {
+        BOOST_FOREACH(const CFGChartItem::StatefulNode * sn, snm.second) {
+            HyperEdge * edge = new HyperEdge(root);
+            edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
+            edge->AddTail(sn->first);
+            Real total_score = 0;
+            for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {
+                LMData* data = lm_data_[lm_id];
+                Real my_score = funcs_[lm_id]->CalcFinalScore(data->GetLM(), sn->second[lm_id]);
+                if(my_score != 0.0)
+                    edge->GetFeatures().Add(data->GetFeatureName(), my_score);
+                total_score += my_score * data->GetWeight();
+            }
+            edge->SetScore(total_score);
+            ret->AddEdge(edge);
+            root->AddEdge(edge);
+        }
+    }
+    root->CalcViterbiScore();
+
+    return ret;
 }

@@ -5,6 +5,7 @@
 #include <travatar/hyper-graph.h>
 #include <travatar/translation-rule-hiero.h>
 #include <travatar/lookup-table-cfglm.h>
+#include <travatar/global-debug.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
@@ -126,9 +127,9 @@ public:
     }
     
     HyperGraph * CreateExpectedGraph(bool extra) {
-        vector<HyperNode*> node(6 + (extra ? 1:0));
-        vector<HyperEdge*> edge(10 + (extra ? 2:0));
-        vector<TranslationRuleHiero*> rules(11 + (extra ? 2:0));
+        vector<HyperNode*> node(11 + (extra ? 1:0));
+        vector<HyperEdge*> edge(14 + (extra ? 2:0));
+        vector<TranslationRuleHiero*> rules(14);
     
         for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
         for (int j=0; j < (int)edge.size(); ++j) edge[j] = new HyperEdge;
@@ -146,102 +147,121 @@ public:
         rules[8] = BuildRule("\"two\" x0:X @ X", "\"futatsu\" \"no\" x0:X @ X", "Pegf=0.02 ppen=2.718");
         rules[9] = BuildRule("\"two\" @ X", "\"futatsu\" @ X", "Pegf=0.02 ppen=2.718");
         rules[10] = BuildRule("\"hamburgers\" @ X", "\"hanbaga\" @ X", "Pegf=0.02 ppen=2.718");
-        if (extra) {
-            rules[11] = BuildRule("\"two\" x0:DIFF @ X" ,"\"futatsu\" x0:DIFF @ X", "Pegf=0.02 ppen=2.718");
-            rules[12] = BuildRule("\"hamburger\" @ DIFF","\"hamburger\" @ DIFF", "unk=1");
-        }
+        rules[11] = new TranslationRuleHiero;
+
+        rules[12] = BuildRule("\"two\" x0:DIFF @ X" ,"\"futatsu\" x0:DIFF @ X", "Pegf=0.02 ppen=2.718");
+        rules[13] = BuildRule("\"hamburger\" @ DIFF","\"hamburger\" @ DIFF", "unk=1");
     
-        // Draw it. You will have an idea after you see the drawing.
-        edge[0]->SetHead(node[0]);
-        {
-            edge[0]->AddTail(node[1]);
-            edge[0]->AddTail(node[4]);
-            edge[0]->SetRule(rules[5]);
-        }
-        edge[1]->SetHead(node[5]);
-        {
-            edge[1]->SetRule(rules[10]);
-        }
-        edge[2]->SetHead(node[4]);
-        {
-            edge[2]->AddTail(node[5]);
-            edge[2]->SetRule(rules[8]);
-        }
-        edge[3]->SetHead(node[3]);
-        {
-            edge[3]->AddTail(node[4]);
-            edge[3]->SetRule(rules[6]);
-        }
-        edge[4]->SetHead(node[3]);
-        {
-            edge[4]->AddTail(node[5]);
-            edge[4]->SetRule(rules[4]);
-        }
-        edge[5]->SetHead(node[2]);
-        {
-            edge[5]->SetRule(rules[7]);
-        }
-        edge[6]->SetHead(node[0]);
-        {
-            edge[6]->AddTail(node[2]);
-            edge[6]->AddTail(node[5]);
-            edge[6]->SetRule(rules[3]);
-        }
-        edge[7]->SetHead(node[0]);
-        {
-            edge[7]->AddTail(node[2]);
-            edge[7]->SetRule(rules[1]);
-        }
-        edge[8]->SetHead(node[0]);
-        {
-            edge[8]->AddTail(node[3]);
-            edge[8]->SetRule(rules[0]);
-        }
-        edge[9]->SetHead(node[1]);
-        {
-            edge[9]->SetRule(rules[2]);
-        }
-        if (extra) {
-            edge[10]->SetHead(node[6]);
-            edge[10]->SetRule(rules[12]);
-            edge[11]->SetHead(node[4]);
-            edge[11]->AddTail(node[6]);
-            edge[11]->SetRule(rules[11]);
-        }
+        // [3,4]: hamburgers
+        edge[0]->SetHead(node[1]);
+        edge[0]->SetRule(rules[10]);
+        // [2,3]: two 
+        edge[1]->SetHead(node[2]);
+        edge[1]->SetRule(rules[9]);
+        // [2,4]: two X0[3,4]
+        edge[2]->SetHead(node[3]);
+        edge[2]->AddTail(node[1]);
+        edge[2]->SetRule(rules[8]);
+        // [1,2]: eat
+        edge[3]->SetHead(node[4]);
+        edge[3]->SetRule(rules[7]);
+        // [1,3]: eat X0[2,3]
+        edge[4]->SetHead(node[5]);
+        edge[4]->AddTail(node[2]);
+        edge[4]->SetRule(rules[6]);
+        // [1,4]: eat X0[2,4]
+        edge[5]->SetHead(node[6]);
+        edge[5]->AddTail(node[3]);
+        edge[5]->SetRule(rules[6]);
+        // [1,4]: eat two X0[3,4]
+        edge[6]->SetHead(node[6]);
+        edge[6]->AddTail(node[1]);
+        edge[6]->SetRule(rules[4]);
+        // [0,1]: I
+        edge[7]->SetHead(node[7]);
+        edge[7]->SetRule(rules[2]);
+        // [0,2]: I X0[1,2]
+        edge[8]->SetHead(node[8]);
+        edge[8]->AddTail(node[4]);
+        edge[8]->SetRule(rules[0]);
+        // [0,3]: I X0[1,3]
+        edge[9]->SetHead(node[9]);
+        edge[9]->AddTail(node[5]);
+        edge[9]->SetRule(rules[0]);
+        // [0,4]: I X0[1,4]
+        edge[10]->SetHead(node[10]);
+        edge[10]->AddTail(node[6]);
+        edge[10]->SetRule(rules[0]);
+        // [0,4]: I X0[1,2] two X1[3,4]
+        edge[11]->SetHead(node[10]);
+        edge[11]->AddTail(node[4]);
+        edge[11]->AddTail(node[1]);
+        edge[11]->SetRule(rules[3]);
+        // [0,4]: I X0[1,2] two hamburgers
+        edge[12]->SetHead(node[10]);
+        edge[12]->AddTail(node[4]);
+        edge[12]->SetRule(rules[1]);
+        // [0,4]: X0[0,4]
+        edge[13]->SetHead(node[0]);
+        edge[13]->AddTail(node[10]);
+        edge[13]->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
+        // if (extra) {
+        //     edge[10]->SetHead(node[6]);
+        //     edge[10]->SetRule(rules[12]);
+        //     edge[11]->SetHead(node[4]);
+        //     edge[11]->AddTail(node[6]);
+        //     edge[11]->SetRule(rules[11]);
+        // }
        
+        // root:
         node[0]->SetSpan(pair<int,int>(0,4));
-        {
-            node[0]->AddEdge(edge[0]);
-            node[0]->AddEdge(edge[6]);
-            node[0]->AddEdge(edge[7]);
-            node[0]->AddEdge(edge[8]);
-        }
-        node[1]->SetSpan(pair<int,int>(0,1));
-        {
-            node[1]->AddEdge(edge[9]);
-        }
-        node[2]->SetSpan(pair<int,int>(1,2));
-        {
-            node[2]->AddEdge(edge[5]);
-        }
-        node[3]->SetSpan(pair<int,int>(1,4));
-        {
-            node[3]->AddEdge(edge[3]);
-            node[3]->AddEdge(edge[4]);
-        }
-        node[4]->SetSpan(pair<int,int>(2,4));
-        {
-            node[4]->AddEdge(edge[2]);
-            if (extra) node[4]->AddEdge(edge[11]);
-        }
-        node[5]->SetSpan(pair<int,int>(3,4));
-        {
-            node[5]->AddEdge(edge[1]);
-        }
-        if (extra) {
-            node[6]->SetSpan(pair<int,int>(3,4));
-            node[6]->AddEdge(edge[10]);
-        }
+        node[0]->AddEdge(edge[13]);
+        node[0]->SetViterbiScore(0);
+        // [3,4]:
+        node[1]->SetSpan(pair<int,int>(3,4));
+        node[1]->AddEdge(edge[0]);
+        node[1]->SetViterbiScore(0);
+        // [2,3]:
+        node[2]->SetSpan(pair<int,int>(2,3));
+        node[2]->AddEdge(edge[1]);
+        node[2]->SetViterbiScore(0);
+        // [2,4]:
+        node[3]->SetSpan(pair<int,int>(2,4));
+        node[3]->AddEdge(edge[2]);
+        node[3]->SetViterbiScore(0);
+        // [1,2]:
+        node[4]->SetSpan(pair<int,int>(1,2));
+        node[4]->AddEdge(edge[3]);
+        node[4]->SetViterbiScore(0);
+        // [1,3]:
+        node[5]->SetSpan(pair<int,int>(1,3));
+        node[5]->AddEdge(edge[4]);
+        node[5]->SetViterbiScore(0);
+        // [1,4]:
+        node[6]->SetSpan(pair<int,int>(1,4));
+        node[6]->AddEdge(edge[5]);
+        node[6]->AddEdge(edge[6]);
+        node[6]->SetViterbiScore(0);
+        // [0,1]:
+        node[7]->SetSpan(pair<int,int>(0,1));
+        node[7]->AddEdge(edge[7]);
+        // [0,2]:
+        node[8]->SetSpan(pair<int,int>(0,2));
+        node[8]->AddEdge(edge[8]);
+        // [0,3]:
+        node[9]->SetSpan(pair<int,int>(0,3));
+        node[9]->AddEdge(edge[9]);
+        // [0,4]:
+        node[10]->SetSpan(pair<int,int>(0,4));
+        node[10]->AddEdge(edge[10]);
+        node[10]->AddEdge(edge[11]);
+        node[10]->AddEdge(edge[12]);
+        node[10]->SetViterbiScore(0);
+
+        // if (extra) {
+        //     node[6]->SetSpan(pair<int,int>(3,4));
+        //     node[6]->AddEdge(edge[10]);
+        // }
     
         HyperGraph* expected_graph = new HyperGraph;
         BOOST_FOREACH(HyperEdge* ed, edge) {
