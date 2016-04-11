@@ -31,7 +31,7 @@ public:
     HieroHeadLabels GetHeadLabels() const;
     HieroHeadLabels GetChildHeadLabels(int position) const;
 protected:
-	CfgData src_data_;
+	  CfgData src_data_;
 };
 }
 #endif

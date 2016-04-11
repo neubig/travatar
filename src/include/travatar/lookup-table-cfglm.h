@@ -151,13 +151,16 @@ public:
     void SetWeights(const Weights & weights) { weights_ = &weights; }
     void SetRootSymbol(WordId symbol) { root_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
     void SetUnkSymbol(WordId symbol) { unk_symbol_ = HieroHeadLabels(std::vector<WordId>(trg_factors_+1,symbol)); }
-    void AddRuleFSM(RuleFSM* fsm) { rule_fsms_.push_back(fsm); }
+    void AddRuleFSM(RuleFSM* fsm);
 
 private:
 
     std::vector<RuleFSM*> rule_fsms_;
     std::vector<LMData*> lm_data_;
     std::vector<LMFunc*> funcs_;
+    std::vector<TranslationRuleHiero*> unary_rules_;
+    typedef boost::unordered_map<HieroHeadLabels,std::vector<int> > UnaryIds;
+    UnaryIds unary_ids_;
     int pop_limit_;
     int chart_limit_;
     

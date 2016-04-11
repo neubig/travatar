@@ -17,7 +17,7 @@ class CfgData;
 
 typedef std::vector<WordId> HieroHeadLabels;
 typedef std::vector<std::pair<int,int> > HieroRuleSpans;
-typedef std::map<HieroHeadLabels,std::set<HieroHeadLabels> > UnaryMap;
+typedef std::map<HieroHeadLabels,std::vector<HieroHeadLabels> > UnaryMap;
 typedef std::map<HieroHeadLabels, HyperNode*> HeadNodePairs;
 typedef std::map<std::pair<int,int>, HeadNodePairs> HieroNodeMap;
 typedef std::vector<HyperEdge* > EdgeList;
@@ -59,6 +59,7 @@ public:
     // ACCESSOR
     int GetSpanLimit() const { return span_length_; } 
     const RuleSet & GetRules() const { return rules_; }
+    const UnaryMap & GetUnaryMap() const { return unaries_; }
     const marisa::Trie & GetTrie() const { return trie_; }
     RuleSet & GetRules() { return rules_; }
     marisa::Trie & GetTrie() { return trie_; }

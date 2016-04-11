@@ -32,8 +32,6 @@ CFGChartItem::~CFGChartItem() {
 
 
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
-    //cerr << " populated_ == " << populated_ << " (" << (long)&populated_ << ")" << endl;
-    assert(populated_);
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     assert(it != nodes_.end());
     Real ret = (it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
@@ -47,7 +45,6 @@ void CFGChartItem::AddStatefulNode(const HieroHeadLabels & label, HyperNode* nod
 }
 
 const CFGChartItem::StatefulNode & CFGChartItem::GetStatefulNode(const HieroHeadLabels & label, int pos) const {
-    assert(populated_);
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     //cerr << " pos==" << pos << ", it->second.size()==" << it->second.size() << endl;
     assert(it != nodes_.end() && it->second.size() > pos);
@@ -95,6 +92,22 @@ LookupTableCFGLM * LookupTableCFGLM::ReadFromFiles(const std::vector<std::string
     return ret;
 }
 
+void LookupTableCFGLM::AddRuleFSM(RuleFSM* fsm) {
+    rule_fsms_.push_back(fsm);
+    BOOST_FOREACH(const UnaryMap::value_type & val, fsm->GetUnaryMap()) {
+        Sentence inv_heads(val.first.size());
+        for(size_t i = 0; i < val.first.size(); i++) inv_heads[i] = -1 - val.first[i];
+        std::string str((char*)&inv_heads[0], inv_heads.size()*sizeof(WordId));
+        marisa::Agent ag; ag.set_query(str.c_str(), str.length());
+        assert(fsm->GetTrie().lookup(ag));
+        BOOST_FOREACH(TranslationRuleHiero * rule, fsm->GetRules()[ag.key().id()]) {
+            //cerr << "Adding rule: " << *rule << " at " << val.first << endl;
+            unary_ids_[val.first].push_back(unary_rules_.size());
+            unary_rules_.push_back(rule);
+        }
+    }
+}
+
 void LookupTableCFGLM::LoadLM(const std::string & filename) {
     lm_data_.push_back(new LMData(filename));
     funcs_.push_back(LMFunc::CreateFromType(lm_data_[lm_data_.size()-1]->GetType())); 
@@ -128,12 +141,8 @@ void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int
     //cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
     if(!u) {
         BOOST_FOREACH(const RuleFSM * fsm, rule_fsms_) {
-            if(fsm->GetTrie().lookup(a.agent)) {
-                //cerr << " Looking up and found rules" << endl;
+            if(fsm->GetTrie().lookup(a.agent))
                 collections[i*N+j].AddRules(a, fsm->GetRules()[a.agent.key().id()]);
-            } else {
-                //cerr << " Looking up and didn't find rules" << endl;
-            }
         }
     }
     if(PredictiveSearch(a.agent))
@@ -157,7 +166,6 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     assert(rules.size() == spans.size());
 
     // Score the top hypotheses of each rule
-    vector<Real> rule_scores(rules.size());
     //cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
     for(size_t i = 0; i < rules.size(); i++) {
         // Get the base score for the rule
@@ -182,6 +190,10 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     typedef std::pair<HieroHeadLabels, std::vector<lm::ngram::ChartState> > RecombIndex;
     typedef std::map<RecombIndex, HyperNode*> RecombMap;
     RecombMap recomb_map;
+    set<vector<int> > finished_hyps;
+
+    // Create the unary path
+    vector<pair<int,int> > unary_path(1, pair<int,int>(i,j));
 
     // Go through the priority queue
     for(int num_popped = 0; hypo_queue.size() != 0 && 
@@ -191,18 +203,33 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         Real top_score = hypo_queue.top().first;
         vector<int> id_str = hypo_queue.top().second;
         hypo_queue.pop();
-        const vector<pair<int,int> > & path = *spans[id_str[0]];
-        const TranslationRuleHiero & rule = *rules[id_str[0]];
+        // Check if this has already been expanded
+        if(finished_hyps.find(id_str) != finished_hyps.end()) continue;
+        finished_hyps.insert(id_str);
+        // Find the paths and rules
+        const vector<pair<int,int> > * path;
+        const TranslationRuleHiero * rule;
+        // Non-unary rules
+        if(id_str[0] >= 0) {
+            path = spans[id_str[0]].get();
+            rule = rules[id_str[0]];
+            //cerr << "Non-unary rule: " << *rule << endl;
+        // Unary rules
+        } else {
+            path = &unary_path;
+            rule = unary_rules_[-1-id_str[0]];
+            //cerr << "Unary rule: " << *rule << endl;
+        }
         // Create the next edge
         HyperEdge * next_edge = new HyperEdge;
-        next_edge->SetFeatures(rule.GetFeatures());
-        next_edge->SetTrgData(rule.GetTrgData());
+        next_edge->SetFeatures(rule->GetFeatures());
+        next_edge->SetTrgData(rule->GetTrgData());
         // next_edge->SetSrcStr(rule.GetSrcStr());
         vector<lm::ngram::ChartState> my_state(lm_data_.size());
-        vector<vector<lm::ngram::ChartState> > states(path.size());
-        for(size_t j = 0; j < path.size(); j++) {
-            const pair<int,int> & my_span = (*spans[id_str[0]])[j];
-            const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode((*labels[id_str[0]])[j], id_str[j+1]);
+        vector<vector<lm::ngram::ChartState> > states(path->size());
+        for(size_t j = 0; j < path->size(); j++) {
+            const pair<int,int> & my_span = (*path)[j];
+            const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode(rule->GetChildHeadLabels(j), id_str[j+1]);
             //cerr << " Adding tail: " << node.first->GetId() << endl;
             next_edge->AddTail(node.first);
             states[j] = node.second;
@@ -222,7 +249,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         }
         next_edge->GetFeatures() += SparseVector(lm_features);
         // Add the hypothesis to the hypergraph
-        RecombIndex ridx = make_pair(rule.GetHeadLabels(), my_state);
+        RecombIndex ridx = make_pair(rule->GetHeadLabels(), my_state);
         RecombMap::iterator rit = recomb_map.find(ridx);
         ret.AddEdge(next_edge);
         if(rit != recomb_map.end()) {
@@ -231,23 +258,33 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         } else {
             HyperNode * node = new HyperNode;
             node->SetSpan(make_pair(i, j+1));
+            node->SetSym(rule->GetSrcData().label);
             next_edge->SetHead(node);
             ret.AddNode(node);
-            chart[id].AddStatefulNode(rule.GetHeadLabels(), node, my_state);
+            chart[id].AddStatefulNode(rule->GetHeadLabels(), node, my_state);
             node->AddEdge(next_edge);
             recomb_map.insert(make_pair(ridx, node));
         }
-        //cerr << " hypo_queue.size(): " << hypo_queue.size() << endl;
-        // Advance the hypotheses
-        for(size_t j = 0; j < path.size(); j++) {
-            const pair<int,int> & my_span = (*spans[id_str[0]])[j];
-            Real my_score = top_score - chart[my_span.first*N + my_span.second].GetHypScoreDiff((*labels[id_str[0]])[j], id_str[j+1]);
+        // Advance the hypothesis
+        for(size_t j = 0; j < path->size(); j++) {
+            const pair<int,int> & my_span = (*path)[j];
+            Real my_score = top_score - chart[my_span.first*N + my_span.second].GetHypScoreDiff(rule->GetChildHeadLabels(j), id_str[j+1]);
             if(my_score > -REAL_MAX/2) {
                 //cerr << " adding hypothesis with score: " << my_score << endl;
                 vector<int> pos(id_str); pos[j+1]++;
                 hypo_queue.push(make_pair(my_score, pos));
             }
-        } 
+        }
+        // If unary rules exist
+        UnaryIds::const_iterator uit = unary_ids_.find(rule->GetHeadLabels());
+        if(uit != unary_ids_.end()) {
+            BOOST_FOREACH(int urid, uit->second) {
+                vector<int> pos(2); pos[0] = -1-urid; pos[1] = 0;
+                // TODO: Recalculating the features for unary rules every time is extremely wasteful. Do something.
+                Real my_score = top_score + weights_->GetCurrent() * unary_rules_[urid]->GetFeatures();
+                hypo_queue.push(make_pair(my_score, pos));
+            }
+        }
     }
 
     // Sort the nodes in each bin, and mark the chart populated
@@ -287,8 +324,9 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
     }
 
     // Build the final nodes
-    BOOST_FOREACH(const CFGChartItem::StatefulNodeMap::value_type snm, chart[N-1].GetNodes()) {
-        BOOST_FOREACH(const CFGChartItem::StatefulNode * sn, snm.second) {
+    CFGChartItem::StatefulNodeMap::iterator snmit = chart[N-1].GetNodes().find(root_symbol_);
+    if(snmit != chart[N-1].GetNodes().end()) {
+        BOOST_FOREACH(const CFGChartItem::StatefulNode * sn, snmit->second) {
             HyperEdge * edge = new HyperEdge(root);
             edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
             //cerr << " Adding tail: " << sn->first->GetId() << endl;
@@ -310,3 +348,4 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
 
     return ret;
 }
+

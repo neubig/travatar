@@ -31,7 +31,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
             src_data
         );
         if(src_data.syms.size() == 1 && src_data.words.size() == 1)
-            unaries[rule->GetChildHeadLabels(0)].insert(rule->GetHeadLabels());
+            unaries[rule->GetChildHeadLabels(0)].push_back(rule->GetHeadLabels());
         // Sanity check
         BOOST_FOREACH(const CfgData & trg_data, rule->GetTrgData())
             if(trg_data.syms.size() != src_data.syms.size())
@@ -53,19 +53,20 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
 
     // Expand unary values
     bool added = true;
+    size_t pos;
     while(added) {
         added = false;
         BOOST_FOREACH(UnaryMap::value_type & val, unaries) {
-            BOOST_FOREACH(HieroHeadLabels target, val.second) {
+            BOOST_FOREACH(const HieroHeadLabels & target, val.second) {
                 if(val.first == target)
                     THROW_ERROR("Unary cycles are not allowed in CFG grammars, but found one with for label " << Dict::WSym(target[0]) << endl);
                 UnaryMap::iterator it = unaries.find(target);
                 if(it != unaries.end()) {
-                    BOOST_FOREACH(HieroHeadLabels second_trg, it->second) {
-                        set<HieroHeadLabels>::iterator it2 = val.second.find(target);
-                        if(it2 == val.second.end()) {
+                    BOOST_FOREACH(const HieroHeadLabels & second_trg, it->second) {
+                        for(pos = 0; pos < val.second.size() && val.second[pos] != second_trg; ++pos);
+                        if(pos == val.second.size()) {
                             added = true;
-                            val.second.insert(second_trg);
+                            val.second.push_back(second_trg);
                         } 
                     }
                 }
