@@ -11,10 +11,10 @@
 #include <travatar/weights.h>
 #include <marisa/marisa.h>
 #include <boost/foreach.hpp>
+#include <boost/unordered_set.hpp>
 #include <sstream>
 #include <fstream>
 #include <queue>
-#include <unordered_set>
 
 using namespace travatar;
 using namespace std;
@@ -34,7 +34,7 @@ CFGChartItem::~CFGChartItem() {
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     assert(it != nodes_.end());
-    Real ret = (it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
+    Real ret = ((int)it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
     //cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << (it->second.size() > pos) << ", ret: " << ret << endl;
     return ret;
 }
@@ -47,7 +47,7 @@ void CFGChartItem::AddStatefulNode(const HieroHeadLabels & label, HyperNode* nod
 const CFGChartItem::StatefulNode & CFGChartItem::GetStatefulNode(const HieroHeadLabels & label, int pos) const {
     StatefulNodeMap::const_iterator it = nodes_.find(label);
     //cerr << " pos==" << pos << ", it->second.size()==" << it->second.size() << endl;
-    assert(it != nodes_.end() && it->second.size() > pos);
+    assert(it != nodes_.end() && (int)it->second.size() > pos);
     return *it->second[pos];
 }
 
@@ -167,21 +167,20 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
 
     // Score the top hypotheses of each rule
     //cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
-    for(size_t i = 0; i < rules.size(); i++) {
+    for(size_t rid = 0; rid < rules.size(); rid++) {
         // Get the base score for the rule
-        Real score = weights_->GetCurrent() * rules[i]->GetFeatures();
-        const vector<pair<int,int> > & path = *spans[i];
-        const vector<HieroHeadLabels> & lab = *labels[i];
-        assert(i < labels.size());
+        Real score = weights_->GetCurrent() * rules[rid]->GetFeatures();
+        const vector<pair<int,int> > & path = *spans[rid];
+        const vector<HieroHeadLabels> & lab = *labels[rid];
         //cerr << " Lab: " << lab.size() << ", path: " << path.size() << ", rule_score: " << score << endl;
         assert(lab.size() == path.size());
-        for(size_t j = 0; j < path.size() && score != -REAL_MAX; j++) {
-            int id = path[j].first * N + path[j].second;
-            score += chart[id].GetHypScore(lab[j], 0);
+        for(size_t pid = 0; pid < path.size() && score != -REAL_MAX; pid++) {
+            int id = path[pid].first * N + path[pid].second;
+            score += chart[id].GetHypScore(lab[pid], 0);
         }
         //cerr << " score = " << score << endl;
         if(score != -REAL_MAX) {
-            vector<int> pos(spans[i]->size()+1,0); pos[0] = i;
+            vector<int> pos(spans[rid]->size()+1,0); pos[0] = rid;
             hypo_queue.push(make_pair(score, pos));
         }
     }
@@ -198,7 +197,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     // Go through the priority queue
     for(int num_popped = 0; hypo_queue.size() != 0 && 
                             (pop_limit_ < 0 || num_popped < pop_limit_) &&
-                            (chart_limit_ < 0 || recomb_map.size() < chart_limit_); num_popped++) {
+                            (chart_limit_ < 0 || (int)recomb_map.size() < chart_limit_); num_popped++) {
         // Pop the top hypothesis
         Real top_score = hypo_queue.top().first;
         vector<int> id_str = hypo_queue.top().second;
@@ -227,12 +226,12 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         // next_edge->SetSrcStr(rule.GetSrcStr());
         vector<lm::ngram::ChartState> my_state(lm_data_.size());
         vector<vector<lm::ngram::ChartState> > states(path->size());
-        for(size_t j = 0; j < path->size(); j++) {
-            const pair<int,int> & my_span = (*path)[j];
-            const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode(rule->GetChildHeadLabels(j), id_str[j+1]);
+        for(size_t pid = 0; pid < path->size(); pid++) {
+            const pair<int,int> & my_span = (*path)[pid];
+            const CFGChartItem::StatefulNode & node = chart[my_span.first*N + my_span.second].GetStatefulNode(rule->GetChildHeadLabels(pid), id_str[pid+1]);
             //cerr << " Adding tail: " << node.first->GetId() << endl;
             next_edge->AddTail(node.first);
-            states[j] = node.second;
+            states[pid] = node.second;
         }
         // Calculate the language model score
         Real total_score = 0;

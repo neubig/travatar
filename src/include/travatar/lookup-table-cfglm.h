@@ -4,6 +4,7 @@
 #include <travatar/graph-transformer.h>
 #include <travatar/rule-fsm.h>
 #include <marisa/marisa.h>
+#include <boost/shared_ptr.hpp>
 
 namespace lm { namespace ngram { struct ChartState; } }
 
@@ -50,14 +51,14 @@ public:
         agent.set_query(str.c_str(), str.length());
     }
     CFGPath(CFGPath & prev_path, const Sentence & sent, int id) : str(prev_path.str), labels(prev_path.labels), spans(prev_path.spans) {
-        assert(id < sent.size());
+        assert(id < (int)sent.size());
         str.append((char*)&sent[id], sizeof(WordId));
         agent.set_query(str.c_str(), str.length());
         assert(labels.size() == spans.size());
     }
     CFGPath(CFGPath & prev_path, const HieroHeadLabels & heads, int i, int j) : str(prev_path.str), labels(prev_path.labels), spans(prev_path.spans) {
         Sentence inv_heads(heads.size());
-        for(size_t i = 0; i < heads.size(); i++) inv_heads[i] = -1 - heads[i];
+        for(size_t k = 0; k < heads.size(); k++) inv_heads[k] = -1 - heads[k];
         str.append((char*)&inv_heads[0], inv_heads.size()*sizeof(WordId));
         labels.push_back(heads);
         spans.push_back(std::make_pair(i, j));
@@ -94,15 +95,15 @@ public:
 class CFGCollection {
 
 public:
-    typedef std::vector<std::shared_ptr<HieroRuleSpans> > SpanVec;
-    typedef std::vector<std::shared_ptr<std::vector<HieroHeadLabels> > > LabelVec;
+    typedef std::vector<boost::shared_ptr<HieroRuleSpans> > SpanVec;
+    typedef std::vector<boost::shared_ptr<std::vector<HieroHeadLabels> > > LabelVec;
 
     CFGCollection() { }
     ~CFGCollection() { }
 
     void AddRules(const CFGPath & path, const RuleVec & rules) {
-        std::shared_ptr<HieroRuleSpans> span(new HieroRuleSpans(path.spans));
-        std::shared_ptr<std::vector<HieroHeadLabels> > label(new std::vector<HieroHeadLabels>(path.labels));
+        boost::shared_ptr<HieroRuleSpans> span(new HieroRuleSpans(path.spans));
+        boost::shared_ptr<std::vector<HieroHeadLabels> > label(new std::vector<HieroHeadLabels>(path.labels));
         for(size_t i = 0; i < rules.size(); i++) {
             rules_.push_back(rules[i]);
             spans_.push_back(span);
