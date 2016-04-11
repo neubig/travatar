@@ -31,7 +31,7 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
             src_data
         );
         if(src_data.syms.size() == 1 && src_data.words.size() == 1)
-            unaries[rule->GetChildHeadLabels(0)].push_back(rule->GetHeadLabels());
+            unaries[rule->GetChildHeadLabels(0)].insert(rule->GetHeadLabels());
         // Sanity check
         BOOST_FOREACH(const CfgData & trg_data, rule->GetTrgData())
             if(trg_data.syms.size() != src_data.syms.size())
@@ -53,7 +53,6 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
 
     // Expand unary values
     bool added = true;
-    size_t pos;
     while(added) {
         added = false;
         BOOST_FOREACH(UnaryMap::value_type & val, unaries) {
@@ -63,10 +62,10 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
                 UnaryMap::iterator it = unaries.find(target);
                 if(it != unaries.end()) {
                     BOOST_FOREACH(const HieroHeadLabels & second_trg, it->second) {
-                        for(pos = 0; pos < val.second.size() && val.second[pos] != second_trg; ++pos);
-                        if(pos == val.second.size()) {
+                        set<HieroHeadLabels>::iterator it2 = val.second.find(target);
+                        if(it2 == val.second.end()) {
                             added = true;
-                            val.second.push_back(second_trg);
+                            val.second.insert(second_trg);
                         } 
                     }
                 }

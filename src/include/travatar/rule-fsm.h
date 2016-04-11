@@ -17,7 +17,7 @@ class CfgData;
 
 typedef std::vector<WordId> HieroHeadLabels;
 typedef std::vector<std::pair<int,int> > HieroRuleSpans;
-typedef std::map<HieroHeadLabels,std::vector<HieroHeadLabels> > UnaryMap;
+typedef std::map<HieroHeadLabels,std::set<HieroHeadLabels> > UnaryMap;
 typedef std::map<HieroHeadLabels, HyperNode*> HeadNodePairs;
 typedef std::map<std::pair<int,int>, HeadNodePairs> HieroNodeMap;
 typedef std::vector<HyperEdge* > EdgeList;
