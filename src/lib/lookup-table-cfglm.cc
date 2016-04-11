@@ -33,9 +33,9 @@ CFGChartItem::~CFGChartItem() {
 
 Real CFGChartItem::GetHypScore(const HieroHeadLabels & label, int pos) const {
     StatefulNodeMap::const_iterator it = nodes_.find(label);
-    assert(it != nodes_.end());
+    assert(it != nodes_.end() && pos >= 0);
     Real ret = ((int)it->second.size() > pos) ? it->second[pos]->first->CalcViterbiScore() : -REAL_MAX;
-    //cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << (it->second.size() > pos) << ", ret: " << ret << endl;
+    //cerr << " label: " << label << ", pos: " << pos << ", it->second.size(): " << it->second.size() << ", more_than: " << ((int)it->second.size() > pos) << ", ret: " << ret << endl;
     return ret;
 }
 
@@ -267,7 +267,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         // Advance the hypothesis
         for(size_t j = 0; j < path->size(); j++) {
             const pair<int,int> & my_span = (*path)[j];
-            Real my_score = top_score - chart[my_span.first*N + my_span.second].GetHypScoreDiff(rule->GetChildHeadLabels(j), id_str[j+1]);
+            Real my_score = top_score + chart[my_span.first*N + my_span.second].GetHypScoreDiff(rule->GetChildHeadLabels(j), id_str[j+1]+1);
             if(my_score > -REAL_MAX/2) {
                 //cerr << " adding hypothesis with score: " << my_score << endl;
                 vector<int> pos(id_str); pos[j+1]++;
