@@ -24,6 +24,17 @@ using namespace boost;
 //  A CKY+ Variant for SCFG Decoding Without a Dot Chart
 //  Rico Sennrich. SSST 2014.
 
+void CFGCollection::AddRules(const CFGPath & path, const RuleVec & rules) {
+    boost::shared_ptr<HieroRuleSpans> span(new HieroRuleSpans(path.spans));
+    boost::shared_ptr<std::vector<HieroHeadLabels> > label(new std::vector<HieroHeadLabels>(path.labels));
+    for(size_t i = 0; i < rules.size(); i++) {
+        //cerr << " AddRules: " << *rules[i] << endl;
+        rules_.push_back(rules[i]);
+        spans_.push_back(span);
+        labels_.push_back(label);
+    }
+}
+
 CFGChartItem::~CFGChartItem() {
     BOOST_FOREACH(StatefulNodeMap::value_type & val, nodes_)
         BOOST_FOREACH(StatefulNode* ptr, val.second)
@@ -81,7 +92,7 @@ LookupTableCFGLM * LookupTableCFGLM::ReadFromFiles(const std::vector<std::string
     LookupTableCFGLM * ret = new LookupTableCFGLM;
     BOOST_FOREACH(const std::string & filename, filenames) {
         InputFileStream tm_in(filename.c_str());
-        cerr << "Reading TM file from "<<filename<<"..." << endl;
+        //cerr << "Reading TM file from "<<filename<<"..." << endl;
         if(!tm_in)
             THROW_ERROR("Could not find TM: " << filename);
         ret->AddRuleFSM(RuleFSM::ReadFromRuleTable(tm_in));
@@ -98,7 +109,7 @@ void LookupTableCFGLM::AddRuleFSM(RuleFSM* fsm) {
         marisa::Agent ag; ag.set_query(str.c_str(), str.length());
         assert(fsm->GetTrie().lookup(ag));
         BOOST_FOREACH(TranslationRuleHiero * rule, fsm->GetRules()[ag.key().id()]) {
-            // cerr << "Adding rule: " << *rule << " at " << val.first << endl;
+            //cerr << "Adding rule: " << *rule << " at " << val.first << endl;
             unary_ids_[val.first].push_back(unary_rules_.size());
             unary_rules_.push_back(rule);
         }
@@ -120,22 +131,24 @@ bool LookupTableCFGLM::PredictiveSearch(marisa::Agent & agent) const {
 }
 
 void LookupTableCFGLM::Consume(CFGPath & a, const Sentence & sent, int N, int i, int j, int k, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
-    cerr << "Consume(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << k << ")" << endl;
+    //cerr << "Consume(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << k << ")" << endl;
     bool unary = (i == j);
     if(j == k) {
         CFGPath next(a, sent, j);
         if(PredictiveSearch(next.agent))
             AddToChart(next, sent, N, i, k, unary, chart, collections);
     }
+    //cerr << " Searching through " << chart[j*N+k].GetNodes().size() << " nodes in chart[" << j*N+k << "]" << endl;
     BOOST_FOREACH(const CFGChartItem::StatefulNodeMap::value_type & sym, chart[j*N+k].GetNodes()) {
         CFGPath next(a, sym.first, j, k);
+        //cerr << " Searching for(" << CFGPath::PrintAgent(next.agent) << " len==" << next.agent.query().length() << ")" << endl;
         if(PredictiveSearch(next.agent))
             AddToChart(next, sent, N, i, k, unary, chart, collections);
     }
 }
 
 void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int i, int j, bool u, vector<CFGChartItem> & chart, vector<CFGCollection> & collections) const {
-    cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
+    //cerr << "AddToChart(" << CFGPath::PrintAgent(a.agent) << " len==" << a.agent.query().length() << ", " << sent << ", " << N << ", " << i << ", " << j << ", " << u << ")" << endl;
     if(!u) {
         BOOST_FOREACH(const RuleFSM * fsm, rule_fsms_) {
             if(fsm->GetTrie().lookup(a.agent))
@@ -148,7 +161,7 @@ void LookupTableCFGLM::AddToChart(CFGPath & a, const Sentence & sent, int N, int
 }
 
 void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & collection, vector<CFGChartItem> & chart, HyperGraph & ret) const {
-    cerr << "CubePrune(" << N << ", " << i << ", " << j << ")" << endl;
+    //cerr << "CubePrune(" << N << ", " << i << ", " << j << ")" << endl;
     // Don't build already finished charts
     int id = i*N + j;
     assert(!chart[id].IsPopulated());
@@ -163,7 +176,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     assert(rules.size() == spans.size());
 
     // Score the top hypotheses of each rule
-    cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
+    //cerr << " Scoring hypotheses for " << rules.size() << " rules" << endl;
     for(size_t rid = 0; rid < rules.size(); rid++) {
         // Get the base score for the rule
         Real score = weights_->GetCurrent() * rules[rid]->GetFeatures();
@@ -207,12 +220,12 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
         if(id_str[0] >= 0) {
             path = spans[id_str[0]].get();
             rule = rules[id_str[0]];
-            cerr << " Non-unary rule: " << *rule << endl;
+            //cerr << " Non-unary ["<<i<<","<<j+1<<"] (s=" << top_score << "): " << *rule << endl;
         // Unary rules
         } else {
             path = &unary_path;
             rule = unary_rules_[-1-id_str[0]];
-            cerr << " Unary rule: " << *rule << endl;
+            //cerr << " Unary ["<<i<<","<<j+1<<"] (s=" << top_score << "): " << *rule << endl;
         }
         // Create the next edge
         HyperEdge * next_edge = new HyperEdge;
@@ -280,7 +293,7 @@ void LookupTableCFGLM::CubePrune(int N, int i, int j, vector<CFGCollection> & co
     }
 
     // Sort the nodes in each bin, and mark the chart populated
-    cerr << " Finalizing " << id << endl;
+    //cerr << " Finalizing chart[" << id << "]" << endl;
     chart[id].FinalizeNodes();
 
 }
@@ -302,15 +315,23 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
     ret->AddNode(root);
 
     for(int i = N-1; i >= 0; i--) {
-        // Find single words
-        CFGPath next(root_path, sent, i);
-        if(PredictiveSearch(next.agent))
-            AddToChart(next, sent, N, i, i, false, chart, collections);
-        CubePrune(N, i, i, collections, chart, *ret);
 
-        // Find multi-words
-        for(int j = i+1; j < N; j++) {
-            Consume(root_path, sent, N, i, i, j, chart, collections);
+        //cerr << "----------------- TOP: i=" << i << endl;
+        for(int j = i; j < N; j++) {
+            //cerr << "----------------- TOP: j=" << j << endl;
+            // Find single words
+            if(i == j) {
+                CFGPath next(root_path, sent, i);
+                BOOST_FOREACH(const RuleFSM * fsm, rule_fsms_) {
+                    if(fsm->GetTrie().lookup(next.agent))
+                        collections[i*N+j].AddRules(next, fsm->GetRules()[next.agent.key().id()]);
+                }
+                // if(PredictiveSearch(next.agent))
+                //     AddToChart(next, sent, N, i, i, false, chart, collections);
+            // Find multi-words
+            } else {
+                Consume(root_path, sent, N, i, i, j-1, chart, collections);
+            }
             CubePrune(N, i, j, collections, chart, *ret);
         }
     }
@@ -321,7 +342,7 @@ HyperGraph * LookupTableCFGLM::TransformGraph(const HyperGraph & graph) const {
         BOOST_FOREACH(const CFGChartItem::StatefulNode * sn, snmit->second) {
             HyperEdge * edge = new HyperEdge(root);
             edge->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
-            cerr << " Adding tail: " << sn->first->GetId() << endl;
+            //cerr << " Adding tail: " << sn->first->GetId() << endl;
             edge->AddTail(sn->first);
             Real total_score = 0;
             for(int lm_id = 0; lm_id < (int)lm_data_.size(); lm_id++) {

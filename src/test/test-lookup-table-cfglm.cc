@@ -57,7 +57,7 @@ public:
     
     HyperGraph * CreateExpectedGraph(bool extra) {
         vector<HyperNode*> node(11 + (extra ? 1:0));
-        vector<HyperEdge*> edge(14 + (extra ? 2:0));
+        vector<HyperEdge*> edge(16 + (extra ? 2:0));
         vector<TranslationRuleHiero*> rules(14);
     
         for (int i=0; i < (int)node.size(); ++i) node[i] = new HyperNode;
@@ -113,27 +113,37 @@ public:
         edge[8]->SetHead(node[8]);
         edge[8]->AddTail(node[4]);
         edge[8]->SetRule(rules[0]);
+        // [0,2]: X0[0,1] eat X1[2,3]
+        edge[9]->SetHead(node[8]);
+        edge[9]->AddTail(node[7]);
+        edge[9]->AddTail(node[2]);
+        edge[9]->SetRule(rules[5]);
         // [0,3]: I X0[1,3]
-        edge[9]->SetHead(node[9]);
-        edge[9]->AddTail(node[5]);
-        edge[9]->SetRule(rules[0]);
-        // [0,4]: I X0[1,4]
-        edge[10]->SetHead(node[10]);
-        edge[10]->AddTail(node[6]);
+        edge[10]->SetHead(node[9]);
+        edge[10]->AddTail(node[5]);
         edge[10]->SetRule(rules[0]);
-        // [0,4]: I X0[1,2] two X1[3,4]
-        edge[11]->SetHead(node[10]);
-        edge[11]->AddTail(node[4]);
-        edge[11]->AddTail(node[1]);
-        edge[11]->SetRule(rules[3]);
-        // [0,4]: I X0[1,2] two hamburgers
+        // [0,2]: X0[0,1] eat X1[2,3]
+        edge[11]->SetHead(node[8]);
+        edge[11]->AddTail(node[7]);
+        edge[11]->AddTail(node[3]);
+        edge[11]->SetRule(rules[0]);
+        // [0,4]: I X0[1,4]
         edge[12]->SetHead(node[10]);
-        edge[12]->AddTail(node[4]);
-        edge[12]->SetRule(rules[1]);
+        edge[12]->AddTail(node[6]);
+        edge[12]->SetRule(rules[0]);
+        // [0,4]: I X0[1,2] two X1[3,4]
+        edge[13]->SetHead(node[10]);
+        edge[13]->AddTail(node[4]);
+        edge[13]->AddTail(node[1]);
+        edge[13]->SetRule(rules[3]);
+        // [0,4]: I X0[1,2] two hamburgers
+        edge[14]->SetHead(node[10]);
+        edge[14]->AddTail(node[4]);
+        edge[14]->SetRule(rules[1]);
         // [0,4]: X0[0,4]
-        edge[13]->SetHead(node[0]);
-        edge[13]->AddTail(node[10]);
-        edge[13]->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
+        edge[15]->SetHead(node[0]);
+        edge[15]->AddTail(node[10]);
+        edge[15]->SetTrgData(CfgDataVector(GlobalVars::trg_factors, CfgData(Sentence(1, -1))));
         // if (extra) {
         //     edge[10]->SetHead(node[6]);
         //     edge[10]->SetRule(rules[12]);
@@ -174,6 +184,7 @@ public:
         // [0,1]:
         node[7]->SetSpan(pair<int,int>(0,1));
         node[7]->AddEdge(edge[7]);
+        node[7]->SetViterbiScore(0);
         // [0,2]:
         node[8]->SetSpan(pair<int,int>(0,2));
         node[8]->AddEdge(edge[8]);

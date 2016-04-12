@@ -324,6 +324,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
         fsm_tm_->SetTrgFactors(GlobalVars::trg_factors);
         fsm_tm_->SetRootSymbol(Dict::WID(config.GetString("root_symbol")));
         fsm_tm_->SetUnkSymbol(Dict::WID(config.GetString("unk_symbol")));
+        fsm_tm_->SetWeights(*weights_);
         // fsm_tm_->SetSpanLimits(config.GetIntArray("hiero_span_limit"));
         // fsm_tm_->SetSaveSrcStr(save_src_str);
         tm_.reset(fsm_tm_);

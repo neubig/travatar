@@ -101,15 +101,7 @@ public:
     CFGCollection() { }
     ~CFGCollection() { }
 
-    void AddRules(const CFGPath & path, const RuleVec & rules) {
-        boost::shared_ptr<HieroRuleSpans> span(new HieroRuleSpans(path.spans));
-        boost::shared_ptr<std::vector<HieroHeadLabels> > label(new std::vector<HieroHeadLabels>(path.labels));
-        for(size_t i = 0; i < rules.size(); i++) {
-            rules_.push_back(rules[i]);
-            spans_.push_back(span);
-            labels_.push_back(label);
-        }
-    }
+    void AddRules(const CFGPath & path, const RuleVec & rules);
 
     const RuleVec & GetRules() const { return rules_; }
     const SpanVec & GetSpans() const { return spans_; }
