@@ -13,6 +13,17 @@ const std::vector<int> CfgData::GetNontermPositions() const {
     return ret;
 }
 
+const bool CfgData::NontermsAreOrdered() const {
+    int min_val = 0;
+    for(int i = 0; i < (int)words.size(); i++) {
+        if(words[i] < 0) {
+            if(words[i] != min_val-1) return false;
+            min_val = words[i];
+        }
+    }
+    return true;
+}
+
 void CfgData::AppendChild(const CfgData & child) {
     BOOST_FOREACH(WordId wid, child.words)
         words.push_back(wid);

@@ -318,7 +318,7 @@ void TravatarRunner::Run(const ConfigTravatarRunner & config) {
     }  else if (config.GetString("tm_storage") == "cfg") {
         if(lm_files.size() > 1 || pop_limits.size() != 1) THROW_ERROR("Cannot use multiple LMs or pop limits with -tm_storage=cfg");
         LookupTableCFGLM * fsm_tm_ = LookupTableCFGLM::ReadFromFiles(tm_files);
-        fsm_tm_->LoadLM(lm_files[0]);
+        if(lm_files[0] != "") fsm_tm_->LoadLM(lm_files[0]);
         fsm_tm_->SetPopLimit(pop_limits[0]);
         fsm_tm_->SetChartLimit(config.GetInt("chart_limit"));
         fsm_tm_->SetTrgFactors(GlobalVars::trg_factors);

@@ -37,6 +37,7 @@ public:
     }
 
     const std::vector<int> GetNontermPositions() const;
+    const bool NontermsAreOrdered() const;
 
     void Print(std::ostream & out) const;
 

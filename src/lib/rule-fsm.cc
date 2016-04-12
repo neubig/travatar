@@ -24,6 +24,8 @@ RuleFSM * RuleFSM::ReadFromRuleTable(istream & in) {
         if(columns.size() < 3)
             THROW_ERROR("Wrong number of columns in rule table, expected at least 3 but got "<<columns.size()<<": " << endl << line);
         CfgData src_data = Dict::ParseAnnotatedWords(columns[0]);
+        if(!src_data.NontermsAreOrdered())
+            THROW_ERROR("Nonterminal IDs on the source side must be in ascending order, but are not at line: " << endl << line);
         vector<CfgData> trg_data = Dict::ParseAnnotatedVector(columns[1]);
         TranslationRuleHiero * rule = new TranslationRuleHiero(
             trg_data,
