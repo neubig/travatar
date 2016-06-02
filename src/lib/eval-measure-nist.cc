@@ -96,6 +96,7 @@ NistReport EvalStatsNist::CalcNistReport() const {
     NistReport report;
     int ngram_order = GetNgramOrder();
     // Calculate the precision for each order
+    report.nist = 0.0;
     for (int i=0; i < ngram_order; i++) {
         Real score = vals_[2*i]/vals_[2*i+1];
         report.scores.push_back(score);
