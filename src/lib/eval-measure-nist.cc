@@ -37,12 +37,12 @@ void EvalMeasureNist::InitializeWithReferences(const std::vector< std::vector<Se
     Real log2 = log(2.0);
     BOOST_FOREACH(const NgramStats::value_type & val, counts) {
         if(val.first.size() == 1) {
-            weight_ngrams_[val.first] = log((Real)val.second/null)/log2;
+            weight_ngrams_[val.first] = -log((Real)val.second/null)/log2;
         } else {
             vector<WordId> context = val.first; context.resize(val.first.size()-1);
             NgramStats::const_iterator it = counts.find(context);
             if(it == counts.end()) THROW_ERROR("Couldn't find context");
-            weight_ngrams_[val.first] = log((Real)val.second/it->second)/log2;
+            weight_ngrams_[val.first] = -log((Real)val.second/it->second)/log2;
         }
     }
 }
