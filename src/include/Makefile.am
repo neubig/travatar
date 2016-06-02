@@ -21,6 +21,7 @@ nobase_include_HEADERS = \
 	travatar/eval-measure-bleu.h \
 	travatar/eval-measure-interp.h \
 	travatar/eval-measure-ribes.h \
+	travatar/eval-measure-nist.h \
 	travatar/eval-measure-ter.h \
 	travatar/eval-measure.h \
 	travatar/eval-measure-loader.h \

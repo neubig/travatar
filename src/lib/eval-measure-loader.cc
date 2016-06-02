@@ -3,6 +3,7 @@
 #include <travatar/eval-measure.h>
 #include <travatar/eval-measure-bleu.h>
 #include <travatar/eval-measure-ribes.h>
+#include <travatar/eval-measure-nist.h>
 #include <travatar/eval-measure-ter.h>
 #include <travatar/eval-measure-wer.h>
 #include <travatar/eval-measure-interp.h>
@@ -26,6 +27,8 @@ EvalMeasure * EvalMeasureLoader::CreateMeasureFromString(const string & str) {
         return new EvalMeasureBleu(config);
     else if(eval == "ribes")
         return new EvalMeasureRibes(config);
+    else if(eval == "nist")
+        return new EvalMeasureNist(config);
     else if(eval == "ter")
         return new EvalMeasureTer(config);
     else if(eval == "wer")

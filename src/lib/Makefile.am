@@ -10,14 +10,15 @@ TRAVATARCPP = \
 	config-base.cc \
 	dict.cc \
 	eval-measure.cc \
-    eval-measure-loader.cc \
+	eval-measure-loader.cc \
 	eval-measure-bleu.cc \
 	eval-measure-interp.cc \
 	eval-measure-ribes.cc \
+	eval-measure-nist.cc \
 	eval-measure-ter.cc \
 	eval-measure-wer.cc \
-    gradient.cc \
-    gradient-xeval.cc \
+	gradient.cc \
+	gradient-xeval.cc \
 	input-file-stream.cc \
 	io-util.cc \
 	lm-composer.cc \

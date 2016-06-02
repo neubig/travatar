@@ -36,8 +36,11 @@ void MTEvaluatorRunner::Run(const ConfigMTEvaluatorRunner & config) {
     vector<boost::shared_ptr<EvalMeasure> > eval_measures;
     vector<string> eval_ids;
     algorithm::split(eval_ids, config.GetString("eval"), is_any_of(" "));
-    BOOST_FOREACH(const string & eval, eval_ids)
-        eval_measures.push_back(boost::shared_ptr<EvalMeasure>(EvalMeasureLoader::CreateMeasureFromString(eval)));
+    BOOST_FOREACH(const string & eval, eval_ids) {
+        boost::shared_ptr<EvalMeasure> my_ptr(EvalMeasureLoader::CreateMeasureFromString(eval));
+        my_ptr->InitializeWithReferences(ref_sentences);
+        eval_measures.push_back(my_ptr);
+    }
     int eval_count = eval_measures.size();
 
     // If we are doing bootstrap resampling to calculate statistical significance, create random sets

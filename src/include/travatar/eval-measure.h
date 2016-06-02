@@ -91,6 +91,9 @@ public:
     EvalMeasure(const std::string & config) : factor_(0) { }
     virtual ~EvalMeasure() { }
 
+    // Initialize with reference
+    virtual void InitializeWithReferences(const std::vector< std::vector<Sentence> > & refs) { }
+
     // Calculate the stats for a single sentence
     virtual EvalStatsPtr CalculateStats(
                 const Sentence & ref,
