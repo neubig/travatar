@@ -20,7 +20,6 @@ using namespace travatar;
 using namespace boost;
 using namespace lm::ngram;
 
-
 void HyperEdge::AddTail(HyperNode* tail) {
     if(head_ && head_->GetId() != -1 && head_->GetId() == tail->GetId())
         THROW_ERROR("Adding head and tail to the same edge: " << head_->GetId());
@@ -327,6 +326,7 @@ boost::shared_ptr<NbestStackItem> HyperGraph::NbestStackIncrementChild(int node,
     boost::shared_ptr<HyperPath> next_path = NbestGetNthPath(my_edge->GetTail(child_num)->GetId(), item.child_ranks[child_num]+1, uniq, states);
     if(next_path.get() == NULL)
         return boost::shared_ptr<NbestStackItem>();
+    assert(curr_path.get() != NULL);
     Real diff = next_path->GetScore() - curr_path->GetScore();
     boost::shared_ptr<NbestStackItem> ret(new NbestStackItem(item));
     ret->score += diff;
@@ -341,6 +341,7 @@ boost::shared_ptr<HyperPath> HyperGraph::NbestGetNthPath(int node, int rank, boo
         // Get an item from the stack and create the path
         boost::shared_ptr<NbestStackItem> item = state->PopStack();
         boost::shared_ptr<HyperPath> act_path = NbestCreatePath(node, *item, uniq, states);
+        if(act_path.get() == NULL) continue;
         // Check whether to add it or not
         if(uniq) {
             CfgDataVector trg = act_path->CalcTranslations();
