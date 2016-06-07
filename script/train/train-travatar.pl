@@ -70,6 +70,9 @@ my $CONFIG_FILE = "";
 # Progress showing option by pipe viewer
 my $PROGRESS = 0;
 
+# Resuming optin
+my $RESUME = 0;
+
 # Sort command options
 my $SORT_OPTIONS = "";
 
@@ -110,6 +113,7 @@ GetOptions(
     "initial_phrase=s" => \$MAX_INITIAL_PHRASE, # The maximum length of initial phrase in hiero extraction
     "hiero_rule_len=s" => \$MAX_TERMINALS, # The maximum length of hiero rules that are extracted from hiero extraction
     "progress" => \$PROGRESS, # Flag to show the progress bar (by pv command)
+    "resume" => \$RESUME, # Resume the training
 );
 if(@ARGV != 0) {
     print STDERR "Usage: $0 --work_dir=work --src_file=src.txt --trg_file=trg.txt\n";
@@ -129,7 +133,7 @@ for($SRC_FILE, $TRG_FILE, $TRAVATAR_DIR, $SRC_WORDS, $TRG_WORDS, $ALIGN_FILE, $L
 ((not $LM_FILE) and ($NO_LM ne "true")) and
     die "Must specify an LM file using -lm_file, or choose to not use an LM by setting -no_lm true";
 ((-e $WORK_DIR) or not safesystem("mkdir $WORK_DIR")) and
-    die "Working directory $WORK_DIR already exists or could not be created";
+    ($RESUME or die "Working directory $WORK_DIR already exists or could not be created");
 
 if ($TRANSLATION_METHOD eq "hiero") {
     $SRC_FORMAT = "word";
@@ -149,6 +153,15 @@ if ($PROGRESS) {
   }
 }
 
+# Default file paths and file flows
+my %DEFAULT_FILE;
+my %NEXT_FILE;
+set_default_files();
+
+if ($RESUME) {
+    set_processed();
+}
+
 # Steps:
 # 1 -> Prepare Data
 # 2 -> Create Alignments
@@ -160,10 +173,11 @@ if ($PROGRESS) {
 print STDERR "(1) Preparing data @ ".`date`;
 
 # Convert trees into plain text sentences
+$SRC_WORDS = $SRC_FILE if((not $SRC_WORDS) and ($SRC_FORMAT eq "word"));
 $TRG_WORDS = $TRG_FILE if((not $TRG_WORDS) and ($TRG_FORMAT eq "word"));
-(safesystem("mkdir $WORK_DIR/data") or die) if ((not $SRC_WORDS) or (not $TRG_WORDS));
+(safesystem("mkdir -p $WORK_DIR/data") or die) if ((not $SRC_WORDS) or (not $TRG_WORDS));
 if(not $SRC_WORDS) {
-    $SRC_WORDS = "$WORK_DIR/data/src.word";
+    $SRC_WORDS = $DEFAULT_FILE{'SRC_WORDS'};
     if ($TRANSLATION_METHOD eq "t2s") {
         safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $SRC_FORMAT -output_format word < $SRC_FILE > $SRC_WORDS") or die;
     } else {
@@ -172,7 +186,7 @@ if(not $SRC_WORDS) {
     }
 }
 if(not $TRG_WORDS) {
-    $TRG_WORDS = "$WORK_DIR/data/trg.word";
+    $TRG_WORDS = $DEFAULT_FILE{'TRG_WORDS'};
     if ($TRANSLATION_METHOD eq "t2s") {
         safesystem("$TRAVATAR_DIR/src/bin/tree-converter -input_format $TRG_FORMAT -output_format word < $TRG_FILE > $TRG_WORDS") or die;
     } else {
@@ -186,8 +200,8 @@ print STDERR "(2) Creating alignments @ ".`date`;
 
 # Alignment with GIZA++
 if(not $ALIGN_FILE) {
-    safesystem("mkdir $WORK_DIR/align") or die;
-    $ALIGN_FILE = "$WORK_DIR/align/align.txt";
+    safesystem("mkdir -p $WORK_DIR/align") or die;
+    $ALIGN_FILE = $DEFAULT_FILE{'ALIGN_FILE'};
     if($ALIGN eq "giza") {
         my $GIZA = "$BIN_DIR/GIZA++";
         my $SNT2COOC = "$BIN_DIR/snt2cooc.out";
@@ -231,13 +245,15 @@ print STDERR "(3) Creating lexical translation probabilities @ ".`date`;
 
 # Create the lexical translation probabilities
 if(not ($LEX_SRCTRG and $LEX_TRGSRC)) {
-    safesystem("mkdir $WORK_DIR/lex") or die;
+    safesystem("mkdir -p $WORK_DIR/lex") or die;
     # Write only the non-specified values
     my $WRITE_SRCTRG = ($LEX_SRCTRG ? "/dev/null" : "$WORK_DIR/lex/src_given_trg.lex");
     $LEX_SRCTRG = $WRITE_SRCTRG if not $LEX_SRCTRG;
     my $WRITE_TRGSRC = ($LEX_TRGSRC ? "/dev/null" : "$WORK_DIR/lex/trg_given_src.lex");
     $LEX_TRGSRC = $WRITE_TRGSRC if not $LEX_TRGSRC;
     # Run the program
+    print "SRC_WORDS: $SRC_WORDS\n";
+    print "TRG_WORDS: $TRG_WORDS\n";
     safesystem("$TRAVATAR_DIR/script/train/align2lex.pl $SRC_WORDS $TRG_WORDS $ALIGN_FILE $WRITE_SRCTRG $WRITE_TRGSRC") or die;
 }
 exit(0) if $LAST_STEP eq "lex";
@@ -245,25 +261,30 @@ exit(0) if $LAST_STEP eq "lex";
 # ****** 4: Create the model file *******
 print STDERR "(4) Creating model @ ".`date`;
 
+my ($EXTRACT_FILE, $RT_SRCTRG, $RT_TRGSRC);
 if(not $TM_FILE) {
-    safesystem("mkdir $WORK_DIR/model") or die;
+    safesystem("mkdir -p $WORK_DIR/model") or die;
     # First extract the rules
-    my $EXTRACT_FILE = "$WORK_DIR/model/extract.gz";
-    if ($TRANSLATION_METHOD eq "t2s") {
-        my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
-        safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE $PV_PIPE | gzip -c > $EXTRACT_FILE") or die;
-    } elsif ($TRANSLATION_METHOD eq "hiero") {
-        my $EXTRACT_OPTIONS = "-max_initial_phrase $MAX_INITIAL_PHRASE -max_terminals $MAX_TERMINALS";
-        safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE $PV_PIPE | gzip -c > $EXTRACT_FILE") or die;
-    } else {
-        die "Unrecognized method: $TRANSLATION_METHOD\n";
+    if (not $EXTRACT_FILE) {
+        $EXTRACT_FILE = $DEFAULT_FILE{'EXTRACT_FILE'};
+        if ($TRANSLATION_METHOD eq "t2s") {
+            my $EXTRACT_OPTIONS = "-input_format $SRC_FORMAT -output_format $TRG_FORMAT -normalize_probs $NORMALIZE -binarize $BINARIZE -compose $COMPOSE -attach $ATTACH -attach_len $ATTACH_LEN -nonterm_len $NONTERM_LEN -term_len $TERM_LEN";
+            safesystem("$TRAVATAR_DIR/src/bin/forest-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE $PV_PIPE | gzip -c > $EXTRACT_FILE") or die;
+        } elsif ($TRANSLATION_METHOD eq "hiero") {
+            my $EXTRACT_OPTIONS = "-max_initial_phrase $MAX_INITIAL_PHRASE -max_terminals $MAX_TERMINALS";
+            safesystem("$TRAVATAR_DIR/src/bin/hiero-extractor $EXTRACT_OPTIONS $SRC_FILE $TRG_FILE $ALIGN_FILE $PV_PIPE | gzip -c > $EXTRACT_FILE") or die;
+        } else {
+            die "Unrecognized method: $TRANSLATION_METHOD\n";
+        }
     }
     # Then, score the rules (in parallel?)
-    my $RT_SRCTRG = "$WORK_DIR/model/rule-table.src-trg.gz"; 
-    my $RT_TRGSRC = "$WORK_DIR/model/rule-table.trg-src.gz"; 
-    my $RT_SRCTRG_CMD = "gunzip -c $EXTRACT_FILE | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort $SORT_OPTIONS | gzip > $RT_SRCTRG";
-    my $RT_TRGSRC_CMD = "gunzip -c $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS $PV_PIPE | gzip > $RT_TRGSRC";
-    run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
+    if (not ($RT_SRCTRG and $RT_TRGSRC)) {
+        $RT_SRCTRG = $DEFAULT_FILE{'RT_SRCTRG'};
+        $RT_TRGSRC = $DEFAULT_FILE{'RT_TRGSRC'};
+        my $RT_SRCTRG_CMD = "gunzip -c $EXTRACT_FILE | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --fof-file=$WORK_DIR/model/fof.txt --lex-prob-file=$LEX_TRGSRC --cond-prefix=egf --joint | env LC_ALL=C sort $SORT_OPTIONS | gzip > $RT_SRCTRG";
+        my $RT_TRGSRC_CMD = "gunzip -c $EXTRACT_FILE | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS | $TRAVATAR_DIR/script/train/score-t2s.pl $SCORE_OPTIONS --lex-prob-file=$LEX_SRCTRG --cond-prefix=fge | $TRAVATAR_DIR/script/train/reverse-rt.pl $PV_SORT | env LC_ALL=C sort $SORT_OPTIONS $PV_PIPE | gzip > $RT_TRGSRC";
+        run_two($RT_SRCTRG_CMD, $RT_TRGSRC_CMD);
+    }
     # Whether to create the model zipped or not
     my $zip_cmd;
     if($GZIP_TM eq "true") {
@@ -274,15 +295,15 @@ if(not $TM_FILE) {
     }
     # Finally, combine the table
     safesystem("$TRAVATAR_DIR/script/train/combine-rt.pl --fof-file=$WORK_DIR/model/fof.txt --smooth=$SMOOTH --top-n=$NBEST_RULES $RT_SRCTRG $RT_TRGSRC $PV_PIPE $zip_cmd > $TM_FILE") or die;
-    # If we are doing Hiero, print the glue rules too
-    if ($TRANSLATION_METHOD eq "hiero") {
-        my $gfile = "$WORK_DIR/model/glue-rules";
-        open GFILE, ">:utf8", $gfile or die "Couldn't open $gfile\n";
-        print GFILE "x0:X @ S ||| x0:X @ S ||| \n";
-        print GFILE "x0:X x1:S @ S ||| x0:X x1:S @ S ||| glue=1\n";
-        close GFILE;
-        $TM_FILE .= "\n$gfile";
-    }
+}
+# If we are doing Hiero, print the glue rules too
+if ($TRANSLATION_METHOD eq "hiero") {
+    my $gfile = $DEFAULT_FILE{'GFILE'};
+    open GFILE, ">:utf8", $gfile or die "Couldn't open $gfile\n";
+    print GFILE "x0:X @ S ||| x0:X @ S ||| \n";
+    print GFILE "x0:X x1:S @ S ||| x0:X x1:S @ S ||| glue=1\n";
+    close GFILE;
+    $TM_FILE .= "\n$gfile";
 }
 
 # ******* 5: Create a configuration file ********
@@ -398,3 +419,61 @@ sub to_words {
     $str =~ s/ +$//g;
     return split(/ +/, $str);
 }
+
+sub set_default_files {
+    %DEFAULT_FILE = (
+        'SRC_WORDS'    => "$WORK_DIR/data/src.word",
+        'TRG_WORDS'    => "$WORK_DIR/data/trg.word",
+        'ALIGN_FILE'   => "$WORK_DIR/align/align.txt",
+        'LEX_SRCTRG'   => "$WORK_DIR/lex/src_given_trg.lex",
+        'LEX_TRGSRC'   => "$WORK_DIR/lex/trg_given_src.lex",
+        'EXTRACT_FILE' => "$WORK_DIR/model/extract.gz",
+        'RT_SRCTRG'    => "$WORK_DIR/model/rule-table.src-trg.gz",
+        'RT_TRGSRC'    => "$WORK_DIR/model/rule-table.trg-src.gz",
+        'TM_FILE'      => "$WORK_DIR/model/rule-table",
+        'GFILE'        => "$WORK_DIR/model/glue-rules",
+        'TINI_FILE'    => "$WORK_DIR/model/travatar.ini",
+    );
+    if ($SRC_FORMAT eq "word") {
+        $DEFAULT_FILE{'SRC_WORDS'} = $SRC_FILE;
+    }
+    if ($TRG_FORMAT eq "word") {
+        $DEFAULT_FILE{'TRG_WORDS'} = $TRG_FILE;
+    }
+    if($GZIP_TM eq "true") {
+        $DEFAULT_FILE{'TM_FILE'} = "$WORK_DIR/model/rule-table.gz";
+    }
+    %NEXT_FILE = (
+        'SRC_WORDS' => $DEFAULT_FILE{'ALIGN_FILE'},
+        'TRG_WORDS' => $DEFAULT_FILE{'ALIGN_FILE'},
+        'ALIGN_FILE' => $DEFAULT_FILE{'LEX_SRCTRG'},
+        'LEX_SRCTRG' => $DEFAULT_FILE{'LEX_TRGSRC'},
+        'LEX_TRGSRC' => $DEFAULT_FILE{'EXTRACT_FILE'},
+        'EXTRACT_FILE' => $DEFAULT_FILE{'RT_SRCTRG'},
+        'RT_SRCTRG' => $DEFAULT_FILE{'TM_FILE'},
+        'RT_TRGSRC' => $DEFAULT_FILE{'TM_FILE'},
+        'TM_FILE' => $DEFAULT_FILE{'TINI_FILE'},
+        'TINI_FILE' => "",
+    );
+}
+
+sub get_ready_file {
+    my $name = shift;
+    if (-f $DEFAULT_FILE{$name} and -f $NEXT_FILE{$name}) {
+        return $DEFAULT_FILE{$name};
+    }
+    return "";
+}
+
+sub set_processed {
+    $SRC_WORDS    = get_ready_file('SRC_WORDS');
+    $TRG_WORDS    = get_ready_file('TRG_WORDS');
+    $ALIGN_FILE   = get_ready_file('ALIGN_FILE');
+    $LEX_SRCTRG   = get_ready_file('LEX_SRCTRG');
+    $LEX_TRGSRC   = get_ready_file('LEX_TRGSRC');
+    $EXTRACT_FILE = get_ready_file('EXTRACT_FILE');
+    $RT_SRCTRG    = get_ready_file('RT_SRCTRG');
+    $RT_TRGSRC    = get_ready_file('RT_TRGSRC');
+    $TM_FILE      = get_ready_file('TM_FILE');
+}
+
