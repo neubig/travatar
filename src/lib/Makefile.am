@@ -17,6 +17,7 @@ TRAVATARCPP = \
 	eval-measure-nist.cc \
 	eval-measure-ter.cc \
 	eval-measure-wer.cc \
+	eval-measure-zeroone.cc \
 	gradient.cc \
 	gradient-xeval.cc \
 	input-file-stream.cc \

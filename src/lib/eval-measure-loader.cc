@@ -8,6 +8,7 @@
 #include <travatar/eval-measure-wer.h>
 #include <travatar/eval-measure-interp.h>
 #include <travatar/eval-measure-adv-interp.h>
+#include <travatar/eval-measure-zeroone.h>
 
 #include <travatar/global-debug.h>
 
@@ -37,6 +38,8 @@ EvalMeasure * EvalMeasureLoader::CreateMeasureFromString(const string & str) {
         return new EvalMeasureInterp(config);
     else if(eval == "ainterp")
         return new EvalMeasureAdvInterp(config);
+    else if(eval == "zeroone")
+        return new EvalMeasureZeroOne(config);
     else
         THROW_ERROR("Unknown evaluation measure: " << eval);
     return NULL;
