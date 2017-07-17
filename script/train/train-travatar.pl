@@ -148,8 +148,8 @@ if ($PROGRESS) {
     $PV = "pv";
   }
   if ($PV) {
-    $PV_PIPE = "| ${PV} -Wl";
-    $PV_SORT = "| ${PV} -Wl -N 'sorting records'";
+    $PV_PIPE = "2> /dev/null | ${PV} -clN processing";
+    $PV_SORT = "| ${PV} -clN sorting";
   }
 }
 
