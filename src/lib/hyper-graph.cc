@@ -1,7 +1,7 @@
 #include <queue>
 #include <map>
+#include <unordered_set>
 #include <boost/shared_ptr.hpp>
-#include <boost/tr1/unordered_set.hpp>
 #include <boost/regex.hpp>
 #include <lm/left.hh>
 #include <lm/model.hh>
