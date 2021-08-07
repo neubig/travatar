@@ -175,7 +175,7 @@ Real GradientXeval::CalcGradient(size_t n, const Real * x, Real * g) const {
     
     if(first_stats->GetIdString() == "BLEU") {
         CalcBleuGradient(p_i_k, stats, n, x, g);
-    } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES" || first_stats->GetIdString() == "TER") {
+    } else if(first_stats->GetIdString() == "AVG" || first_stats->GetIdString() == "RIBES" || first_stats->GetIdString() == "TER" || first_stats->GetIdString() == "ZEROONE") {
         CalcAvgGradient(p_i_k, stats, n, x, g);
     } else {
         THROW_ERROR("Cannot optimize expectation of "<<first_stats->GetIdString()<<" yet");

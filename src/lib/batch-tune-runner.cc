@@ -130,6 +130,8 @@ void BatchTuneRunner::DoTuning(const ConfigBatchTune & config) {
         if(config.GetString("algorithm") == "onlinepro")
             online->SetAlgorithm("pro");
         tune.reset(online);
+    } else {
+        THROW_ERROR("Unknown tuning algorithm " << config.GetString("algorithm"));
     }
 
     // Load the features from the weight file
